@@ -31,8 +31,8 @@ namespace hccl {
 using RankId = u32;
 
 enum class OpMode {
-    OPBASE = 0,
-    OFFLOAD = 1
+    OFFLOAD = 0,
+    OPBASE = 1
 };
 
 enum class DeviceMode {
