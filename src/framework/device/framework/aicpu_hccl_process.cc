@@ -191,7 +191,10 @@ u32 AicpuHcclProcess::AicpuRpcResInitV2(HcclOpResParam *commParam, bool isCustom
             group.c_str()),
         ret);
     HCCL_DEBUG("[AicpuHcclProcess][AicpuRpcResInitV2]AicpuRpcResInitV2 process end-------");
-    CHK_RET(hrtHalGetDeviceType(commAicpu->GetDevId(), g_devType));
+    if (g_devType == DevType::DEV_TYPE_COUNT) {
+        CHK_RET(hrtHalGetDeviceType(commAicpu->GetDevId(), g_devType));
+        HCCL_RUN_INFO("[AicpuHcclProcess][AicpuRpcResInitV2] devId %u, get devType %u", commAicpu->GetDevId(), static_cast<u32>(g_devType));
+    }
     HCCL_INFO("[AicpuHcclProcess][AicpuRpcResInitV2] get PlatformVersion %u, %u", static_cast<u32>(g_devType),
         commAicpu->GetDevId());
     AicpuComContext *ctx = AicpuGetComContext();

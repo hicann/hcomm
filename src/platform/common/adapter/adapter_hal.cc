@@ -512,11 +512,11 @@ HcclResult hrtHalGetDeviceType(const uint32_t devId, DevType &devType)
         CHK_RET(DlHalFunction::GetInstance().DlHalFunctionInit());
     }
 
-    devType = DevType::DEV_TYPE_COUNT;
     std::string chipName;
     HcclResult ret = hrtHalGetChipInfo(devId, chipName);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("hrtHalGetChipInfo failed, ret[%d], devId[%u]", ret, devId);
+        devType = DevType::DEV_TYPE_COUNT;
         return ret;
     }
     HCCL_INFO("[Get][DeviceType]Chip name[%s].", chipName.c_str());
@@ -525,6 +525,7 @@ HcclResult hrtHalGetDeviceType(const uint32_t devId, DevType &devType)
     if (iter == SOC_VER_CONVERT.end()) {
         HCCL_ERROR("[Get][DeviceType]errNo[0x%016llx] hrtHalGetChipInfo get illegal chipver, chipName[%s].",
             HCCL_ERROR_CODE(HCCL_E_DRV), chipName.c_str());
+        devType = DevType::DEV_TYPE_COUNT;
         return HCCL_E_DRV;
     }
     devType = iter->second;
