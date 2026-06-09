@@ -6311,7 +6311,10 @@ namespace hccl
                                            newTag.c_str(), resRequest.streamNum),
                                 HCCL_E_INTERNAL);
                 } else {
-                    algResResponse.slaveStreams = GetWorkspaceSubStreams(opParam.tag, resRequest.streamNum);
+                    // aicpu模式下不申请host从流
+                    if (!opParam.aicpuUnfoldMode) {
+                        algResResponse.slaveStreams = GetWorkspaceSubStreams(opParam.tag, resRequest.streamNum);
+                    }
                 }
             }
         } else if (GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE ||
