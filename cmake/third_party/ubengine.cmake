@@ -15,8 +15,8 @@ set(URMA_SEARCH_PATHS "${CMAKE_SOURCE_DIR}/../ubengine/ssapi/")
 set(URMA_INSTALL_PATHS "${CMAKE_CURRENT_BINARY_DIR}/${URMA_NAME}/build")
 set(URMA_SRC_DIR ${URMA_BUILD_PATH}/urma)
 set(URMA_SRC_DIRS
-    "${URMA_SEARCH_PATHS}/kernelspace/urma/code/lib/urma/include"
-    "${URMA_SEARCH_PATHS}/kernelspace/urma/code/include"
+    "${URMA_SEARCH_PATHS}/userspace/umdk/src/urma/lib/urma/core/include"
+    "${URMA_SEARCH_PATHS}/userspace/umdk/src/urma/lib/urma/core"
     "${URMA_SEARCH_PATHS}/userspace/udma/src/urma/hw/udma/include"
 )
 set(URMA_INCLUDE_DIR ${URMA_BUILD_PATH}/urma)
@@ -25,12 +25,20 @@ file(MAKE_DIRECTORY "${URMA_INCLUDE_DIR}")
 if(EXISTS ${URMA_SEARCH_PATHS})
     foreach(SRC_DIR ${URMA_SRC_DIRS})
         if(EXISTS "${SRC_DIR}")
+            file(GLOB SRC_DIR_CONTENTS "${SRC_DIR}/*")
+            if(NOT SRC_DIR_CONTENTS)
+                message(FATAL_ERROR "${SRC_DIR} have no urma headers")
+            endif()
+
             file(COPY "${SRC_DIR}/" DESTINATION "${URMA_INCLUDE_DIR}")
+            message(STATUS "Successfully copied ${SRC_DIR} to ${URMA_INCLUDE_DIR}.")
+        else()
+            message(FATAL_ERROR "not found ${SRC_DIR}")
         endif()
     endforeach()
-    message(STATUS "Successfully copied ${URMA_SEARCH_PATHS} to ${URMA_BUILD_PATH}.")
+    message(STATUS "built urma headers.")
 else()
     set(URMA_URL "")
     set(URMA_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src/platform/hccp/external_depends/ubengine)
-    message(STATUS "downloading ${URMA_URL} to ${URMA_SRC_DIR}")
+    message(STATUS "URMA_INCLUDE_DIR IS ${URMA_INCLUDE_DIR}")
 endif()
