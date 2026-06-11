@@ -1055,49 +1055,49 @@ u32 CollAlgOperator::CalcOptimalIntraRingsize(u64 count, HcclDataType dataType, 
     // --- 2. 数据总量 (GB) ---
     float baseSizeGB = static_cast<double>(count) * perDataSize / GB2B;
     float totalSize  = baseSizeGB;
-    HCCL_INFO("CalcOptimalIntraRingsize: count[%u], totalSize:[%lf]GB, perDataSize[%u].", count, totalSize, perDataSize);
-    if (opType == HcclCMDType::HCCL_CMD_ALLGATHER || opType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER) {
+    HCCL_INFO("CalcOptimalIntraRingsize: count[%u], totalSize:[%lf]GB, perDataSize[%u]. ", count, totalSize, perDataSize);
+    if (opType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER || opType == HcclCMDType::HCCL_CMD_ALLGATHER) {
         totalSize *= rankSizeInSuperPod;
     }
     // --- 3. 枚举可能的环大小 ---
     std::vector<u32> factors;
     for (u32 i = 1; i <= rankSizeInSuperPod / i; ++i) {
         if (rankSizeInSuperPod % i == 0) {
-            factors.push_back(i);
             if (i != rankSizeInSuperPod / i) {
                 factors.push_back(rankSizeInSuperPod / i);
             }
+            factors.push_back(i);
         }
     }
     std::sort(factors.begin(), factors.end());
     // --- 4. 计算最优带宽 ---
     double maxBwARS = 0.0;
     for (u32 N1 : factors) {
+        // 传输时延 (ms)
+        double latencyIntra;
+        if (N1 == FACTOR_TWO) {
+            latencyIntra = totalSize * MULTIPLIER_S2MS / FACTOR_TWO / bwSIO;
+        } else if ((N1 % FACTOR_TWO == 0) && (N1 > FACTOR_TWO)) {
+            latencyIntra = (N1 - 1) * totalSize * MULTIPLIER_S2MS / N1 / bwHCCS / FACTOR_TWO;
+        } else {
+            latencyIntra = (N1 - 1) * totalSize * MULTIPLIER_S2MS / N1 / bwHCCS;
+        }
         u32 N2 = rankSizeInSuperPod / N1;
         // 静态时延 (ms)
         double interStep = (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_RING) ? (N2 - 1) : log2(N2);
         double latencyStep = (interStep + (N1 - 1)) * latency;
-        // 传输时延 (ms)
-        double latencyIntra;
-        if ((N1 % FACTOR_TWO == 0) && (N1 > FACTOR_TWO)) {
-            latencyIntra = (N1 - 1) * totalSize * MULTIPLIER_S2MS / N1 / bwHCCS / FACTOR_TWO;
-        } else if (N1 == FACTOR_TWO) {
-            latencyIntra = totalSize * MULTIPLIER_S2MS / FACTOR_TWO / bwSIO;
-        } else {
-            latencyIntra = (N1 - 1) * totalSize * MULTIPLIER_S2MS / N1 / bwHCCS;
-        }
         double latencyInter = (N2 - 1) * totalSize * MULTIPLIER_S2MS / N1 / N2 / bwHCCS;
         // HBM 拷贝时延 (ms)
-        double latencyCopy = totalSize * MULTIPLIER_S2MS / bwHBM;
         u8 mul = (opType == HcclCMDType::HCCL_CMD_ALLREDUCE) ? FACTOR_TWO : 1;
+        double latencyCopy = totalSize * MULTIPLIER_S2MS / bwHBM;
         double timeCost = mul * (latencyStep + latencyIntra + latencyInter) + latencyCopy;
-        double bwARS = totalSize / timeCost;  // GB/ms
+        double bwARS = totalSize / timeCost;    // GB/ms
         if (bwARS > maxBwARS) {
-            maxBwARS = bwARS;
             level0RingSize = N1;
+            maxBwARS = bwARS;
         }
     }
-    HCCL_INFO("level0RingSize:[%u], totalSize:[%lf]GB, level0RankSize[%u].", level0RingSize, totalSize, level0RankSize);
+    HCCL_INFO("level0RingSize:[%u], totalSize:[%lf]GB, level0RankSize[%u]. ", level0RingSize, totalSize, level0RankSize);
     return level0RingSize;
 }
 

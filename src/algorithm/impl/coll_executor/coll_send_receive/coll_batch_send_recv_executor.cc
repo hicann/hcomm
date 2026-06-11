@@ -224,26 +224,28 @@ HcclResult CollBatchSendRecvExecutor::RunLoopInHostUnfoldMode(OpParam& param)
         CHK_RET(AlgTemplateBase::ExecEmptyTask(algResResp_->cclInputMem, algResResp_->cclOutputMem, param.stream,
             dispatcher_));
     }
-    bool IsSetNormalMode = false; // 设置过一次就不需要再设置了
+    bool isSetNormalMode = false; // 设置过一次就不需要再设置了
     for (u32 i = 0; i < sendDataSilces_.size(); ++i) {
         SendRecvSlice& slice = sendDataSilces_[i];
         LINK targetLink;
         CHK_RET(GetSendTargetLink(slice.remoteRank, targetLink));
-        if (targetLink->GetTransportType() == TransportType::TRANS_TYPE_DEVICE_DIRECT) {
-            CHK_RET(SetNormalMode(dispatcher_));
-            IsSetNormalMode = true;
-            HCCL_INFO("[CollBatchSendRecvExecutor][RunLoopInHostUnfoldMode]Send Set NormalMode dispatcher");
+        if (TransportType::TRANS_TYPE_DEVICE_DIRECT == targetLink->GetTransportType()) {
+            if (!isSetNormalMode) {
+                CHK_RET(SetNormalMode(dispatcher_));
+                isSetNormalMode = true;
+            }
+            HCCL_INFO("[CollBatchSendRecvExecutor][RunLoopInHostUnfoldMode]Send Set NormalMode true");
             break;
         }
     }
 
-    for (u32 i = 0; i < recvDataSilces_.size() && !IsSetNormalMode; ++i) {
+    for (u32 i = 0; i < recvDataSilces_.size() && !isSetNormalMode; ++i) {
         SendRecvSlice& slice = recvDataSilces_[i];
         LINK targetLink;
         CHK_RET(GetRecvTargetLink(slice.remoteRank, targetLink));
-        if (targetLink->GetTransportType() == TransportType::TRANS_TYPE_DEVICE_DIRECT) {
+        if (TransportType::TRANS_TYPE_DEVICE_DIRECT == targetLink->GetTransportType()) {
             CHK_RET(SetNormalMode(dispatcher_));
-            HCCL_INFO("[CollBatchSendRecvExecutor][RunLoopInHostUnfoldMode]Recv Set NormalMode dispatcher");
+            HCCL_INFO("[CollBatchSendRecvExecutor][RunLoopInHostUnfoldMode]Recv Set NormalMode true");
             break;
         }
     }

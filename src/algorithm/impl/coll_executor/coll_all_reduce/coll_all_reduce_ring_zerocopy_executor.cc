@@ -429,23 +429,22 @@ HcclResult CollAllReduceRingZerocopyExecutor::DoubleRingAllGather(
     u32 ringSize = multRingsSliceZero[0].size();
     std::vector<std::vector<u32>> rankOrders(TWO_RING, std::vector<u32>(ringSize));
     for (u32 i = 0; i < ringSize; i++) {
-        rankOrders[0][i] = i;
         rankOrders[1][i] = (i == 0) ? 0 : (ringSize - i);
+        rankOrders[0][i] = i;
     }
 
     // 执行算法编排
+    HCCL_CONFIG_INFO(HCCL_ALG, "[%s] Run TEMPLATE_ALIGNED_ALL_GATHER_DOUBLE_RING in COMM_LEVEL0", __func__);
     std::unique_ptr<AlgTemplateBase> tempAlg = AlgTemplateRegistry::Instance().GetAlgTemplate(
         TemplateType::TEMPLATE_ALIGNED_ALL_GATHER_DOUBLE_RING, dispatcher_);
-    HCCL_CONFIG_INFO(HCCL_ALG, "[%s] Run TEMPLATE_ALIGNED_ALL_GATHER_DOUBLE_RING in COMM_LEVEL0", __func__);
     CHK_SMART_PTR_NULL(tempAlg);
     CHK_RET(tempAlg->Prepare(opInfo, topoAttr_.userRank, algResResp_->slaveStreams, 
         algResResp_->notifiesMain, algResResp_->notifiesAux, rankOrders, multRingsUserMemSlice));
     CHK_RET(tempAlg->Prepare(outputMem, outputMem, inputMem, count, dataType, stream, multRingsSliceZero,
         HCCL_REDUCE_RESERVED, LEVEL0_BRIDGE_RANK_ID, baseOffset));
-    CHK_RET(tempAlg->RegisterProfiler(
-        ((COMM_INDEX_0 + 1) << PROF_RINGINDEX_OFFSET_OF_PLANEID) +
-        (level0RankSize_ << PROF_RANKSIZE_OFFSET_OF_PLANEID) + level0Rank_,
-        profStage, HCCL_EXEC_STEP_NOT_SET, stream));
+    CHK_RET(tempAlg->RegisterProfiler(((COMM_INDEX_0 + 1) << PROF_RINGINDEX_OFFSET_OF_PLANEID) +
+        (level0RankSize_ << PROF_RANKSIZE_OFFSET_OF_PLANEID) + level0Rank_, profStage,
+        HCCL_EXEC_STEP_NOT_SET, stream));
     CHK_RET(RunTemplate(tempAlg, level0RingCommInfo));
 
     return HCCL_SUCCESS;

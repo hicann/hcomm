@@ -167,8 +167,8 @@ HcclResult CollBatchSendRecvGroupExecutor::CopyLocalDataForARound(Stream& mainSt
         DeviceMem inMem(slice.addr, slice.size);
         u64 offset = bufferSliceSize_ * (slice.remoteRank % sendStreamNum_);
         DeviceMem inCommMem = algResResp_->cclInputMem.range(offset, slice.size);
-        HCCL_INFO("[ProcessSendStreamDataSlice] inMem ptr[%p], size[%llu]", inMem.ptr(), inMem.size());
-        HCCL_INFO("[ProcessSendStreamDataSlice] inCommMem ptr[%p], size[%llu]", inCommMem.ptr(), inCommMem.size());
+        HCCL_INFO("[CopyLocalDataForARound] inMem ptr[%p], size[%llu]", inMem.ptr(), inMem.size());
+        HCCL_INFO("[CopyLocalDataForARound] inCommMem ptr[%p], size[%llu]", inCommMem.ptr(), inCommMem.size());
         CHK_RET(HcclD2DMemcpyAsync(dispatcher_, inCommMem, inMem, mainStream));
     }
     return HCCL_SUCCESS;
@@ -192,12 +192,12 @@ HcclResult CollBatchSendRecvGroupExecutor::RunTasksBig(OpParam& param)
 
         for (u32 i = 0; i < sendStreamNum_; i++){
             if (!sendDataSilcesBySendStream_[i].empty()) {
-                CHK_RET(ProcessSendStreamDataSlice(algResResp_->slaveStreams[i], i, false, false));
+                CHK_RET(ProcessSendStreamDataSlice(algResResp_->slaveStreams[i], false, false, true, i));
             }
         }
         for (u32 i = 0; i < recvStreamNum_; i++){
             if (!recvDataSilcesByRecvStream_[i].empty()) {
-                CHK_RET(ProcessRecvStreamDataSlice(algResResp_->slaveStreams[i + sendStreamNum_], i, false, false));
+                CHK_RET(ProcessRecvStreamDataSlice(algResResp_->slaveStreams[i + sendStreamNum_], false, false, true, i));
             }
         }
         CHK_RET(MainWaitSubPost(param.stream));
@@ -235,20 +235,20 @@ HcclResult CollBatchSendRecvGroupExecutor::RunLoopBig(OpParam& param)
         CHK_RET(AlgTemplateBase::ExecEmptyTask(algResResp_->cclInputMem, algResResp_->cclOutputMem, param.stream,
             dispatcher_));
     }
-    bool IsSetNormalMode = false; // 设置过一次就不需要再设置了
+    bool isSetNormalMode = false; // 设置过一次就不需要再设置了
     for (u32 i = 0; i < sendDataSilces_.size(); ++i) {
         SendRecvSlice& slice = sendDataSilces_[i];
         LINK targetLink;
         CHK_RET(GetSendTargetLink(slice.remoteRank, targetLink));
         if (targetLink->GetTransportType() == TransportType::TRANS_TYPE_DEVICE_DIRECT) {
             CHK_RET(SetNormalMode(dispatcher_));
-            IsSetNormalMode = true;
+            isSetNormalMode = true;
             HCCL_INFO("[CollBatchSendRecvGroupExecutor][RunLoopBig]Send Set NormalMode dispatcher");
             break;
         }
     }
 
-    for (u32 i = 0; i < recvDataSilces_.size() && !IsSetNormalMode; ++i) {
+    for (u32 i = 0; i < recvDataSilces_.size() && !isSetNormalMode; ++i) {
         SendRecvSlice& slice = recvDataSilces_[i];
         LINK targetLink;
         CHK_RET(GetRecvTargetLink(slice.remoteRank, targetLink));
@@ -277,26 +277,28 @@ HcclResult CollBatchSendRecvGroupExecutor::RunLoopSmall(OpParam& param)
         CHK_RET(AlgTemplateBase::ExecEmptyTask(algResResp_->cclInputMem, algResResp_->cclOutputMem, param.stream,
             dispatcher_));
     }
-    bool IsSetNormalMode = false; // 设置过一次就不需要再设置了
+    bool isSetNormalMode = false; // 设置过一次就不需要再设置了
     for (u32 i = 0; i < sendDataSilces_.size(); ++i) {
         SendRecvSlice& slice = sendDataSilces_[i];
         LINK targetLink;
         CHK_RET(GetSendTargetLink(slice.remoteRank, targetLink));
-        if (targetLink->GetTransportType() == TransportType::TRANS_TYPE_DEVICE_DIRECT) {
-            CHK_RET(SetNormalMode(dispatcher_));
-            IsSetNormalMode = true;
-            HCCL_INFO("[CollBatchSendRecvGroupExecutor][RunLoopBig]Send Set NormalMode dispatcher");
+        if (TransportType::TRANS_TYPE_DEVICE_DIRECT == targetLink->GetTransportType()) {
+            if (!isSetNormalMode) {
+                CHK_RET(SetNormalMode(dispatcher_));
+                isSetNormalMode = true;
+            }
+            HCCL_INFO("[CollBatchSendRecvGroupExecutor][RunLoopSmall]Send Set NormalMode true");
             break;
         }
     }
 
-    for (u32 i = 0; i < recvDataSilces_.size() && !IsSetNormalMode; ++i) {
+    for (u32 i = 0; i < recvDataSilces_.size() && !isSetNormalMode; ++i) {
         SendRecvSlice& slice = recvDataSilces_[i];
         LINK targetLink;
         CHK_RET(GetRecvTargetLink(slice.remoteRank, targetLink));
         if (targetLink->GetTransportType() == TransportType::TRANS_TYPE_DEVICE_DIRECT) {
             CHK_RET(SetNormalMode(dispatcher_));
-            HCCL_INFO("[CollBatchSendRecvGroupExecutor][RunLoopBig]Recv Set NormalMode dispatcher");
+            HCCL_INFO("[CollBatchSendRecvGroupExecutor][RunLoopSmall]Recv Set NormalMode dispatcher");
             break;
         }
     }
@@ -446,17 +448,23 @@ HcclResult CollBatchSendRecvGroupExecutor::SubNotifyMain(Stream& stream, u32 str
     return HCCL_SUCCESS;
 }
 
-HcclResult CollBatchSendRecvGroupExecutor::ProcessSendStreamDataSlice(Stream& stream, u32 sendStreamId, bool needStreamSync, 
-    bool retryEnable)
+HcclResult CollBatchSendRecvGroupExecutor::ProcessSendStreamDataSlice(Stream& stream, bool needStreamSync, 
+    bool retryEnable, bool isSendStream, u32 sendStreamId)
 {
-    SendRecvSlice& slice = sendDataSilcesBySendStream_[sendStreamId].front();
-    
+    SendRecvSlice& slice = isSendStream ? sendDataSilcesBySendStream_[sendStreamId].front() : sendDataSilces_.front();
     u64 offset = bufferSliceSize_ * (slice.remoteRank % sendStreamNum_);
     DeviceMem inCommMem = algResResp_->cclInputMem.range(offset, slice.size);
     HCCL_INFO("[ProcessSendStreamDataSlice] inCommMem ptr[%p], size[%llu]", inCommMem.ptr(), inCommMem.size());
-
+    if (!isSendStream) {
+        DeviceMem inMem(slice.addr, slice.size);
+        CHK_RET(HcclD2DMemcpyAsync(dispatcher_, inCommMem, inMem, stream));
+    }
     if (needStreamSync) {
-        CHK_RET(SubNotifyMain(stream, sendStreamId));
+        if (isSendStream) {
+            CHK_RET(SubNotifyMain(stream, sendStreamId));
+        } else {
+            CHK_RET(SubNotifyMain(stream, slice.remoteRank % sendStreamNum_));
+        }
     }
 
     ExecMem execMem;
@@ -469,56 +477,16 @@ HcclResult CollBatchSendRecvGroupExecutor::ProcessSendStreamDataSlice(Stream& st
     return HCCL_SUCCESS;
 }
 
-HcclResult CollBatchSendRecvGroupExecutor::ProcessRecvStreamDataSlice(Stream& stream, u32 recvStreamId, bool needStreamSync, 
-    bool retryEnable)
-{
-    SendRecvSlice& slice = recvDataSilcesByRecvStream_[recvStreamId].front();
-    
-    ExecMem execMem;
-    if (needStreamSync) {
-        CHK_RET(SubNotifyMain(stream, recvStreamId + sendStreamNum_));
-    }
-    LINK targetLink;
-    CHK_RET(GetRecvTargetLink(slice.remoteRank, targetLink));
-    if (topoAttr_.isDiffDeviceType || topoAttr_.superPodNum > 1 || 
-            (topoAttr_.moduleNum > 1 && static_cast<bool>(topoMatcher_->GetExternalInputInterHccsDisable())) ||
-            (topoAttr_.deviceType == DevType::DEV_TYPE_910B && targetLink->GetLinkType() == LinkType::LINK_ROCE)) {
-        u64 offset = bufferSliceSize_ * (slice.remoteRank % recvStreamNum_);
-        execMem.outputMem = algResResp_->cclOutputMem.range(offset, slice.size);
-        HcclResult ret = RecvKernelRun(stream, execMem, slice.remoteRank, retryEnable);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[CollBatchSendRecvGroupExecutor][ProcessRecvStreamDataSlice]errNo[0x%016llx]kernel run error, tag[%s], " \
-            "output_ptr[%p], size[%llu]", HCCL_ERROR_CODE(ret), tag_.c_str(), execMem.outputMem.ptr(),
-            slice.size), ret);
-
-        DeviceMem outMem(slice.addr, slice.size);
-        DeviceMem outCommMem = execMem.outputMem;
-        HCCL_INFO("[ProcessRecvStreamDataSlice] outMem ptr[%p], size[%llu]", outMem.ptr(), outMem.size());
-        HCCL_INFO("[ProcessRecvStreamDataSlice] outCommMem ptr[%p], size[%llu]", outCommMem.ptr(), outCommMem.size());
-        CHK_RET(HcclD2DMemcpyAsync(dispatcher_, outMem, outCommMem, stream));
-    } else {
-        DeviceMem outMem(slice.addr, slice.size);
-        execMem.outputMem = outMem;
-        HCCL_INFO("[ProcessRecvStreamDataSlice] DMA Reduce, outMem ptr[%p], size[%llu]", outMem.ptr(), outMem.size());
-        HcclResult ret = RecvKernelRun(stream, execMem, slice.remoteRank, retryEnable);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[CollBatchSendRecvGroupExecutor][ProcessRecvStreamDataSlice]errNo[0x%016llx]kernel run error, tag[%s], " \
-            "input_ptr[%p], size[%llu]", HCCL_ERROR_CODE(ret), tag_.c_str(), execMem.inputMem.ptr(),
-            slice.size), ret);
-    }
-    return HCCL_SUCCESS;
-}
-
 HcclResult CollBatchSendRecvGroupExecutor::ProcessDataSliceSmall(OpParam& param)
 {
     CHK_RET(MainPostSubWaitSmall(param.stream, algResResp_->slaveStreams[STREAM_INDEX_0]));
     while (!sendDataSilces_.empty() || !recvDataSilces_.empty()) {
         if(!sendDataSilces_.empty()) {
-            CHK_RET(ProcessSendDataSliceSmall(param.stream, false, false));
+            CHK_RET(ProcessSendStreamDataSlice(param.stream, false, false));
             sendDataSilces_.pop_front();
         }
         if(!recvDataSilces_.empty()) {
-            CHK_RET(ProcessRecvDataSliceSmall(algResResp_->slaveStreams[STREAM_INDEX_0], false, false));
+            CHK_RET(ProcessRecvStreamDataSlice(algResResp_->slaveStreams[STREAM_INDEX_0], false, false));
             recvDataSilces_.pop_front();
         }
     }
@@ -544,47 +512,24 @@ HcclResult CollBatchSendRecvGroupExecutor::MainWaitSubPostSmall(Stream& mainStre
     return HCCL_SUCCESS;
 }
 
-HcclResult CollBatchSendRecvGroupExecutor::ProcessSendDataSliceSmall(Stream& stream, bool needStreamSync, bool retryEnable)
+HcclResult CollBatchSendRecvGroupExecutor::ProcessRecvStreamDataSlice(Stream& stream, bool needStreamSync, bool retryEnable, bool isRecvStream, u32 recvStreamId)
 {
-    SendRecvSlice& slice = sendDataSilces_.front();
-    
-    DeviceMem inMem(slice.addr, slice.size);
-    u32 sendStreamId = slice.remoteRank % sendStreamNum_;
-    u64 offset = bufferSliceSize_ * sendStreamId;
-    DeviceMem inCommMem = algResResp_->cclInputMem.range(offset, slice.size);
-    HCCL_INFO("[ProcessSendStreamDataSlice] inMem ptr[%p], size[%llu]", inMem.ptr(), inMem.size());
-    HCCL_INFO("[ProcessSendStreamDataSlice] inCommMem ptr[%p], size[%llu]", inCommMem.ptr(), inCommMem.size());
-    CHK_RET(HcclD2DMemcpyAsync(dispatcher_, inCommMem, inMem, stream));
-
-    if (needStreamSync) {
-        CHK_RET(SubNotifyMain(stream, sendStreamId));
-    }
-
-    ExecMem execMem;
-    execMem.inputMem = inCommMem;
-    HcclResult ret = SendKernelRun(stream, execMem, slice.remoteRank, retryEnable);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[CollBatchSendRecvGroupExecutor][ProcessSendStreamDataSlice]errNo[0x%016llx]kernel run error, tag[%s], " \
-        "input_ptr[%p], size[%llu]", HCCL_ERROR_CODE(ret), tag_.c_str(), execMem.inputMem.ptr(),
-        slice.size), ret);
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollBatchSendRecvGroupExecutor::ProcessRecvDataSliceSmall(Stream& stream, bool needStreamSync, bool retryEnable)
-{
-    SendRecvSlice& slice = recvDataSilces_.front();
-    u32 recvStreamId = slice.remoteRank % recvStreamNum_;
+    SendRecvSlice& slice = isRecvStream ? recvDataSilcesByRecvStream_[recvStreamId].front() :recvDataSilces_.front();
     
     ExecMem execMem;
     if (needStreamSync) {
-        CHK_RET(SubNotifyMain(stream, recvStreamId + sendStreamNum_));
+        if (isRecvStream) {
+            CHK_RET(SubNotifyMain(stream, recvStreamId + sendStreamNum_));
+        } else {
+            CHK_RET(SubNotifyMain(stream, slice.remoteRank % recvStreamNum_ + sendStreamNum_));
+        }
     }
     LINK targetLink;
     CHK_RET(GetRecvTargetLink(slice.remoteRank, targetLink));
     if (topoAttr_.isDiffDeviceType || topoAttr_.superPodNum > 1 || 
             (topoAttr_.moduleNum > 1 && static_cast<bool>(topoMatcher_->GetExternalInputInterHccsDisable())) ||
             (topoAttr_.deviceType == DevType::DEV_TYPE_910B && targetLink->GetLinkType() == LinkType::LINK_ROCE)) {
-        u64 offset = bufferSliceSize_ * recvStreamId;
+        u64 offset = bufferSliceSize_ * (slice.remoteRank % recvStreamNum_);
         execMem.outputMem = algResResp_->cclOutputMem.range(offset, slice.size);
         HcclResult ret = RecvKernelRun(stream, execMem, slice.remoteRank, retryEnable);
         CHK_PRT_RET(ret != HCCL_SUCCESS,

@@ -1911,8 +1911,8 @@ std::vector<std::vector<Slice> > CollCommExecutor::AnyPathPrepareMultiRingSlice(
     std::vector<Slice> singleRingSlices;
     std::vector<u32> rankList;
 
-    ringRankList.reserve(ringCount);
     singleRingSlices.reserve(ringRanks);
+    ringRankList.reserve(ringCount);
     rankList.reserve(ringRanks);
 
     for (u32 ringIndex = 0; ringIndex < ringCount; ringIndex++) {
@@ -1920,20 +1920,19 @@ std::vector<std::vector<Slice> > CollCommExecutor::AnyPathPrepareMultiRingSlice(
             u32 deviceIdx = multiRingsOrder[ringIndex][segsIndex];
             std::vector<u32>::iterator iterRank = std::find(nicList.begin(), nicList.end(), deviceIdx);
             if (iterRank != nicList.end()) {
-                rankList.push_back(segsIndex);
                 u32 nicPosition = distance(nicList.begin(), iterRank);
                 for (u32 chunkIdx = 0; chunkIdx < chunkSize; chunkIdx++) {
                     Slice tempSlice = mutliSegsSlices[nicPosition * chunkSize + chunkIdx][ringIndex];
                     singleRingSlices.push_back(tempSlice);
                 }
+                rankList.push_back(segsIndex);
             }
         }
         mutliRingsSlices.push_back(singleRingSlices);
-        ringRankList.push_back(rankList);
         singleRingSlices.clear();
+        ringRankList.push_back(rankList);
         rankList.clear();
     }
-
     ret = SetRingNics(tag, ringRankList);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[Prepare][MultiRingSlice]set nics in ring failed, ret[%u]", ret);

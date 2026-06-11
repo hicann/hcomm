@@ -25,10 +25,8 @@ protected:
     /* *************** 算法编排 *************** */
     u64 CalcSendLoopMaxCount(const u32 unitSize) const;
     u64 CalcRecvLoopMaxCount(const u32 unitSize) const;
-    HcclResult ProcessSendStreamDataSlice(Stream& stream, u32 sendStreamId, bool needStreamSync, bool retryEnable);
-    HcclResult ProcessRecvStreamDataSlice(Stream& stream, u32 recvStreamId, bool needStreamSync, bool retryEnable);
-    HcclResult ProcessSendDataSliceSmall(Stream& stream, bool needStreamSync, bool retryEnable);
-    HcclResult ProcessRecvDataSliceSmall(Stream& stream, bool needStreamSync, bool retryEnable);
+    HcclResult ProcessSendStreamDataSlice(Stream& stream, bool needStreamSync, bool retryEnable, bool isSendStream = false, u32 sendStreamId = 0);
+    HcclResult ProcessRecvStreamDataSlice(Stream& stream, bool needStreamSync, bool retryEnable, bool isRecvStream = false, u32 recvStreamId = 0);
     HcclResult ProcessDataSliceSmall(OpParam& param);
     HcclResult CalcSendSlices();
     HcclResult CalcRecvSlices();

@@ -339,43 +339,43 @@ HcclResult ReduceScatterMultiDeterPipeline::Prepare(HcomCollOpInfo *opInfo, Devi
     const SubCommInfo &level1CommInfo, Stream &mainStream, std::vector<Stream> &subStream,
     std::vector<std::shared_ptr<LocalNotify>> &notifyMain, std::vector<std::shared_ptr<LocalNotify>> &notifySub)
 {
-    // opInfo
-    opInfo_ = opInfo;
-    dataType_ = opInfo_->dataType;
-    unitSize_ = SIZE_TABLE[opInfo_->dataType];
-    memSliceSize_ = opInfo_->count * unitSize_; // 一整块rank的内存大小
-    usrInMemPtr_ = opInfo_->inputAddr;
-    usrOutMemPtr_ = opInfo_->outputAddr;
-    reductionOp_ = opInfo_->reduceOp;
-
     // stream
     mainStream_ = mainStream;
     subStreams_ = subStream;
     subStreamNum_ = subStreams_.size();
     CHK_RET(PrepareTopoInfo(level0CommInfo, level1CommInfo));
     all2allStreamBegin_ = 0;
-    all2allStreamSize_ = intraRankSize_ - 1;  // alltoall 从流只需要 intraRankSize_ - 1条
     reduceMainStreamIdx_ = intraRankSize_ - 1;
-    reduceStreamBegin_ = intraRankSize_ - 1;
+    reduceStreamBegin_ = intraRankSize_ - 1;  
+    all2allStreamSize_ = intraRankSize_ - 1;  //  alltoall从流只需要 intraRankSize_ - 1条
     reduceStreamSize_ = MAX_REDUCE_STREAM_NUM; // reduce 从流只需要MAX_REDUCE_STREAM_NUM条
     HCCL_INFO("[%s] stream: all2allStreamBegin[%u], size[%u], reduceStreamBegin[%u], size[%u], reduceMainStreamIdx[%u]",
         __func__, all2allStreamBegin_, all2allStreamSize_, reduceStreamBegin_, reduceStreamSize_, reduceMainStreamIdx_);
 
+    // opInfo
+    opInfo_ = opInfo;
+    reductionOp_ = opInfo_->reduceOp;
+    usrInMemPtr_ = opInfo_->inputAddr;
+    usrOutMemPtr_ = opInfo_->outputAddr;
+    dataType_ = opInfo_->dataType;
+    unitSize_ = SIZE_TABLE[opInfo_->dataType];
+    memSliceSize_ = opInfo_->count * unitSize_; // 整块rank的内存大小
+
     // streamNotify, size: n
-    streamNotifyMain_ = notifyMain;
-    if (streamNotifyMain_.size() < intraRankSize_) {
-        HCCL_ERROR("[%s] rank[%u] streamNotifyMain_ size [%u] error, is smaller than intraRankSize[%u]",
-            __func__, userRank_, streamNotifyMain_.size(), intraRankSize_);
-        return HCCL_E_INTERNAL;
-    }
     streamNotifySub_ = notifySub;
     if (streamNotifySub_.size() < intraRankSize_) {
         HCCL_ERROR("[%s] rank[%u] streamNotifySub_ size [%u] error, is smaller than intraRankSize[%u]",
             __func__, userRank_, streamNotifySub_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
     }
-    HCCL_INFO("[%s] notify: streamNum[%u], streamNotifyMainNum[%u], streamNotifySubNum[%u]", __func__,
-        subStreams_.size(), streamNotifyMain_.size(), streamNotifySub_.size());
+    streamNotifyMain_ = notifyMain;
+    if (streamNotifyMain_.size() < intraRankSize_) {
+        HCCL_ERROR("[%s] rank[%u] streamNotifyMain_ size [%u] error, is smaller than intraRankSize[%u]",
+            __func__, userRank_, streamNotifyMain_.size(), intraRankSize_);
+        return HCCL_E_INTERNAL;
+    }
+    HCCL_INFO("[%s] notify: streamNum[%u], streamNotifySubNum[%u], streamNotifyMainNum[%u]", __func__,
+        subStreams_.size(), streamNotifySub_.size(), streamNotifyMain_.size());
 
     // 此次reduce scatter数据信息
     cclBuffer_ = cclBuffer;
