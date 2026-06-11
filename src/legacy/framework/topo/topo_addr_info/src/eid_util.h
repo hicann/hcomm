@@ -18,15 +18,8 @@ extern "C" {
 
 /**
  * 用于获取EID中的信息
- * EID是一个128bit的应用层地址
- * EID的格式说明:
- * |127:92|91:   78|77|76:74|73:      69|68:53|52   |51:32|31:0|
- * |无效  |超节点ID|  |无效 |UBEntity ID|无效 |固定1|无效 |CNA |
- * UBEntity ID 定义了本UBEntity的用途
- * CNA用于路由
- * CNA的格式定义如下
- * |31:   12|11   |10:            8|7      |6:   3|2:   0|
- * |固定前缀|固定0|subserverid(0-7)|iodie号|端口号|NPU ID|
+ * EID是一个128bit的应用层地址, EID的编址规则中包含了物理端口ID、iodie ID、UBEntity ID等信息
+ * 本文件中的相关函数为解析EID使用
  */
 
 /**
@@ -40,14 +33,35 @@ int EidGetFeId(const char *eid_str);
 int EidGetPortId(const char *eid_str, int* port_id);
 int EidGetDieId(const char *eid_str, int* die_id);
 
-int UrmaEidGetFeId(dcmi_urma_eid_t *eid);
-int UrmaEidGetPortId(dcmi_urma_eid_t *eid);
-int UrmaEidGetDieId(dcmi_urma_eid_t *eid);
 
+//标卡
+int UrmaEidGetDieIdForCard(dcmi_urma_eid_t *eid);
+int UrmaEidGetPortIdForCard(dcmi_urma_eid_t *eid);
+
+
+//服务器和PoD
+int UrmaEidGetFeId(const dcmi_urma_eid_t *eid);
+int UrmaEidGetPortId(const dcmi_urma_eid_t *eid);
+int UrmaEidGetDieId(const dcmi_urma_eid_t *eid);
 /**
- * 获取低6bit表示的逻辑端口号
+ * 判断是否为portgroup
+ * 判断依据:portID为0x3F时，为portgroup
+ * @param eid URMA eid结构体指针
+ * @return int 1为portgroup，0 不是portgroup
  */
-int UrmaEidGetLowBitPort(dcmi_urma_eid_t *eid);
+int UrmaEidIsPortGroup(const dcmi_urma_eid_t *eid);
+
+int UrmaEidIsUBOE(const dcmi_urma_eid_t *eid);
+
+int UrmaEidIsUBG(const dcmi_urma_eid_t *eid);
+/**
+ * 从EID中解析出CNA地址, 
+ * @param eid URMA eid结构体指针
+ * @param ip CNA以IP地址的方式表达
+ * @param ip_len CNA地址字符串长度
+ * @return int 0成功，-1失败
+ */
+int UrmaEid2CNA(const dcmi_urma_eid_t *eid, char *cna, size_t cnaSize);
 
 /**
  * 获取FE ID, FE是UB中的功能实体, 在EID编址规则中，讲FE ID编在了EID中
@@ -57,17 +71,21 @@ int EidGetFeId(const char *eidhexstr);
 /**
  * 根据EID编址规范，FE最大的是mesh链接使用
  */
-int GetMaxFeId(dcmi_urma_eid_info_t *eidList, size_t eid_cnt);
+int GetMaxFeId(const dcmi_urma_eid_info_t *eidList, size_t eid_cnt);
 
-int UBEntityGetId(UBEntity *ue);
+/**
+ * 获取UBEntity ID
+ */
+int UBEntityGetId(const UBEntity *ue);
 
-int UBEntityGetServerPortGroupIdx(UBEntity *ue);
+/**
+ * 获取UBEntity的die ID, 一个UBEntity只属于一个iodie
+ */
+int UBEntityGetDieId(const UBEntity *ue);
 
-int UrmaEidGetServerDieId(dcmi_urma_eid_t *eid);
+int UBEntityGetPortGroupIdx(const UBEntity *ue);
 
-int UrmaEidGetPodDieId(dcmi_urma_eid_t *eid);
-
-int UBGetMaxEntityId(UEList *ueList);
+int UBGetMaxEntityId(const UEList *ueList, int dieId);
 
 #ifdef __cplusplus
 }

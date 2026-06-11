@@ -73,16 +73,16 @@ static const UBEntityRule g_ubrules[] = {
 static int ProcessLayerMesh(int npu_id, NetLayer *layer, UEList *ueList, struct dcmi_spod_info *spod_info)
 {
     char net_instance_id[MAX_INSTANCE_ID_LEN] = {0};
-    sprintf_s(net_instance_id, sizeof(net_instance_id), "sp%ld_chassis%ld", spod_info->super_pod_id, spod_info->chassis_id);
+    sprintf_s(net_instance_id, sizeof(net_instance_id), "sp%ld_srv%ld", spod_info->super_pod_id, spod_info->server_index);
     NetLayerInit(layer, PRODUCT_MESH_LEVEL, net_instance_id);
     NetLayerSetNetType(layer, NET_TYPE_MESH);
 
-
-    int meshEntityId = UBGetMaxEntityId(ueList);
-    const unsigned minMeshEidNum = 7;
+    const int meshDieId = npu_id % 8 < 4 ? 0 : 1;
+    int meshEntityId = UBGetMaxEntityId(ueList, meshDieId);
     for (unsigned int i = 0; i < ueList->ueNum; i++) {
         int fe = UBEntityGetId(&ueList->ueList[i]);
-        if (fe != meshEntityId || ueList->ueList[i].eidNum < minMeshEidNum) {
+        int dieId = UBEntityGetDieId(&ueList->ueList[i]);
+        if (fe != meshEntityId || dieId != meshDieId) {
             continue;
         }
         for (unsigned int j = 0; j < ueList->ueList[i].eidNum; ++j) {
@@ -93,9 +93,9 @@ static int ProcessLayerMesh(int npu_id, NetLayer *layer, UEList *ueList, struct 
             Addr addr;
             memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
             AddrSetEID(&addr, &ueList->ueList[i].eidList[j].eid);
+            int portId = UrmaEidGetPortId(&ueList->ueList[i].eidList[j].eid);
             char port[MAX_PORT_LEN] = {0};
-            // topo中端口从0开始编，CNA中需要规避全0，从1开始
-            sprintf_s(port, MAX_PORT_LEN, "%d/%d", (npu_id % 8) < 4 ? 0 : 1, phyPortId < 2 ? (phyPortId - 1) : (phyPortId + 2));
+            sprintf_s(port, MAX_PORT_LEN, "%d/%d", dieId, portId);
             AddrAddPort(&addr, port);
             AddrSetPlaneId(&addr, "plane_0");
             NetLayerAddAddr(layer, &addr);
@@ -148,8 +148,8 @@ static int ProcessLayerClos(int npu_id, unsigned int mainBoardId, NetLayer *laye
 
     for (unsigned int i = 0; i < ueList->ueNum; ++i) {
         int fe = UBEntityGetId(&ueList->ueList[i]);
-        int portGroupIdx = UBEntityGetServerPortGroupIdx(&ueList->ueList[i]);
-        int die = UrmaEidGetPodDieId(&ueList->ueList[i].eidList[portGroupIdx].eid);
+        int portGroupIdx = UBEntityGetPortGroupIdx(&ueList->ueList[i]);
+        int die = UrmaEidGetDieId(&ueList->ueList[i].eidList[portGroupIdx].eid);
         if (portGroupIdx < 0) {
             continue;
         }
@@ -161,17 +161,25 @@ static int ProcessLayerClos(int npu_id, unsigned int mainBoardId, NetLayer *laye
         memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
         AddrSetEID(&addr, &ueList->ueList[i].eidList[portGroupIdx].eid);
 
-        for (int j = 0; j < rule->portNum; ++j) {
+        int portNum = 0;
+        for (unsigned int j = 0; j < ueList->ueList[i].eidNum; ++j) {
+            if (UrmaEidIsPortGroup(&ueList->ueList[i].eidList[j].eid)) {
+                continue;
+            }
+            int portId = UrmaEidGetPortId(&ueList->ueList[i].eidList[j].eid);
             char port[MAX_PORT_LEN] = {0};
-            sprintf_s(port, MAX_PORT_LEN, "%d/%d", die, rule->ports[j]);
+            sprintf_s(port, MAX_PORT_LEN, "%d/%d", die, portId);
             AddrAddPort(&addr, port);
+            portNum++;
         }
-        AddrSetPlaneId(&addr, rule->planeId);
-        // CCU需使用相同的6口建联，需要吧6口的portgroup排在前面
+
+        // CCU需使用相同的6口建联，需要把6口的portgroup排在前面
         const int primaryPortNum = 6;
-        if (rule->portNum >= primaryPortNum) {
+        if (portNum >= primaryPortNum) {
+            AddrSetPlaneId(&addr, "plane_0");
             NetLayerSetAddrAt(layer, &addr, 0);
         } else {
+            AddrSetPlaneId(&addr, "plane_1");
             NetLayerSetAddrAt(layer, &addr, 1);
         }
     }

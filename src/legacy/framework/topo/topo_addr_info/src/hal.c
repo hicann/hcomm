@@ -327,8 +327,10 @@ int hal_get_driver_install_path(char *value_buf, size_t buf_size) {
     // 打开文件
     fp = fopen("/etc/ascend_install.info", "r");
     if (fp == NULL) {
-        perror("Failed to open file /etc/ascend_install.info");
-        return -1;
+        if (strcpy_s(value_buf, buf_size, DRIVER_DRFAULT_INSTALL_PATH) != 0) {
+            return -1;
+        }
+        return 0;
     }
 
     // 逐行读取文件
