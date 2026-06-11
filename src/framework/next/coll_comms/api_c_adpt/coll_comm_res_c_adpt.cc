@@ -367,7 +367,15 @@ HcclResult HcclCcuKernelRegister(HcclComm comm,
     CcuKernelHandle newHandle{0};
     // 当前注册内部流程可能抛异常
     EXCEPTION_HANDLE_BEGIN
-    CHK_RET(kernelMgr.Register(std::move(kernel), *resPack, newHandle));
+    HcclResult ret = kernelMgr.Register(std::move(kernel), *resPack, newHandle);
+    if (ret == HcclResult::HCCL_E_UNAVAIL) {
+        // ccu资源不足导致的情况下会回退aicpu执行，业务流程不终止不打印error日志，仅打印warning
+        HCCL_WARNING("[%s]kernel Register failed, resource not enough[%d]", __func__, ret);
+        return ret;
+    } else if (ret != HcclResult::HCCL_SUCCESS) {
+        HCCL_ERROR("[%s]call trace: hcclRet -> %d", __func__, ret);
+        return ret;
+    }
     EXCEPTION_HANDLE_END
     CHK_RET(ccuContainer->SaveCcuKernel(newHandle));
     *kernelHandle = newHandle;

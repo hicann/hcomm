@@ -682,7 +682,7 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
         CHK_RET(BatchConnectChannels(channelDescs, hostChannelHandleList, channelNum));
         auto end = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        HCCL_RUN_INFO("[MyRank][CreateChannels] CreateChannels Time Elapsed [%llu], channelNum [%u]", duration, channelNum);
+        HCCL_RUN_INFO("[MyRank][CreateChannels] CreateChannels Time Elapsed [%llu]us, channelNum [%u]", duration, channelNum);
     }
 
     // 借用hcommDescs.socket，完成一致性校验必要的数据交换

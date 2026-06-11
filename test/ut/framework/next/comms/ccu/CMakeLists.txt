@@ -14,6 +14,7 @@ set(src_to_test_list
     ut_CcuComponent_test.cc
     ut_CcuConn_test.cc
     ut_ccu_microcode.cc
+    ut_ccu_mgr_test.cc
     ./ccu_representation/interface/ut_ccu_interface_assist.cc
     ./ccu_device/ut_ccu_res_batch_allocator.cc
     ./ccu_device/ccu_comp/ccu_channel/ccu_pfe/ut_ccu_pfe_cfg_mgr.cc
