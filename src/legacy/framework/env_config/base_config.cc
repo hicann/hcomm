@@ -44,17 +44,17 @@ void EnvHostNicConfig::Parse()
     hcclHostSocketPortRange.Parse();
     std::ostringstream hosrPortRangeOss;
     for (auto range : GetHostSocketPortRange()) {
-        hosrPortRangeOss << "[" << range.min << ", " << range.max << "] ";
+        hosrPortRangeOss << "[" << range.min << ", " << range.max << "]";
     }
-    HCCL_RUN_INFO("[HCCL_ENV] HCCL_HOST_SOCKET_PORT_RANGE set by %s to [%s]", hcclHostSocketPortRange.GetSource(),
+    HCCL_RUN_INFO("[HCCL_ENV] HCCL_HOST_SOCKET_PORT_RANGE set by %s to %s", hcclHostSocketPortRange.GetSource(),
         hosrPortRangeOss.str().c_str());
 
     hcclDeviceSocketPortRange.Parse();
     std::ostringstream devicePortRangeOss;
     for (auto range : GetDeviceSocketPortRange()) {
-        devicePortRangeOss << "[" << range.min << ", " << range.max << "] ";
+        devicePortRangeOss << "[" << range.min << ", " << range.max << "]";
     }
-    HCCL_RUN_INFO("[HCCL_ENV] HCCL_NPU_SOCKET_PORT_RANGE set by %s to [%s]", hcclDeviceSocketPortRange.GetSource(),
+    HCCL_RUN_INFO("[HCCL_ENV] HCCL_NPU_SOCKET_PORT_RANGE set by %s to %s", hcclDeviceSocketPortRange.GetSource(),
         devicePortRangeOss.str().c_str());
 }
 
@@ -169,7 +169,7 @@ void EnvRdmaConfig::Parse()
         GetRdmaQueueNum());
 
     multiQpThreshold.Parse();
-    HCCL_RUN_INFO("[HCCL_ENV] HCCL_MULTI_QP_THRESHOLD set by %s to [%u B]", multiQpThreshold.GetSource(),
+    HCCL_RUN_INFO("[HCCL_ENV] HCCL_MULTI_QP_THRESHOLD set by %s to [%u]B", multiQpThreshold.GetSource(),
         GetRdmaMultiQpThreshold());
 }
 
@@ -236,7 +236,7 @@ void EnvAlgoConfig::Parse()
         hcclAlgoConfigOss.str().c_str());
 
     bufferSize.Parse();
-    HCCL_RUN_INFO("[HCCL_ENV] HCCL_BUFFSIZE set by %s to [%llu]", bufferSize.GetSource(),
+    HCCL_RUN_INFO("[HCCL_ENV] HCCL_BUFFSIZE set by %s to [%llu]B", bufferSize.GetSource(),
         GetBuffSize());
 
     hcclAccelerator_.Parse();
