@@ -19,12 +19,12 @@ public:
                        uint16_t mask);
     bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
-    uint32_t    GetMask() { return mask; }
-    uint32_t    GetRmtXnId() { return rmtXnId; }
-    uint32_t    GetRmtCkeId() { return rmtCkeId; }
-    uint16_t    GetParamIndex() { return paramIndex; }
+    uint32_t    GetMask() const { return mask; }
+    uint32_t    GetRmtXnId() const { return rmtXnId; }
+    uint32_t    GetRmtCkeId() const { return rmtCkeId; }
+    uint16_t    GetParamIndex() const { return paramIndex; }
     Variable    GetParam() { return param; }
-    uint32_t    GetChannelId() { return channelId; }
+    uint32_t    GetChannelId() const { return channelId; }
 
 private:
     Variable                      param;

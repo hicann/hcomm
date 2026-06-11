@@ -487,9 +487,6 @@ HcclResult HcclGetDpuSteamIdV2(HcclComm comm, u32 &dpuStreamId) {
     return HCCL_SUCCESS;
 }
 
-
-
-
 HcclResult HcclTaskUnRegisterV2(HcclComm comm, const char *msgTag)
 {
     HCCL_RUN_INFO("[HcclTaskUnRegisterV2] start to unregister task, g_taskServiceMap.size()==%zu", g_taskServiceMap.size());

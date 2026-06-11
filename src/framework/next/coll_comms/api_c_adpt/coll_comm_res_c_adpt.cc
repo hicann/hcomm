@@ -482,7 +482,7 @@ HcclResult HcclReportCcuProfilingInfo(const ThreadHandle threadHandle, uint64_t 
     taskParam.taskPara.Ccu.missionId = profilingArray[0].missionId;
     taskParam.taskPara.Ccu.execMissionId = profilingArray[0].missionId;
     taskParam.taskPara.Ccu.instrId   = profilingArray[0].instrId;
-    taskParam.taskPara.Ccu.executeId = execId; // TODO: 传入是kernelHandle，不建议赋值给executeId
+    taskParam.taskPara.Ccu.executeId = execId;
     taskParam.taskPara.Ccu.ccuKernelHandle = execId;
     taskParam.isMaster = isMaster;
     HCCL_INFO("[%s]dieId[%u], missionId[%u], execMissionId[%u], instrId[%u], executeId[%u], ccuKernelHandle[%u]",

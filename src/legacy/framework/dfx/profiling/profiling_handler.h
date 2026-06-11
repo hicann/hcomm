@@ -187,7 +187,7 @@ private:
     void GetProfCommonInfo(const TaskInfo &taskInfo, HCCLReportData &hcclReportData) const;
     void GetProfTaskSpecificInfo(const TaskInfo &taskInfo, HCCLReportData &hcclReportData) const;
     void GetDpuProfInfo(const TaskInfo &taskInfo, HCCLReportData &hcclReportData) const;
-    void CallAdditionInfo(HCCLReportData &hcclReportData, void *data, u32 len, ProfTaskType taskType) const;
+    void CallAdditionInfo(HCCLReportData &hcclReportData, void *data, u32 len, ProfTaskType type) const;
 
     void ReportCcuInfo(const TaskInfo &taskInfo) const;
     void GetCcuTaskInfo(const TaskInfo &taskInfo, const CcuProfilingInfo &info) const;

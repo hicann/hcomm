@@ -54,7 +54,7 @@ public:
     static HcclResult ChannelDestroy(const ChannelHandle *channels, uint32_t channelNum, aclrtBinHandle binHandle = nullptr);
     static HcclResult ChannelGet(const ChannelHandle channelHandle, void **channel);
 
-    static HcclResult ChannelClean(const ChannelHandle *channelList, uint32_t channelNum);
+    static HcclResult ChannelClean(const ChannelHandle *channelList, uint32_t listNum);
     static HcclResult ChannelResume(const ChannelHandle *channelList, uint32_t channelNum);
     static HcclResult ChannelUpdateKernelLaunch(ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, 
         uint32_t listNum, const std::string &commTag, aclrtBinHandle binHandle);

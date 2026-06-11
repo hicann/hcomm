@@ -43,7 +43,7 @@ AicpuTsUboeChannel::~AicpuTsUboeChannel()
 }
 
 HcclResult AicpuTsUboeChannel::Makebufs(HcommMemHandle *memHandles, uint32_t memHandleNum,
-    std::vector<std::shared_ptr<Hccl::Buffer>> &bufs)
+    std::vector<std::shared_ptr<Hccl::Buffer>> &bufs) const
 {
     bufs.clear();
     for (uint32_t i = 0; i < memHandleNum; ++i) {
@@ -156,7 +156,7 @@ HcclResult AicpuTsUboeChannel::BuildNotify()
 }
 
 HcclResult AicpuTsUboeChannel::FillTagVec(std::vector<Hccl::LocalRmaBuffer *> &bufferVec,
-    std::vector<std::array<char, HCCL_RES_TAG_MAX_LEN>> &localUserMemTag)
+    std::vector<std::array<char, HCCL_RES_TAG_MAX_LEN>> &localUserMemTag) const
 {
     uint64_t bufferNum = bufferVec.size();
     if (bufferNum == 0) {
@@ -406,7 +406,7 @@ void AicpuTsUboeChannel::NotifyVecPack(Hccl::BinaryStream &binaryStream)
 }
 
 void AicpuTsUboeChannel::BufferVecPack(Hccl::BinaryStream &binaryStream, std::vector<Hccl::LocalRmaBuffer *> &bufferVec,
-    std::vector<std::array<char, HCCL_RES_TAG_MAX_LEN>> &tagVec)
+    std::vector<std::array<char, HCCL_RES_TAG_MAX_LEN>> &tagVec) const
 {
     binaryStream << static_cast<u32>(bufferVec.size());
     u32 pos = 0;

@@ -25,10 +25,10 @@ namespace hcomm {
 using RdmaHandle = void*;
 
 using GetCcuCqeErrInfoCallBackHcomm = void (*)(u32 RemoteLocalId, u32 locDeviceId, uint16_t status, std::string LocalEid, std::string RemoteEid, std::string RemoteInsId); // 获取远端rankId的回调函数类型
-void RegisterGetCcuCqeErrInfoCallBackHcomm(GetCcuCqeErrInfoCallBackHcomm); // 注册获取远端rankId的回调函数
+void RegisterGetCcuCqeErrInfoCallBackHcomm(GetCcuCqeErrInfoCallBackHcomm p1); // 注册获取远端rankId的回调函数
 
 using CcuGetErrStatusVecCallBack = std::vector<std::string> (*)(s32 deviceLogicID);
-void RegisterCcuGetErrStatusVecCallBack(CcuGetErrStatusVecCallBack);
+void RegisterCcuGetErrStatusVecCallBack(CcuGetErrStatusVecCallBack p1);
 
 class CcuTaskException {
 public:
@@ -116,7 +116,7 @@ private:
     static void GetCcuCqeErrorInfo(const CcuErrorInfo &ccuErrorInfo, const Hccl::TaskInfo &taskInfo, u32 locDeviceId, uint8_t missionStatus);
     static void GetCcuCqeErrRemoteLocalIdByRankId(hccl::CollComm* collComm, uint32_t rankid, u32 &remoteLocalId);
     static void GetCcuCqeErrNetInstanceByRankId(hccl::CollComm* collComm, uint32_t rankid, std::string &netInstanceId);
-    static void ClusterMoniterGetCcuCqeErrInfo(u32 RemoteDeviceId, u32 locDeviceId, uint16_t status, std::string LocalEid, std::string RemoteEid, std::string RemoteInsId);
+    static void ClusterMoniterGetCcuCqeErrInfo(u32 RemoteLocalId, u32 locDeviceId, uint16_t status, std::string LocalEid, std::string RemoteEid, std::string RemoteInsId);
 };
 } // namespace hcomm
 

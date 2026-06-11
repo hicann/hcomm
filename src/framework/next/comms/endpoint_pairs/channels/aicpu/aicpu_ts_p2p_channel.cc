@@ -34,7 +34,7 @@ AicpuTsP2pChannel::~AicpuTsP2pChannel()
 }
 
 HcclResult AicpuTsP2pChannel::Makebufs(HcommMemHandle *memHandles, uint32_t memHandleNum,
-    std::vector<std::shared_ptr<Hccl::Buffer>> &bufs)
+    std::vector<std::shared_ptr<Hccl::Buffer>> &bufs) const
 {
     bufs.clear();
     for (uint32_t i = 0; i < memHandleNum; ++i) {
@@ -171,7 +171,7 @@ HcclResult AicpuTsP2pChannel::BuildSocket()
 
     Hccl::IpAddress ipaddr{};
     CHK_RET(CommAddrToIpAddress(localEp_.commAddr, ipaddr));
-    Hccl::DevNetPortType type = Hccl::DevNetPortType(Hccl::ConnectProtoType::PCIE); // TODO PROTOTYPE P2P?
+    Hccl::DevNetPortType type = Hccl::DevNetPortType(Hccl::ConnectProtoType::PCIE);
     Hccl::PortData localPort = Hccl::PortData(static_cast<Hccl::RankId>(localEp_.loc.device.devPhyId), type, 0, ipaddr);
     Hccl::SocketHandle socketHandle = Hccl::SocketHandleManager::GetInstance().Create(localEp_.loc.device.devPhyId, localPort);
     EXECEPTION_CATCH(serverSocket_ = std::make_unique<Hccl::Socket>(socketHandle, ipaddr, 60001,
@@ -228,7 +228,7 @@ ChannelStatus AicpuTsP2pChannel::GetStatus()
     return out;
 }
 
-HcclResult AicpuTsP2pChannel::SetModuleDataName(Hccl::ModuleData &module, const std::string &name)
+HcclResult AicpuTsP2pChannel::SetModuleDataName(Hccl::ModuleData &module, const std::string &name) const
 {
     int ret = strcpy_s(module.name, sizeof(module.name), name.c_str());
     if (ret != 0) {

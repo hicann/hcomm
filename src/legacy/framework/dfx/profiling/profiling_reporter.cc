@@ -71,7 +71,7 @@ void ProfilingReporter::ReportCallBackAllTasks(bool cachedReq)
     ReportAllTasks(cachedReq);
 }
 
-void ProfilingReporter::ReportAllTasks(bool cachedReq)
+void ProfilingReporter::ReportAllTasks(bool cachedReq) const
 {
     HCCL_INFO("[ProfilingReporter]ProfilingReporter ReportAllTasks start.");
     std::lock_guard<std::mutex> lock(mirrorTaskMgr_->GetTaskMutex());

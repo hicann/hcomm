@@ -17,9 +17,9 @@ public:
     CcuRepRemPostSem(const ChannelHandle channel, uint16_t semIndex, uint16_t mask);
     bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
-    uint32_t    GetMask() { return mask; }
+    uint32_t    GetMask() const { return mask; }
     uint32_t    GetId() { return signalId; }
-    uint32_t    GetChannelId() { return channelId; }
+    uint32_t    GetChannelId() const { return channelId; }
 
 private:
     ChannelHandle channel;

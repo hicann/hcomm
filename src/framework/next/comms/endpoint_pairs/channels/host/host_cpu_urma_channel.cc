@@ -276,7 +276,7 @@ HcclResult HostCpuUrmaChannel::GetLocSeg(const void *addr, const size_t size, u6
     return HCCL_SUCCESS;
 }
 
-HcclResult HostCpuUrmaChannel::GetSplitNum(uint64_t len, uint64_t maxJettyWrDataLen, uint64_t &splitNum)
+HcclResult HostCpuUrmaChannel::GetSplitNum(uint64_t len, uint64_t maxJettyWrDataLen, uint64_t &splitNum) const
 {
     if (len == 0 || maxJettyWrDataLen == 0) {
         HCCL_ERROR("[HostCpuUrmaChannel::%s] invalid len[%llu] or maxJettyWrDataLen[%llu].", __func__, len, maxJettyWrDataLen);

@@ -958,7 +958,7 @@ HcclResult HostCpuRoceChannel::PrepareWriteWrResource(const void *dst, const voi
 }
 
 HcclResult HostCpuRoceChannel::WriteWithNotify(
-    void *dst, const void *src, const uint64_t len, const uint32_t remoteNotifyIdx)
+    void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx)
 {
     CHK_PTR_NULL(src);
     CHK_PTR_NULL(dst);
@@ -1032,7 +1032,6 @@ HcclResult HostCpuRoceChannel::WriteWithNotify(
         return dfxCallback_(taskParam, reinterpret_cast<u64>(this));
     }
 
-
     return HCCL_SUCCESS;
 }
 
@@ -1053,7 +1052,7 @@ void HostCpuRoceChannel::BuildRdmaWr(const char *caller, ibv_wr_opcode opcode, v
     wr.wr.rdma.remote_addr = reinterpret_cast<uint64_t>(remoteAddr);
 }
 
-HcclResult HostCpuRoceChannel::PostAndCheckSend(struct ibv_qp *qp, uint32_t qpIdx, const char *caller, struct ibv_send_wr &wr)
+HcclResult HostCpuRoceChannel::PostAndCheckSend(struct ibv_qp *qp, const uint32_t qpIdx, const char *caller, struct ibv_send_wr &wr)
 {
     struct ibv_send_wr *badWr = nullptr;
     s32 ret = ibv_post_send(qp, &wr, &badWr);
@@ -1141,7 +1140,7 @@ HcclResult HostCpuRoceChannel::PostRdmaOp(const char *caller, ibv_wr_opcode opco
     return HCCL_SUCCESS;
 }
 
-HcclResult HostCpuRoceChannel::Write(void *dst, const void *src, const uint64_t len)
+HcclResult HostCpuRoceChannel::Write(void *dst, const void *src, uint64_t len)
 {
     CHK_PRT_RET(maxMsgSize_ == 0,
         HCCL_ERROR("[HostCpuRoceChannel::%s] maxMsgSize_ is 0, channel not initialized", __func__),
@@ -1162,7 +1161,7 @@ HcclResult HostCpuRoceChannel::Write(void *dst, const void *src, const uint64_t 
     return HCCL_SUCCESS;
 }
 
-HcclResult HostCpuRoceChannel::Read(void *dst, const void *src, const uint64_t len)
+HcclResult HostCpuRoceChannel::Read(void *dst, const void *src, uint64_t len)
 {
     CHK_PRT_RET(maxMsgSize_ == 0,
         HCCL_ERROR("[HostCpuRoceChannel::%s] maxMsgSize_ is 0, channel not initialized", __func__),

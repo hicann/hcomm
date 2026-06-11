@@ -37,8 +37,8 @@ public:
     HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum) override;
     HcclResult GetUserRemoteMem(CommMem **remoteMem, char ***memTag, uint32_t *memNum) override;
 
-    virtual HcclResult Clean() override;
-    virtual HcclResult Resume() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
 
     HcclResult ChannelFence() override;
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;

@@ -531,8 +531,7 @@ void CommunicatorImpl::ExecuteFastCcuLaunch(const CollOpParams &opParams, aclrtS
 
     auto &opbaseStream = GetStreamManager().opbase;
     auto  mStream      = params.isSlave ? opbaseStream->GetSlave(slaveIndex)->GetPtr() : stream;
-    u32   streamNum    = params.count.size();
-    
+    u32   streamNum    = params.count.size(); 
     if (streamNum > 1) {
         timeout = notifyTimeoutCfg.GetNotifyTimeout();
         mStreamId = params.isSlave ? opbaseStream->GetSlave(slaveIndex++)->GetId() : HrtGetStreamId(mStream);
@@ -749,7 +748,7 @@ HcclResult CommunicatorImpl::LoadOpbasedCollOp(const CollOpParams &opParams, voi
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CommunicatorImpl::CheckCommStatus()
+HcclResult CommunicatorImpl::CheckCommStatus() const
 {
     if (GetCommStatus() == CommStatus::COMM_ERROR) {
         HCCL_ERROR("Comm has been error, can not load opbased operator now!");
@@ -2499,7 +2498,7 @@ HcclResult CommunicatorImpl::DestroyDpuKernelResource()
     return HCCL_SUCCESS;
 }
 
-HcclResult CommunicatorImpl::WaitDpuKernelThreadTerminate()
+HcclResult CommunicatorImpl::WaitDpuKernelThreadTerminate() const
 {
     if (!isDpuKernelLaunched) {
         return HCCL_SUCCESS;
@@ -2812,7 +2811,7 @@ HcclResult CommunicatorImpl::SetAccelerator(HcclAccelerator hcclAccelerator, boo
     return HCCL_SUCCESS;
 }
 
-bool CommunicatorImpl::IsCommWithPCIEProtocol()
+bool CommunicatorImpl::IsCommWithPCIEProtocol() const
 {
     auto links = GetFullMeshLinks();
     for (auto link : links) {
@@ -4052,7 +4051,7 @@ ErrorMessageReport CommunicatorImpl::GetAicpuTaskException()
 }
 
 
-u32 CommunicatorImpl::GetRankInParentComm() {
+u32 CommunicatorImpl::GetRankInParentComm() const {
     return static_cast<u32>(rankInParentComm);
 }
 void CommunicatorImpl::RegisterAicpuKernel()

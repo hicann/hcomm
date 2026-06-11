@@ -164,7 +164,6 @@ HcclResult ChannelProcess::ChannelGetStatus(const ChannelHandle *channelList, ui
             status = channel.GetStatus();  // 锁内调用，防止 destroy 并发释放
             return HcclResult::HCCL_SUCCESS;
         });
-
         if (ret != HcclResult::HCCL_SUCCESS) {
             HCCL_ERROR("[%s] Get ChannelHandle failed.", __func__);
             return ret;
@@ -732,7 +731,6 @@ HcclResult ChannelProcess::ChannelClean(const ChannelHandle *channelList, uint32
         HcclResult ret = WithChannelByHandleLocked(inHandle, [&](Channel &channel) -> HcclResult {
             return channel.Clean();  
         });
-
         if (ret != HcclResult::HCCL_SUCCESS) {
             HCCL_ERROR("[%s] ChannelHandle Clean failed, ret = 0x%016llx, i = %u", __func__, HCCL_ERROR_CODE(ret), i);
             return ret;
@@ -749,7 +747,6 @@ HcclResult ChannelProcess::ChannelResumeConcurrency(const ChannelHandle *channel
         HcclResult ret = WithChannelByHandleLocked(inHandle, [&](Channel &channel) -> HcclResult {
             return channel.Resume();
         });
-
         if (ret != HcclResult::HCCL_SUCCESS) {
             HCCL_ERROR("[%s] Get ChannelHandle failed, ret = 0x%016llx, i = %u", __func__, HCCL_ERROR_CODE(ret), i);
             return ret;

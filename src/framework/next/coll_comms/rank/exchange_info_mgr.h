@@ -39,7 +39,7 @@ public:
         const u8 *sendData, u32 sendLen,
         u8 *recvData, u32 recvLen);
     HcclResult WaitAllAsyncComplete(const std::vector<Hccl::Socket*> &sockets,
-        const std::vector<u32> &remoteRanks);
+        const std::vector<u32> &remoteRanks) const;
     HcclResult WaitActiveAsyncComplete(
         const std::vector<Hccl::Socket*> &sockets,
         const std::vector<u32> &remoteRanks,

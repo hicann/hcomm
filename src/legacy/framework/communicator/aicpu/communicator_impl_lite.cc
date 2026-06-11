@@ -276,7 +276,7 @@ void CommunicatorImplLite::UpdateHDCommnicate(HcclKernelParamLite *kernelParam)
     hdcHandler = make_unique<AicpuHdcHandler>(*kfcControlTransferH2D, *kfcStatusTransferD2H);
 }
 
-void CommunicatorImplLite::UpdateDynamicOpData(HcclKernelParamLite *kernelParam)
+void CommunicatorImplLite::UpdateDynamicOpData(HcclKernelParamLite *kernelParam) const
 {
     HCCL_INFO("[CommunicatorImplLite][UpdateDynamicOpData] OpType[%s]", kernelParam->op.algOperator.opType.Describe().c_str());
     u8* dynamicDataPtr = reinterpret_cast<u8*>(kernelParam) + sizeof(struct HcclKernelParamLite);

@@ -27,7 +27,7 @@ class AicpuTsHccsEndpoint : public Endpoint {
 public:
     explicit AicpuTsHccsEndpoint(const EndpointDesc &endpointDesc);
 
-    ~AicpuTsHccsEndpoint();
+    ~AicpuTsHccsEndpoint() override;
 
     HcclResult Init() override;
     HcclResult ServerSocketListen(const uint32_t port) override;

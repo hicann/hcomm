@@ -26,9 +26,9 @@ public:
     uint16_t GetDstTokenId() { return dst.token.Id(); }
     uint16_t GetLenId() { return len.Id(); }
     uint16_t GetSemId() { return sem.Id(); }
-    uint32_t GetMask() { return mask; }
-    uint16_t GetDataType() { return dataType; }
-    uint16_t GetOpType() { return opType; }
+    uint32_t GetMask() const { return mask; }
+    uint16_t GetDataType() const { return dataType; }
+    uint16_t GetOpType() const { return opType; }
 
 private:
     LocalAddr   dst;

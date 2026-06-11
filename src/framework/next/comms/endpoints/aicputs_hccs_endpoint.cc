@@ -30,7 +30,6 @@ AicpuTsHccsEndpoint::~AicpuTsHccsEndpoint()
         (void)ServerSocketStopListen(serverPort_);
     }  catch (...) { }
     
-
     if (regedMemMgr_ != nullptr) {
         regedMemMgr_ = nullptr;
     }

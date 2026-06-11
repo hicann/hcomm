@@ -33,7 +33,7 @@ public:
         s32 memNum = 0;
     };
     AicpuTsHccsChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
-    virtual ~AicpuTsHccsChannel();
+    ~AicpuTsHccsChannel() override;
 
     HcclResult Init() override;
     HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
@@ -64,9 +64,9 @@ private:
     void DestroyConnection();
     HcclResult EnableMemAccess();
     void DisableMemAccess();
-    HcclResult GetFirstIpByPhyId(u32 devicePhyId, u32 superDevId, hccl::HcclIpAddress &ip);
+    HcclResult GetFirstIpByPhyId(u32 devicePhyId, u32 superDevId, hccl::HcclIpAddress &ip) const;
     HcclResult SetMachinePara(hccl::MachinePara &machinePara);
-    void SetTransportParam(hccl::TransportPara &para);
+    void SetTransportParam(hccl::TransportPara &para) const;
     HcclResult TransportInit();
     void TransportDeInit();
     HcclResult BuildHcclChannelHccsRes(HcclChannelHccsRes &channelHccsRes);

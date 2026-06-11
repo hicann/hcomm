@@ -30,7 +30,7 @@ namespace hcomm {
 class HostCpuUrmaChannel : public Channel {
 public:
     HostCpuUrmaChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
-    ~HostCpuUrmaChannel();
+    ~HostCpuUrmaChannel() override;
 
     HcclResult Init() override;
     HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
@@ -45,8 +45,8 @@ public:
     HcclResult Read(void *dst, const void *src, uint64_t len) override;
     HcclResult ChannelFence() override;
 
-    virtual HcclResult Clean() override;
-    virtual HcclResult Resume() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
 
 private:
     HcclResult ParseInputParam();
@@ -57,7 +57,7 @@ private:
     HcclResult BuildUbMemTransport();
     HcclResult GetLocSeg(const void *addr, const size_t size, u64 *seg);
     HcclResult UrmaPostJettySendWr(urma_opcode_t opcode, void *dst, const void *src, uint64_t len);
-    HcclResult GetSplitNum(uint64_t len, uint64_t maxJettyWrDataLen, uint64_t &splitNum);
+    HcclResult GetSplitNum(uint64_t len, uint64_t maxJettyWrDataLen, uint64_t &splitNum) const;
     HcclResult GetLocalAndRemoteSeg(urma_opcode_t opcode, void *dst, const void *src, uint64_t len, u64 &localSeg, u64 &remoteSeg);
 
 private:

@@ -147,7 +147,7 @@ HcclResult ExchangeInfoMgr::BatchExchangeFixedData(
 
 HcclResult ExchangeInfoMgr::WaitAllAsyncComplete(
     const std::vector<Hccl::Socket*> &sockets,
-    const std::vector<u32> &remoteRanks)
+    const std::vector<u32> &remoteRanks) const
 {
     auto timeout = std::chrono::seconds(Hccl::EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
     auto startTime = std::chrono::steady_clock::now();

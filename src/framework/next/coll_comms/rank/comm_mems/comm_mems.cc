@@ -56,7 +56,7 @@ HcclResult CommMems::GetHcclBuffer(void *&addr, uint64_t &len)
     return HCCL_SUCCESS;
 }
 
-HcclResult CommMems::HcclBufferMemset(void *&addr, uint64_t &len, bool clearFlag)
+HcclResult CommMems::HcclBufferMemset(void *&addr, uint64_t &len, bool clearFlag) const
 {
     if (!clearFlag) {
         HCCL_DEBUG("[CommMems][HcclBufferMemset] clearFlag[%d] is false, skip memset.", clearFlag);

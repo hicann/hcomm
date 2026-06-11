@@ -52,7 +52,7 @@ public:
     HcclResult LocalNotifyRecord(uint32_t notifyId) const override;
 
     HcclResult LocalNotifyRecord(ThreadHandle dstThread, uint32_t dstNotifyIdx) const override;
-    HcclResult LocalNotifyWait(uint32_t notifyIdx, uint32_t timeOut) const override;
+    HcclResult LocalNotifyWait(uint32_t notifyId, uint32_t timeOut) const override;
 
     HcclResult LocalCopy(void *dst, const void *src, uint64_t size) const override;
     HcclResult LocalReduce(
@@ -85,7 +85,7 @@ private:
     HcclResult BuildComStreamInfo(const HcclStreamInfo &streamInfo, HcclComStreamInfo &comStreamInfo) const;
 #endif
     template <typename Operation, typename ReportOp>
-    HcclResult LocalProcess(void *dst, const void *src, uint64_t size, Operation &&op, ReportOp &&reportOp) const;
+    HcclResult LocalProcess(void *dst, const void *src, uint64_t sizeByte, Operation &&op, ReportOp &&reportOp) const;
 
     // 成员变量（适配 AICPU-TS）
     bool isDeviceSide_ = false;

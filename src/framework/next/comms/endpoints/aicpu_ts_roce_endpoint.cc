@@ -295,7 +295,7 @@ std::unordered_map<SocketMapKey, AicpuTsListenSocketSlot, SocketMapKeyHash> &Aic
     return serverSocketMap;
 }
 
-HcclResult AicpuTsRoceEndpoint::AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo> &wlistInfos)
+HcclResult AicpuTsRoceEndpoint::AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo> &wlistInfos) const
 {
     if (wlistInfos.empty()) {
         HCCL_ERROR("[AicpuTsRoceEndpoint][%s] empty whitelist", __func__);
@@ -316,7 +316,7 @@ HcclResult AicpuTsRoceEndpoint::AddListenSocketWhiteList(uint32_t port, const st
 }
 
 HcclResult AicpuTsRoceEndpoint::AcceptDataSocket(uint32_t port, const std::string &tag,
-    std::shared_ptr<hccl::HcclSocket> &outConnected, uint32_t acceptTimeoutMs)
+    std::shared_ptr<hccl::HcclSocket> &outConnected, uint32_t acceptTimeoutMs) const
 {
     std::lock_guard<std::mutex> lk(ListenSocketMapMutex());
     auto &map = GetServerSocketMap();

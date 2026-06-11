@@ -24,7 +24,7 @@ namespace hcomm {
 class UboeEndpoint : public Endpoint {
 public:
     explicit UboeEndpoint(const EndpointDesc &endpointDesc);
-    ~UboeEndpoint() = default;
+    ~UboeEndpoint() override = default;
 
     HcclResult Init() override;
 
@@ -41,7 +41,6 @@ public:
     HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
     HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
     HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
-
 };
 }
 

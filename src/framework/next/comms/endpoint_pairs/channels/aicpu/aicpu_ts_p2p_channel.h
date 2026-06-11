@@ -28,7 +28,7 @@ namespace hcomm {
 class AicpuTsP2pChannel : public Channel {
 public:
     AicpuTsP2pChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
-    ~AicpuTsP2pChannel();
+    ~AicpuTsP2pChannel() override;
 
     HcclResult Init() override;
     HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
@@ -39,8 +39,8 @@ public:
 
     HcclResult H2DResPack(std::vector<char>& buffer);
 
-    virtual HcclResult Clean() override;
-    virtual HcclResult Resume() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
 
     // 数据面接口
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
@@ -52,8 +52,8 @@ public:
 
 private:
     HcclResult Makebufs(HcommMemHandle *memHandles, uint32_t memHandleNum,
-        std::vector<std::shared_ptr<Hccl::Buffer>> &bufs);
-    HcclResult SetModuleDataName(Hccl::ModuleData &module, const std::string &name);
+        std::vector<std::shared_ptr<Hccl::Buffer>> &bufs) const;
+    HcclResult SetModuleDataName(Hccl::ModuleData &module, const std::string &name) const;
     HcclResult ParseInputParam();
     HcclResult BuildAttr();
     HcclResult BuildConnection();

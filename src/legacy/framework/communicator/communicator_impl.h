@@ -386,12 +386,12 @@ public:
     static std::string GetTopoFilePath();
     std::vector<LinkData> GetFullMeshLinks() const;
     ErrorMessageReport GetAicpuTaskException();
-    u32 GetRankInParentComm();
+    u32 GetRankInParentComm() const;
     aclrtFuncHandle GetAicpuKernelFuncHandle(const char *kernelName) const;
-    bool IsCommWithPCIEProtocol();   // 判断通信域内是否有rank之间存在PCIE链路
+    bool IsCommWithPCIEProtocol() const;   // 判断通信域内是否有rank之间存在PCIE链路
     HcclResult Mc2AiCpuStreamAllocAndGetV2(rtStream_t *aiCpuStream);
     HcclResult SaveDpuStreamId();
-    uint32_t GetDpuStreamId() {
+    uint32_t GetDpuStreamId() const {
         return dpuStreamId;
     }
      
@@ -526,7 +526,7 @@ private:
     void InitRankGraph(const RankTableInfo &ranktable);
     void CheckRankGraph() const;
     void CheckRankGraphAddrs() const;
-    HcclResult CheckCommStatus();
+    HcclResult CheckCommStatus() const;
     void InitDataBufferManager();
     void InitNotifyManager();
     void InitStreamManager();
@@ -562,7 +562,7 @@ private:
     HcclResult LaunchDpuKernel(aclrtFuncHandle &funcHandle);
     HcclResult PrepareDpuKernelResource(aclrtFuncHandle &funcHandle);
     HcclResult DestroyDpuKernelResource();
-    HcclResult WaitDpuKernelThreadTerminate();
+    HcclResult WaitDpuKernelThreadTerminate() const;
     HcclResult InitAndLaunchDpuKernel();
 
     HcclResult Init(const CommParams &commParams, std::unique_ptr<RankGraph> &inputRankGraph, DevId inputDevLogicId);

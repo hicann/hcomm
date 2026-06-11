@@ -28,7 +28,7 @@ namespace hcomm {
 class AicpuTsUrmaChannel : public Channel {
 public:
     AicpuTsUrmaChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
-    ~AicpuTsUrmaChannel();
+    ~AicpuTsUrmaChannel() override;
 
     HcclResult Init() override;
     HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
@@ -40,8 +40,8 @@ public:
     HcclResult H2DResPack(std::vector<char>& buffer);
     HcommChannelKind GetChannelKind() const override;
 
-    virtual HcclResult Clean() override;
-    virtual HcclResult Resume() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
 
     // 数据面接口
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
@@ -52,7 +52,7 @@ public:
     HcclResult ChannelFence() override;
 
 private:
-    HcclResult Makebufs(HcommMemHandle *memHandles, uint32_t memHandleNum, std::vector<std::shared_ptr<Hccl::Buffer>> &bufs);
+    HcclResult Makebufs(HcommMemHandle *memHandles, uint32_t memHandleNum, std::vector<std::shared_ptr<Hccl::Buffer>> &bufs) const;
     HcclResult ParseInputParam();
     HcclResult BuildAttr();
     HcclResult BuildConnection();

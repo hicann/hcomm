@@ -446,8 +446,7 @@ uint64_t CcuTaskException::GetCcuGSAValue(int32_t deviceId, uint32_t dieId, uint
 
     ret = HccpRaCustomChannel(HrtNetworkMode::HDC, devicePhyId, &inBuff, &outBuff);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s]HccpRaCustomChannel fail, ret[%u]", __func__, ret), INVALID_U64);
-
-    
+   
     auto sret = memcpy_s(&gsaVal, sizeof(gsaVal), outBuff.data.dataInfo.dataArray, inBuff.data.dataInfo.dataLen);
     CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, sret), INVALID_U64);
     return gsaVal;

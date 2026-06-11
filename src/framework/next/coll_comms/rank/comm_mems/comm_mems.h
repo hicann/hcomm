@@ -55,7 +55,7 @@ public:
 
     HcclResult GetHcclBuffer(void *&addr, uint64_t &len);
 
-    HcclResult HcclBufferMemset(void *&addr, uint64_t &len, bool clearFlag);
+    HcclResult HcclBufferMemset(void *&addr, uint64_t &len, bool clearFlag) const;
 
     HcclResult Init(HcclMem cclBuffer);
 

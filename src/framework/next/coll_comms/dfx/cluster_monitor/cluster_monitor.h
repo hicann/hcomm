@@ -158,13 +158,13 @@ class ClusterMonitor {
 public:
     HcclResult RegisterToClusterMonitor(HcclComm comm);
     HcclResult UnRegisterToClusterMonitor(hccl::CollComm* collComm);
-    ClusterUIDType FormatUID(ClusterUIDCxt ctxt);
+    ClusterUIDType FormatUID(ClusterUIDCxt cxt);
     std::string GetUID(const ClusterUIDType &uid) const;
     std::string FormatConnTag(HcommSocketRole role, std::pair<ClusterUIDType, ClusterUIDType> uidPair);
     HcclResult InsertClusterMonitorCxt(HcclComm comm, UIDContext remoteCtx, std::map<ClusterUIDType, ClusterMonitorSocketCtx> &needConnectRank);
     HcclResult GetSamePlaneRank(HcclComm comm, std::vector<UIDContext> singlePlaneCtx, std::map<ClusterUIDType, ClusterMonitorSocketCtx> &needConnectRank);
     HcclResult GetConnectRank(HcclComm comm, std::map<ClusterUIDType, ClusterMonitorSocketCtx> &needConnectRank, std::map<uint32_t,
-        std::vector<UIDContext>> uidctxs, std::vector<uint32_t> &netLayersVector);
+        std::vector<UIDContext>> uidCtxs, std::vector<uint32_t> &netLayersVector);
     void CreateHBLinksAsync();
     void SetStatus(ClusterUIDType &crimer, ClusterUIDType &informer, ClusterMonitorStatus status, bool needBroadcast = true);
     void MonitorThread();
@@ -189,7 +189,7 @@ private:
     
     HcclResult CreateTransportHandle(ClusterMonitorSocketCtx &info);
 
-    void CreateLinkWithRemotePonit(std::string group, ClusterUIDType rem, ClusterMonitorSocketCtx needConnectRank);
+    void CreateLinkWithRemotePonit(std::string commId, ClusterUIDType rem, ClusterMonitorSocketCtx needConnectRank);
     
     struct FrameStatus { // 专门用来给frame设置对应的状态
         ClusterMonitorStatus status = ClusterMonitorStatus::CLUSTER_MONITOR_OK;

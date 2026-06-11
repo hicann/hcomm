@@ -22,12 +22,12 @@ public:
     bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     const std::vector<CcuBuf>& GetMem() { return mem; }
-    uint16_t GetCount() { return count; }
-    uint16_t GetDataType() { return dataType; }
-    uint16_t GetOutputDataType() { return outputDataType; }
-    uint16_t GetOpType() { return opType; }
+    uint16_t GetCount() const { return count; }
+    uint16_t GetDataType() const { return dataType; }
+    uint16_t GetOutputDataType() const { return outputDataType; }
+    uint16_t GetOpType() const { return opType; }
     uint16_t GetXnLengthId() { return xnIdLength_.Id(); }
-    uint16_t GetMask() { return mask; }
+    uint16_t GetMask() const { return mask; }
     uint16_t GetSemId() { return sem.Id(); }
 
 private:

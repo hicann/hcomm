@@ -67,9 +67,9 @@ public:
     HcclNetDev GetNetDev() const { return netDev_; }
 
     HcclResult AcceptDataSocket(uint32_t port, const std::string &tag,
-        std::shared_ptr<hccl::HcclSocket> &outConnected, uint32_t acceptTimeoutMs = 0);
+        std::shared_ptr<hccl::HcclSocket> &outConnected, uint32_t acceptTimeoutMs = 0) const;
 
-    HcclResult AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo> &wlistInfos);
+    HcclResult AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo> &wlistInfos) const;
 
 private:
     static std::unordered_map<SocketMapKey, AicpuTsListenSocketSlot, SocketMapKeyHash> &GetServerSocketMap();

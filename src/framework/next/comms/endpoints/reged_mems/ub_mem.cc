@@ -95,7 +95,6 @@ HcclResult UbMemRegedMemMgr::UnregisterMemory(void* memHandle)
             [buffer](const std::shared_ptr<Hccl::LocalIpcRmaBuffer>& ptr) {
                 return ptr.get() == buffer;
             });
-
     if (it == allRegisteredBuffers_.end()) {
         HCCL_ERROR("[%s] Memory not found in vector!", __func__);
         return HCCL_E_NOT_FOUND;

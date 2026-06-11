@@ -49,10 +49,10 @@ private:
         }
     };
 
-    HcclResult GetParamsFromMemDesc(const void *memDesc, uint32_t descLen, EndpointDesc &endpointDesc, std::string &rdmaBlob);
+    HcclResult GetParamsFromMemDesc(const void *memDesc, uint32_t descLen, EndpointDesc &endpointDesc, std::string &rdmaBlob) const;
     void TrackRegisteredBuffer(const std::shared_ptr<hccl::LocalRdmaRmaBuffer> &localBuffer);
     HcclResult GetOrCreateLocalRdmaRmaBuffer(hccl::NetDevContext *netDevCtx, HcommMem mem,
-        hccl::BufferKey<uintptr_t, u64> tempKey, std::shared_ptr<hccl::LocalRdmaRmaBuffer> &localBuffer);
+        hccl::BufferKey<uintptr_t, u64> tempKey, std::shared_ptr<hccl::LocalRdmaRmaBuffer> &localRdmaRmaBuffer);
 
     HcclResult GatherLocalMemDetails(std::vector<RoceMemDetails> &localOut) const;
     HcclResult AppendLocalNotifyMemDetails(std::vector<RoceMemDetails> &localOut) const;

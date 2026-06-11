@@ -73,7 +73,7 @@ private:
     void InitSerializeRoceChannelRes(HcommRoceChannelRes &res, size_t localMemCount, size_t remoteMemCount,
         void *localMem, void *remoteMem, const std::vector<HcclQpInfoV2> &aiQpInfos, u32 qpNum) const noexcept;
     HcclResult BuildSerializeChannelMem(AicpuTsRoceChannelMem &bundle, const std::vector<RoceMemDetails> &localMd,
-        const std::vector<RoceMemDetails> &remoteMd, const std::vector<HcclQpInfoV2> &aiQpInfos, u32 qpNum);
+        const std::vector<RoceMemDetails> &remoteMd, const std::vector<HcclQpInfoV2> &aiQpInfos, u32 qpNum) const;
 
     const char *SocketRoleTag() const noexcept
     {

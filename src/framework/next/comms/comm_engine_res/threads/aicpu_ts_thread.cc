@@ -244,7 +244,7 @@ HcclResult AicpuTsThread::LocalNotifyRecord(ThreadHandle dstThread, uint32_t dst
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsThread::LocalNotifyWait(uint32_t notifyId, uint32_t timeout) const
+HcclResult AicpuTsThread::LocalNotifyWait(uint32_t notifyId, uint32_t timeOut) const
 {
     u64 beginTime = ProfGetCurCpuTimestamp();
     void *streamLitePtr = GetStreamLitePtr();
@@ -252,7 +252,7 @@ HcclResult AicpuTsThread::LocalNotifyWait(uint32_t notifyId, uint32_t timeout) c
     Hccl::RtsqBase *rtsq = streamLite->GetRtsq();
     u32 taskId = rtsq->GetTaskId();
 
-    CHK_RET(pImpl_->NotifyWait(notifyId, timeout));
+    CHK_RET(pImpl_->NotifyWait(notifyId, timeOut));
 
     CHK_RET(ReportAicpuNotifyWaitTask(notifyId, beginTime, taskId, streamLite->GetSqId()));
     

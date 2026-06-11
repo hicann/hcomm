@@ -449,7 +449,7 @@ void AicpuTsRoceChannel::InitSerializeRoceChannelRes(HcommRoceChannelRes &res, s
 
 HcclResult AicpuTsRoceChannel::BuildSerializeChannelMem(AicpuTsRoceChannelMem &bundle,
     const std::vector<RoceMemDetails> &localMd, const std::vector<RoceMemDetails> &remoteMd,
-    const std::vector<HcclQpInfoV2> &aiQpInfos, u32 qpNum)
+    const std::vector<HcclQpInfoV2> &aiQpInfos, u32 qpNum) const
 {
     const size_t nL = localMd.size();
     const size_t nR = remoteMd.size();

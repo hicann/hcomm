@@ -232,7 +232,6 @@ HcclResult CollCommAicpu::ParsePackData(std::vector<char> &data, ChannelHandle &
     u32 transType;
     binaryStreamForType >> transType;
     HCCL_INFO("[CollCommAicpu][ParsePackData] transType[%u]", transType);
-    // TODO TransportType
     if (transType == Hccl::TransportType::UB) {
         std::unique_ptr<Hccl::UbTransportLiteImpl> ubTransportLiteImpl;
         EXECEPTION_CATCH((ubTransportLiteImpl = std::make_unique<Hccl::UbTransportLiteImpl>(transpUniqueId)),
@@ -248,7 +247,6 @@ HcclResult CollCommAicpu::ParsePackData(std::vector<char> &data, ChannelHandle &
         CHK_SMART_PTR_NULL(p2pTransportLiteImpl);
         handle = reinterpret_cast<uint64_t>(p2pTransportLiteImpl.get());
         p2pTransportMap_.insert({handle, std::move(p2pTransportLiteImpl)});
-        // TODO 是否需要缓存用于NsRecovery
     } else {
         HCCL_ERROR("[CollCommAicpu][ParsePackData] unsupported transportType[%u]", transType);
         return HCCL_E_INTERNAL;

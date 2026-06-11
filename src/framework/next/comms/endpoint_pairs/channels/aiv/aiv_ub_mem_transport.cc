@@ -195,13 +195,13 @@ HcclResult AivUbMemTransport::SendMemInfo()
 }
 
 void AivUbMemTransport::BufferPack(Hccl::BinaryStream &binaryStream, std::vector<Hccl::LocalIpcRmaBuffer *> &bufferVec,
-        std::vector<std::array<char, HCCL_RES_TAG_MAX_LEN>> &tagVec)
+        std::vector<std::array<char, HCCL_RES_TAG_MAX_LEN>> &localUserMemTag) const
 {
     u32 vecSize = bufferVec.size();
     binaryStream << vecSize;
     HCCL_RUN_INFO("BufferPack vecSize=%u", vecSize);
 
-    for (const auto& tag : tagVec) {
+    for (const auto& tag : localUserMemTag) {
         // 逐个字节传输
         for (uint32_t i = 0; i < HCCL_RES_TAG_MAX_LEN; i++) {
             binaryStream << static_cast<u8>(tag[i]);

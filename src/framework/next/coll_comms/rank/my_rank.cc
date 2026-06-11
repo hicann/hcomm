@@ -380,7 +380,7 @@ constexpr uint32_t MEM_HANDLE_NUM_MAX = 256;  // memHandleNum的默认限制最�
 constexpr uint32_t NOTIFY_NUM_MAX = 64; // notifynum 的默认限制最大为64
 
 HcclResult MyRank::CheckChannelParam(CommEngine engine, const HcclChannelDesc* channelDesc,
-    uint32_t channelNum)
+    uint32_t channelNum) const
 {
     for (u32 index = 0; index < channelNum; ++index) {
         if (engine == COMM_ENGINE_AIV) {
@@ -635,7 +635,7 @@ HcclResult MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, Cha
     return HCCL_SUCCESS;
 }
 
-HcclResult MyRank::ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc)
+HcclResult MyRank::ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc) const
 {
     if (engine == COMM_ENGINE_CCU) {
         if (opExpansionMode_ == CCU_MS_MODE) {

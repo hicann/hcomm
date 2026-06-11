@@ -263,7 +263,7 @@ void TaskExceptionHost::GetAicpuCqeErrRemoteLocalIdByRankId(hccl::CollComm* coll
         return;
     }
 
-    Hccl::HcclCommunicator * commV2 = static_cast<Hccl::HcclCommunicator *>(collComm->GetCommunicatorV2());
+    Hccl::HcclCommunicator *commV2 = static_cast<Hccl::HcclCommunicator *>(collComm->GetCommunicatorV2());
     if (commV2 == nullptr) {
         HCCL_ERROR("[GetAicpuCqeErrRemoteLocalIdByRankId]commV2 is nullptr, rankId[%u]", rankid);
         remoteLocalId = INVALID_VALUE_RANKID;
@@ -290,7 +290,7 @@ void TaskExceptionHost::GetAicpuCqeErrNetInstanceByRankId(hccl::CollComm* collCo
         return;
     }
     
-    Hccl::HcclCommunicator * commV2 = static_cast<Hccl::HcclCommunicator *>(collComm->GetCommunicatorV2());
+    Hccl::HcclCommunicator *commV2 = static_cast<Hccl::HcclCommunicator *>(collComm->GetCommunicatorV2());
     if (commV2 == nullptr) {
         HCCL_ERROR("[GetAicpuCqeErrNetInstanceByRankId]commV2 is nullptr, rankId[%u]", rankid);
         netInstanceId = "";

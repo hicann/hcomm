@@ -17,9 +17,9 @@ public:
     CcuRepRemWaitSem(const ChannelHandle channel, uint16_t semIndex, uint16_t mask, bool isProfiling=true);
     bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
-    uint32_t    GetMask() { return mask; }
+    uint32_t    GetMask() const { return mask; }
     uint32_t    GetId() { return signalId; }
-    uint16_t    GetChannelId() { return channelId; }
+    uint16_t    GetChannelId() const { return channelId; }
 
 private:
     ChannelHandle channel;

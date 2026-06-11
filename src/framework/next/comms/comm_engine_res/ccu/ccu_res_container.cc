@@ -90,7 +90,6 @@ HcclResult CcuResContainer::Init()
             ccuDrvHandle_ = nullptr;
             return ret;
         }
-
     }
 
     if (!resPack_) {

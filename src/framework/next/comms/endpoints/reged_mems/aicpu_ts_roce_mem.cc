@@ -223,7 +223,7 @@ HcclResult AicpuTsRoceRegedMemMgr::MemoryExport(const EndpointDesc endpointDesc,
 }
 
 HcclResult AicpuTsRoceRegedMemMgr::GetParamsFromMemDesc(const void *memDesc, uint32_t descLen,
-    EndpointDesc &endpointDesc, std::string &rdmaBlob)
+    EndpointDesc &endpointDesc, std::string &rdmaBlob) const
 {
     CHK_PTR_NULL(memDesc);
     if (descLen < sizeof(EndpointDesc)) {

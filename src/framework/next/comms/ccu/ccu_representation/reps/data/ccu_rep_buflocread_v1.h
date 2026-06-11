@@ -23,7 +23,7 @@ public:
     uint16_t GetDstId() { return dst.Id(); }
     uint16_t GetLenId() { return len.Id();}
     uint16_t GetSemId() { return sem.Id(); }
-    uint32_t GetMask() { return mask; }
+    uint32_t GetMask() const { return mask; }
 
 private:
     LocalAddr    src;

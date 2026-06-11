@@ -84,13 +84,13 @@ private:
     HcclResult BatchCreateChannels(CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum,
         std::vector<HcommChannelDesc> &hcommDescs, ChannelHandle *channelHandles);
     HcclResult BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle *channelHandles, uint32_t channelNum);
-    HcclResult CheckChannelParam(CommEngine engine, const HcclChannelDesc* channelDesc, uint32_t channelNum);
+    HcclResult CheckChannelParam(CommEngine engine, const HcclChannelDesc* channelDesc, uint32_t channelNum) const;
     HcclResult QueryListenPort(uint32_t localRank, uint32_t remoteRank, const EndpointDesc &localEndpointDesc, 
         const EndpointDesc &remoteEndpointDesc, uint32_t &listenPort, HcommChannelDesc &hcommDesc);
     HcclResult GetLocalTlsStatus(Hccl::TlsStatus &tlsStatus) const;
 
     HcclResult TryInitCcuInstance();
-    HcclResult ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc);
+    HcclResult ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc) const;
     HcclResult DestroyNewChannels(CommEngine engine, const HcclChannelDesc* channelDescs);
     // 获取port
     HcclResult GetListenPortInternal(uint32_t rank, uint32_t *devPort, EndpointLocType locType);
