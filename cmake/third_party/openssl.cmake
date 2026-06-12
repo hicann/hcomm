@@ -120,7 +120,7 @@ else()
     set(OPENSSL_CONFIGURE_PUB_COMMAND
         ${PERL_PATH} <SOURCE_DIR>/Configure
         ${OPENSSL_PLATFORM}
-        no-asm enable-shared threads enable-ssl3-method no-tests
+        no-asm no-shared threads enable-ssl3-method no-tests
         ${OPENSSL_OPTION}
         --prefix=${OPENSSL_INSTALL_PATH}
     )
