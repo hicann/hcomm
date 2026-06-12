@@ -234,8 +234,7 @@ void RaHdcDeinitSession(HDC_SESSION *session);
 int RaHdcSetSessionReference(HDC_SESSION *session);
 void MsgHeadBuildUp(struct MsgHead *pSendRcvHead, unsigned int opcode, unsigned int reqId,
     unsigned int msgDataLen, pid_t hostTgid);
-int HdcAsyncSendPkt(struct HdcAsyncInfo *asyncInfo, unsigned int phyId, void *sendBuf, unsigned int sendLen,
-    struct RaRequestHandle *reqHandle);
+int HdcAsyncSendPkt(struct HdcAsyncInfo *asyncInfo, unsigned int phyId, void *sendBuf, unsigned int sendLen);
 int HdcAsyncRecvPkt(struct HdcAsyncInfo *asyncInfo, unsigned int phyId, void *recvBuf, unsigned int *recvLen);
 int RaHdcSaveSnapshot(unsigned int phyId, enum SaveSnapshotAction action);
 int RaHdcRestoreSnapshot(unsigned int phyId);

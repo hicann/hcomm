@@ -235,6 +235,10 @@ int RaHdcSendMsgAsync(unsigned int opcode, unsigned int phyId, char *data, unsig
     RA_PTHREAD_MUTEX_LOCK(&gRaHdcAsync[phyId].reqMutex);
     asyncReqId = gRaHdcAsync[phyId].reqId;
     gRaHdcAsync[phyId].reqId++;
+    HdcAsyncSetRequest(reqHandle, asyncReqId, opHandleTmp, phyId, dataSize);
+    // make sure request has been added to req_list
+    RaListAddTail(&reqHandle->list, &gRaHdcAsync[phyId].reqList);
+    RA_PTHREAD_MUTEX_UNLOCK(&gRaHdcAsync[phyId].reqMutex);
 
     MsgHeadBuildUp(sendBuf, opcode, asyncReqId, dataSize, hostTgid);
     ret = memcpy_s(sendBuf + sizeof(struct MsgHead), sendLen - sizeof(struct MsgHead), data, dataSize);
@@ -244,14 +248,19 @@ int RaHdcSendMsgAsync(unsigned int opcode, unsigned int phyId, char *data, unsig
         goto out;
     }
 
-    HdcAsyncSetRequest(reqHandle, asyncReqId, opHandleTmp, phyId, dataSize);
-    ret = HdcAsyncSendPkt(&gRaHdcAsync[phyId], phyId, sendBuf, sendLen, reqHandle);
+    ret = HdcAsyncSendPkt(&gRaHdcAsync[phyId], phyId, sendBuf, sendLen);
     if (ret != 0) {
         hccp_err("[async][ra_hdc_send]hdc_async_send_pkt opcode(%u) failed ret(%d) phyId(%u)", opcode, ret, phyId);
         goto out;
     }
 
+    free(sendBuf);
+    sendBuf = NULL;
+    return 0;
+
 out:
+    RA_PTHREAD_MUTEX_LOCK(&gRaHdcAsync[phyId].reqMutex);
+    RaListDel(&reqHandle->list);
     RA_PTHREAD_MUTEX_UNLOCK(&gRaHdcAsync[phyId].reqMutex);
     free(sendBuf);
     sendBuf = NULL;

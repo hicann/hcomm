@@ -512,8 +512,7 @@ out:
     return ret;
 }
 
-int HdcAsyncSendPkt(struct HdcAsyncInfo *asyncInfo, unsigned int phyId, void *sendBuf, unsigned int sendLen,
-    struct RaRequestHandle *reqHandle)
+int HdcAsyncSendPkt(struct HdcAsyncInfo *asyncInfo, unsigned int phyId, void *sendBuf, unsigned int sendLen)
 {
     struct drvHdcMsg *pMsgSnd = NULL;
     HDC_SESSION session = NULL;
@@ -545,8 +544,6 @@ int HdcAsyncSendPkt(struct HdcAsyncInfo *asyncInfo, unsigned int phyId, void *se
         goto msg_err;
     }
 
-    // make sure request has been added to req_list
-    RaListAddTail(&reqHandle->list, &asyncInfo->reqList);
 msg_err:
     RA_HDC_OPS.freeMsg(pMsgSnd);
 alloc_msg_err:
