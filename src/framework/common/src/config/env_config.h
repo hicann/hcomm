@@ -14,6 +14,7 @@
 #include <vector>
 #include <hccl/hccl_types.h>
 #include "hccl/base.h"
+#include "hcomm_res_defs.h"
 #include "alg_env_config.h"
 
 /*************** Interfaces ***************/
@@ -138,6 +139,7 @@ struct EnvConfig {
     static const u32 HCCL_QOS_MIN = 0;
  	static const u32 HCCL_QOS_MAX = 7;
  	static const u32 HCCL_QOS_DEFAULT = 6;
+    static const u32 UB_QOS_DEFAULT = HCOMM_UB_QOS_DEFAULT;
     // 解析RDMATrafficClass
     HcclResult ParseRDMATrafficClass();
     // 解析RDMAServerLevel

@@ -409,6 +409,13 @@ void HrtGetSocVer(std::string &socName)
     socName = "Ascend958B";
 }
 
+HcclResult HrtGetMainboardId(uint32_t deviceLogicId, HcclMainboardId &hcclMainboardId)
+{
+    (void)deviceLogicId;
+    hcclMainboardId = HcclMainboardId::MAINBOARD_OTHERS;
+    return HcclResult::HCCL_SUCCESS;
+}
+
 QpHandle HrtRaQpCreate(RdmaHandle rdmaHandle, int flag, int qpMode)
 {
     return (QpHandle)0x12345678;
@@ -510,7 +517,7 @@ std::vector<char> AicpuResPackageHelper::GetPackedData(
 
 DevUbConnection::DevUbConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
     const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress &locIpv4Addr,
-    const IpAddress &rmtIpv4Addr)
+    const IpAddress &rmtIpv4Addr, const u8 qos)
     : RmaConnection(nullptr, RmaConnType::UB),
       rdmaHandle(rdmaHandle),
       locAddr(locAddr),
@@ -519,28 +526,29 @@ DevUbConnection::DevUbConnection(const RdmaHandle rdmaHandle, const IpAddress &l
       jfcMode(jfcMode),
       locIpv4Addr(locIpv4Addr),
       rmtIpv4Addr(rmtIpv4Addr),
-      rmtEid(rmtAddr.GetReverseEid())
+      rmtEid(rmtAddr.GetReverseEid()),
+      qos_(qos)
 {
 }
 
 DevUbTpConnection::DevUbTpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
     const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress &locIpv4Addr,
-    const IpAddress &rmtIpv4Addr)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr)
+    const IpAddress &rmtIpv4Addr, const u8 qos)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
 {
 }
 
 DevUbCtpConnection::DevUbCtpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
     const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress &locIpv4Addr,
-    const IpAddress &rmtIpv4Addr)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr)
+    const IpAddress &rmtIpv4Addr, const u8 qos)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
 {
 }
 
 DevUbUboeConnection::DevUbUboeConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr,
     const IpAddress &rmtAddr, const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-    const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr)
+    const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, const u8 qos)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
 {
     tpProtocol = TpProtocol::UBOE;
 }
@@ -2621,6 +2629,10 @@ std::pair<uint32_t, uint32_t> RdmaHandleManager::GetDieAndFuncId(RdmaHandle rdma
 
 HcclResult TpManager::GetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo, bool isSync)
 {
+    (void)isSync;
+    tpInfo.tpHandle = 1;
+    tpInfo.mappedJettyPriority = static_cast<uint32_t>(param.qos & 0xFU);
+    tpInfo.hasMappedJettyPriority = true;
     return HcclResult::HCCL_SUCCESS;
 }
 

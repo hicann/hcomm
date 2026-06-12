@@ -16,15 +16,25 @@
 #include "../common/loggers/channel_logger.h"  // 日志记录器
 #include "hcclCommDfx.h"
 #include "env_config/env_config.h"
+#include "config/env_config.h"
 #include "channel_process.h"
 #include "dlprof_function.h"
 #include "config_log.h"
+#include "comm_config_pub.h"
 
 using namespace hcomm;
 
 namespace MyRankUtils {
 
-HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc &hcclDesc)
+static uint32_t ResolveUbCommDomainQos(const hccl::CommConfig &commConfig)
+{
+    if (commConfig.GetConfigHcclQos() == HCCL_COMM_QOS_CONFIG_NOT_SET) {
+        return EnvConfig::UB_QOS_DEFAULT;
+    }
+    return commConfig.GetConfigHcclQos();
+}
+
+HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc &hcclDesc, const hccl::CommConfig &commConfig)
 {
     HcommChannelDesc hcommDesc{};
     (void)HcommChannelDescInit(&hcommDesc, 1);
@@ -34,6 +44,18 @@ HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc &hcclDesc)
     hcommDesc.memHandleNum = hcclDesc.memHandleNum;
     (void)memcpy_s(hcommDesc.raws, sizeof(hcommDesc.raws), hcclDesc.raws, sizeof(hcclDesc.raws));
     
+    if (hcclDesc.channelProtocol == COMM_PROTOCOL_ROCE) {
+        hcommDesc.roceAttr.retryCnt = hcclDesc.roceAttr.retryCnt;
+        hcommDesc.roceAttr.retryInterval = hcclDesc.roceAttr.retryInterval;
+        hcommDesc.roceAttr.sl = hcclDesc.roceAttr.sl;
+        hcommDesc.roceAttr.tc = hcclDesc.roceAttr.tc;
+        return hcommDesc;
+    }
+    if (hcclDesc.channelProtocol == COMM_PROTOCOL_UBC_CTP ||
+        hcclDesc.channelProtocol == COMM_PROTOCOL_UBC_TP ||
+        hcclDesc.channelProtocol == COMM_PROTOCOL_UBOE) {
+        hcommDesc.qos = ResolveUbCommDomainQos(commConfig);
+    }
     return hcommDesc;
 }
 
@@ -668,7 +690,7 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
     auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
     std::vector<HcommChannelDesc> hcommDescs(channelNum);
     for (u32 i = 0; i < channelNum; ++i) {
-        hcommDescs[i] = MyRankUtils::ChannelDescHccl2Hcomm(channelDescs[i]);
+        hcommDescs[i] = MyRankUtils::ChannelDescHccl2Hcomm(channelDescs[i], config_);
         hcommDescs[i].roceAttr.qpThreshold = rdmaConfig.GetRdmaMultiQpThreshold();
         CHK_RET(ConfigSqDepthByExpansionMode(engine, hcommDescs[i]));
     }

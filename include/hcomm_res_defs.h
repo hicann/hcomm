@@ -24,7 +24,10 @@ extern "C" {
 static const uint32_t COMM_ADDR_EID_LEN = 16U;
 static const uint32_t HCOMM_CHANNEL_MAGIC_WORD = 0x0fcf0f0fU;
 static const uint32_t HCOMM_CHANNEL_VERSION_ONE = 1U;
-static const uint32_t HCOMM_CHANNEL_VERSION = HCOMM_CHANNEL_VERSION_ONE;
+/** ABI v2：在 union 之后增加与协议解耦的通信域 qos（uint32_t）等布局变更 */
+static const uint32_t HCOMM_CHANNEL_VERSION = 2u;
+/** UB 通信域默认 QoS（0–7），legacy / framework / platform 共用 */
+static const uint32_t HCOMM_UB_QOS_DEFAULT = 4U;
 
 typedef int32_t HcommResult;
 
@@ -191,6 +194,8 @@ typedef enum {
 /**
  * @brief 通道描述参数
  * @note 结构体末尾扩展需要自增版本号，并补充兼容处理逻辑。
+ *       ABI v1：HCOMM_CHANNEL_VERSION_ONE，无 union 之后的 qos 字段，见 HCOMM_CHANNEL_DESC_ABI_V1_SIZE。
+ *       ABI v2：HCOMM_CHANNEL_VERSION，在 union 之后增加 uint32_t qos（通信域 QoS，与协议解耦）。
  */
 typedef struct {
     CommAbiHeader header;            ///< ABI头部，包含版本等信息
@@ -219,7 +224,11 @@ typedef struct {
             uint32_t sqDepth;         ///< UB队列深度，0表示使用默认值
         } ubAttr;
     };
+    uint32_t qos;             ///< QoS 与协议解耦
 } HcommChannelDesc;
+
+/** v1 描述符在内存中的长度（不含 union 之后的 trailing qos），用于兼容校验 */
+#define HCOMM_CHANNEL_DESC_ABI_V1_SIZE (offsetof(HcommChannelDesc, qos))
 
 /**
  * @brief 初始化EndpointDesc结构体
@@ -279,6 +288,7 @@ static inline HcommResult HcommChannelDescInit(HcommChannelDesc *channelDesc, ui
         channelDesc->socket = NULL;
         channelDesc->role = HCOMM_SOCKET_ROLE_RESERVED;
         channelDesc->port = 0;
+        channelDesc->qos = HCOMM_UB_QOS_DEFAULT;
         if (EndpointDescInit(&channelDesc->remoteEndpoint, 1) != 0) {
             return hcommEInternal;
         }

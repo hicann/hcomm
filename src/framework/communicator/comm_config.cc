@@ -655,6 +655,12 @@ HcclResult CommConfig::SetConfigServiceLevel(u32 serviceLevel)
     return HCCL_SUCCESS;
 }
 
+HcclResult CommConfig::SetConfigHcclQos(u32 hcclQos)
+{
+    hcclQos_ = hcclQos;
+    return HCCL_SUCCESS;
+}
+
 HcclResult CommConfig::SetConfigExecTimeOut(s32 execTimeOut)
 {
     execTimeOut_ = execTimeOut;

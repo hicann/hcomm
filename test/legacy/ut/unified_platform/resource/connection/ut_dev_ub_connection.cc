@@ -997,3 +997,77 @@ TEST_F(DevUbConnectionTest, Ut_ImportRmtDto)
     devUbConnection.ImportRmtDto();
     GlobalMockObject::verify();
 }
+
+static HcclResult StubGetTpInfoWithMappedQos(TpManager *, const RaUbGetTpInfoParam &, TpInfo &tpInfo, bool)
+{
+    tpInfo.tpHandle = 0x555ULL;
+    tpInfo.hasMappedJettyPriority = true;
+    tpInfo.mappedJettyPriority = 6U;
+    return HCCL_SUCCESS;
+}
+
+static u8 gCapturedJettyCreateQos = 0U;
+RequestHandle CaptureQosRaUbCreateJettyAsync(const RdmaHandle handle, const HrtRaUbCreateJettyParam &in,
+    vector<char_t> &out, void *&jettyHandle)
+{
+    gCapturedJettyCreateQos = in.qos;
+    struct QpCreateInfo info{};
+    info.ub.sqBuffVa = expectSqBuffVa;
+    info.ub.id = 1;
+    info.key.size = 0;
+    out.resize(sizeof(info));
+    memcpy(out.data(), &info, sizeof(info));
+    jettyHandle = reinterpret_cast<void *>(0x12345678ULL);
+    return static_cast<RequestHandle>(0x12345678ULL);
+}
+
+TEST_F(DevUbConnectionTest, Ut_DevUsed_DeferJettyUntilTpReady_And_MapQos)
+{
+    GlobalMockObject::verify();
+    gCapturedJettyCreateQos = 0U;
+    MOCKER_CPP(&DevUbConnection::GetTpAttrAsync).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(RaUbCreateJettyAsync).stubs().will(invoke(CaptureQosRaUbCreateJettyAsync));
+    MOCKER_CPP(&TpManager::GetTpInfo)
+        .stubs()
+        .will(returnValue(HCCL_E_AGAIN))
+        .then(invoke(StubGetTpInfoWithMappedQos));
+
+    RdmaHandle rdmaHandle = reinterpret_cast<void *>(0x1000000);
+    BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
+    LinkData linkData(portType, 20, 21, 20, 21);
+    linkData.localAddr_ = IpAddress("12.0.0.1");
+    linkData.remoteAddr_ = IpAddress("12.0.0.2");
+    linkData.linkProtocol_ = LinkProtocol::UB_CTP;
+
+    const u8 requestQos = 3U;
+    DevUbCtpConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE,
+        true, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(), requestQos);
+    devUbConnection.tpProtocol = TpProtocol::CTP;
+
+    EXPECT_EQ(devUbConnection.GetStatus(), RmaConnStatus::INIT);
+    EXPECT_EQ(devUbConnection.ubConnStatus, DevUbConnection::UbConnStatus::TP_INFO_GETTING);
+    EXPECT_EQ(devUbConnection.GetStatus(), RmaConnStatus::INIT);
+    EXPECT_EQ(devUbConnection.ubConnStatus, DevUbConnection::UbConnStatus::JETTY_CREATING);
+    EXPECT_EQ(devUbConnection.qos_, static_cast<u8>(6U));
+    EXPECT_EQ(gCapturedJettyCreateQos, static_cast<u8>(6U));
+    EXPECT_EQ(devUbConnection.GetStatus(), RmaConnStatus::EXCHANGEABLE);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DevUbConnectionTest, Ut_CreateJetty_PassesConfiguredQos)
+{
+    gCapturedJettyCreateQos = 0U;
+    MOCKER(RaUbCreateJettyAsync).stubs().will(invoke(CaptureQosRaUbCreateJettyAsync));
+
+    RdmaHandle rdmaHandle = reinterpret_cast<void *>(0x1000000);
+    BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
+    LinkData linkData(portType, 10, 11, 10, 11);
+    linkData.linkProtocol_ = LinkProtocol::UB_CTP;
+
+    DevUbCtpConnection devUbCtpConn(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE,
+        false, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(), 5U);
+    devUbCtpConn.tpInfo.tpHandle = 0x100ULL;
+    devUbCtpConn.CreateJetty(false);
+    EXPECT_EQ(gCapturedJettyCreateQos, static_cast<u8>(5U));
+    GlobalMockObject::verify();
+}

@@ -9,6 +9,7 @@
  */
 
 #include <gtest/gtest.h>
+#include "hccl/hccl_comm.h"
 #include "hccl/hccl_res.h"
 #include "hccl/hccl_res_expt.h"
 #include "../../hccl_api_base_test.h"
@@ -286,6 +287,7 @@ TEST_F(HcclIndependentOpEngineTest, Ut_HcclThreadExportToCommEngine_When_Engine_
 
     char commName[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
     HcclCommConfig config;
+    HcclCommConfigInit(&config);
     config.hcclOpExpansionMode = 1;           // 非CCU模式，避免拉起CCU平台层
     config.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
     config.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level

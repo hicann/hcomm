@@ -16,6 +16,7 @@ target_sources(hccl_v2 PRIVATE
         dev_capability.cc
         dlprof_func.cc
         tp_manager.cc
+        tp_qos.cc
         inner_net_dev_manager.cc
         inner_net_dev.cc
         net_device.cc

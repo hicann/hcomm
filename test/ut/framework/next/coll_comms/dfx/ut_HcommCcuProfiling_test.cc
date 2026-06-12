@@ -13,6 +13,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include "hccl/hccl_comm.h"
 #include "ccu_kernel_arg.h"
 #include "ccu_kernel_signature.h"
 #include "base.h"
@@ -239,6 +240,7 @@ TEST_F(Ccukernel_ReportProfilingTest, Ut_HcclReportAivKernel_Normal)
     char commName[128] = {};
     std::shared_ptr<hccl::hcclComm> hcclCommPtr = make_shared<hccl::hcclComm>(1, 1, commName);
     HcclCommConfig config;
+    HcclCommConfigInit(&config);
     config.hcclOpExpansionMode = 6; 
     config.hcclRdmaServiceLevel = 0; 
     config.hcclRdmaTrafficClass = 0;
@@ -282,6 +284,7 @@ TEST_F(Ccukernel_ReportProfilingTest, Ut_HcclReportAicpuKernel_Normal)
     char commName[128] = {};
     std::shared_ptr<hccl::hcclComm> hcclCommPtr = make_shared<hccl::hcclComm>(1, 1, commName);
     HcclCommConfig config;
+    HcclCommConfigInit(&config);
     config.hcclOpExpansionMode = 6; 
     config.hcclRdmaServiceLevel = 0; 
     config.hcclRdmaTrafficClass = 0;

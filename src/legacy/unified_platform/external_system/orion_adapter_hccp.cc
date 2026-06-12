@@ -31,7 +31,6 @@ constexpr u32 ONE_HUNDRED_MICROSECOND_OF_USLEEP = 100;
 constexpr u32 ONE_MILLISECOND_OF_USLEEP         = 1000;
 constexpr unsigned int SOCKET_NUM_ONE           = 1;
 constexpr u32 MAX_NUM_OF_WHITE_LIST_NUM         = 16;
-constexpr uint32_t TP_HANDLE_REQUEST_NUM        = 1;
 constexpr u32      AUTO_LISTEN_PORT             = 0;
 constexpr u64 SOCKET_SEND_MAX_SIZE              = 0x7FFFFFFFFFFFFFFF;
 constexpr u32 MAX_WR_NUM = 1024;
@@ -1184,9 +1183,31 @@ RdmaHandle HrtRaUbCtxInit(const HrtRaUbCtxInitParam &in)
     initCfg.mode                 = HRT_NETWORK_MODE_MAP.at(in.mode);
 
     struct CtxInitAttr ctxInfo {};
-    ctxInfo.phyId       = in.phyId;
-    ctxInfo.ub.eidIndex = 0;
-    HCCL_INFO("[HrtRaUbCtxInit] use eid[%s]", in.addr.Describe().c_str());
+    ctxInfo.phyId = in.phyId;
+    // urma_create_context(eidIndex) decides ctx local EID; must match link EID used by GetTpList/Import.
+    ctxInfo.ub.eidIndex = 0U;
+    const Eid linkEid = in.addr.GetEid();
+    try {
+        const vector<HrtDevEidInfo> eidInfoList = HrtRaGetDevEidInfoList(HRaInfo(in.mode, in.phyId));
+        bool matched = false;
+        for (const auto &eidInfo : eidInfoList) {
+            if (eidInfo.ipAddress.GetEid() == linkEid) {
+                ctxInfo.ub.eidIndex = eidInfo.eidIndex;
+                matched = true;
+                HCCL_INFO("[HrtRaUbCtxInit] linkEid[%s] matched eidIndex[%u].",
+                    in.addr.Describe().c_str(), eidInfo.eidIndex);
+                break;
+            }
+        }
+        if (!matched) {
+            HCCL_WARNING("[HrtRaUbCtxInit] linkEid[%s] not found in dev eid list(size[%zu]), "
+                "fallback eidIndex[0].", in.addr.Describe().c_str(), eidInfoList.size());
+        }
+    } catch (const NetworkApiException &) {
+        HCCL_WARNING("[HrtRaUbCtxInit] HrtRaGetDevEidInfoList failed, fallback eidIndex[0], addr[%s].",
+            in.addr.Describe().c_str());
+    }
+    HCCL_INFO("[HrtRaUbCtxInit] use eid[%s] eidIndex[%u]", in.addr.Describe().c_str(), ctxInfo.ub.eidIndex);
     s32 sRet = memcpy_s(ctxInfo.ub.eid.raw, sizeof(ctxInfo.ub.eid.raw), in.addr.GetEid().raw, sizeof(in.addr.GetEid().raw));
     if (sRet != EOK) {
         MACRO_THROW(InternalException, StringFormat("[HrtRaUbCtxInit]memcpy_s failed. sRet[%d]", sRet));
@@ -1468,8 +1489,7 @@ static struct QpCreateAttr GetQpCreateAttr(const HrtRaUbCreateJettyParam &in)
         24-31代表芯片配置值b11:32s
     */
     attr.ub.errTimeout       = in.errTimeout;
-    // CTP默认优先级使用2, TP/UBG等模式后续QoS特性统一适配
-    attr.ub.priority         = 2;
+    attr.ub.priority         = in.qos;
     attr.ub.rnrRetry         = RNR_RETRY;
     attr.ub.flag.bs.shareJfr = 1;
     attr.ub.jettyId          = in.jettyId;
@@ -2214,7 +2234,7 @@ RequestHandle RaUbGetTpInfoAsync(const RdmaHandle rdmaHandle, const RaUbGetTpInf
     cfg.peerEid = IpAddressToHccpEid(rmtAddr);
     HCCL_INFO("RaUbGetTpInfoAsync cfg.peerEid=%s", HccpEidDesc(cfg.peerEid).c_str());
 
-    out.resize(sizeof(HccpTpInfo));
+    out.resize(static_cast<size_t>(TP_HANDLE_REQUEST_NUM) * sizeof(struct HccpTpInfo));
     struct HccpTpInfo *info = reinterpret_cast<struct HccpTpInfo *>(out.data());
 
     void *raReqHandle = nullptr;
@@ -2242,13 +2262,14 @@ void RaUbGetTpInfo(const RdmaHandle rdmaHandle, const RaUbGetTpInfoParam &param,
     struct GetTpCfg cfg{};
     cfg.flag.bs.rtp = tpProtocol == TpProtocol::TP ? 1 : 0;
     cfg.flag.bs.ctp = tpProtocol == TpProtocol::CTP ? 1 : 0;
+    cfg.flag.bs.uboe = tpProtocol == TpProtocol::UBOE ? 1 : 0;
     cfg.transMode = TransportModeT::CONN_RM; // 当前只使用RM Jetty
     cfg.localEid = IpAddressToHccpEid(locAddr);
     HCCL_INFO("RaUbGetTpInfo cfg.localEid=%s", HccpEidDesc(cfg.localEid).c_str());
     cfg.peerEid = IpAddressToHccpEid(rmtAddr);
     HCCL_INFO("RaUbGetTpInfo cfg.peerEid=%s", HccpEidDesc(cfg.peerEid).c_str());
 
-    out.resize(sizeof(HccpTpInfo));
+    out.resize(static_cast<size_t>(TP_HANDLE_REQUEST_NUM) * sizeof(struct HccpTpInfo));
     struct HccpTpInfo *info = reinterpret_cast<struct HccpTpInfo *>(out.data());
 
     num = TP_HANDLE_REQUEST_NUM; // 指定需要从管控面申请tp handle的数量, hccp 会返回实际个数

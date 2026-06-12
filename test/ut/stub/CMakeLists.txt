@@ -119,6 +119,7 @@ set(orion_list
     ${HCCL_CODE_ROOT}/src/legacy/framework/env_config/base_config.cc
     ${HCCL_CODE_ROOT}/src/legacy/framework/env_config/env_config.cc
     ${HCCL_CODE_ROOT}/src/legacy/framework/env_config/env_func.cc
+    ${HCCL_CODE_ROOT}/src/legacy/unified_platform/common/tp_qos.cc
 )
 
 set(hccl_list

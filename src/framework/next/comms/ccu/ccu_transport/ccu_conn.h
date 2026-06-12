@@ -15,6 +15,7 @@
 #include "ccu_jetty_.h"
 #include "ccu_dev_mgr_imp.h"
 #include "hcomm_adapter_hccp.h"
+#include "env_config/env_config.h"
 
 namespace hcomm {
 
@@ -27,7 +28,7 @@ MAKE_ENUM(CcuConnStatus,
 class CcuConnection {
 public:
     CcuConnection(const CommAddr &locAddr, const CommAddr &rmtAddr,
-        const CcuChannelInfo &channelInfo, const std::vector<CcuJetty *> &ccuJettys);
+        const CcuChannelInfo &channelInfo, const std::vector<CcuJetty *> &ccuJettys, uint32_t qos);
     CcuConnection(const CcuConnection &that)             = delete;
     CcuConnection &operator=(const CcuConnection &other) = delete;
     ~CcuConnection();
@@ -66,6 +67,7 @@ private:
 private:
     HcclResult    StatusMachine();
     HcclResult    UpdateInitStatus();
+    HcclResult    TryCreateJettyAndAdvance();
     HcclResult    UpdateExchangeStatus();
 
     HcclResult    GetLocalCcuRmaBufferInfo();
@@ -73,6 +75,7 @@ private:
     HcclResult    GetTpInfo();
     HcclResult    GetTpAttr();
     HcclResult    GetTaTimeOut();
+    void          InitGetTpInfoParam();
     void          GenerateLocalPsn();
     void          ResetRequestCtxs();
     HcclResult    StartImportJettyRequest(uint32_t jettyIndex, RequestHandle &reqHandle);
@@ -92,6 +95,7 @@ private:
     CommAddr         rmtAddr_{};
     CcuChannelInfo          channelInfo_{};
     std::vector<CcuJetty *> ccuJettys_;
+    uint32_t      qos_{EnvConfig::UB_QOS_DEFAULT};
 
     int32_t       devLogicId_{0};
     uint32_t      devPhyId_{0};
@@ -114,8 +118,9 @@ private:
     uint32_t      rmtCcuBufTokenValue_{0};
 
     // 感知tp获取tp handle，import jetty后urma提供tpn
-    TpInfo   tpInfo_{};
-    TpAttrInfo tpAttrInfo_{};
+    GetTpInfoParam getTpInfoParam_{};
+    TpInfo         tpInfo_{};
+    TpAttrInfo     tpAttrInfo_{};
 
     // 异步import上下文信息
     std::vector<RequestHandle>  reqHandles_;
@@ -130,13 +135,13 @@ private:
 class CcuRtpConnection : public CcuConnection {
 public:
     CcuRtpConnection(const CommAddr &locAddr, const CommAddr &rmtAddr,
-        const CcuChannelInfo &channelInfo, const std::vector<CcuJetty *> &ccuJettys);
+        const CcuChannelInfo &channelInfo, const std::vector<CcuJetty *> &ccuJettys, uint32_t qos);
 };
 
 class CcuCtpConnection : public CcuConnection {
 public:
     CcuCtpConnection(const CommAddr &locAddr, const CommAddr &rmtAddr,
-        const CcuChannelInfo &channelInfo, const std::vector<CcuJetty *> &ccuJettys);
+        const CcuChannelInfo &channelInfo, const std::vector<CcuJetty *> &ccuJettys, uint32_t qos);
 };
 
 } // namespace hcomm

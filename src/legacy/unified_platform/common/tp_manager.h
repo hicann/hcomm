@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -10,6 +10,8 @@
 #ifndef HCCLV2_TP_MANAGER_H
 #define HCCLV2_TP_MANAGER_H
 
+#include <cstdint>
+#include <functional>
 #include <mutex>
 #include <vector>
 #include <unordered_map>
@@ -40,13 +42,18 @@ constexpr uint8_t AT_GEAR_MAX = 3;
 constexpr uint8_t AT_GEAR_DEFAULT = 2;
 constexpr uint32_t AT_TIMEOUT_MAP[4] = {16, 128, 1000, 4000};
 
+/// 与 GetTpInfo / ReleaseTpInfo 中 info、req 两级 map 的 qos 键一致（param.qos 低 8 位）
+using QosKey = uint32_t;
+
 /*
- * TP信息，当前申请TpHandle，不感知具体TP信息，当前仅支持TP与CTP
- * tpHandle: 对应管控面的TPID与相关资源，URMA通过引用计数管理申请和销毁TP
+ * TP 信息：当前仅申请 TpHandle，不感知具体 TP 详情，当前仅支持 TP 与 CTP
+ * tpHandle: 对应管控面的 TPID 与相关资源，URMA 通过引用计数管理申请与销毁 TP
  */
 using TpHandle = uint64_t;
 struct TpInfo {
     TpHandle tpHandle{0};
+    uint32_t mappedJettyPriority{0};
+    bool hasMappedJettyPriority{false};
 
     TpInfo() = default;
     TpInfo(const TpHandle handle)
@@ -79,8 +86,9 @@ class TpManager {
 public:
     static TpManager &GetInstance(const int32_t deviceLogicId);
     void Init();
+    /// `isSync==true`：主端 HostUb 同步路径（GetByAddr + `RaUbGetTpInfo`）；默认 `false` 走异步 + QoS/SL 逻辑
     HcclResult GetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo, bool isSync = false);
-    // unimport jetty 会 URMA 销毁 tp 资源，hccl 配套删除记录
+    // unimport jetty 会由 URMA 销毁 tp 资源，hccl 配套删除记录
     HcclResult ReleaseTpInfo(const RaUbGetTpInfoParam &param, const TpInfo &tpInfo);
     HcclResult GetTpAttr(const GetTpAttrParam &param, TpAttrInfo &tpAttrInfo, RdmaHandle rdmaHandle);
     HcclResult ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo &tpAttrInfo);
@@ -90,15 +98,18 @@ public:
     static uint32_t TaHwValueToMs(uint8_t hwValue);
     static uint8_t FindMinTaHwValue(uint32_t tpTotalTimeoutMs);
 
+    void SetIsHost();
+
 private:
     bool initFlag{false};
+    bool isHost{false};
     uint32_t devLogicId{0};
     uint32_t devPhyId{0};
 
     struct TpInfoCtx {
         TpInfo tpInfo{};
         uint32_t useCnt{0};
-        
+
         TpInfoCtx() = default;
         TpInfoCtx(const TpInfo &info, const uint32_t cnt)
             : tpInfo(info), useCnt(cnt) {}
@@ -114,18 +125,21 @@ private:
     };
 
     /*
-    * Request上下文，保存查询TP信息相关调用异步接口出参
-    * handle: 异步接口调用handle，用于查询处理结果
-    * tpInfoNum: 查询到的TP信息个数，当前为复用TP，只会申请1个
-    * isSync: 同步/异步标记，true走同步路径直接调用RaUbGetTpInfo并等待返回，false走异步路径通过RaUbGetTpInfoAsync+轮询完成。
-    *          当前仅hostCpuUrma场景（HostUbConnection）使用同步模式。
-    * dataBuffer: 查询到的TP信息数据，原始数据保留缓冲区
-    */
+     * Request 上下文，保存查询 TP 信息相关异步接口出参
+     * handle: 异步接口调用 handle，用于查询处理结果
+     * tpInfoNum: 查询到的 TP 信息个数，当前为复用 TP，只会申请 1 个
+     * isSync: 与主端一致；true 时走同步 `RaUbGetTpInfo`，不参与异步 handle 轮询
+     * dataBuffer: 查询到的 TP 信息数据，原始数据保留缓冲区
+     */
     struct RequestCtx {
+        enum class ReqPhase : uint8_t { WAIT_LIST = 0, WAIT_TP_ATTR = 1 };
+        ReqPhase phase{ReqPhase::WAIT_LIST};
         RequestHandle handle{0};
         uint32_t tpInfoNum{0};
         bool isSync{false};
         std::vector<char_t> dataBuffer;
+        TpAttr tpAttr{};
+        uint32_t tpAttrBitmap{0};
     };
 
     struct TpAttrRequestCtx {
@@ -133,8 +147,13 @@ private:
         struct TpAttr tpAttr{0};
     };
 
-    using InfoCtxMap = std::unordered_map<IpAddress, std::unordered_map<IpAddress, TpInfoCtx>>;
-    using ReqCtxMap  = std::unordered_map<IpAddress, std::unordered_map<IpAddress, RequestCtx>>;
+    /// 三级索引：先按本端 IP，再按对端 IP，最后按 QoS 键（`QosKey`：`param.qos & 0xFF`，与 next `TpMgr` 一致）
+    using InfoQosMap = std::unordered_map<uint32_t, TpInfoCtx>;
+    using InfoRmtMap = std::unordered_map<IpAddress, InfoQosMap>;
+    using InfoCtxMap = std::unordered_map<IpAddress, InfoRmtMap>;
+    using ReqQosMap = std::unordered_map<uint32_t, RequestCtx>;
+    using ReqRmtMap = std::unordered_map<IpAddress, ReqQosMap>;
+    using ReqCtxMap = std::unordered_map<IpAddress, ReqRmtMap>;
 
     using TpAttrCtxMap = std::unordered_map<TpHandle, TpAttrCtx>;
     using TpAttrReqCtxMap = std::unordered_map<TpHandle, TpAttrRequestCtx>;
@@ -168,14 +187,22 @@ private:
     TpManager(const TpManager &that) = delete;
     TpManager &operator=(const TpManager &that) = delete;
 
-    bool FindAndGetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo);
+    HcclResult FindAndGetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo);
+    HcclResult PollGetTpInfoReqCtx(const RaUbGetTpInfoParam &param, TpInfo &tpInfo, bool isSync);
+    HcclResult AdvanceDeviceWaitListPhase(const RaUbGetTpInfoParam &param, RequestCtx &reqCtx, ReqQosMap &qosReqMap,
+        ReqQosMap::iterator it, std::unique_lock<std::mutex> &reqCtxLock, TpInfo &tpInfo);
+    HcclResult FinishGetTpInfoFromReq(ReqQosMap &qosReqMap, ReqQosMap::iterator it,
+        std::unique_lock<std::mutex> &reqCtxLock, const RaUbGetTpInfoParam &param, TpInfo &tpInfo, bool withSlPolicy);
     void StartGetTpInfoListRequest(const RaUbGetTpInfoParam &param, RequestCtx &reqCtx, bool isSync) const;
     HcclResult FindAndGetTpAttr(const TpHandle tpHandle, TpAttrInfo &tpAttrInfo);
     HcclResult StartGetTpAttrRequest(const GetTpAttrParam &param, TpAttrRequestCtx &reqCtx, RdmaHandle rdmaHandle) const;
-    HcclResult HandleCompletedRequest(const RequestCtx reqCtx, const RaUbGetTpInfoParam &param,
-        TpInfo &tpInfo);
     HcclResult HandleCompletedTpAttrRequest(const TpAttrRequestCtx reqCtx, const TpHandle tpHandle,
         TpAttrInfo &tpAttrInfo);
+
+    void StartGetTpAttrForFirstTpDevice(const RaUbGetTpInfoParam &param, RequestCtx &reqCtx);
+    HcclResult HandleCompletedRequest(RequestCtx reqCtx, const RaUbGetTpInfoParam &param, TpInfo &tpInfo,
+        bool withSlPolicy);
+    HcclResult MapTpInfoFromTpAttr(const RaUbGetTpInfoParam &param, const RequestCtx &reqCtx, TpInfo &outTpInfo);
 
     bool CheckRequestResult(RequestHandle &reqHandle) const;
     InfoCtxMap &GetInfoCtxMap(const TpProtocol tpProtocol);

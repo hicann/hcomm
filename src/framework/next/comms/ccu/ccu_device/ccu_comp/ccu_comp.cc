@@ -33,6 +33,19 @@ namespace hcomm {
 
 constexpr TpProtocol LOOP_JETTY_PROTOCOL = TpProtocol::RTP; // 环回使用RTP避免被环境link down阻塞
 
+static GetTpInfoParam MakeLoopGetTpInfoParam(const CommAddr &commAddr, TpProtocol tpProtocol)
+{
+    GetTpInfoParam param;
+    param.locAddr = commAddr;
+    param.rmtAddr = commAddr;
+    param.tpProtocol = tpProtocol;
+    param.qos = 0U;
+    param.slLevelCount = 0U;
+    param.loopFirstTpLowestSl = true;
+    param.ccuLoopbackGetTpInfo = true;
+    return param;
+}
+
 // 设置为0，分配数量由channelCtxMgr决定，v1 默认1个
 constexpr uint32_t LOOP_CHANNEL_USE_JETTY  = 0;
 constexpr uint32_t LOOP_CHANNEL_USE_SQSIZE = 16;
@@ -448,9 +461,12 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(const uint8_t dieId,
         uint8_t errTimeout = TpMgr::CalcTaTimeout(tpAttrInfo);
 
         const auto jettyMode = HrtJettyMode::CCU_CCUM_CACHE; // 当前仅支持该模式
-        const HrtRaUbCreateJettyParam req{jfcHandle, jfcHandle, ccuBufTokenValue, tokenIdHandle, jettyMode,
+        HrtRaUbCreateJettyParam req{jfcHandle, jfcHandle, ccuBufTokenValue, tokenIdHandle, jettyMode,
             jettyInfo.taJettyId, jettyInfo.sqBufVa, jettyInfo.sqBufSize, jettyInfo.wqeBBStartId, jettyInfo.sqDepth,
             errTimeout};
+        if (tpInfo.hasMappedJettyPriority) {
+            req.qos = static_cast<u8>(tpInfo.mappedJettyPriority & 0xFU);
+        }
 
         HrtRaUbJettyCreatedOutParam createdOutParam{};
         CHK_RET(HccpUbCreateJetty(ctxHandle, req, createdOutParam));
@@ -472,12 +488,12 @@ static HcclResult RequestNewLoopTpInfo(const uint32_t devPhyId,
     const auto startTime = std::chrono::steady_clock::now();
 
     auto &tpMgr = TpMgr::GetInstance(devPhyId);
-    const GetTpInfoParam tpParam = {commAddr, commAddr, LOOP_JETTY_PROTOCOL};
+    const GetTpInfoParam tpParam = MakeLoopGetTpInfoParam(commAddr, LOOP_JETTY_PROTOCOL);
     HcclResult ret = HcclResult::HCCL_SUCCESS;
     do {
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
             HCCL_ERROR("[CcuComponent][%s] failed, get tp info "
-                "timeout[%d ms], devPhyId[%d].", __func__, timeout, devPhyId);
+                "timeout[%d ms], devPhyId[%d].", __func__, LOOP_CHANNEL_WAIT_TIMEOUT_MS, devPhyId);
             return HcclResult::HCCL_E_TIMEOUT;
         }
 
@@ -947,7 +963,7 @@ HcclResult CcuComponent::ReleaseAllTpInfos()
             return HcclResult::HCCL_E_NOT_FOUND;
         }
         const auto &commAddr = dieIdIter->second.second;
-        const GetTpInfoParam tpParam = {commAddr, commAddr, LOOP_JETTY_PROTOCOL};
+        const GetTpInfoParam tpParam = MakeLoopGetTpInfoParam(commAddr, LOOP_JETTY_PROTOCOL);
         (void)TpMgr::GetInstance(devPhyId_).ReleaseTpInfo(tpParam, tpInfo);
         item.second.tpHandle = 0; // 清理handle，避免重复释放
     }

@@ -22,8 +22,11 @@
 #include "virtual_topo.h"
 #include "aicpu_res_package_helper.h"
 #include "tp_manager.h"
+#include "env_config/env_config.h"
+#include "config/env_config.h"
 
 namespace hcomm {
+
 constexpr uint16_t DEFAULT_LISTENING_PORT = 60001;
 
 AicpuTsUrmaChannel::AicpuTsUrmaChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc):
@@ -116,17 +119,21 @@ HcclResult AicpuTsUrmaChannel::BuildConnection()
     CHK_RET(hrtGetDevice(&deviceLogicId));
     Hccl::TpManager::GetInstance(deviceLogicId).Init();
 
+    const u8 ubQos = static_cast<u8>((channelDesc_.qos > 7U) ? EnvConfig::UB_QOS_DEFAULT
+                                                               : (channelDesc_.qos & 7U));
     std::unique_ptr<Hccl::DevUbConnection> ubConn = nullptr;
     switch (protocol) {
         case Hccl::LinkProtocol::UB_TP:
             EXECEPTION_CATCH(
-                ubConn = std::make_unique<Hccl::DevUbTpConnection>(rdmaHandle_, locAddr, rmtAddr, opMode, devUsed),
+                ubConn = std::make_unique<Hccl::DevUbTpConnection>(rdmaHandle_, locAddr, rmtAddr, opMode, devUsed,
+                    Hccl::HrtUbJfcMode::STARS_POLL, Hccl::IpAddress(), Hccl::IpAddress(), ubQos),
                 return HCCL_E_PTR
             );
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXECEPTION_CATCH(
-                ubConn = std::make_unique<Hccl::DevUbCtpConnection>(rdmaHandle_, locAddr, rmtAddr, opMode, devUsed),
+                ubConn = std::make_unique<Hccl::DevUbCtpConnection>(rdmaHandle_, locAddr, rmtAddr, opMode, devUsed,
+                    Hccl::HrtUbJfcMode::STARS_POLL, Hccl::IpAddress(), Hccl::IpAddress(), ubQos),
                 return HCCL_E_PTR
             );
             break;

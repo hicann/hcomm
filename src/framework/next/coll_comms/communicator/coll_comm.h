@@ -103,6 +103,7 @@ private:
     HcclResult InitHDCommunicate();   
     HcclResult InitTaskExceptionHandler();
     HcclResult InitKfcAndRegisterCollComm();
+    HcclResult ApplyUserCommConfig(HcclCommConfig *config, uint32_t &opExpansionMode);
     HcclResult GetRankIpPortMap();
 
     void* comm_{nullptr};

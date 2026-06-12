@@ -281,7 +281,7 @@ typedef struct urma_device_cap {
     uint32_t max_fetch_and_xor_size;
     urma_atomic_feature_t atomic_feat; /* [Public] support atomic feature of device */
     uint16_t trans_mode;               /* [Public] bit OR of supported transport modes */
-    uint16_t sub_trans_mode_cap;       /* [Public] bit OR of supported transport modes cap, urma_sub_trans_mode_cap_t */
+    uint16_t reserved;
     uint16_t congestion_ctrl_alg;      /* [Public] one or more mode from urma_congestion_ctrl_alg_t */
     uint32_t ceq_cnt;                  /* [Public] ceq_cnt */
     uint32_t max_tp_in_tpg;            /* [Public] max tp in tpg */
@@ -1318,7 +1318,9 @@ typedef union urma_get_tp_cfg_flag {
         uint32_t uboe            : 1;
         uint32_t pre_defined     : 1;
         uint32_t dynamic_defined : 1;
-        uint32_t reserved        : 26;
+        uint32_t udp             : 5;
+        uint32_t group_id        : 15;
+        uint32_t reserved        : 6;
     } bs;
     uint32_t value;
 } urma_get_tp_cfg_flag_t;
@@ -1371,7 +1373,10 @@ typedef struct urma_tp_attr_value {
     uint8_t spray_en : 1;
     uint8_t udp_global_en : 1;
     uint8_t reserve_0 : 2;
-    uint8_t reserved[73];
+    uint16_t sl_bitmap;
+    uint8_t dscp_config_mode : 1; /* DSCP configuration mode. 0-service plane, 1-management and control plane */
+    uint8_t reserve_1 : 7;
+    uint8_t reserved[70];
 } urma_tp_attr_value_t;
 #pragma pack()
 

@@ -11,6 +11,7 @@
 #include "my_rank.h"
 #undef private
 #include "hccl_comm_pub.h"
+#include "hccl/hccl_comm.h"
 #include "llt_hccl_stub_rank_graph.h"
 
 using namespace hccl;
@@ -57,6 +58,7 @@ void InitCollComm(std::shared_ptr<hccl::hcclComm> hcclCommPtr)
     cclBuffer.addr = (void*)0x1000;
     char commName[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
     HcclCommConfig config;
+    HcclCommConfigInit(&config);
     config.hcclOpExpansionMode = 1;
     config.hcclRdmaTrafficClass = 0xFFFFFFFF;
     config.hcclRdmaServiceLevel = 0xFFFFFFFF;

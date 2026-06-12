@@ -107,6 +107,7 @@ public:
     u64 GetConfigSymmetricMemoryStride() const;
     HcclResult SetConfigTrafficClass(u32 trafficClass);
     HcclResult SetConfigServiceLevel(u32 serviceLevel);
+    HcclResult SetConfigHcclQos(u32 hcclQos);
 
 private:
     void InitAlgoConfig();

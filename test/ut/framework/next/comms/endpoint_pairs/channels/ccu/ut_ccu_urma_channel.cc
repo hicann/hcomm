@@ -30,7 +30,7 @@ class TestCcuConnection : public CcuConnection {
 public:
     TestCcuConnection(const CommAddr &locAddr, const CommAddr &rmtAddr,
         const CcuChannelInfo &channelInfo, const std::vector<CcuJetty *> &ccuJettys)
-        : CcuConnection(locAddr, rmtAddr, channelInfo, ccuJettys) {}
+        : CcuConnection(locAddr, rmtAddr, channelInfo, ccuJettys, 4U) {}
     // Do not call Init(); use default base behavior for Clean()
 };
 
@@ -83,7 +83,7 @@ TEST_F(CcuUrmaChannelTest, Ut_GetStatus_DfxInfo_TEST) {
     CcuChannelInfo channelInfo{};
     std::vector<CcuJetty*> jettys{};
 
-    auto conn = std::make_unique<CcuConnection>(locAddr, rmtAddr, channelInfo, jettys);
+    auto conn = std::make_unique<CcuConnection>(locAddr, rmtAddr, channelInfo, jettys, 4U);
     auto fakeSocket = reinterpret_cast<Hccl::Socket*>(1);
     CcuTransport::CclBufferInfo bufInfo(0x1000, 0x100, 1, 1);
 

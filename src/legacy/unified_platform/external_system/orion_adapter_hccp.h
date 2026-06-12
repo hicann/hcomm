@@ -19,6 +19,7 @@
 #include "hccp_tlv.h"
 #include <mutex>
 #include "hccp_async_ctx.h"
+#include "hcomm_res_defs.h"
 
 namespace Hccl {
 using namespace std;
@@ -34,6 +35,8 @@ constexpr u32 SOCKET_CONNECTING      = 3;
 
 constexpr u32 UB_WQE_SIZE_64  = 64;
 constexpr u32 UB_WQE_SIZE_128 = 128;
+constexpr u32 kRaUbGetTpInfoParamDefaultQos = HCOMM_UB_QOS_DEFAULT;
+constexpr uint32_t TP_HANDLE_REQUEST_NUM = 8U;
 
 // QP CQ default attr
 constexpr u32 DEFAULT_OPBASE_MAX_SEND_WR = 32768;
@@ -431,6 +434,8 @@ using HrtRaUbCreateJettyParam = struct HrtRaUbJettyCreateParamDef {
     // HOST_OFFLOAD / HOST_OPBASE / CACHE_LOCK_DWQE 类型的Jetty ，需要指定WQEBB的数目
     // STADARD 类型Jetty，该参数代表SQ深度
     u32              sqDepth{0};
+    /// 低4bit 映射 UB Jetty 创建属性中的 priority（attr.ub.priority = qos & 0xF）
+    u8               qos{2};
     u32              rqDepth{64};
     HrtTransportMode transMode{HrtTransportMode::RM}; // 仅能使用RM模式的Jetty
     u8 errTimeout{16};
@@ -595,15 +600,21 @@ using RaUbGetTpInfoParam = struct RaUbGetTpInfoParamDef {
     IpAddress locAddr{};
     IpAddress rmtAddr{};
     TpProtocol tpProtocol{TpProtocol::CTP};
+    uint32_t qos{kRaUbGetTpInfoParamDefaultQos};
+    uint32_t slLevelCount{0U};
+    bool loopFirstTpLowestSl{false};
+    bool ccuLoopbackGetTpInfo{false};
 
     explicit RaUbGetTpInfoParamDef() = default;
     RaUbGetTpInfoParamDef(const IpAddress &locAddr, const IpAddress &rmtAddr, TpProtocol tpProtocol)
         : locAddr(locAddr), rmtAddr(rmtAddr), tpProtocol(tpProtocol){};
 
     std::string Describe() const {
-        return StringFormat("RaUbGetTpInfoParam[locAddr=%s, rmtAddr=%s, tpProtocol=%s]",
-            locAddr.Describe().c_str(), rmtAddr.Describe().c_str(),
-            tpProtocol.Describe().c_str());
+        return StringFormat(
+            "RaUbGetTpInfoParam[locAddr=%s, rmtAddr=%s, tpProtocol=%s, qos=%u, loopFirstTpLowestSl=%d, ccuLoop=%d]",
+            locAddr.Describe().c_str(), rmtAddr.Describe().c_str(), tpProtocol.Describe().c_str(),
+            static_cast<unsigned>(qos & 0xFFU), static_cast<int>(loopFirstTpLowestSl),
+            static_cast<int>(ccuLoopbackGetTpInfo));
     }
 };
 

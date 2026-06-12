@@ -22,6 +22,8 @@
 #include "virtual_topo.h"
 #include "aicpu_res_package_helper.h"
 #include "tp_manager.h"
+#include "env_config/env_config.h"
+#include "config/env_config.h"
 #include "exchange_ub_buffer_dto.h"
 #include "exchange_ub_conn_dto.h"
 #include "user_remote_mem_getter.h"
@@ -119,8 +121,10 @@ HcclResult AicpuTsUboeChannel::BuildConnection()
     CHK_RET(hrtGetDevice(&deviceLogicId));
     Hccl::TpManager::GetInstance(deviceLogicId).Init();
 
+    const u8 ubQos = static_cast<u8>((channelDesc_.qos > 7U) ? EnvConfig::UB_QOS_DEFAULT
+                                                               : (channelDesc_.qos & 7U));
     std::unique_ptr<Hccl::DevUbConnection> ubConn = std::make_unique<Hccl::DevUbUboeConnection>(rdmaHandle_, 
-        locAddr_, rmtAddr_, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL, locIpv4Addr, rmtIpv4Addr);
+        locAddr_, rmtAddr_, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL, locIpv4Addr, rmtIpv4Addr, ubQos);
     CHK_SMART_PTR_NULL(ubConn);
 
     commonRes_.connVec.clear();

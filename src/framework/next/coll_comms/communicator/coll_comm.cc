@@ -69,26 +69,12 @@ HcclResult CollComm::Init(void * rankGraph, aclrtBinHandle binHandle, HcclMem cc
         EXECEPTION_CATCH(contextMgr_ = std::make_unique<ContextManager>(), return HCCL_E_PTR);
     }
 
+    uint32_t opExpansionMode = 0;
+    CHK_RET(ApplyUserCommConfig(config, opExpansionMode));
+
     EXECEPTION_CATCH(
         myRank_ = std::make_shared<MyRank>(binHandle, rankId_, config_, callbacks_, rankgraph_.get(), rankIpPortMap_),
         return HCCL_E_PTR);
-    uint32_t opExpansionMode = 0;
-    if (config) {
-        opExpansionMode = config->hcclOpExpansionMode;
-        u32 tc = config->hcclRdmaTrafficClass;
-        CHK_PRT_RET((tc != TC_DEFAULT) && (tc > TC_MAX || (tc % MULTIPLE != 0)),
-            HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclRdmaTrafficClass[%u], must be 0xFFFFFFFF or in [0,255] and a multiple of 4",
-                HCCL_ERROR_CODE(HCCL_E_PARA), tc),
-            HCCL_E_PARA);
-        CHK_RET(config_.SetConfigTrafficClass(tc));
-
-        u32 sl = config->hcclRdmaServiceLevel;
-        CHK_PRT_RET((sl != SL_DEFAULT) && (sl > SL_MAX),
-            HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclRdmaServiceLevel[%u], must be 0xFFFFFFFF or in [0,7]",
-                HCCL_ERROR_CODE(HCCL_E_PARA), sl),
-            HCCL_E_PARA);
-        CHK_RET(config_.SetConfigServiceLevel(sl));
-    }
     CHK_RET(myRank_->Init(cclBuffer, opExpansionMode, rankNum));
     CHK_RET(hrtGetDevice(&deviceLogicId_));
 
@@ -103,6 +89,36 @@ HcclResult CollComm::Init(void * rankGraph, aclrtBinHandle binHandle, HcclMem cc
     CHK_RET(InitKfcAndRegisterCollComm());
 
     EXCEPTION_HANDLE_END
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollComm::ApplyUserCommConfig(HcclCommConfig *config, uint32_t &opExpansionMode)
+{
+    if (!config) {
+        return HCCL_SUCCESS;
+    }
+
+    opExpansionMode = config->hcclOpExpansionMode;
+    u32 tc = config->hcclRdmaTrafficClass;
+    CHK_PRT_RET((tc != TC_DEFAULT) && (tc > TC_MAX || (tc % MULTIPLE != 0)),
+        HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclRdmaTrafficClass[%u], must be 0xFFFFFFFF or in [0,255] and a multiple of 4",
+            HCCL_ERROR_CODE(HCCL_E_PARA), tc),
+        HCCL_E_PARA);
+    CHK_RET(config_.SetConfigTrafficClass(tc));
+
+    u32 sl = config->hcclRdmaServiceLevel;
+    CHK_PRT_RET((sl != SL_DEFAULT) && (sl > SL_MAX),
+        HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclRdmaServiceLevel[%u], must be 0xFFFFFFFF or in [0,7]",
+            HCCL_ERROR_CODE(HCCL_E_PARA), sl),
+        HCCL_E_PARA);
+    CHK_RET(config_.SetConfigServiceLevel(sl));
+
+    u32 qos = config->hcclQos;
+    CHK_PRT_RET((qos != HCCL_COMM_QOS_CONFIG_NOT_SET) && (qos > SL_MAX),
+        HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclQos[%u], must be 0xFFFFFFFF or in [0,7]",
+            HCCL_ERROR_CODE(HCCL_E_PARA), qos),
+        HCCL_E_PARA);
+    CHK_RET(config_.SetConfigHcclQos(qos));
     return HCCL_SUCCESS;
 }
 

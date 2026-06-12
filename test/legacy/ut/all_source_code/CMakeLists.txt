@@ -94,6 +94,7 @@ target_sources(hccl_v2_utest
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/dev_capability.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/dlprof_func.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/tp_manager.cc
+        ${HCCL_V2_CODE_ROOT}/unified_platform/common/tp_qos.cc
         
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/inner_net_dev_manager.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/inner_net_dev.cc

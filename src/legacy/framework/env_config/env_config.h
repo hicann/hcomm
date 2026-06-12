@@ -10,9 +10,12 @@
 #ifndef HCCLV2_ENV_CONFIG_H
 #define HCCLV2_ENV_CONFIG_H
 
+#include "hcomm_res_defs.h"
 #include "base_config.h"
 
 namespace Hccl {
+
+constexpr u32 UB_QOS_DEFAULT = HCOMM_UB_QOS_DEFAULT;
 
 class EnvConfig {
 public:

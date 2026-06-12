@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -26,7 +26,8 @@ class DevUbConnection : public RmaConnection {
 public:
     DevUbConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                     const OpMode opMode, const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
-                    const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress());
+                    const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress(),
+                    u8 qos = static_cast<u8>(HCOMM_UB_QOS_DEFAULT));
     void          Connect() override;
     RmaConnStatus GetStatus() override;
     bool          Suspend() override;
@@ -107,6 +108,7 @@ private:
     u32          tokenValue{GetUbToken()};
     Eid          rmtEid{};
     Eid          locEid{};
+    u8           qos_{static_cast<u8>(HCOMM_UB_QOS_DEFAULT)};
 
     int32_t   devLogicId{0};
     u32       dieId{0};
@@ -136,6 +138,9 @@ private:
     u32                 localTpnStart{0};
     u32                 localTpNum{0};
     TpInfo              tpInfo{};
+    /// 与 `TpManager` 缓存键一致：首次成功 `GetTpInfo` 时的 `p.qos`（须在改写 `qos_` 为 mapped priority 之前记录）
+    uint32_t            tpMgrReleaseQos_{0};
+    bool                tpMgrReleaseQosCaptured_{false};
 
     u32 piVal{0};
     u32 ciVal{0};
@@ -146,6 +151,12 @@ private:
 
     bool CheckRequestResult();
     void ThrowAbnormalStatus(std::string funcName);
+    void AdvanceUbConnFromInit();
+    void AdvanceUbConnFromTpInfoGetting();
+    void AdvanceUbConnAfterTpInfoReady();
+    void AdvanceUbConnFromJettyCreating();
+    void AdvanceUbConnFromJettyCreated();
+    void AdvanceUbConnFromJettyImporting();
 
     void         GenerateLocalPsn();
     void         CreateJetty(const bool devUsed);
@@ -181,21 +192,24 @@ class DevUbTpConnection : public DevUbConnection {
 public:
     DevUbTpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                       const OpMode opMode, const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
-                      const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress());
+                      const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress(),
+                      u8 qos = static_cast<u8>(HCOMM_UB_QOS_DEFAULT));
 };
 
 class DevUbCtpConnection : public DevUbConnection {
 public:
     DevUbCtpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                        const OpMode opMode, const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
-                       const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress());
+                       const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress(),
+                       u8 qos = static_cast<u8>(HCOMM_UB_QOS_DEFAULT));
 };
 
 class DevUbUboeConnection : public DevUbConnection {
 public:
     DevUbUboeConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                         const OpMode opMode, const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
-                        const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress());
+                        const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress(),
+                        u8 qos = static_cast<u8>(HCOMM_UB_QOS_DEFAULT));
 };
 
 std::vector<DevUbConnection *> GetStarsPollUbConns(const std::vector<RmaConnection *> &rmaConns);

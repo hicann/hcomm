@@ -561,6 +561,19 @@ int RaGetDevBaseAttr(void *ctx_handle, struct DevBaseAttr *attr)
     return 0;
 }
 
+int RaGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen)
+{
+    (void)info;
+    (void)key;
+    if (value != nullptr && valueLen != nullptr && *valueLen > 0U) {
+        value[0] = '\0';
+    }
+    if (valueLen != nullptr) {
+        *valueLen = 0U;
+    }
+    return -1;
+}
+
 int RaCustomChannel(struct RaInfo info, struct CustomChanInfoIn *in, struct CustomChanInfoOut *out)
 {
     return 0;

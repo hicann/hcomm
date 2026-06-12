@@ -27,11 +27,11 @@ HcclResult BuildCcuConnection(const CcuTransport::CcuConnectionInfo &ccuConnecti
     if (ccuConnectionInfo.type == CcuTransport::CcuConnectionType::UBC_CTP) {
         ccuConnection.reset(new (std::nothrow) CcuCtpConnection(
             ccuConnectionInfo.locAddr, ccuConnectionInfo.rmtAddr,
-            ccuConnectionInfo.channelInfo, ccuConnectionInfo.ccuJettys));
+            ccuConnectionInfo.channelInfo, ccuConnectionInfo.ccuJettys, ccuConnectionInfo.qos));
     } else {
         ccuConnection.reset(new (std::nothrow) CcuRtpConnection(
             ccuConnectionInfo.locAddr, ccuConnectionInfo.rmtAddr,
-            ccuConnectionInfo.channelInfo, ccuConnectionInfo.ccuJettys));
+            ccuConnectionInfo.channelInfo, ccuConnectionInfo.ccuJettys, ccuConnectionInfo.qos));
     }
     CHK_PTR_NULL(ccuConnection);
     CHK_RET(ccuConnection->Init());

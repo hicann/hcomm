@@ -45,6 +45,19 @@ constexpr u32 MAX_CKE_DATA_ARRAY_SIZE = 8;
 constexpr uint32_t MSID_CONFIG_AX_MAINBOARD = 7;
 constexpr TpProtocol LOOP_JETTY_PROTOCOL = TpProtocol::TP; // 环回使用TP避免被环境link down阻塞
 
+static RaUbGetTpInfoParam MakeLoopGetTpInfoParam(const IpAddress &ipAddr, TpProtocol tpProtocol)
+{
+    RaUbGetTpInfoParam param;
+    param.locAddr = ipAddr;
+    param.rmtAddr = ipAddr;
+    param.tpProtocol = tpProtocol;
+    param.qos = 0U;
+    param.slLevelCount = 0U;
+    param.loopFirstTpLowestSl = true;
+    param.ccuLoopbackGetTpInfo = true;
+    return param;
+}
+
 CcuComponent &CcuComponent::GetInstance(const int32_t deviceLogicId)
 {
     static CcuComponent ccuComponent[MAX_MODULE_DEVICE_NUM + 1];
@@ -103,7 +116,7 @@ void CcuComponent::Deinit()
         const auto &ipAddr = item.first;
         const auto &tpInfo = item.second;
         (void)TpManager::GetInstance(devLogicId)
-            .ReleaseTpInfo({ipAddr, ipAddr, LOOP_JETTY_PROTOCOL}, tpInfo);
+            .ReleaseTpInfo(MakeLoopGetTpInfoParam(ipAddr, LOOP_JETTY_PROTOCOL), tpInfo);
     }
 
     createdOutParamMap.clear();
@@ -419,9 +432,12 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(const uint8_t dieId, const Ip
     auto &importedVec = importedOutParamMap[dieId];
     for (const auto &jettyInfo : jettyInfos) {
         const auto jettyMode = HrtJettyMode::CCU_CCUM_CACHE; // 当前仅支持该模式
-        const HrtRaUbCreateJettyParam req{jfcHandle, jfcHandle, ccuBufTokenValue,
+        HrtRaUbCreateJettyParam req{jfcHandle, jfcHandle, ccuBufTokenValue,
             tokenIdHandle, jettyMode, jettyInfo.taJettyId, jettyInfo.sqBufVa,
             jettyInfo.sqBufSize, jettyInfo.wqeBBStartId, jettyInfo.sqDepth, errTimeout};
+        if (tpInfo.hasMappedJettyPriority) {
+            req.qos = static_cast<u8>(tpInfo.mappedJettyPriority & 0xFU);
+        }
         auto createdOutParam = HrtRaUbCreateJetty(rdmaHandle, req);
         createdVec.emplace_back(createdOutParam);
 
@@ -442,9 +458,10 @@ TpInfo CcuComponent::RequestNewTpInfo(const IpAddress &srcIpAddr, const IpAddres
     auto &tpManager = TpManager::GetInstance(devLogicId);
     const auto timeout = std::chrono::milliseconds(LOOP_CHANNEL_WAIT_TIMEOUT_MS);
     const auto startTime = std::chrono::steady_clock::now();
-    auto ret = tpManager.GetTpInfo({srcIpAddr, dstIpAddr, LOOP_JETTY_PROTOCOL}, tpInfo);
+    const RaUbGetTpInfoParam tpParam = MakeLoopGetTpInfoParam(srcIpAddr, LOOP_JETTY_PROTOCOL);
+    auto ret = tpManager.GetTpInfo(tpParam, tpInfo);
     while (ret == HcclResult::HCCL_E_AGAIN) {
-        ret = tpManager.GetTpInfo({srcIpAddr, dstIpAddr, LOOP_JETTY_PROTOCOL}, tpInfo);
+        ret = tpManager.GetTpInfo(tpParam, tpInfo);
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
             THROW<InternalException>("[CcuComponent][%s] failed, get tp info "
                 "timeout[%d ms], devLogicId[%d].", __func__, timeout, devLogicId);

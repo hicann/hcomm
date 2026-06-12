@@ -33,6 +33,9 @@ public:
             .will(returnValue(true));
     }
     void TearDown() override {
+        // MockCcuResourcesDefault 会 Init 单例；在 mock 仍有效时 Deinit，避免进程退出时静态析构触发 bad_alloc
+        const int32_t devLogicId = MAX_MODULE_DEVICE_NUM - 1;
+        (void)hcomm::CcuComponent::GetInstance(devLogicId).Deinit();
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }

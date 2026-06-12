@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -30,10 +30,10 @@ constexpr u32 UB_MAX_TRANS_SIZE       = 256 * 1024 * 1024; // UB单次最大传�
 
 DevUbConnection::DevUbConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                                  const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-                                 const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr)
+                                 const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, const u8 qos)
     : RmaConnection(nullptr, RmaConnType::UB), rdmaHandle(rdmaHandle), locAddr(locAddr), rmtAddr(rmtAddr),
       opMode(opMode), jfcMode(jfcMode), locIpv4Addr(locIpv4Addr), rmtIpv4Addr(rmtIpv4Addr),
-      rmtEid(rmtAddr.GetReverseEid()), locEid(locAddr.GetReverseEid())
+      rmtEid(rmtAddr.GetReverseEid()), locEid(locAddr.GetReverseEid()), qos_(qos)
 {
     HCCL_INFO("[DevUbConnection::DevUbConnection] rmtEid=%s", rmtEid.Describe().c_str());
     devLogicId = HrtGetDevice();
@@ -59,28 +59,34 @@ DevUbConnection::DevUbConnection(const RdmaHandle rdmaHandle, const IpAddress &l
     if (sqDepth > (UINT32_MAX / UB_SQ_WQEBB_SIZE / WQE_NUM_PER_SQE)) {
         THROW<InternalException>("integer overflow occurs");
     }
+
+    if (!isdevUsed) {
+        CreateJetty(isdevUsed);
+    } else {
+        HCCL_INFO("[DevUbConnection][Constructor] devUsed: defer CreateJetty until GetTpInfo maps qos.");
+    }
 }
 
 DevUbTpConnection::DevUbTpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                                      const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-                                     const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr)
+                                     const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, const u8 qos)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
 {
     tpProtocol = TpProtocol::TP;
 }
 
 DevUbCtpConnection::DevUbCtpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                                        const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-                                       const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr)
+                                       const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, const u8 qos)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
 {
     tpProtocol = TpProtocol::CTP;
 }
 
 DevUbUboeConnection::DevUbUboeConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                                          const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-                                         const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr)
+                                         const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, const u8 qos)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
 {
     tpProtocol = TpProtocol::UBOE;
     jettyTimeOut = 16; // UBoE场景的默认TA配置为16
@@ -182,19 +188,82 @@ void DevUbConnection::GetTimeOut() // 直接基于环境变量控制
     uint32_t tpTimeOut = 0;
     CalcTotalTimeout(tpTimeOut);
     if (envTimeOut < tpTimeOut) {
-        // 规则: 如果环境变量时间 < TP总超时，选择大于TP总超时的最小TA挡位
+        // 规则: 如果环境变量时间 < TP总超时，选择大于TP总超时的最小TA档位
         jettyTimeOut = TpManager::FindMinTaHwValue(tpTimeOut);
         HCCL_WARNING("%s Env timeout [%ums] < TP timeout [%ums]. Auto upgrade TA to hw_val[%u] (%ums).", __func__,
             envTimeOut, tpTimeOut, envValue, tpTimeOut);
     } else {
-        // 规则: 否则，直接使用环境变量对应的挡位 (对齐到 0/8/16/24)
-        // 注意：这里我们取环境变量所在挡位的基准值 (例如 env=10 -> 取 8)
+        // 规则: 否则，直接使用环境变量对应的档位 (对齐到0/8/16/24)
+        // 注意：这里我们取环境变量所在档位的基准值 (例如 env=10 -> 取8)
         jettyTimeOut = envValue;
         HCCL_INFO("%s Env timeout [%ums] >= TP timeout [%ums]. Use env gear base hw_val[%u] (%ums).", __func__,
             envTimeOut, tpTimeOut, envValue, envTimeOut);
     }
 
     HCCL_INFO("%s final TA Timeout [%u] (%ums).", __func__, jettyTimeOut);
+}
+
+void DevUbConnection::AdvanceUbConnAfterTpInfoReady()
+{
+    if (isdevUsed) {
+        GetTimeOut();
+        CreateJetty(isdevUsed);
+        ubConnStatus = UbConnStatus::JETTY_CREATING;
+        return;
+    }
+    GetTimeOut();
+    CreateJetty(isdevUsed);
+    if (!CheckRequestResult()) {
+        ubConnStatus = UbConnStatus::JETTY_CREATING;
+        return;
+    }
+    SetJettyInfo();
+    status       = RmaConnStatus::EXCHANGEABLE;
+    ubConnStatus = UbConnStatus::JETTY_CREATED;
+}
+
+void DevUbConnection::AdvanceUbConnFromInit()
+{
+    HCCL_INFO("[DevUbConnection][%s] start, status[%s], ubConnStatus[%s].", __func__, status.Describe().c_str(),
+              ubConnStatus.Describe().c_str());
+
+    if (!GetTpInfo()) {
+        ubConnStatus = UbConnStatus::TP_INFO_GETTING;
+        return;
+    }
+    AdvanceUbConnAfterTpInfoReady();
+}
+
+void DevUbConnection::AdvanceUbConnFromTpInfoGetting()
+{
+    if (!GetTpInfo()) {
+        return;
+    }
+    AdvanceUbConnAfterTpInfoReady();
+}
+
+void DevUbConnection::AdvanceUbConnFromJettyCreating()
+{
+    if (CheckRequestResult()) {
+        SetJettyInfo();
+        status       = RmaConnStatus::EXCHANGEABLE;
+        ubConnStatus = UbConnStatus::JETTY_CREATED;
+    }
+}
+
+void DevUbConnection::AdvanceUbConnFromJettyCreated()
+{
+    HCCL_INFO("[DevUbConnection][%s] status[%s] will not change, "
+              "should call ImportRmtDto to change status.",
+              __func__, status.Describe().c_str());
+}
+
+void DevUbConnection::AdvanceUbConnFromJettyImporting()
+{
+    SetImportInfo();
+
+    status       = RmaConnStatus::READY;
+    ubConnStatus = UbConnStatus::READY;
 }
 
 RmaConnStatus DevUbConnection::GetStatus()
@@ -204,47 +273,21 @@ RmaConnStatus DevUbConnection::GetStatus()
     }
 
     switch (ubConnStatus) {
-        case UbConnStatus::INIT: {
-            HCCL_INFO("[DevUbConnection][%s] start, status[%s], ubConnStatus[%s].", __func__, status.Describe().c_str(),
-                      ubConnStatus.Describe().c_str());
-
-            if (!GetTpInfo()) {
-                break;
-            }
-            GetTimeOut();
-            CreateJetty(isdevUsed);
- 
-            if (!CheckRequestResult()) {
-                ubConnStatus = UbConnStatus::JETTY_CREATING;
-                break;
-            }
-            SetJettyInfo();
-
-            status       = RmaConnStatus::EXCHANGEABLE;
-            ubConnStatus = UbConnStatus::JETTY_CREATED;
+        case UbConnStatus::INIT:
+            AdvanceUbConnFromInit();
             break;
-        }
-        case UbConnStatus::JETTY_CREATING: {
-            if (CheckRequestResult()) {
-                SetJettyInfo();
-                status       = RmaConnStatus::EXCHANGEABLE;
-                ubConnStatus = UbConnStatus::JETTY_CREATED;
-            }
+        case UbConnStatus::TP_INFO_GETTING:
+            AdvanceUbConnFromTpInfoGetting();
             break;
-        }
-        case UbConnStatus::JETTY_CREATED: {
-            HCCL_INFO("[DevUbConnection][%s] status[%s] will not change, "
-                      "should call ImportRmtDto to change status.",
-                      __func__, status.Describe().c_str());
+        case UbConnStatus::JETTY_CREATING:
+            AdvanceUbConnFromJettyCreating();
             break;
-        }
-        case UbConnStatus::JETTY_IMPORTING: {
-            SetImportInfo();
-
-            status       = RmaConnStatus::READY;
-            ubConnStatus = UbConnStatus::READY;
+        case UbConnStatus::JETTY_CREATED:
+            AdvanceUbConnFromJettyCreated();
             break;
-        }
+        case UbConnStatus::JETTY_IMPORTING:
+            AdvanceUbConnFromJettyImporting();
+            break;
         case UbConnStatus::READY:
             break;
         default:
@@ -376,6 +419,10 @@ void DevUbConnection::CreateJetty(const bool devUsed)
         HCCL_INFO("[DevUbConnection][%s] HrtJettyMode is DEV_USED.", __func__);
     }
 
+    req.qos = qos_;
+    HCCL_INFO("[DevUbConnection][%s] jetty create qos[%u] (maps to attr.ub.priority lower 4 bits).", __func__,
+        static_cast<unsigned int>(qos_));
+
     reqHandle = RaUbCreateJettyAsync(rdmaHandle, req, reqDataBuffer, jettyHandlePtr);
 }
 
@@ -403,12 +450,26 @@ bool DevUbConnection::GetTpInfo()
             __func__, tpProtocol.Describe().c_str());
         ThrowAbnormalStatus(std::string(__func__));
     }
-    
-    auto ret = TpManager::GetInstance(devLogicId).GetTpInfo(
-        {locAddr, rmtAddr, tpProtocol}, tpInfo);
+
+    RaUbGetTpInfoParam p{};
+    p.locAddr = locAddr;
+    p.rmtAddr = rmtAddr;
+    p.tpProtocol = tpProtocol;
+    p.qos = qos_;
+    p.slLevelCount = 0;
+    p.loopFirstTpLowestSl = false;
+
+    auto ret = TpManager::GetInstance(devLogicId).GetTpInfo(p, tpInfo);
 
     switch (ret) {
         case HcclResult::HCCL_SUCCESS:
+            if (!tpMgrReleaseQosCaptured_) {
+                tpMgrReleaseQos_ = p.qos;
+                tpMgrReleaseQosCaptured_ = true;
+            }
+            if (tpInfo.hasMappedJettyPriority) {
+                qos_ = static_cast<u8>(tpInfo.mappedJettyPriority & 0xFU);
+            }
             GenerateLocalPsn();
             return true;
         case HcclResult::HCCL_E_AGAIN:
@@ -455,9 +516,13 @@ void DevUbConnection::SetImportInfo()
 void DevUbConnection::ReleaseTp()
 {
     if (tpInfo.tpHandle != 0) {
-        (void)TpManager::GetInstance(devLogicId)
-            .ReleaseTpInfo({locAddr, rmtAddr, tpProtocol}, tpInfo);
+        RaUbGetTpInfoParam relParam(locAddr, rmtAddr, tpProtocol);
+        if (tpMgrReleaseQosCaptured_) {
+            relParam.qos = tpMgrReleaseQos_;
+        }
+        (void)TpManager::GetInstance(devLogicId).ReleaseTpInfo(relParam, tpInfo);
         tpInfo.tpHandle = 0;
+        tpMgrReleaseQosCaptured_ = false;
     }
 }
 
@@ -922,7 +987,7 @@ void DevUbConnection::AddNop(const Stream &stream)
 
     HrtUbDbInfo info;
     info.dbNum = 1;
-    info.wrCqe = 0; // 默认值是0 不会cqe  如果传1，驱动分发，会给hccl cqe，用于维护ci指针。
+    info.wrCqe = 0; // 默认值是0 不会cqe  如果置1，驱动分发，会给hccl cqe，用于维护ci指针。
     info.info[0].functionId = funcId;
     info.info[0].dieId      = dieId;
     info.info[0].jettyId    = jettyId;
@@ -1009,7 +1074,7 @@ HcclResult DevUbConnection::Ipv4ToIpArray(const char *ipv4Str, uint8_t ipArr[16U
         return HCCL_E_PARA;
     }
 
-    // inet_pton: 将点分十进制IP转为网络字节序的二进制(sip: 128 bit->16字节，IPv4填充后4字节，后12字节留0)
+    // inet_pton: 将点分十进制IP转为网络字节序的二进制 sip: 128 bit->16字节，IPv4填充后4字节，后12字节留空
     struct in_addr addr;
     int ret = inet_pton(AF_INET, ipv4Str, &addr);
     if (ret != 1) {
@@ -1021,7 +1086,7 @@ HcclResult DevUbConnection::Ipv4ToIpArray(const char *ipv4Str, uint8_t ipArr[16U
     memset_s(&ipArr[0], 16, 0, 16);
 
     uint32_t ipNet = addr.s_addr;   // 网络字节序的 IP 整数
-    // 拆分网络序整数为4个字节，写入 ipArr 前4位（大端序）
+    // 拆分网络序整数为4个字节，写入 ipArr 后4位（大端序）
     // ipArr[15] = 最高位字节（如 192.168.100.2 的 2）
     ipArr[12] = ipNet & 0xFF;           // 192
     ipArr[13] = (ipNet >> 8) & 0xFF;    // 168
@@ -1043,7 +1108,7 @@ bool DevUbConnection::IpArrayCompare(uint8_t ipArrLeft[16U], uint8_t ipArrRight[
 HcclResult DevUbConnection::SetTpAttrAsync(uint32_t attrBitmapCurrent, struct TpAttr& tpAttrCurrent)
 {
     TpHandle tpHandle = tpInfo.tpHandle;
-    /*  bitmap 至少配置为1FC，转2进制: 0011 1111 1000(前两位retry_times_init+at不用配置、后三位at_times+sl+ttl不用配置)，转10进制:508 
+    /*  bitmap 至少配置为508，转2进制: 0011 1111 1000(前两位retry_times_init+at不用配置、后三位at_times+sl+ttl不用配置)，转10进制:508
         0-retry_times_init: 3 bit   1-at: 5 bit             2-sip: 128 bit
         3-dip: 128 bit              4-sma: 48 bit           5-dma: 48 bit
         6-vlan_id: 12 bit           7-vlan_en: 1 bit        8-dscp: 6 bit
@@ -1053,7 +1118,7 @@ HcclResult DevUbConnection::SetTpAttrAsync(uint32_t attrBitmapCurrent, struct Tp
     struct TpAttr tpAttr = {0};
 
     // 填充本端IP
-    // inet_pton: 将点分十进制IP转为网络字节序的二进制(sip: 128 bit->16字节，IPv4填充前4字节，后12字节留0)
+    // inet_pton: 将点分十进制IP转为网络字节序的二进制 sip: 128 bit->16字节，IPv4填充前4字节，后12字节留空
     const char* localIp = locIpv4Addr.GetIpStr().c_str();
     CHK_RET(Ipv4ToIpArray(localIp, tpAttr.sip));
     HCCL_INFO("[DevUbConnection::%s] localIpv4Str[%s], sip[%u:%u:%u:%u]",

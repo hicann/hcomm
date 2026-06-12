@@ -37,6 +37,7 @@ target_sources(hccl_v2_utest
 
     ${HCCL_V2_CODE_ROOT}/unified_platform/common/rdma_handle_manager.cc
     ${HCCL_V2_CODE_ROOT}/unified_platform/common/tp_manager.cc
+    ${HCCL_V2_CODE_ROOT}/unified_platform/common/tp_qos.cc
     ${HCCL_V2_CODE_ROOT}/unified_platform/external_system/orion_adapter_hccp.cc
     ${HCCL_V2_CODE_ROOT}/unified_platform/external_system/orion_adapter_rts.cc
     

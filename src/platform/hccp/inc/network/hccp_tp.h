@@ -35,7 +35,9 @@ union GetTpCfgFlag {
         uint32_t uboe : 1;
         uint32_t preDefined : 1;
         uint32_t dynamicDefined : 1;
-        uint32_t reserved : 26;
+        uint32_t udp : 5;
+        uint32_t groupId : 15;
+        uint32_t reserved : 6;
     } bs;
     uint32_t value;
 };
@@ -60,7 +62,10 @@ struct TpAttr {
     uint8_t sprayEn : 1; // corresponding bitmap bit: 15
     uint8_t udpGlobalEn : 1; // corresponding bitmap bit: 16
     uint8_t reserve0 : 2;
-    uint8_t reserved[73];
+    uint16_t slBitmap; // corresponding bitmap bit: 17
+    uint8_t dscpConfigMode : 1; // corresponding bitmap bit: 18
+    uint8_t reserve1 : 7;
+    uint8_t reserved[70];
 };
 #pragma pack()
 

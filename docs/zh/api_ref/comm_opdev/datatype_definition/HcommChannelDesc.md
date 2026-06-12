@@ -31,5 +31,6 @@ typedef struct {
             uint32_t qos;            /* HCCS QoS */
         } hccsAttr;
     };
+    uint32_t qos;             ///< QoS 与协议解耦
 } HcommChannelDesc;
 ```

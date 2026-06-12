@@ -32,6 +32,7 @@ class HcclRankGraphTest: public BaseInit {
         char commName[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
         hcclCommPtr = std::make_shared<hccl::hcclComm>(1, 1, commName);
         HcclCommConfig config;
+        UtInitHcclCommConfig(config);
         config.hcclOpExpansionMode = 1; // 非CCU模式，避免拉起CCU平台层
         config.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
         config.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level

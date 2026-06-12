@@ -19,6 +19,8 @@
 
 #include "enum_factory.h"
 #include "hccl_rank_graph.h"
+#include "env_config/env_config.h"
+#include "config/env_config.h"
 
 // orion 暂时复用
 #include "ip_address.h"
@@ -97,6 +99,9 @@ using HrtRaUbCreateJettyParam = struct HrtRaUbJettyCreateParamDef {
     // HOST_OFFLOAD / HOST_OPBASE / CACHE_LOCK_DWQE 类型的Jetty ，需要指定WQEBB的数目
     // STADARD 类型Jetty，该参数代表SQ深度
     u32              sqDepth{0};
+    /// 低4bit 映射 UB Jetty 创建属性中的 priority（attr.ub.priority = qos & 0xF）
+    /// 字段顺序须与 orion_adapter_hccp.h HrtRaUbJettyCreateParamDef 一致，供 RaUbCreateJettyAsync 等复用
+    u8               qos{static_cast<u8>(EnvConfig::UB_QOS_DEFAULT & 0xFU)};
     u32              rqDepth{64};
     HrtTransportMode transMode{HrtTransportMode::RM}; // 仅能使用RM模式的Jetty
     u8 errTimeout{16};
@@ -143,7 +148,7 @@ using HrtRaUbJettyImportedOutParam = struct HrtRaUbJettyImportedOutParamDef {
     u32               tpn{0};
 };
 
-MAKE_ENUM(TpProtocol, CTP, RTP);
+MAKE_ENUM(TpProtocol, CTP, RTP, UBOE);
 
 struct JettyImportCfg {
     u64 localTpHandle{0};

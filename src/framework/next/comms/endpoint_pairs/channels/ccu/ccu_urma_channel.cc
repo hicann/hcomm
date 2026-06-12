@@ -62,7 +62,7 @@ HcclResult BuildBufferInfos(HcommMemHandle *memHandles, uint32_t memHandleNum,
 
 static HcclResult CreateCcuTransport(UrmaEndpoint *ccuEndpoint,
     const Hccl::LinkData &linkData, Hccl::Socket *socket, HcommMemHandle *memHandles,
-    uint32_t memHandleNum, std::unique_ptr<CcuTransport> &impl, uint32_t sqSize)
+    uint32_t memHandleNum, uint32_t qos, std::unique_ptr<CcuTransport> &impl, uint32_t sqSize)
 {
     HCCL_INFO("[CcuUrmaChannel][%s] begin, sqSize[%u]", __func__, sqSize);
     // 当前ccu channel不支持按需申请cke
@@ -100,7 +100,7 @@ static HcclResult CreateCcuTransport(UrmaEndpoint *ccuEndpoint,
         CcuTransport::CcuConnectionType::UBC_TP;
 
     CcuTransport::CcuConnectionInfo connectionInfo{type_,
-        locAddr, rmtAddr, channelInfo, ccuJettys};
+        locAddr, rmtAddr, channelInfo, ccuJettys, qos};
 
     std::vector<CcuTransport::CclBufferInfo> bufferInfos{};
     CHK_RET(BuildBufferInfos(memHandles, memHandleNum, bufferInfos));
@@ -168,7 +168,8 @@ HcclResult CcuUrmaChannel::Init()
     HCCL_WARNING("[CcuUrmaChannel][%s] now only support to exchange hccl buffer.",
         __func__);
     CHK_RET_UNAVAIL(CreateCcuTransport(ccuEndpoint, linkData, socket,
-        channelDesc_.memHandles, channelDesc_.memHandleNum, impl_, channelDesc_.ubAttr.sqDepth));
+        channelDesc_.memHandles, channelDesc_.memHandleNum, channelDesc_.qos,
+        impl_, channelDesc_.ubAttr.sqDepth));
 
     hcclBufferInfoPtr_.reset(new (std::nothrow) HcclMem());
     CHK_PTR_NULL(hcclBufferInfoPtr_);

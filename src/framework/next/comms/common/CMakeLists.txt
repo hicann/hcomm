@@ -13,6 +13,7 @@ set(src_list
     hccp_tlv_hdc_mgr.cc
     eid_info_mgr.cc
     tp_mgr.cc
+    ${HCCL_BASE_DIR}/legacy/unified_platform/common/tp_qos.cc
 )
 
 target_sources(hcomm PRIVATE

@@ -28,7 +28,12 @@
 #include <nlohmann/json.hpp>
 #include "rt_external.h"
 #include "launch_device.h"
+#include "hccl/hccl_comm.h"
 
+inline void UtInitHcclCommConfig(HcclCommConfig &config)
+{
+    HcclCommConfigInit(&config);
+}
 
 #define private public
 #define protected public
