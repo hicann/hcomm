@@ -91,12 +91,24 @@ TEST_F(AicpuUboeEndpointTest, Ut_HcommEndpointCreate_When_Uboe_Host_Expect_Retur
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
-TEST_F(AicpuUboeEndpointTest, Ut_HcommEndpointCreate_When_Invalid_CommAddr_Expect_Return_SUCCESS)
+TEST_F(AicpuUboeEndpointTest, Ut_HcommEndpointCreate_When_ID_TYPE_CommAddr_Expect_Return_NOT_SUPPORT)
 {
     EndpointDesc endpointDesc;
     CreateEndpointDesc(endpointDesc);
     CommAddr commAddr;
-    endpointDesc.commAddr.type = COMM_ADDR_TYPE_RESERVED; // 配置成无效类型
+    endpointDesc.commAddr.type = COMM_ADDR_TYPE_ID; // 配置ID地址类型
+    EndpointHandle endpointHandle;
+
+    HcommResult ret = HcommEndpointCreate(&endpointDesc, &endpointHandle);
+    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+}
+
+TEST_F(AicpuUboeEndpointTest, Ut_HcommEndpointCreate_When_Invalid_CommAddr_Expect_Return_NOT_SUPPORT)
+{
+    EndpointDesc endpointDesc;
+    CreateEndpointDesc(endpointDesc);
+    CommAddr commAddr;
+    endpointDesc.commAddr.type = static_cast<CommAddrType>(5); // 配置成无效类型
     EndpointHandle endpointHandle;
 
     HcommResult ret = HcommEndpointCreate(&endpointDesc, &endpointHandle);

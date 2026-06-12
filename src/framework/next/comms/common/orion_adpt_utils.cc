@@ -16,10 +16,34 @@
 
 namespace hcomm {
 
+const char *CommAddrTypeToStr(CommAddrType type)
+{
+    switch (type) {
+        case COMM_ADDR_TYPE_IP_V4:
+            return "COMM_ADDR_TYPE_IP_V4";
+        case COMM_ADDR_TYPE_IP_V6:
+            return "COMM_ADDR_TYPE_IP_V6";
+        case COMM_ADDR_TYPE_EID:
+            return "COMM_ADDR_TYPE_EID";
+        case COMM_ADDR_TYPE_ID:
+            return "COMM_ADDR_TYPE_ID";
+        case COMM_ADDR_TYPE_RESERVED:
+            return "COMM_ADDR_TYPE_RESERVED";
+        default:
+            return "UNKNOWN_COMM_ADDR_TYPE";
+    }
+}
+
 HcclResult CommAddrToIpAddress(const CommAddr &commAddr, Hccl::IpAddress &ipAddr)
 {
     if (commAddr.type != COMM_ADDR_TYPE_IP_V4 && commAddr.type != COMM_ADDR_TYPE_IP_V6 && commAddr.type != COMM_ADDR_TYPE_EID) {
-        HCCL_ERROR("[%s] failed, comm address type[%d] is not supported.", __func__, commAddr.type);
+        if (commAddr.type == COMM_ADDR_TYPE_ID || commAddr.type == COMM_ADDR_TYPE_RESERVED) {
+            HCCL_ERROR("[%s] failed, comm address type[%d][%s] is not supported.", __func__, commAddr.type,
+                CommAddrTypeToStr(commAddr.type));
+        } else {
+            HCCL_ERROR("[%s] failed, comm address type[%d][%s] is invalid.", __func__, commAddr.type,
+                CommAddrTypeToStr(commAddr.type));
+        }
         return HCCL_E_NOT_SUPPORT;
     }
 
