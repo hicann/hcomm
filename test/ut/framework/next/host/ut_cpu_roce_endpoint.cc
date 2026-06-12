@@ -173,7 +173,7 @@ TEST_F(CpuRoceEndpointTest, Ut_When_Register_Memory_Fail_Expect_Return_HCCL_E_PT
 
 TEST_F(CpuRoceEndpointTest, ut_HcommResMgrInit_When_Normal_Expect_ReturnSuccess)
 {
-    HcommResult ret = HcommResMgrInit(0);
+    HcommResult ret = HcommResMgrInit();
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 

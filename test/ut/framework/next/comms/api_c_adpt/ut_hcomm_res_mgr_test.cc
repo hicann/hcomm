@@ -22,6 +22,6 @@ public:
 
 TEST_F(TestHcommResMgrInit, Ut_TestHcommResMgrInit_When_WithDevPhyId_Return_HCCL_Success)
 {
-    HcommResult ret = HcommResMgrInit(1);
+    HcommResult ret = HcommResMgrInit();
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }

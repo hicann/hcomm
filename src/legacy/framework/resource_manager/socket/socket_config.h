@@ -23,7 +23,7 @@ public:
     LinkData          link;
     uint32_t          listeningPort{DEFAULT_LISTENING_PORT};
     const std::string tag;
-    uint32_t          hostNic2DeviceNicMode_; // 0 normal, 1: host(host cpu roce channel) - device(transport ibv)
+    uint32_t          hostNic2DeviceNicMode_{0}; // 0 normal, 1: host(host cpu roce channel) - device(transport ibv)
 
     SocketConfig(RankId remoteRank, const LinkData &link, const std::string &tag)
         : remoteRank(remoteRank), link(link), tag(tag),

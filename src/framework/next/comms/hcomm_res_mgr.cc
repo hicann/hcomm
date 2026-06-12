@@ -38,6 +38,8 @@ namespace hcomm {
 
 HcommResMgr& HcommResMgr::GetInstance(const uint32_t devicePhyId)
 {
+ 	static std::array<bool, MAX_MODULE_DEVICE_NUM + 1> isInitialized{false};
+
     uint32_t devPhyId = devicePhyId;
     if (devPhyId >= MAX_MODULE_DEVICE_NUM) {
         HCCL_WARNING("[HcommResMgr][%s] use the backup device, devPhyId[%u] should be "
@@ -45,33 +47,37 @@ HcommResMgr& HcommResMgr::GetInstance(const uint32_t devicePhyId)
         devPhyId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
 
-    // 临时方案：只声明单例对象做生命周期控制，不执行业务动作
-    // 未来需要将各种单例转为该数据结构的成员变量
-    // devicePhyId 目前不影响流程，只是触发静态对象声明
-    Hccl::HccpHdcManager::GetInstance();
-    Hccl::HccpPeerManager::GetInstance();
-    Hccl::HccpTlvHdcManager::GetInstance();
-    Hccl::RdmaHandleManager::GetInstance();
-    Hccl::InnerNetDevManager::GetInstance();
-    Hccl::SocketHandleManager::GetInstance();
-    Hccl::HostSocketHandleManager::GetInstance();
-    Hccl::TpManager::GetInstance(devicePhyId);
-    EndpointMonitor::GetInstance(devicePhyId);
+    if (!isInitialized[devPhyId]) {
+        // 临时方案：只声明单例对象做生命周期控制，不执行业务动作
+        // 未来需要将各种单例转为该数据结构的成员变量
+        // devicePhyId 目前不影响流程，只是触发静态对象声明
+        Hccl::HccpHdcManager::GetInstance();
+        Hccl::HccpPeerManager::GetInstance();
+        Hccl::HccpTlvHdcManager::GetInstance();
+        Hccl::RdmaHandleManager::GetInstance();
+        Hccl::InnerNetDevManager::GetInstance();
+        Hccl::SocketHandleManager::GetInstance();
+        Hccl::HostSocketHandleManager::GetInstance();
+        SocketMgr::GetInstance(devicePhyId);
+        Hccl::TpManager::GetInstance(devicePhyId);
+        EndpointMonitor::GetInstance(devicePhyId);
 
-    Hccl::CcuComponent::GetInstance(devicePhyId);
-    Hccl::CcuResBatchAllocator::GetInstance(devicePhyId);
-    Hccl::CtxMgrImp::GetInstance(devicePhyId);
+        Hccl::CcuComponent::GetInstance(devicePhyId);
+        Hccl::CcuResBatchAllocator::GetInstance(devicePhyId);
+        Hccl::CtxMgrImp::GetInstance(devicePhyId);
 
-    // 开源开放架构下CCU模式新增类型单例，当前混跑时不使用
-    HccpTlvHdcMgr::GetInstance(devicePhyId);
-    TpMgr::GetInstance(devicePhyId);
-    CcuComponent::GetInstance(devicePhyId);
-    CcuResBatchAllocator::GetInstance(devicePhyId);
-    CcuKernelMgr::GetInstance(devicePhyId);
-    SocketProcess::GetInstance(devicePhyId);
+        // 开源开放架构下CCU模式新增类型单例，当前混跑时不使用
+        HccpTlvHdcMgr::GetInstance(devicePhyId);
+        TpMgr::GetInstance(devicePhyId);
+        CcuComponent::GetInstance(devicePhyId);
+        CcuResBatchAllocator::GetInstance(devicePhyId);
+        CcuKernelMgr::GetInstance(devicePhyId);
+        SocketProcess::GetInstance(devicePhyId);
+ 	}
 
     static HcommResMgr hcommResMgrs[MAX_MODULE_DEVICE_NUM + 1];
     hcommResMgrs[devPhyId].devPhyId_ = devPhyId;
+    isInitialized[devPhyId] = true;
 
     return hcommResMgrs[devPhyId];
 }

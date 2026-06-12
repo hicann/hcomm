@@ -330,14 +330,14 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CCU_Expect_Success)
 
 TEST_F(HcommCAdptTest, ut_HcommResMgrInit_When_Normal_Expect_Success)
 {
-    HcommResult ret = HcommResMgrInit(0);
+    HcommResult ret = HcommResMgrInit();
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
 TEST_F(HcommCAdptTest, ut_HcommResMgrInit_MultiDevice_Expect_Success)
 {
-    HcommResult ret1 = HcommResMgrInit(0);
-    HcommResult ret2 = HcommResMgrInit(1);
+    HcommResult ret1 = HcommResMgrInit();
+    HcommResult ret2 = HcommResMgrInit();
     EXPECT_EQ(ret1, HCCL_SUCCESS);
     EXPECT_EQ(ret2, HCCL_SUCCESS);
 }
