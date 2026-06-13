@@ -321,11 +321,13 @@ HcclResult CollBatchSendRecvGroupExecutor::CalcSendSlices()
         // 遍历这个stream对应的queue中的所有item，每次取一个slice，然后再重新遍历，直到所有的itemcount减为0
         u32 emptyItem = 0;
         while (emptyItem < sendQueueInner.size()) {
+            u32 preRank = INVALID_VALUE_RANKID;
             for (u32 j = 0; j < sendQueueInner.size(); j++){
                 HcclSendRecvItem* sendRecvItem = sendQueueInner[j];
-                if (sendRecvItem->count == 0) {
+                if (sendRecvItem->count == 0 || sendRecvItem->remoteRank == preRank) { // 同一个rank不连续取两个slice
                     continue;
                 }
+                preRank = sendRecvItem->remoteRank;
                 u32 unitSize = SIZE_TABLE[sendRecvItem->dataType];
                 u64 maxCountPerLoop = CalcSendLoopMaxCount(unitSize);
                 u8 *curInputPtr = static_cast<u8 *>(sendRecvItem->buf);
@@ -358,11 +360,13 @@ HcclResult CollBatchSendRecvGroupExecutor::CalcRecvSlices()
         // 遍历这个stream对应的queue中的所有item，每次取一个slice，然后再重新遍历，直到所有的itemcount减为0
         u32 emptyItem = 0;
         while (emptyItem < recvQueueInner.size()) {
+            u32 preRank = INVALID_VALUE_RANKID;
             for (u32 j = 0; j < recvQueueInner.size(); j++){
                 HcclSendRecvItem* sendRecvItem = recvQueueInner[j];
-                if (sendRecvItem->count == 0) {
+                if (sendRecvItem->count == 0 || sendRecvItem->remoteRank == preRank) { // 同一个rank不连续取两个slice
                     continue;
                 }
+                preRank = sendRecvItem->remoteRank;
                 u32 unitSize = SIZE_TABLE[sendRecvItem->dataType];
                 u64 maxCountPerLoop = CalcRecvLoopMaxCount(unitSize);
                 u8 *curOutputPtr = static_cast<u8 *>(sendRecvItem->buf);
