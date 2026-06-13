@@ -213,7 +213,7 @@ HcclResult AlltoAllOperator::SelectAlgforAiv(const OpParam& param, std::string& 
         // aiv模式下910A2多server场景 alltoall算子
         bool isSingleAX = serverNum_ == 1 && moduleNum_ == 2;         // a+x单机跨module场景
         bool isSupportNpuDirect = isOpbase && param.supportRoceDirect;
-        if (isSupportNpuDirect && ((isSingleAX && GetExternalInputIntraRoceSwitch() == 1) || !isSingleAX)) {
+        if (false && (isSupportNpuDirect && ((isSingleAX && GetExternalInputIntraRoceSwitch() == 1) || !isSingleAX))) {
             // 单算子支持Roce直驱场景，使用DirectFullmesh
             algName = "AlltoAllDirectFullmeshAIVExecutor";
         } else {
