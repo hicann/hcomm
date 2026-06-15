@@ -387,8 +387,10 @@ bool HostUbConnection::Suspend()
 }
 
 std::unique_ptr<BaseTask> HostUbConnection::ConstructTaskUbSend(const HrtRaUbSendWrRespParam &sendWrResp,
-                                                            const SqeConfig              &config)
+                                                             const SqeConfig              &config) const
 {
+    (void)sendWrResp;
+    (void)config;
     unique_ptr<BaseTask> result;
     return result;
 }
@@ -397,19 +399,30 @@ void HostUbConnection::ProcessSlices(const MemoryBuffer &loc, const MemoryBuffer
                                     std::function<void(const MemoryBuffer &, const MemoryBuffer &, u32)> processOneSlice,
                                     DataType                                                             dataType) const
 {
+    (void)loc;
+    (void)rmt;
+    (void)processOneSlice;
+    (void)dataType;
 }
 
 unique_ptr<BaseTask> HostUbConnection::PrepareRead(const MemoryBuffer &remoteMemBuf, const MemoryBuffer &localMemBuf,
                                                 const SqeConfig &config)
 {
+    (void)remoteMemBuf;
+    (void)localMemBuf;
+    (void)config;
     HCCL_INFO("[HostUbConnection::%s] not supported yet.", __func__);
     return nullptr;
 }
 
-unique_ptr<BaseTask> HostUbConnection::PrepareReadReduce(const MemoryBuffer &remoteMemBuf,
-                                                        const MemoryBuffer &localMemBuf, DataType dataType,
-                                                        ReduceOp reduceOp, const SqeConfig &config)
+unique_ptr<BaseTask> HostUbConnection::PrepareReadReduce(const MemoryBuffer &remoteMemBuf, const MemoryBuffer &localMemBuf,
+                                                    DataType dataType, ReduceOp reduceOp, const SqeConfig &config)
 {
+    (void)remoteMemBuf;
+    (void)localMemBuf;
+    (void)dataType;
+    (void)reduceOp;
+    (void)config;
     HCCL_INFO("[HostUbConnection::%s] not supported yet.", __func__);
     return nullptr;
 }
@@ -417,6 +430,9 @@ unique_ptr<BaseTask> HostUbConnection::PrepareReadReduce(const MemoryBuffer &rem
 unique_ptr<BaseTask> HostUbConnection::PrepareWrite(const MemoryBuffer &remoteMemBuf, const MemoryBuffer &localMemBuf,
                                                 const SqeConfig &config)
 {
+    (void)remoteMemBuf;
+    (void)localMemBuf;
+    (void)config;
     HCCL_INFO("[HostUbConnection::%s] not supported yet.", __func__);
     return nullptr;
 }
@@ -425,6 +441,11 @@ unique_ptr<BaseTask> HostUbConnection::PrepareWriteReduce(const MemoryBuffer &re
                                                         const MemoryBuffer &localMemBuf, DataType dataType,
                                                         ReduceOp reduceOp, const SqeConfig &config)
 {
+    (void)remoteMemBuf;
+    (void)localMemBuf;
+    (void)dataType;
+    (void)reduceOp;
+    (void)config;
     HCCL_INFO("[HostUbConnection::%s] not supported yet.", __func__);
     return nullptr;
 }
@@ -432,6 +453,9 @@ unique_ptr<BaseTask> HostUbConnection::PrepareWriteReduce(const MemoryBuffer &re
 unique_ptr<BaseTask> HostUbConnection::PrepareInlineWrite(const MemoryBuffer &remoteMemBuf, u64 data,
                                                         const SqeConfig &config)
 {
+    (void)remoteMemBuf;
+    (void)data;
+    (void)config;
     HCCL_INFO("[HostUbConnection::%s] not supported yet.", __func__);
     return nullptr;
 }
@@ -446,6 +470,7 @@ string HostUbConnection::Describe() const
 
 void HostUbConnection::AddNop(const Stream &stream)
 {
+    (void)stream;
 }
 
 HrtUbJfcMode HostUbConnection::GetUbJfcMode() const
@@ -483,17 +508,17 @@ u32 HostUbConnection::GetSqDepth() const
     return sqDepth;
 }
 
-uint64_t HostUbConnection::GetCqVa()
+uint64_t HostUbConnection::GetCqVa() const
 {
     return cqInfo_.va;
 }
 
-u64 HostUbConnection::GetJettyVa()
+u64 HostUbConnection::GetJettyVa() const
 {
     return jettyVa_;
 }
 
-JettyHandle HostUbConnection::GetTJettyVa()
+JettyHandle HostUbConnection::GetTJettyVa() const
 {
     return remoteJettyVa_;
 }
@@ -511,8 +536,9 @@ bool IfNeedUpdatingUbCi(const std::vector<HostUbConnection *> &ubConns)
         u32 sqDepth = ubConn->GetSqDepth();
         // 考虑pi翻转场景
         u32 extra = pi >= ci ? 0 : sqDepth;
+        constexpr u32 thresholdDivisor = 2;
 
-        if (static_cast<double>(pi + extra - ci) >= static_cast<double>(sqDepth) / 2) { 
+        if (static_cast<double>(pi + extra - ci) >= static_cast<double>(sqDepth) / thresholdDivisor) { 
             // 当pi和ci差距大于sqDepth/2时，更新ci
             return true;
         }

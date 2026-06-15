@@ -192,7 +192,7 @@ inline void BuildA5SqeUbDbSend(u32 streamId, u32 taskId, const UbJettyLiteId &je
 inline void BuildA5SqeP2pWriteValue(u32 streamId, u32 taskId, u64 remoteAddr, u32 writeValue, uint8_t * const sqeIn)
 {
     (void) streamId;
-    Rt91095StarsWriteValueSqe *sqe  = (Rt91095StarsWriteValueSqe *)sqeIn;
+    Rt91095StarsWriteValueSqe *sqe  = reinterpret_cast<Rt91095StarsWriteValueSqe *>(sqeIn);
     SetSqeHeaderTaskFields(sqe, taskId);
     
     sqe->header.type                = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_WRITE_VALUE);

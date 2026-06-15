@@ -23,7 +23,7 @@ public:
 
     P2PTransport(CommonLocRes &commonLocRes, Attribution &attr, const LinkData &linkData, const Socket &socket, std::function<void(u32 streamId, u32 taskId, TaskParam taskParam)> callback);
 
-    ~P2PTransport() = default;
+    ~P2PTransport() override = default;
 
     std::string Describe() const override;
 

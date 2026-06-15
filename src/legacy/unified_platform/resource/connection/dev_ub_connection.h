@@ -38,9 +38,9 @@ public:
 
     std::vector<char> GetUniqueId() const override;
 
-    void SetCqInfo(HcclAiRMACQ &cq);
+    void SetCqInfo(HcclAiRMACQ &cq) const;
  	 
- 	void SetWqInfo(HcclAiRMAWQ &wq);
+ 	void SetWqInfo(HcclAiRMAWQ &wq) const;
 
     unique_ptr<BaseTask> PrepareRead(const MemoryBuffer &remoteMemBuf, const MemoryBuffer &localMemBuf,
                                      const SqeConfig &config) override;
@@ -183,8 +183,8 @@ private:
     void                      UpdateCiVal(u32 ci);
     HcclResult                SetTpAttrAsync(uint32_t attrBitmapCurrent, struct TpAttr& tpAttrCurrent);
     HcclResult                GetTpAttrAsync(uint32_t& attrBitmap, struct TpAttr& tpAttr);
-    HcclResult                Ipv4ToIpArray(const char *ipv4Str, uint8_t ipArr[16U]);
-    bool                      IpArrayCompare(uint8_t ipArrLeft[16U], uint8_t ipArrRight[16U]);
+    HcclResult                Ipv4ToIpArray(const char *ipv4Str, uint8_t ipArr[16U]) const;
+    bool                      IpArrayCompare(uint8_t ipArrLeft[16U], uint8_t ipArrRight[16U]) const;
     HcclResult                CalcTotalTimeout(uint32_t &outTotalTimeoutMs);
 };
 

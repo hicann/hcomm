@@ -112,7 +112,8 @@ void CcuContext::AllocGoResource(uint32_t parallelDim, uint32_t msPerLoop)
         moRes.ccuBuffer = CreateBlockCcuBuffer(moConfig.loopCount * moConfig.msInterleave);
     }
 
-    if (moRes.maskSignal.size() < 2) {
+    constexpr size_t minMaskSignalCount = 2;
+    if (moRes.maskSignal.size() < minMaskSignalCount) {
         THROW<CcuApiException>("MaskSignal is not enough, maskSignal = %lu", moRes.maskSignal.size());
     }
 }

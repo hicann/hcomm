@@ -10,11 +10,11 @@
 #ifndef HCCLV2_RMA_CONNECTION_H
 #define HCCLV2_RMA_CONNECTION_H
 #include "task.h"
-#include "socket_manager.h"
 #include "virtual_topo.h"
 #include "buffer_type.h"
 #include "remote_rma_buffer.h"
 #include "stream.h"
+#include "../socket/socket.h"
 #include "serializable.h"
 
 namespace Hccl {

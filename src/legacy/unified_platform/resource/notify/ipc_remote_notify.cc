@@ -42,7 +42,7 @@ IpcRemoteNotify::IpcRemoteNotify(const Serializable &rmtDto) : BaseRemoteNotify(
     }
     addr = HrtNotifyGetAddr(handle);
     size = DevCapability::GetInstance().GetNotifySize();
-    HCCL_INFO("IpcRemoteNotify[name=%s, handleAddr=0x%llx, id=%u, rmtPid=%u, rmtDevPhyId=%u, devUsed=%d, addr=%d, "
+    HCCL_INFO("IpcRemoteNotify[name=%s, handleAddr=0x%llx, id=%u, rmtPid=%u, rmtDevPhyId=%u, devUsed=%d, addr=0x%llx, "
                         "handle=%p]", name, handleAddr, id, rmtPid, rmtDevPhyId, devUsed, addr, handle);
 }
 

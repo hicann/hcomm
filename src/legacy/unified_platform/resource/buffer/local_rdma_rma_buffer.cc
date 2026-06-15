@@ -20,7 +20,8 @@ LocalRdmaRmaBuffer::LocalRdmaRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle r
     : LocalRmaBuffer(buf, RmaType::RDMA), rdmaHandle(rdmaHandle)
 {
     if (rdmaHandle == nullptr || buf == nullptr) {
-        THROW<NullPtrException>("LocalRdmaRmaBuffer's rdmaHandle is NULL");
+        string nullParam = rdmaHandle == nullptr ? "rdmaHandle" : "buf";
+        THROW<NullPtrException>("LocalRdmaRmaBuffer's %s is nullptr", nullParam.c_str());
     }
     const uintptr_t bufAddr = buf->GetAddr();
     size_t bufSize = buf->GetSize();

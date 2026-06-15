@@ -139,7 +139,7 @@ HcclResult HcclNetDevGetAddrV2(const HcclNetDev netDev, HcclAddress *addr)
         addr->type = HCCL_ADDR_TYPE_IP_V4;
         addr->addr = ipAddr.GetBinaryAddress().addr;
         unsigned char *ipv4Addr = reinterpret_cast<unsigned char*>(&addr->addr);
-        HCCL_DEBUG("IPv4 Address: %d.%d.%d.%d", ipv4Addr[0], ipv4Addr[1], ipv4Addr[2], ipv4Addr[3]);
+        HCCL_DEBUG("IPv4 Address: %u.%u.%u.%u", ipv4Addr[0], ipv4Addr[1], ipv4Addr[2], ipv4Addr[3]);
     } else if (ipAddr.GetFamily() == AF_INET6) {
         addr->type  = HCCL_ADDR_TYPE_IP_V6;
         addr->addr6 = ipAddr.GetBinaryAddress().addr6;

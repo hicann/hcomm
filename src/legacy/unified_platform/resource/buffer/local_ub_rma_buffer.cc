@@ -24,8 +24,8 @@ constexpr u32 TEN_MILLISECOND_OF_USLEEP = 10000;
 LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle rdmaHandle)
     : LocalRmaBuffer(buf, RmaType::UB), rdmaHandle(rdmaHandle)
 {
-     if (rdmaHandle == nullptr) {
-        THROW<NullPtrException>("LocalUbRmaBuffer's rdmaHandle is NULL");
+    if (rdmaHandle == nullptr) {
+        THROW<NullPtrException>("LocalUbRmaBuffer's rdmaHandle is nullptr");
     }
     std::pair<u64, u64> alignBuf = BufAlign(buf->GetAddr(), buf->GetSize());
 
@@ -50,7 +50,7 @@ LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, void *netDevice,
 {
     (void)flag;
     if (netDevice == nullptr) {
-        THROW<NullPtrException>("LocalUbRmaBuffer's netDevice is NULL");
+        THROW<NullPtrException>("LocalUbRmaBuffer's netDevice is nullptr");
     }
     tokenValue = GetUbToken();
     netDev     = reinterpret_cast<HcclNetDevice *>(netDevice);

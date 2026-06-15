@@ -23,6 +23,8 @@
 
 namespace Hccl {
 
+class CommunicatorImpl;
+
 MAKE_ENUM(UboeStatus, READY, INIT, SOCKET_OK, SOCKET_TIMEOUT);
 
 class RmaConnManager {

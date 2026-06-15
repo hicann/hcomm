@@ -72,9 +72,9 @@ public:
     u32          GetCiVal() const;
     u32          GetSqDepth() const;
 
-    uint64_t GetCqVa();
-    u64 GetJettyVa();
-    JettyHandle GetTJettyVa();
+    uint64_t GetCqVa() const;
+    u64 GetJettyVa() const;
+    JettyHandle GetTJettyVa() const;
 
 protected:
     TpProtocol     tpProtocol{TpProtocol::INVALID};
@@ -148,7 +148,7 @@ private:
                     std::function<void(const MemoryBuffer &, const MemoryBuffer &, u32)> processOneSlice,
                     DataType dataType = DataType::INVALID) const;
 
-    std::unique_ptr<BaseTask> ConstructTaskUbSend(const HrtRaUbSendWrRespParam &sendWrResp, const SqeConfig &config);
+    std::unique_ptr<BaseTask> ConstructTaskUbSend(const HrtRaUbSendWrRespParam &sendWrResp, const SqeConfig &config) const;
     void                      UpdateCiVal(u32 ci);
 };
 

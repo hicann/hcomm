@@ -3166,7 +3166,7 @@ int RaEpollCtlDel(const void *fd_handle)
 
 int RaSocketGetVnicIpInfos(unsigned int phy_id, enum IdType type, unsigned int* ids, unsigned int num, struct IpInfo *infos)
 {
-    if (type == DeviceIdType::DEVICE_ID_TYPE_PHY_ID) {
+    if (type == IdType::PHY_ID_VNIC_IP) {
             infos[0].ip.addr.s_addr = 2;
             infos[0].family = AF_INET;
     } else {

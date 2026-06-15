@@ -18,6 +18,7 @@
 #include "mc2_type.h"
 
 namespace Hccl {
+class CommunicatorImpl;
 class MemTransportManager {
 public:
     explicit MemTransportManager(const CommunicatorImpl &communicator);

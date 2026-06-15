@@ -16,7 +16,7 @@
 
 #if T_DESC("ip管理", true)
 
-enum DeviceIdType {
+enum class DeviceIdType {
     DEVICE_ID_TYPE_PHY_ID = 0,
     DEVICE_ID_TYPE_SDID
 };

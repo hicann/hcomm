@@ -2615,7 +2615,7 @@ HcclResult HrtRaCtxQpDestoryBatch(const RdmaHandle handle, const std::unordered_
                 HCCL_ERROR("[%s]poll timeout, originalJettyCount[%u], undeleteJettyCount[%u].", __func__, jettyHandles.size(), failJettyHandles.size());
                 return HCCL_E_TIMEOUT;
             }
-            ReqHandleResult result;
+            ReqHandleResult result = ReqHandleResult::INVALID_PARA;
             TRY_CATCH_RETURN(result = HrtRaGetAsyncReqResult(reqHandle));
             if (result == ReqHandleResult::NOT_COMPLETED) {
                 continue;
@@ -2757,7 +2757,7 @@ HcclResult WaitRequestResult(void* raReqHandle, RequestHandle& reqHandle)
             return HCCL_E_TIMEOUT;  // 超时报错
         }
 
-        ReqHandleResult result;
+        ReqHandleResult result = ReqHandleResult::INVALID_PARA;
         TRY_CATCH_RETURN(result = HrtRaGetAsyncReqResult(reqHandle));
     
         // 结果判断

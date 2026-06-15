@@ -23,8 +23,8 @@ public:
     CcuRepWaitGroup(const CcuTransportGroup &transportGroup, uint16_t semIndex, uint16_t mask, bool isProfiling=true);
     bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
-    uint32_t    GetMask() { return mask; };
-    uint32_t    GetId() { return instrId; };
+    uint32_t    GetMask() const { return mask; }
+    uint32_t    GetId() const { return instrId; }
     HcclResult  GetChannelId(uint16_t& channelId);
 
 private:

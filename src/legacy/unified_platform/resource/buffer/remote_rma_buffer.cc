@@ -85,7 +85,7 @@ RemoteRdmaRmaBuffer::RemoteRdmaRmaBuffer(RdmaHandle rdmaHandle)
     : RemoteRmaBuffer(RmaType::RDMA), rdmaHandle(rdmaHandle), keyValidLen(RDMA_MEM_KEY_LEN_ROCE)
 {
     if (rdmaHandle == nullptr) { // 使用rdmaHandle调用 HCCP 新接口 import/unimport 接口，获取和销毁key
-        THROW<NullPtrException>("RemoteRdmaRmaBuffer's rdmaHandle is NULL");
+        THROW<NullPtrException>("RemoteRdmaRmaBuffer's rdmaHandle is nullptr");
     }
     // 待修改: 利用 rdmaHandle 从 HCCP 新接口获取keyValidLen, 暂定固定值 ROCE
 }
@@ -114,7 +114,7 @@ string RemoteRdmaRmaBuffer::Describe() const
 RemoteUbRmaBuffer::RemoteUbRmaBuffer(RdmaHandle rdmaHandle) : RemoteRmaBuffer(RmaType::UB), rdmaHandle(rdmaHandle)
 {
     if (rdmaHandle == nullptr) {
-        THROW<NullPtrException>("RemoteUbRmaBuffer's rdmaHandle is NULL");
+        THROW<NullPtrException>("RemoteUbRmaBuffer's rdmaHandle is nullptr");
     }
 }
 

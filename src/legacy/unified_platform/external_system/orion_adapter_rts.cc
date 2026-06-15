@@ -503,7 +503,6 @@ void HrtMemset(void *dst, uint64_t destMax, uint64_t count)
     CHK_PRT_CONT(hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
         HCCL_WARNING("[hrtMemSet] HrtThreadExchangeCaptureMode return [%d].", hcclRet));
     aclError ret = aclrtMemset(dst, destMax, 0, count);
-
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat("[SyncSet][Mem]errNo[0x%016llx] aclrtMemset failed. "
                    "return[%d], para: dstAddr[%p], destMax[%llu], count[%llu].",

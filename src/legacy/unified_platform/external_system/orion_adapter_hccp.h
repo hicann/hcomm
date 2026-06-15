@@ -64,7 +64,7 @@ using FdHandle     = void *;
 using MrHandle = void *;
 
 MAKE_ENUM(HrtNetworkMode, PEER, HDC)
-enum DeviceIdType {
+enum class DeviceIdType {
     DEVICE_ID_TYPE_PHY_ID = 0,
     DEVICE_ID_TYPE_SDID
 };

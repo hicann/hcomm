@@ -44,7 +44,7 @@ void RtsqBase::Reset()
     SetTaskIdBySqeId();
 }
 
-std::string RtsqBase::GetHwSqDescribe()
+std::string RtsqBase::GetHwSqDescribe() const
 {
     return StringFormat("devPhyId=%u, localDevId=%u, streamId=%u, sqId=%u, sqDepth=%u, sqBaseAddr=0x%llx, "
                         "currentHead=%u, currentTail=%u, cqeStatus=%u, taskId=%u",
@@ -52,7 +52,7 @@ std::string RtsqBase::GetHwSqDescribe()
                         taskId_);
 }
 
-u32 RtsqBase::QuerySqStatusByType(drvSqCqPropType_t givenType)
+u32 RtsqBase::QuerySqStatusByType(drvSqCqPropType_t givenType) const
 {
     halSqCqQueryInfo  queryInfo;
 
@@ -71,7 +71,7 @@ u32 RtsqBase::QuerySqStatusByType(drvSqCqPropType_t givenType)
     return queryInfo.value[0];
 }
 
-u64 RtsqBase::QuerySqBaseAddr()
+u64 RtsqBase::QuerySqBaseAddr() const
 {
     halSqCqQueryInfo queryInfo;
     queryInfo.tsId = 0;
@@ -91,19 +91,19 @@ u64 RtsqBase::QuerySqBaseAddr()
     return ((static_cast<u64>(queryInfo.value[1])) << 32) | queryInfo.value[0];
 }
 
-u32 RtsqBase::QuerySqHead()
+u32 RtsqBase::QuerySqHead() const
 {
     return QuerySqStatusByType(drvSqCqPropType_t::DRV_SQCQ_PROP_SQ_HEAD);
 }
-u32 RtsqBase::QuerySqTail()
+u32 RtsqBase::QuerySqTail() const
 {
     return QuerySqStatusByType(drvSqCqPropType_t::DRV_SQCQ_PROP_SQ_TAIL);
 }
-u32 RtsqBase::QuerySqDepth()
+u32 RtsqBase::QuerySqDepth() const
 {
     return QuerySqStatusByType(drvSqCqPropType_t::DRV_SQCQ_PROP_SQ_DEPTH);
 }
-u32 RtsqBase::QueryCqeStatus()
+u32 RtsqBase::QueryCqeStatus() const
 {
     return QuerySqStatusByType(drvSqCqPropType_t::DRV_SQCQ_PROP_SQ_CQE_STATUS);
 }

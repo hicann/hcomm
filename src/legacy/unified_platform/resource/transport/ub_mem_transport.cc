@@ -1061,7 +1061,7 @@ HcclResult UbMemTransport::UpdateMemInfo(std::vector<LocalRmaBuffer *> &bufferVe
             u32 sendSize = sendData.size();
             socket->SendAsync(reinterpret_cast<u8 *>(&sendSize), sizeof(sendSize));
             HCCL_INFO("[UbMemTransport][UpdateMemInfo] Send size[%u] of data success. [%zu] bytes sent.",
-                __func__, sendSize, sizeof(sendSize));
+                sendSize, sizeof(sendSize));
             HcclResult result = CheckSocketStatus("SendDataSize");
             CHK_RET_THROW(InternalException,
                 StringFormat("[UbMemTransport][UpdateMemInfo] failed to send dataSize."),
