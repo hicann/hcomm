@@ -431,40 +431,24 @@ HcclResult HcclCcuKernelRegisterFinish(HcclComm comm)
     return HcclResult::HCCL_SUCCESS;
 }
 
-static HcclResult LaunchCcuTasks(const std::vector<hcomm::CcuTaskParam> &params, const aclrtStream stream, Hccl::TaskParam &taskParam)
+static HcclResult LaunchCcuTasks(const hcomm::CcuTaskParam &param, const aclrtStream stream)
 {
-    taskParam.beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     const uint32_t execTimeOutSec = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
-    for (auto it = params.begin(); it != params.end(); ++it) {
-        rtCcuTaskInfo_t taskInfo{};
-        taskInfo.dieId       = it->dieId;
-        taskInfo.missionId   = it->missionId;
-        taskInfo.instStartId = it->instStartId;
-        taskInfo.instCnt     = it->instCnt;
-        taskInfo.key         = it->key;
-        taskInfo.argSize     = it->argSize;
-        taskInfo.timeout     = execTimeOutSec;
-        std::copy(std::begin(it->args), std::end(it->args), std::begin(taskInfo.args));
-        
-        HCCL_INFO("[%s] start ccu task, dieId[%u] missionId[%u] instStartId[%u] instCnt[%u], "
-            "argSize[%u], timeout[%u]s", __func__, taskInfo.dieId, taskInfo.missionId,
-            taskInfo.instStartId, taskInfo.instCnt, taskInfo.argSize, taskInfo.timeout);
- 
-        for (std::size_t i = 0; i < taskInfo.argSize; i++) { // args 大小为 13
-            constexpr std::size_t TOKEN_VALUE_INDEX = 2; // 与算法约束token index为 2
-            if (i == TOKEN_VALUE_INDEX) { continue; }
-            HCCL_INFO("[%s] arg[%lu] = %lu", __func__, i, taskInfo.args[i]);
-            taskParam.taskPara.Ccu.costumArgs[i] = taskInfo.args[i];
-        }
+    rtCcuTaskInfo_t taskInfo{};
+    taskInfo.dieId       = param.dieId;
+    taskInfo.missionId   = param.missionId;
+    taskInfo.instStartId = param.instStartId;
+    taskInfo.instCnt     = param.instCnt;
+    taskInfo.key         = param.key;
+    taskInfo.argSize     = param.argSize;
+    taskInfo.timeout     = execTimeOutSec;
+    std::copy(std::begin(param.args), std::end(param.args), std::begin(taskInfo.args));
 
-        auto ret = rtCCULaunch(&taskInfo, stream);
-        if (ret != RT_ERROR_NONE) {
-            HCCL_ERROR("[%s] failed to launch ccu, ret[%d]", __func__, ret);
-            return HcclResult::HCCL_E_RUNTIME;
-        }
+    auto ret = rtCCULaunch(&taskInfo, stream);
+    if (ret != RT_ERROR_NONE) {
+        HCCL_ERROR("[%s] failed to launch ccu, ret[%d]", __func__, ret);
+        return HcclResult::HCCL_E_RUNTIME;
     }
-    taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
-
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -476,11 +460,6 @@ HcclResult SaveDfxTaskInfo(const HcclComm comm, const Hccl::TaskParam &taskParam
 
     CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
     auto hcclComm = static_cast<hccl::hcclComm*>(comm);
-    CHK_PTR_NULL(hcclComm);
-    if (!hcclComm->IsCommunicatorV2()) {
-        HCCL_ERROR("[%s] comm is NOT_SUPPORT", __func__);
-        return HCCL_E_NOT_SUPPORT;
-    }
     hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
     hccl::HcclCommDfx* hcclCommDfx = collComm->GetHcclCommDfx();
@@ -490,36 +469,111 @@ HcclResult SaveDfxTaskInfo(const HcclComm comm, const Hccl::TaskParam &taskParam
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclReportCcuProfilingInfo(const ThreadHandle threadHandle, uint64_t execId, void *streamProfilingInfos, size_t infoNum,
-                                        const HcclComm comm, Hccl::TaskParam &taskParam, bool isMaster)
+static void LogCcuTaskInfo(const std::vector<hcomm::CcuTaskParam> &ccuParams, const CcuKernelHandle kernelHandle)
 {
-    if (infoNum == 0) {
-        HCCL_INFO("There is no ccu profiling info.");
+    if (!HcclCheckLogLevel(HCCL_LOG_INFO)) {
+        return;
+    }
+    const uint32_t execTimeOutSec = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
+    for (u32 idx = 0; idx < ccuParams.size(); idx++) {
+        const auto &param = ccuParams[idx];
+        HCCL_INFO("[LaunchCcuTasks] start ccu task, dieId[%u] missionId[%u] instStartId[%u] instCnt[%u], "
+            "argSize[%u], timeout[%u]s", param.dieId, param.missionId,
+            param.instStartId, param.instCnt, param.argSize, execTimeOutSec);
+        constexpr std::size_t TOKEN_VALUE_INDEX = 2;
+        for (std::size_t i = 0; i < param.argSize; i++) {
+            if (i == TOKEN_VALUE_INDEX) { continue; }
+            HCCL_INFO("[LaunchCcuTasks] arg[%lu] = %lu", i, param.args[i]);
+        }
+        HCCL_INFO("[ConstructCcuTaskParam]dieId[%u], missionId[%u], execMissionId[%u], instrId[%u], "
+            "executeId[0x%llx], ccuKernelHandle[0x%llx]",
+            param.dieId, param.missionId, param.missionId,
+            param.instStartId, kernelHandle, kernelHandle);
+    }
+}
+
+std::shared_ptr<std::vector<Hccl::CcuProfilingInfo>> ConstructCcuDetailInfo(
+    const std::vector<hcomm::CcuProfilingInfo> &allCcuProfilingInfo)
+{
+    if (allCcuProfilingInfo.empty()) {
+        return nullptr;
+    }
+    std::vector<Hccl::CcuProfilingInfo> converted(allCcuProfilingInfo.size());
+    for (u32 idx = 0; idx < allCcuProfilingInfo.size(); ++idx) {
+        auto &src = allCcuProfilingInfo[idx];
+        auto &dst = converted[idx];
+        dst.name = src.name;
+        dst.type = src.type;
+        dst.dieId = src.dieId;
+        dst.missionId = src.missionId;
+        dst.instrId = src.instrId;
+        dst.reduceOpType = src.reduceOpType;
+        dst.inputDataType = src.inputDataType;
+        dst.outputDataType = src.outputDataType;
+        dst.dataSize = src.dataSize;
+        dst.ckeId = src.ckeId;
+        dst.mask = src.mask;
+        (void)memcpy_s(dst.channelId, sizeof(dst.channelId), src.channelId, sizeof(src.channelId));
+        (void)memcpy_s(dst.remoteRankId, sizeof(dst.remoteRankId), src.remoteRankId, sizeof(src.remoteRankId));
+    }
+    return std::make_shared<std::vector<Hccl::CcuProfilingInfo>>(std::move(converted));
+}
+
+Hccl::TaskParam ConstructCcuTaskParam(const hcomm::CcuTaskParam &ccuParam, const CcuKernelHandle kernelHandle,
+    const std::shared_ptr<std::vector<Hccl::CcuProfilingInfo>> &ccuDetailInfo, u64 beginTime, u64 endTime, bool isMaster)
+{
+    Hccl::TaskParam taskParam{};
+    taskParam.beginTime = beginTime;
+    taskParam.endTime = endTime;
+    taskParam.taskType = Hccl::TaskParamType::TASK_CCU;
+    taskParam.taskPara.Ccu.dieId     = ccuParam.dieId;
+    taskParam.taskPara.Ccu.missionId = ccuParam.missionId;
+    taskParam.taskPara.Ccu.execMissionId = ccuParam.missionId;
+    taskParam.taskPara.Ccu.instrId   = ccuParam.instStartId;
+    taskParam.taskPara.Ccu.executeId = kernelHandle;
+    taskParam.taskPara.Ccu.ccuKernelHandle = kernelHandle;
+    taskParam.isMaster = isMaster;
+    taskParam.ccuDetailInfo = ccuDetailInfo;
+    return taskParam;
+}
+
+static void ConstructProfilingInfoLog(
+    const std::vector<hcomm::CcuProfilingInfo> &allCcuProfilingInfo)
+{
+    if (HcclCheckLogLevel(HCCL_LOG_INFO) == 0) {
+        return;
+    }
+    for (const hcomm::CcuProfilingInfo& profInfo : allCcuProfilingInfo) {
+        for (int idx = 0; idx < hcomm::CCU_MAX_CHANNEL_NUM; idx++) {
+            if (profInfo.channelId[idx] == hcomm::INVALID_VALUE_CHANNELID) {
+                break;
+            }
+            HCCL_INFO("[%s]idx[%u]: channelId[%u], channelHandle[0x%llx]",
+                __func__, idx, profInfo.channelId[idx], profInfo.channelHandle[idx]);
+        }
+    }
+}
+
+HcclResult ConstructProfilingInfo(const hcomm::CcuTaskArg &arg, hcomm::CcuKernel *kernel, const HcclComm comm,
+    std::vector<hcomm::CcuProfilingInfo> &allCcuProfilingInfo, bool isOpBase)
+{
+    bool isProfilingEnabledL1 = Hccl::ProfilingHandler::GetInstance().GetHcclL1State();
+    bool isProfilingEnabledL0 = Hccl::ProfilingHandler::GetInstance().GetHcclL0State();
+
+    // 没开profiling 而且是单算子模式
+    if (!isProfilingEnabledL1 && !isProfilingEnabledL0 && isOpBase) {
         return HCCL_SUCCESS;
     }
-    CHK_PTR_NULL(streamProfilingInfos);
+    CHK_RET(kernel->GetCcuProfilingInfo(arg, allCcuProfilingInfo));
     CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
+    if (allCcuProfilingInfo.empty()) {
+        return HCCL_SUCCESS;
+    }
     auto hcclComm = static_cast<hccl::hcclComm*>(comm);
-    CHK_PTR_NULL(hcclComm);
-
-    // 将 void* 转换为 CcuProfilingInfo 数组指针
-    hcomm::CcuProfilingInfo* profilingArray = reinterpret_cast<hcomm::CcuProfilingInfo*>(streamProfilingInfos);
-    
-    // 设置任务参数的基本信息
-    taskParam.taskPara.Ccu.dieId     = profilingArray[0].dieId;
-    taskParam.taskPara.Ccu.missionId = profilingArray[0].missionId;
-    taskParam.taskPara.Ccu.execMissionId = profilingArray[0].missionId;
-    taskParam.taskPara.Ccu.instrId   = profilingArray[0].instrId;
-    taskParam.taskPara.Ccu.executeId = execId;
-    taskParam.taskPara.Ccu.ccuKernelHandle = execId;
-    taskParam.isMaster = isMaster;
-    HCCL_INFO("[%s]dieId[%u], missionId[%u], execMissionId[%u], instrId[%u], executeId[%u], ccuKernelHandle[%u]",
-        __func__, taskParam.taskPara.Ccu.dieId, taskParam.taskPara.Ccu.missionId, taskParam.taskPara.Ccu.execMissionId,
-        taskParam.taskPara.Ccu.instrId, taskParam.taskPara.Ccu.executeId, taskParam.taskPara.Ccu.ccuKernelHandle);
+    ConstructProfilingInfoLog(allCcuProfilingInfo);
 
     // 处理每个性能信息条目
-    for (size_t i = 0; i < infoNum; ++i) {
-        hcomm::CcuProfilingInfo& profInfo = profilingArray[i];
+    for (hcomm::CcuProfilingInfo& profInfo : allCcuProfilingInfo) {
         for (int idx = 0; idx < hcomm::CCU_MAX_CHANNEL_NUM; idx++) {
             if (profInfo.channelId[idx] == hcomm::INVALID_VALUE_CHANNELID) {
                 break;
@@ -534,43 +588,8 @@ HcclResult HcclReportCcuProfilingInfo(const ThreadHandle threadHandle, uint64_t 
                 return HCCL_E_PARA;
             }
             profInfo.remoteRankId[idx] = remoteRankId;
-            HCCL_INFO("[%s]idx[%u]: channelId[%u], remoteRankId[%u], channelHandle[0x%llx]",
-                __func__, idx, profInfo.channelId[idx], profInfo.remoteRankId[idx], profInfo.channelHandle[idx]);
         }
     }
-    
-    // 转换函数：将 hcomm::CcuProfilingInfo 转换为 Hccl::CcuProfilingInfo
-    auto convertToHccl = [](const hcomm::CcuProfilingInfo& src) -> Hccl::CcuProfilingInfo {
-        Hccl::CcuProfilingInfo dst;
-        dst.name = src.name;
-        dst.type = src.type;
-        dst.dieId = src.dieId;
-        dst.missionId = src.missionId;
-        dst.instrId = src.instrId;
-        dst.reduceOpType = src.reduceOpType;
-        dst.inputDataType = src.inputDataType;
-        dst.outputDataType = src.outputDataType;
-        dst.dataSize = src.dataSize;
-        dst.ckeId = src.ckeId;
-        dst.mask = src.mask;
-        HCCL_INFO("src.name %s, dst.name %s", src.name.c_str(), dst.name.c_str());
-        (void)memcpy_s(dst.channelId, sizeof(dst.channelId), src.channelId, sizeof(src.channelId));
-        (void)memcpy_s(dst.remoteRankId, sizeof(dst.remoteRankId), src.remoteRankId, sizeof(src.remoteRankId));
-        return dst;
-    };
-
-    // 转换所有性能信息
-    std::vector<Hccl::CcuProfilingInfo> converted;
-    converted.reserve(infoNum);
-
-    for (size_t i = 0; i < infoNum; ++i) {
-        converted.push_back(convertToHccl(profilingArray[i]));
-    }
-    
-    // 构建shared_ptr并保存到任务参数
-    taskParam.ccuDetailInfo = std::make_shared<std::vector<Hccl::CcuProfilingInfo>>(std::move(converted));
-    HCCL_DEBUG("[%s]dieId[%u]", __func__, taskParam.taskPara.Ccu.dieId);
-    CHK_RET(SaveDfxTaskInfo(comm, taskParam));
     return HCCL_SUCCESS;
 }
 
@@ -578,7 +597,6 @@ HcclResult HcclCcuKernelLaunch(HcclComm comm, const ThreadHandle threadHandle,
     const CcuKernelHandle kernelHandle, void *taskArgs)
 {
     // 性能关键路径，禁止打印算子粒度频次的日志
-    (void)comm;
     CHK_PTR_NULL(taskArgs);
     CHK_PRT_RET(threadHandle == 0, HCCL_ERROR("[%s] failed, thread handle is empty.", __func__), HCCL_E_PARA);
 
@@ -604,13 +622,28 @@ HcclResult HcclCcuKernelLaunch(HcclComm comm, const ThreadHandle threadHandle,
         HCCL_INFO("[%s] passed, ccu params are empty.", __func__);
         return HcclResult::HCCL_SUCCESS;
     }
+    CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
+    auto hcclComm = static_cast<hccl::hcclComm*>(comm);
+    hccl::CollComm* collComm = hcclComm->GetCollComm();
+    CHK_PTR_NULL(collComm);
+    HcclCommDfx* hcclCommDfx = collComm->GetHcclCommDfx();
+    CHK_PTR_NULL(hcclCommDfx);
+    bool isOpBase = false;
+    CHK_RET(hcclCommDfx->IsOpBase(isOpBase));
+
     std::vector<hcomm::CcuProfilingInfo> allCcuProfilingInfo;
-    CHK_RET(kernel->GetCcuProfilingInfo(*ccuTaskArgs, allCcuProfilingInfo));
-    Hccl::TaskParam taskParam = {};
-    taskParam.taskType = Hccl::TaskParamType::TASK_CCU;
-    CHK_RET(LaunchCcuTasks(ccuParams, streamPtr, taskParam));
-    CHK_RET(HcclReportCcuProfilingInfo(threadHandle, kernelHandle, allCcuProfilingInfo.data(), allCcuProfilingInfo.size(),
-                                        comm, taskParam, rtsThread->GetMaster()));
+    CHK_RET(ConstructProfilingInfo(*ccuTaskArgs, kernel, comm, allCcuProfilingInfo, isOpBase));
+    LogCcuTaskInfo(ccuParams, kernelHandle);
+    auto ccuDetailInfo = ConstructCcuDetailInfo(allCcuProfilingInfo);
+    for (u32 idx = 0; idx < ccuParams.size(); idx++) {
+        u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+        CHK_RET(LaunchCcuTasks(ccuParams[idx], streamPtr));
+        u64 endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+        Hccl::TaskParam taskParam = ConstructCcuTaskParam(ccuParams[idx], kernelHandle, ccuDetailInfo,
+            beginTime, endTime, rtsThread->GetMaster());
+        CHK_RET(SaveDfxTaskInfo(comm, taskParam));
+    }
+
     EXCEPTION_HANDLE_END
     return HcclResult::HCCL_SUCCESS;
 }

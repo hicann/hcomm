@@ -67,7 +67,7 @@ HcclResult HcommChannelGet(ChannelHandle channel, void** channelPtr) {
 
 // 桩函数，模拟SaveDfxTaskInfo
 static HcclResult g_saveDfxRet = HCCL_SUCCESS;
-HcclResult SaveDfxTaskInfo(HcclComm comm, const Hccl::TaskParam& taskParam, uint32_t remoteRankId, bool isMaster) {
+HcclResult SaveDfxTaskInfo(const HcclComm comm, const Hccl::TaskParam& taskParam) {
     return g_saveDfxRet;
 }
 
