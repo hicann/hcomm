@@ -38,7 +38,7 @@ AicpuTsUboeChannel::AicpuTsUboeChannel(EndpointHandle endpointHandle, const Hcom
 
 AicpuTsUboeChannel::~AicpuTsUboeChannel()
 {
-    if (socket_ != nullptr) {
+    if (channelDesc_.socket == nullptr && socket_ != nullptr) {
         SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
         socket_ = nullptr;
     }
@@ -691,7 +691,7 @@ ChannelStatus AicpuTsUboeChannel::GetStatus()
     if (!IsSocketReady()) return channelStatus;
 
     ProcessUboeState();
-    if (channelStatus == ChannelStatus::READY && socket_ != nullptr) {
+    if (channelStatus == ChannelStatus::READY && channelDesc_.socket == nullptr && socket_ != nullptr) {
         SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
         socket_ = nullptr;
     }

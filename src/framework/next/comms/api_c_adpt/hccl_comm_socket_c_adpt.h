@@ -42,8 +42,6 @@ enum SocketStates { SOCKET_OK, SOCKET_CONNECTING, SOCKET_TIMEOUT };
 HcclResult SocketCreate(
     SocketDesc *socketDesc, SocketHandler *socketHandle); // HcclCommSocketCreate接口，创建socket连接
 
-HcclResult SocketRelease(SocketHandler *socketHandle);
-
 HcclResult SocketDestroy(SocketHandler socketHandle);
 
 HcclResult SocketGetStatus(SocketHandler socketHandle, SocketStates *status);

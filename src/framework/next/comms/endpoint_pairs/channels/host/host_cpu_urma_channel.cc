@@ -31,7 +31,7 @@ HostCpuUrmaChannel::HostCpuUrmaChannel(EndpointHandle endpointHandle, const Hcom
 
 HostCpuUrmaChannel::~HostCpuUrmaChannel()
 {
-    if (socket_ != nullptr) {
+    if (channelDesc_.socket == nullptr && socket_ != nullptr) {
         SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
         socket_ = nullptr;
     }
@@ -228,7 +228,7 @@ ChannelStatus HostCpuUrmaChannel::GetStatus()
 {
     memTransport_->SetIsHost();
     ChannelStatus out = Channel::TransportStatusToChannelStatus(memTransport_->GetStatus());
-    if (out == ChannelStatus::READY && socket_ != nullptr) {
+    if (out == ChannelStatus::READY && channelDesc_.socket == nullptr && socket_ != nullptr) {
         SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
     }
     return out;

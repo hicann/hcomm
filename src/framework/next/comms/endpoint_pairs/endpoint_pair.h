@@ -79,12 +79,11 @@ public:
     ~EndpointPair();
 
     HcclResult Init();
-    HcclResult GetSocket(const std::string &socketTag, const uint32_t listenPort, u32 reuseIdx, Hccl::Socket *&socket);
     
     // 临时方案：新增临时接口用于支持混跑
     HcclResult GetSocket(const uint32_t myRank, const uint32_t rmtRank,
         const std::string &socketTag, u32 reuseIdx, const uint32_t listenPort, Hccl::Socket *&socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId);
-    HcclResult GetSocketWithRank(const uint32_t myRank, const uint32_t rmtRank, const std::string &socketTag,
+    HcclResult GetHostSocketWithRank(const uint32_t myRank, const uint32_t rmtRank, const std::string &socketTag,
         const uint32_t listenPort, u32 reuseIdx, Hccl::Socket*& socket);
 
     HcclResult ServerInit(const uint32_t myRank, const uint32_t rmtRank,
@@ -118,6 +117,7 @@ private:
     std::unordered_map<CommEngine, std::vector<ChannelHandle>> channelHandles_{};
     Hccl::RankIpPortMapPtr rankIpPortMap_;
     uint32_t devicePhyId_{};
+    std::unique_ptr<SocketMgr> socketMgr_;
 };
 
 } // namespace hcomm

@@ -73,7 +73,7 @@ HostCpuRoceChannel::~HostCpuRoceChannel() {
         HCCL_ERROR("[HostCpuRoceChannel::~HostCpuRoceChannel] exception occurred, HcclResult=[%d]", ret);
     }
 
-    if (socket_ != nullptr) {
+    if (channelDesc_.socket == nullptr && socket_ != nullptr) {
         SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
         socket_ = nullptr;
     }
@@ -261,7 +261,7 @@ HcclResult HostCpuRoceChannel::ProcessStatus()
 {
     switch (channelStatus_) {
         case ChannelStatus::READY:
-            if (socket_ != nullptr) {
+            if (channelDesc_.socket == nullptr && socket_ != nullptr) {
                 SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
             }
             return HCCL_SUCCESS;

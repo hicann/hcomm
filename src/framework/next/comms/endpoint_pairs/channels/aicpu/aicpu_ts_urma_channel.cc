@@ -34,7 +34,7 @@ AicpuTsUrmaChannel::AicpuTsUrmaChannel(EndpointHandle endpointHandle, const Hcom
 
 AicpuTsUrmaChannel::~AicpuTsUrmaChannel()
 {
-    if (socket_ != nullptr) {
+    if (channelDesc_.socket == nullptr && socket_ != nullptr) {
         SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
         socket_ = nullptr;
     }
@@ -302,7 +302,7 @@ ChannelStatus AicpuTsUrmaChannel::GetStatus()
         isFirstPrintChannelInfo_ = false;
     }
     
-    if (out == ChannelStatus::READY && socket_ != nullptr) {
+    if (out == ChannelStatus::READY && channelDesc_.socket == nullptr && socket_ != nullptr) {
         SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
     }
     return out;

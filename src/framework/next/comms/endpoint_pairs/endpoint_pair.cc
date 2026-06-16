@@ -31,6 +31,7 @@ EndpointPair::~EndpointPair()
 
 HcclResult EndpointPair::Init()
 {
+    EXECEPTION_CATCH(socketMgr_ = std::make_unique<SocketMgr>(), return HCCL_E_PTR);
     channelHandles_.clear();
     s32 devLogicId;
     CHK_RET(hrtGetDevice(&devLogicId));
@@ -39,21 +40,7 @@ HcclResult EndpointPair::Init()
     return HCCL_SUCCESS;
 }
 
-HcclResult EndpointPair::GetSocket(const std::string &socketTag, const uint32_t listenPort,
-    u32 reuseIdx, Hccl::Socket*& socket)
-{
-    Hccl::LinkData linkData = BuildDefaultLinkData();
-    CHK_RET(EndpointDescPairToLinkData(localEndpointDesc_, remoteEndpointDesc_, linkData, reuseIdx));
-    std::string linkTag = socketTag;
-    if (linkData.GetReuseIdx() != "0") {
-        linkTag += ("_" + linkData.GetReuseIdx());
-    }
-    Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, listenPort, linkTag);
-    CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket));
-    return HCCL_SUCCESS;
-}
-
-HcclResult EndpointPair::GetSocketWithRank(const uint32_t myRank, const uint32_t rmtRank, const std::string &socketTag,
+HcclResult EndpointPair::GetHostSocketWithRank(const uint32_t myRank, const uint32_t rmtRank, const std::string &socketTag,
     const uint32_t listenPort, u32 reuseIdx, Hccl::Socket*& socket)
 {
     uint32_t connectMode = 0;
@@ -72,7 +59,7 @@ HcclResult EndpointPair::GetSocketWithRank(const uint32_t myRank, const uint32_t
     /* A2: host nic(cpu roce channel) -- device nic(transport ibv)时，两边ip地址格式不一样，判断大小算法不匹配
      * 修改成按照rank id大小判断server和client */
     Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, listenPort, linkTag, connectMode, myRank, rmtRank);
-    CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket));
+    CHK_RET(socketMgr_->GetHostSocket(socketConfig, socket));
     return HCCL_SUCCESS;
 }
 
@@ -111,7 +98,7 @@ HcclResult EndpointPair::HandleHostSocketOrBuildLinkData(const uint32_t myRank, 
         } else {
             socketTagPrefix += "_" + std::to_string(rmtRank) + "_" + std::to_string(myRank);
         }
-        CHK_RET(this->GetSocketWithRank(myRank, rmtRank, socketTagPrefix, listenPort, reuseIdx, socket));
+        CHK_RET(this->GetHostSocketWithRank(myRank, rmtRank, socketTagPrefix, listenPort, reuseIdx, socket));
         isHost = true;
         return HCCL_SUCCESS;
     }

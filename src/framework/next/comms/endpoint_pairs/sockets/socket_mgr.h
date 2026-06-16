@@ -25,7 +25,11 @@ namespace hcomm {
 
 class SocketMgr {
 public:
+    SocketMgr() {};
+    ~SocketMgr() {};
+    HcclResult GetNewSocket(const Hccl::SocketConfig &socketConfig, Hccl::Socket*& socket);
     HcclResult GetSocket(const Hccl::SocketConfig &socketConfig, Hccl::Socket*& socket);
+    HcclResult GetHostSocket(const Hccl::SocketConfig &socketConfig, Hccl::Socket*& socket);
     HcclResult CreateSocketWithSocketHandle(const Hccl::SocketConfig &socketConfig);
     HcclResult MakeSocketInUse(Hccl::Socket*& socket);
     HcclResult PutSocket(const Hccl::SocketConfig*& socketConfig, Hccl::Socket*& socket);
@@ -41,8 +45,6 @@ private:
     HcclResult CreateSocket(const Hccl::SocketConfig &socketConfig, const Hccl::SocketHandle &socketHandle);
 
 private:
-    SocketMgr() {};
-    ~SocketMgr() {};
     SocketMgr(const SocketMgr&) = delete;
     SocketMgr& operator=(const SocketMgr&) = delete;
 
