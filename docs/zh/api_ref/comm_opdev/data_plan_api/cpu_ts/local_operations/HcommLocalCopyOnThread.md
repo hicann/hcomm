@@ -36,7 +36,7 @@ int32_t：接口成功返回0，其他失败。
 
 dst、src内存是申请的device内存。
 
-在 Ascend 950PR/Ascend 950DT 上，仅支持 AICPU_TS 模式下、在 Device 侧调用该接口。
+在Ascend 950PR/Ascend 950DT上，仅支持AICPU_TS模式下、在Device侧调用该接口。
 
 ## 调用示例
 

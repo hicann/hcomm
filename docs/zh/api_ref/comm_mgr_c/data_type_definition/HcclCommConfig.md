@@ -100,6 +100,10 @@ typedef struct HcclCommConfigDef {
 
     MS模式为与多个远端通信时，使用CCU片上Memory Slice作为中转，用于节省内存读写带宽，Memory Slice的特点是大小较小，但速度较快。当CCU资源不足时，系统会自动切换为“2：AI CPU模式”。
 
+    该配置项仅支持Broadcast、Reduce、AllReduce、ReduceScatter、AllGather、AllGatherV、ReduceScatterV算子，当前仅支持单机场景。
+    - 针对Broadcast、AllGather、AllGatherV算子，数据类型支持int8、uint8、int16、uint16、int32、uint32、int64、uint64、float16、float32、bfp16。
+    - 针对Reduce、AllReduce、ReduceScatter、ReduceScatterV算子，数据类型支持int16、int32、float16、float32、bfp16。
+
   - 6：通信算子在CCU展开，使用调度模式。
 
     调度模式指使用CCU作为调度器，向UB引擎调度UB WQE任务。调度模式下不使用CCU的片上MS，直接在两个rank间进行HBM到HBM的数据传输。
@@ -125,7 +129,8 @@ typedef struct HcclCommConfigDef {
     - 该配置项下，集合通信支持控核能力，建议业务根据实际使用场景中计算算子与通信算子的并发情况进行Vector Core核数的配置。
 
       - 针对Broadcast算子，建议至少分配ranksize个vector核。
-      - 针对AllReduce、ReduceScatter、AllGather、AlltoAll、AlltoAllV、AlltoAllVC算子，建议最少分配max\(2, ranksize/20 + 1\)个vector核。
+      - 针对AllGather、非确定性ReduceScatter算子，建议最少分配max(2, ceil(ranksize/20))个vector核。
+      - 针对AllReduce、确定性ReduceScatter、AlltoAll、AlltoAllV、AlltoAllVC算子，建议最少分配max(2, ceil(ranksize/20))个vector核，且核数需为偶数（若计算结果为奇数则向上取整至下一个偶数）。
 
       若业务编译分配的Vector Core核数无法满足算法编排的要求，HCCL会报错并提示所需要的最低Vector Core核数。
 
@@ -196,7 +201,7 @@ typedef struct HcclCommConfigDef {
   - 0（默认值）：关闭零拷贝功能。
   - 1：开启零拷贝功能。
 
-- **hcclExecTimeOut**：不同设备进程在分布式训练或推理过程中存在卡间执行任务不一致的场景（如仅特定进程会保存checkpoint数据），通过该参数可控制设备间执行时同步等待的时间，在该配置时间内各设备进程等待其他设备执行通信同步。单位为s，取值范围和针对不同产品类型的使用约束请参见环境变量[HCCL_EXEC_TIMEOUT](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_EXEC_TIMEOUT.md)。
+- **hcclExecTimeOut**：不同设备进程在分布式训练或推理过程中存在卡间执行任务不一致的场景（如仅特定进程会保存checkpoint数据），通过该参数可控制设备间执行时同步等待的时间，在该配置时间内各设备进程等待其他设备执行通信同步。单位为s，取值范围和针对不同产品类型的使用约束请参见环境变量[HCCL_EXEC_TIMEOUT](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_EXEC_TIMEOUT.md)。
 
   **注意事项：**
 
@@ -204,7 +209,7 @@ typedef struct HcclCommConfigDef {
 
 - **hcclAlgo**：用于配置集合通信Server间通信算法以及超节点间通信算法，支持全局配置算法类型与按算子配置算法类型两种配置方式。需注意，HCCL提供自适应算法选择功能，默认会根据产品形态、数据量和Server个数选择合适的算法，一般情况下用户无需手工指定。若通过此参数指定了Server间通信算法，则自适应算法选择功能不再生效。
 
-  配置方式的参数信息及针对不同产品类型支持的算法类型请参见环境变量[HCCL_ALGO](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_ALGO.md)，配置方式如下：
+  配置方式的参数信息及针对不同产品类型支持的算法类型请参见环境变量[HCCL_ALGO](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_ALGO.md)，配置方式如下：
 
   - 全局配置算法类型：`hcclAlgo = "level0:NA;level1:<algo>;level2:<algo>"`，  示例：
 
@@ -221,14 +226,14 @@ typedef struct HcclCommConfigDef {
 
 - **hcclRetryEnable**：用于配置是否开启HCCL算子的重执行特性。重执行是指当通信算子执行报 SDMA 或者RDMA CQE类型的错误时，HCCL会尝试重新执行此通信算子。**仅支持在Atlas A3 训练系列产品/Atlas A3 推理系列产品上使用。**
 
-  通过此参数，开发者可以在Server间、超节点间两个物理层级的通信域中配置是否开启重执行特性，每个层级支持配置两种状态：开启或关闭，使用约束请参见环境变量[HCCL_OP_RETRY_ENABLE](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)，配置方式为：`hcclRetryEnable = "L1:1, L2:0"`，参数取值如下。
+  通过此参数，开发者可以在Server间、超节点间两个物理层级的通信域中配置是否开启重执行特性，每个层级支持配置两种状态：开启或关闭，使用约束请参见环境变量[HCCL_OP_RETRY_ENABLE](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)，配置方式为：`hcclRetryEnable = "L1:1, L2:0"`，参数取值如下。
 
   - L1代表通信域的物理范围为Server间通信域，取值为0表示通信域内Server间通信task不开启重执行，取值为1表示通信域内Server间通信task开启重执行，默认值为0。
   - L2代表通信域的物理范围为超节点间通信域，取值为0表示通信域内超节点间通信task不开启重执行，取值为1表示通信域内超节点间通信task开启重执行，默认值为0。
 
 - **hcclRetryParams**：只有当开发者通过参数**hcclRetryEnable**开启了HCCL的算子重执行特性时，可通过本参数配置第一次重执行的等待时间、最大重执行的次数以及两次重执行的间隔时间。**仅支持在Atlas A3 训练系列产品/Atlas A3 推理系列产品上使用。**
 
-  使用约束请参见环境变量[HCCL_OP_RETRY_PARAMS](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_PARAMS.md)。配置方式为`hcclRetryParams = "MaxCnt:3, HoldTime:5000, IntervalTime:1000"`，参数取值如下：
+  使用约束请参见环境变量[HCCL_OP_RETRY_PARAMS](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_PARAMS.md)。配置方式为`hcclRetryParams = "MaxCnt:3, HoldTime:5000, IntervalTime:1000"`，参数取值如下：
 
   - MaxCnt：最大重传次数，uint32类型，取值范围为\[1,10\]，默认值为1，单位次。
   - HoldTime：从检测到通信算子执行失败到开始第一次重新执行的等待时间，uint32类型，取值范围\[0,60000\]，默认值为5000，单位ms。
@@ -258,12 +263,12 @@ typedef struct HcclCommConfigDef {
 
 | 配置项 | 配置优先级 |
 | --- | --- |
-| hcclBufferSize | 配置项hcclBufferSize（通信域粒度配置）> 环境变量[HCCL_BUFFSIZE](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_BUFFSIZE.md)（全局配置）> 默认值200。 |
-| hcclDeterministic | 配置项hcclDeterministic（通信域粒度配置）> 环境变量[HCCL_DETERMINISTIC](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_DETERMINISTIC.md)（全局配置）> 默认值0（关闭确定性计算）。 |
-| hcclOpExpansionMode | 配置项hcclOpExpansionMode（通信域粒度配置）> 环境变量[HCCL_OP_EXPANSION_MODE](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_OP_EXPANSION_MODE.md)（全局配置）> 默认算子展开模式。<br>Ascend 950PR/Ascend 950DT：CCU_SCHED<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品：AI_CPU<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品：HOST |
-| hcclRdmaTrafficClass | 配置项hcclRdmaTrafficClass（通信域粒度配置） > 环境变量[HCCL_RDMA_TC](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_RDMA_TC.md)（全局配置）> 默认值132。 |
-| hcclRdmaServiceLevel | 配置项hcclRdmaServiceLevel（通信域粒度配置）> 环境变量[HCCL_RDMA_SL](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_RDMA_SL.md)（全局配置）> 默认值4。 |
-| hcclExecTimeOut | 配置项hcclExecTimeOut（通信域粒度配置）> 环境变量[HCCL_EXEC_TIMEOUT](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_EXEC_TIMEOUT.md)（全局配置）> 默认值1836。 |
-| hcclAlgo | 配置项hcclAlgo（通信域粒度配置）> 环境变量[HCCL_ALGO](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_ALGO.md)（全局配置）> 自适应选择算法。 |
-| hcclRetryEnable | 配置项hcclRetryEnable（通信域粒度配置）> 环境变量[HCCL_OP_RETRY_ENABLE](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)（全局配置）> 默认值0。 |
-| hcclRetryParams | 配置项hcclRetryParams（通信域粒度配置）> 环境变量[HCCL_OP_RETRY_PARAMS](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_PARAMS.md)（全局配置）> 默认配置（MaxCnt：1，HoldTime：5000，IntervalTime：1000）。 |
+| hcclBufferSize | 配置项hcclBufferSize（通信域粒度配置）> 环境变量[HCCL_BUFFSIZE](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_BUFFSIZE.md)（全局配置）> 默认值200。 |
+| hcclDeterministic | 配置项hcclDeterministic（通信域粒度配置）> 环境变量[HCCL_DETERMINISTIC](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_DETERMINISTIC.md)（全局配置）> 默认值0（关闭确定性计算）。 |
+| hcclOpExpansionMode | 配置项hcclOpExpansionMode（通信域粒度配置）> 环境变量[HCCL_OP_EXPANSION_MODE](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_OP_EXPANSION_MODE.md)（全局配置）> 默认算子展开模式。<br>Ascend 950PR/Ascend 950DT：CCU_SCHED<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品：AI_CPU<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品：HOST |
+| hcclRdmaTrafficClass | 配置项hcclRdmaTrafficClass（通信域粒度配置） > 环境变量[HCCL_RDMA_TC](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_RDMA_TC.md)（全局配置）> 默认值132。 |
+| hcclRdmaServiceLevel | 配置项hcclRdmaServiceLevel（通信域粒度配置）> 环境变量[HCCL_RDMA_SL](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_RDMA_SL.md)（全局配置）> 默认值4。 |
+| hcclExecTimeOut | 配置项hcclExecTimeOut（通信域粒度配置）> 环境变量[HCCL_EXEC_TIMEOUT](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_EXEC_TIMEOUT.md)（全局配置）> 默认值1836。 |
+| hcclAlgo | 配置项hcclAlgo（通信域粒度配置）> 环境变量[HCCL_ALGO](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_ALGO.md)（全局配置）> 自适应选择算法。 |
+| hcclRetryEnable | 配置项hcclRetryEnable（通信域粒度配置）> 环境变量[HCCL_OP_RETRY_ENABLE](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)（全局配置）> 默认值0。 |
+| hcclRetryParams | 配置项hcclRetryParams（通信域粒度配置）> 环境变量[HCCL_OP_RETRY_PARAMS](https://gitcode.com/cann/hccl/blob/9.1.0-beta.3/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_PARAMS.md)（全局配置）> 默认配置（MaxCnt：1，HoldTime：5000，IntervalTime：1000）。 |

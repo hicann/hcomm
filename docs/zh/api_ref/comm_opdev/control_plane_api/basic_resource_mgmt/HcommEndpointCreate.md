@@ -20,7 +20,7 @@ HcclResult HcommEndpointCreate(const EndpointDesc *endpoint, EndpointHandle *end
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
-| endpoint | 输入 | Endpoint初始化配置信息。<br>EndpointDesc类型的定义请参见[EndPointDesc](../../datatype_definition/EndPointDesc.md)。 |
+| endpoint | 输入 | Endpoint初始化配置信息。<br>EndpointDesc类型的定义请参见[EndpointDesc](../../datatype_definition/EndPointDesc.md)。 |
 | endpointHandle | 输出 | 返回的Endpoint句柄。<br>EndpointHandle类型的定义请参见[EndpointHandle](../../datatype_definition/EndpointHandle.md)。 |
 
 ## 返回值

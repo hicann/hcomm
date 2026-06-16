@@ -191,7 +191,7 @@ clean:
     参考如下命令，使用root用户在物理机上执行， 以device 0为例：
 
     ```bash
-    npu-smi set -t custom-op-secverify-enable -i 0 -d 1    # 使能验签配置
+    npu-smi set -t custom-op-secverify-enable -i 0 -d 1    # 开启验签配置
     npu-smi set -t custom-op-secverify-mode -i 0 -d 0      # 关闭自定义验签
     ```
 

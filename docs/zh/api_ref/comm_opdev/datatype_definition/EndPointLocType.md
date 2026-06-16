@@ -1,4 +1,4 @@
-# EndPointLocType
+# EndpointLocType
 
 ## 功能说明
 

@@ -1,4 +1,4 @@
-# EndPointDesc
+# EndpointDesc
 
 ## 功能说明
 

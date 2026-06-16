@@ -15,7 +15,7 @@ typedef enum {
 
 ## 参数说明
 
-- HCCL_DETERMINISTIC：是否开启确认性计算。
+- HCCL_DETERMINISTIC：是否开启确定性计算。
 
   - 0：不开启确定性计算。
   - 1：开启确定性计算。

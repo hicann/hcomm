@@ -1,4 +1,4 @@
-# EndPointLoc
+# EndpointLoc
 
 ## 功能说明
 
