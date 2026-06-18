@@ -308,6 +308,12 @@ HcclResult MyRank::GetEndpointPairFromChannel(const HcclChannelDesc &channelDesc
     return HCCL_SUCCESS;
 }
 
+inline std::string AddProtocolToSocketTag(const std::string &socketTag, const HcclChannelDesc* channelDescs)
+{
+    std::string newSocketTag = socketTag + "_protocol_" + std::to_string(channelDescs->channelProtocol);
+ 	return newSocketTag;
+}
+
 HcclResult MyRank::BatchServerInitForChannels(const HcclChannelDesc* channelDescs, uint32_t channelNum,
     const std::string &socketTag, ReuseSocketIdxMap &reuseSocketIdxMap)
 {
@@ -333,7 +339,8 @@ HcclResult MyRank::BatchServerInitForChannels(const HcclChannelDesc* channelDesc
         rankGraph_->GetDeviceId(rankId_, &devicePhyId);
         rankGraph_->GetDeviceId(remoteRank, &remoteDevicePhyId);
 
-        auto ret = endpointPair->ServerInit(rankId_, remoteRank, socketTag, reuseIdx, devicePhyId, remoteDevicePhyId);
+        const std::string socketTagAddProto = AddProtocolToSocketTag(socketTag, &channelDescs[i]);
+ 	    auto ret = endpointPair->ServerInit(rankId_, remoteRank, socketTagAddProto, reuseIdx, devicePhyId, remoteDevicePhyId);
         CHK_PRT_RET(ret != HCCL_SUCCESS,
             HCCL_ERROR("[%s] ServerInitFailed, channelIndex[%u], remoteRank[%u], protocol[%d] reuseIdx[%u]",
                 __func__, i, remoteRank, channelDescs[i].localEndpoint.protocol, reuseIdx),
@@ -367,10 +374,11 @@ HcclResult MyRank::BatchGetSocketsForChannels(const HcclChannelDesc* channelDesc
         HCCL_INFO("[MyRank][BatchCreateSockets] rankId_[%u] devicePhyId[%u]", rankId_, devicePhyId);
         HCCL_INFO("[MyRank][BatchCreateSockets] rankId_[%u] devicePhyId[%u]", remoteRank, remoteDevicePhyId);
         Hccl::Socket* socket = nullptr;
-        auto ret = endpointPair->GetConnectedSocket(rankId_, remoteRank, socketTag, reuseIdx, listenPort, socket, devicePhyId, remoteDevicePhyId);
+        const std::string socketTagAddProto = AddProtocolToSocketTag(socketTag, &channelDescs[i]);
+        auto ret = endpointPair->GetConnectedSocket(rankId_, remoteRank, socketTagAddProto, reuseIdx, listenPort, socket, devicePhyId, remoteDevicePhyId);
         CHK_PRT_RET(ret != HCCL_SUCCESS,
             HCCL_ERROR("[%s] failed to get socket, channelIndex[%u], remoteRank[%u], protocol[%d], reuseIdx[%u], tag[%s]",
-                __func__, i, remoteRank, channelDescs[i].localEndpoint.protocol, reuseIdx, socketTag.c_str()),
+                __func__, i, remoteRank, channelDescs[i].localEndpoint.protocol, reuseIdx, socketTagAddProto.c_str()),
             ret);
         CHK_PTR_NULL(socket);
 

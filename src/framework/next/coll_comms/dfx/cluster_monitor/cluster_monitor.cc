@@ -20,6 +20,8 @@
 #include "heartbeat.h"
 #include "comm_addr_logger.h"
 
+constexpr u32 ONE_SECOND_OF_SLEEP = 1;
+
 namespace hcomm {
 
 ClusterUIDType ClusterMonitor::FormatUID(ClusterUIDCxt cxt)
@@ -351,7 +353,7 @@ void ClusterMonitor::CreateLinkWithRemotePonit(
             SocketDestroy(needConnectRank.socketHandler);
             break;
         } else if (status == SocketStates::SOCKET_CONNECTING) {
-            SaluSleep(ONE_MILLISECOND_OF_USLEEP);
+            SalSleep(ONE_SECOND_OF_SLEEP);
             continue;
         }
 
