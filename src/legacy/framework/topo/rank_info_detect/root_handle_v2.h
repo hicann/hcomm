@@ -29,7 +29,7 @@ using HcclRootHandleV2 = struct HcclRootHandleDefV2 {
 };
 
 // buffer大小
-constexpr u32 MAX_BUFFER_LEN  = 10 * 1024 * 1024; // 10M
+constexpr u32 MAX_BUFFER_LEN  = 100 * 1024 * 1024; // 100M
 
 constexpr u32 ONE_MILLISECOND_OF_USLEEP = 1000;
 

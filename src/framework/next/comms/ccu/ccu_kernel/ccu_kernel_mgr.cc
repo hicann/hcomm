@@ -472,6 +472,7 @@ HcclResult CcuKernelMgr::Translate(const std::vector<CcuKernelHandle> &kernelHan
         return HcclResult::HCCL_SUCCESS;
     }
 
+    std::unique_lock<std::mutex> lock(translateMutex_);
     std::vector<CcuKernel *> kernels{};
     for (const auto kernelHandle : kernelHandles) {
         const auto &iter = kernelMap_.find(kernelHandle);

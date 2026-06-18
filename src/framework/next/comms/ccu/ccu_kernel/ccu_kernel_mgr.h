@@ -64,6 +64,7 @@ private:
     bool initializedFlag_{false};
     int32_t devLogicId_{-1};
     std::mutex kernelMapMutex_;
+    std::mutex translateMutex_;
     CcuKernelHandle kernelId_ = 0;
     std::unordered_map<CcuKernelHandle, std::unique_ptr<CcuKernel>> kernelMap_{};
     void *instructionLoadDevMem_{nullptr};
