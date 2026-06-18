@@ -109,6 +109,7 @@ HcclResult OpenDispatcherForTsRoce(const HcommDeviceInfo &deviceInfo, char *comm
     return HCCL_SUCCESS;
 }
 
+constexpr u32 TRANSPORT_PARA_DEFAULT_TIMEOUT = 120000;    // 默认超时时间
 HcclResult CreateAndInitTsRoceTransport(const HcommDeviceInfo &deviceInfo, DispatcherCtxPtr dctxPtr,
     const char *commId, HcclDispatcher dispatcher, TransportDeviceIbverbsData &&ibd,
     std::shared_ptr<Transport> &outLink)
@@ -128,7 +129,7 @@ HcclResult CreateAndInitTsRoceTransport(const HcommDeviceInfo &deviceInfo, Dispa
     machinePara.dctxPtr = dctxPtr;
 
     TransportPara transportPara{};
-    transportPara.timeout = std::chrono::milliseconds(120000);
+    transportPara.timeout = std::chrono::milliseconds(TRANSPORT_PARA_DEFAULT_TIMEOUT);
     transportPara.nicDeploy = NICDeployment::NIC_DEPLOYMENT_DEVICE;
 
     static const std::unique_ptr<NotifyPool> kEmptyNotifyPool;

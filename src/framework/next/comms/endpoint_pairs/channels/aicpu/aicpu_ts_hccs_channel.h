@@ -91,7 +91,7 @@ private:
     std::string                                                 socketTag_{};
     bool                                                        isSocketServer_{false};
     // for create TransportMem
-    HcclDispatcher                                              dispatcher_; // dispatcher放到最后析构
+    HcclDispatcher                                              dispatcher_{nullptr}; // dispatcher放到最后析构
     DispatcherCtxPtr                                            dispatcherCtx_{nullptr};
     std::unique_ptr<hccl::NotifyPool>                           notifyPool_;
     std::shared_ptr<hccl::Transport>                            transport_{nullptr};

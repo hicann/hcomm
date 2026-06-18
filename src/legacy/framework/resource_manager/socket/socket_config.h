@@ -79,9 +79,8 @@ public:
     }
 
     SocketConfig(const LinkData &link, const uint32_t listenPort, const std::string &tag)
-        : link(link), listeningPort(listenPort), tag(tag)
+        : remoteRank(link.GetRemoteRankId()), link(link), listeningPort(listenPort), tag(tag)
     {
-        remoteRank = link.GetRemoteRankId();
         role = link.GetLocalAddr() < link.GetRemoteAddr() ? SocketRole::SERVER : SocketRole::CLIENT;
  
         if (role == SocketRole::SERVER) { // server: tag_local_remote
@@ -94,9 +93,8 @@ public:
     }
 
     SocketConfig(const LinkData &link, const uint32_t listenPort, const std::string &tag, const bool isServer)
-        : link(link), listeningPort(listenPort), tag(tag)
+        : remoteRank(link.GetRemoteRankId()), link(link), listeningPort(listenPort), tag(tag)
     {
-        remoteRank = link.GetRemoteRankId();
         role = isServer ? SocketRole::SERVER : SocketRole::CLIENT;
 
         if (role == SocketRole::SERVER) { // server: tag_local_remote
@@ -123,7 +121,7 @@ private:
     string     hccpTag;
 
 public:
-    bool       noRankId;
+    bool       noRankId{false};
 };
 } // namespace Hccl
 

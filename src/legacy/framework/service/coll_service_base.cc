@@ -363,6 +363,7 @@ HcclResult CollServiceBase::GetSnapShotDynamicBuf(CollOperator &op,BinaryStream 
     return HCCL_E_NOT_SUPPORT;
 }
 
+constexpr u32 TAILADDR_OFFSET_MULTIPLIER      = 2;
 void CollServiceBase::SaveMirrorDfxOpInfo()
 {
     auto dfxOpInfo = std::make_shared<DfxOpInfo>();
@@ -378,7 +379,7 @@ void CollServiceBase::SaveMirrorDfxOpInfo()
  	dfxOpInfo->opIndex_ = comm->GetOpIndex();
  	u64 size = 4;
  	dfxOpInfo->headOpCounterAddr_ = counterBuf->GetAddr() + size;
- 	dfxOpInfo->tailOpCounterAddr_ = counterBuf->GetAddr() + size * 2;
+ 	dfxOpInfo->tailOpCounterAddr_ = counterBuf->GetAddr() + size * TAILADDR_OFFSET_MULTIPLIER;
 
     comm->GetMirrorTaskManager().SetCurrDfxOpInfo(dfxOpInfo);
 }

@@ -279,6 +279,7 @@ void ProfilingHandler::GetProfTaskSpecificInfo(const TaskInfo &taskInfo, HCCLRep
     }
 }
 
+constexpr u32 DPU_DEV_ID_BIT_POS = 12;    // 移位
 void ProfilingHandler::GetDpuProfInfo(const TaskInfo &taskInfo, HCCLReportData &hcclReportData) const
 {
     if (taskInfo.dfxOpInfo_ == nullptr) {
@@ -303,7 +304,7 @@ void ProfilingHandler::GetDpuProfInfo(const TaskInfo &taskInfo, HCCLReportData &
     hcclReportData.dpuProfInfo.transportType = static_cast<uint32_t>(SimpleTaskType::ROCE);
     hcclReportData.dpuProfInfo.aicpu_task_id = taskInfo.taskParam_.aicpuTaskId;
     hcclReportData.dpuProfInfo.npuDevId = taskInfo.taskParam_.npuDevId;
-    hcclReportData.dpuProfInfo.dpuDevId = (1U << 12);
+    hcclReportData.dpuProfInfo.dpuDevId = (1U << DPU_DEV_ID_BIT_POS);
     hcclReportData.dpuProfInfo.linkType = static_cast<uint16_t>(taskPara.DMA.linkType);
     if (hcclReportData.dpuProfInfo.remoteRank == INVALID_VALUE_RANKID) {
         hcclReportData.dpuProfInfo.transportType = static_cast<uint32_t>(SimpleTaskType::LOCAL);

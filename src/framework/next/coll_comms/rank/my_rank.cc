@@ -657,13 +657,15 @@ HcclResult MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, Cha
     return HCCL_SUCCESS;
 }
 
+constexpr u32 CCU_MS_SQDEPTH = 128;    // CCU_MS的sqDepth
+constexpr u32 CCU_SCHED_SQDEPTH = 16;  // CCU_SCHED的sqDepth
 HcclResult MyRank::ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc) const
 {
     if (engine == COMM_ENGINE_CCU) {
         if (opExpansionMode_ == CCU_MS_MODE) {
-            hcommDesc.ubAttr.sqDepth = 128;
+            hcommDesc.ubAttr.sqDepth = CCU_MS_SQDEPTH;
         } else if (opExpansionMode_ == CCU_SCHED_MODE) {
-            hcommDesc.ubAttr.sqDepth = 16;
+            hcommDesc.ubAttr.sqDepth = CCU_SCHED_SQDEPTH;
         } else {
             HCCL_ERROR("[%s] unexpected op expansion mode[%u] for ccu,", __func__, opExpansionMode_);
             return HCCL_E_INTERNAL;
@@ -760,6 +762,7 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
     return HCCL_E_NOT_SUPPORT;
 }
 
+constexpr u32 TEMP_VECTOR_SIZE = 500;
 HcclResult MyRank::ChannelGetHcclBuffer(ChannelHandle channel, void **buffer, uint64_t *size)
 {
     CHK_PTR_NULL(buffer);
@@ -768,8 +771,8 @@ HcclResult MyRank::ChannelGetHcclBuffer(ChannelHandle channel, void **buffer, ui
     u32 memNum = 0;  // 接收内存块数量
     /* 实现获取buffer Num的接口，此处Size为500的vector暂存 */
     // 临时方案，暂时写死大小，后续需定下正式修改方案整改
-    std::vector<CommMem *> remoteMemList(500);
-    std::vector<char *> memTags(500);
+    std::vector<CommMem *> remoteMemList(TEMP_VECTOR_SIZE);
+    std::vector<char *> memTags(TEMP_VECTOR_SIZE);
     CHK_RET(static_cast<HcclResult>(HcommChannelGetRemoteMem(channel, remoteMemList.data(), &memNum, memTags.data())));
 
     for (u32 i = 0; i < memNum; i++) {

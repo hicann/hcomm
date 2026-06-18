@@ -146,11 +146,12 @@ HcclResult HcclCommDfx::ReportKernel(uint64_t beginTime, const std::string& comm
     return HCCL_SUCCESS; 
 }
 
+constexpr u32 TASKID_RANGE = 65536;
 u32 HcclCommDfx::GetTaskId(u32 streamId)
 {
     rwLock_.writeLock();
     auto& taskIdRef = streamIdToTaskId_[streamId];
-    taskIdRef = (taskIdRef + 1) % 65536;
+    taskIdRef = (taskIdRef + 1) % TASKID_RANGE;
     u32 retTaskId = taskIdRef; 
     rwLock_.writeUnlock();
     return retTaskId; 

@@ -118,34 +118,48 @@ HcclResult CcuGetDieEnableInfo(int32_t deviceLogicId, uint8_t dieId, bool &enabl
     return HcclResult::HCCL_SUCCESS;
 }
 
+constexpr u32 CCU_MS_DEFAULT_BLOCK_LOOP_ENGINE_REQ = 8 * 8 * 2;
+constexpr u32 CCU_MS_DEFAULT_BLOCK_MS_REQ = 64 * 8 * 2;
+constexpr u32 CCU_MS_DEFAULT_CKE_REQ = 32;
+constexpr u32 CCU_MS_DEFAULT_BLOCK_CKE_REQ = 8 * 8 * 2;
+constexpr u32 CCU_MS_DEFAULT_XN_REQ = 400;
+constexpr u32 CCU_MS_DEFAULT_GSA_REQ = 400;
+constexpr u32 CCU_MS_DEFAULT_MISSIONREQ_REQ = 2;
 inline void ConfigCcuResReqCcuMs(CcuResReq &resReq, uint8_t dieId)
 {
     resReq.loopEngineReq[dieId] = 0;
-    resReq.blockLoopEngineReq[dieId] = 8 * 8 * 2;
+    resReq.blockLoopEngineReq[dieId] = CCU_MS_DEFAULT_BLOCK_LOOP_ENGINE_REQ;
     resReq.msReq[dieId] = 0;
-    resReq.blockMsReq[dieId] = 64 * 8 * 2;
-    resReq.ckeReq[dieId] = 32;
-    resReq.blockCkeReq[dieId] = 8 * 8 * 2;
+    resReq.blockMsReq[dieId] = CCU_MS_DEFAULT_BLOCK_MS_REQ;
+    resReq.ckeReq[dieId] = CCU_MS_DEFAULT_CKE_REQ;
+    resReq.blockCkeReq[dieId] = CCU_MS_DEFAULT_BLOCK_CKE_REQ;
     resReq.continuousXnReq[dieId] = 0;
-    resReq.xnReq[dieId] = 400;
-    resReq.gsaReq[dieId] = 400;
+    resReq.xnReq[dieId] = CCU_MS_DEFAULT_XN_REQ;
+    resReq.gsaReq[dieId] = CCU_MS_DEFAULT_GSA_REQ;
     resReq.missionReq.reqType = MissionReqType::FUSION_MULTIPLE_DIE;
-    resReq.missionReq.req[dieId] = 2;
+    resReq.missionReq.req[dieId] = CCU_MS_DEFAULT_MISSIONREQ_REQ;
 }
 
+constexpr u32 CCU_SCHED_DEFAULT_BLOCK_LOOP_ENGINE_REQ = 16;
+constexpr u32 CCU_SCHED_DEFAULT_BLOCK_MS_REQ = 128;
+constexpr u32 CCU_SCHED_DEFAULT_CKE_REQ = 32;
+constexpr u32 CCU_SCHED_DEFAULT_BLOCK_CKE_REQ = 16;
+constexpr u32 CCU_SCHED_DEFAULT_XN_REQ = 400;
+constexpr u32 CCU_SCHED_DEFAULT_GSA_REQ = 400;
+constexpr u32 CCU_SCHED_DEFAULT_MISSIONREQ_REQ = 2;
 inline void ConfigCcuResReqCcuSched(CcuResReq &resReq, uint8_t dieId)
 {
     resReq.loopEngineReq[dieId] = 0;
-    resReq.blockLoopEngineReq[dieId] = 16;
+    resReq.blockLoopEngineReq[dieId] = CCU_SCHED_DEFAULT_BLOCK_LOOP_ENGINE_REQ;
     resReq.msReq[dieId] = 0;
-    resReq.blockMsReq[dieId] = 128;
-    resReq.ckeReq[dieId] = 32;
-    resReq.blockCkeReq[dieId] = 16;
+    resReq.blockMsReq[dieId] = CCU_SCHED_DEFAULT_BLOCK_MS_REQ;
+    resReq.ckeReq[dieId] = CCU_SCHED_DEFAULT_CKE_REQ;
+    resReq.blockCkeReq[dieId] = CCU_SCHED_DEFAULT_BLOCK_CKE_REQ;
     resReq.continuousXnReq[dieId] = 0;
-    resReq.xnReq[dieId] = 400;
-    resReq.gsaReq[dieId] = 400;
+    resReq.xnReq[dieId] = CCU_SCHED_DEFAULT_XN_REQ;
+    resReq.gsaReq[dieId] = CCU_SCHED_DEFAULT_GSA_REQ;
     resReq.missionReq.reqType = MissionReqType::FUSION_MULTIPLE_DIE;
-    resReq.missionReq.req[dieId] = 2;
+    resReq.missionReq.req[dieId] = CCU_SCHED_DEFAULT_MISSIONREQ_REQ;
 }
 
 // CCU设备管理对集合通信提供的接口

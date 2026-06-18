@@ -32,6 +32,7 @@ public:
 
     HcclResult ServerSocketListen(const uint32_t port) override;
     HcclResult ServerSocketStopListen(const uint32_t port) override;
+    inline HcclResult ServerSocketStopListenImpl(const uint32_t port);
     HcclResult ServerSocketGetListenPort(uint32_t *port) override;
 
     std::shared_ptr<RegedMemMgr> GetRegedMemMgr() override {

@@ -301,6 +301,7 @@ static HcclResult FillChannelParam(HcclChannelUrmaRes &channelParam,
     return HCCL_SUCCESS;
 }
 
+constexpr u32 STREAM_SYNCHRONIZE_TIMEOUT = 60;
 template<typename T>
 static HcclResult LaunchKernelDeviceParam(const T &channelParam, aclrtBinHandle binHandle, const std::string &kernelName)
 {
@@ -327,7 +328,7 @@ static HcclResult LaunchKernelDeviceParam(const T &channelParam, aclrtBinHandle 
         true,
         NOTIFY_DEFAULT_WAIT_TIME));
 
-    CHK_RET(hcclStreamSynchronize(localStream.ptr(), 60));
+    CHK_RET(hcclStreamSynchronize(localStream.ptr(), STREAM_SYNCHRONIZE_TIMEOUT));
 
     HCCL_INFO("[%s] kernel[%s] launch success.", __func__, kernelName.c_str());
     return HCCL_SUCCESS;

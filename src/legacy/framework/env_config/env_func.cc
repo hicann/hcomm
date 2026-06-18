@@ -260,11 +260,12 @@ void CheckRDMATrafficClass(const u32 &rdmaTrafficClass)
     }
 }
 
+constexpr u32 BYTES_PER_KB = 1024;    // 单位换算
 void ConvertUnitQpThreshold(u32 &multiQpThreshold)
 {
     HCCL_RUN_INFO("[Init][TransferUnitQpThreshold]Env config HCCL_MULTI_QP_THRESHOLD is %u[KB], converted to %u[B] for "
-               "subsequant use.", multiQpThreshold, multiQpThreshold * 1024);
-    multiQpThreshold *= 1024;
+               "subsequant use.", multiQpThreshold, multiQpThreshold * BYTES_PER_KB);
+    multiQpThreshold *= BYTES_PER_KB;
 }
 
 static void ParseAlgoLevel(const std::string &algoLevel, u32 &level, HcclAlgoType &algoType)

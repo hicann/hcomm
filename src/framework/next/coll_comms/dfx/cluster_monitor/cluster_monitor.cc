@@ -795,6 +795,7 @@ void GetCqeErrInfoFromTaskException(unsigned int remoteLocalId, unsigned int loc
         status, localEid, remoteEid, remoteInsId);
 }
 
+constexpr u32 BASE_YEAR = 1900;
 void ClusterMonitor::GetCqeErrInfoFromTaskException(u32 remoteLocalId, uint16_t status, std::string localEid, std::string remoteEid, std::string remoteInsId)
 {
     cqeErrInfo_.cqeRemoteLocalId = remoteLocalId;
@@ -826,7 +827,7 @@ void ClusterMonitor::GetCqeErrInfoFromTaskException(u32 remoteLocalId, uint16_t 
         HCCL_ERROR("[%s][%s][%s]localtime fail, cqe error status[%u], %s", LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(), cqeErrInfo_.cqeStatus, errorLinkLogBuffer);
     } else {
         HCCL_ERROR("[%s][%s][%s]cqe error status[%u], time:[%04u-%02d-%02d %02d:%0d:%02d.%06u], %s", LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(), 
-        cqeErrInfo_.cqeStatus, now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour,
+        cqeErrInfo_.cqeStatus, now->tm_year + BASE_YEAR, now->tm_mon + 1, now->tm_mday, now->tm_hour,
         now->tm_min, now->tm_sec, microseconds, errorLinkLogBuffer);
     }   
     return;

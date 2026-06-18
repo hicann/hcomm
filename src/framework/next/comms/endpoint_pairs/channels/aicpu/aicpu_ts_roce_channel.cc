@@ -313,9 +313,10 @@ HcclResult AicpuTsRoceChannel::ConfigureMachineParaForTransport()
     return HCCL_SUCCESS;
 }
 
+constexpr u32 TRANSPORT_PARA_DEFAULT_TIMEOUT = 120000;    // 默认超时时间
 void AicpuTsRoceChannel::ConfigureTransportParaForRoce()
 {
-    transportPara_.timeout = std::chrono::milliseconds(120000);
+    transportPara_.timeout = std::chrono::milliseconds(TRANSPORT_PARA_DEFAULT_TIMEOUT);
     transportPara_.nicDeploy = NICDeployment::NIC_DEPLOYMENT_DEVICE;
 }
 

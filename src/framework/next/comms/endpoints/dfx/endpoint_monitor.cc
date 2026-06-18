@@ -177,6 +177,8 @@ void EndpointMonitor::ProcessUbAsyncEvents()
     }
 }
 
+constexpr u32 SECOND_LAST_OFFSET  = 2; // 倒数第二个字节偏移
+constexpr u32 LAST_OFFSET         = 3; // 倒数第一个字节偏移
 void EndpointMonitor::PrintUbAsyncEventsContext(u32 devPhyId, const struct AsyncEvent &event)
 {
     u32 contextLen = event.len;
@@ -194,8 +196,8 @@ void EndpointMonitor::PrintUbAsyncEventsContext(u32 devPhyId, const struct Async
     for (u32 i = 0; i < contextLen; i += bytesPerLine) {
         u32 endIndex = std::min(i + bytesPerLine, contextLen);
         HCCL_ERROR("context[byte %3u]: %02x%02x%02x%02x", endIndex,
-            (i + 3 < contextLen) ? event.context[i + 3] : 0,
-            (i + 2 < contextLen) ? event.context[i + 2] : 0,
+            (i + LAST_OFFSET < contextLen) ? event.context[i + LAST_OFFSET] : 0,
+            (i + SECOND_LAST_OFFSET < contextLen) ? event.context[i + SECOND_LAST_OFFSET] : 0,
             (i + 1 < contextLen) ? event.context[i + 1] : 0,
             event.context[i]);
     }

@@ -27,7 +27,7 @@ UrmaEndpoint::~UrmaEndpoint() noexcept
 {
     std::lock_guard<std::mutex> lock(portMutex_);
     if (dynamicPort_ != HCCL_INVALID_PORT) {
-        ServerSocketStopListen(dynamicPort_);
+        ServerSocketStopListenImpl(dynamicPort_);
     }
     dynamicPort_ = HCCL_INVALID_PORT;
 }
@@ -108,7 +108,7 @@ HcclResult UrmaEndpoint::ServerSocketListen(const uint32_t port)
     return HCCL_SUCCESS;
 }
 
-HcclResult UrmaEndpoint::ServerSocketStopListen(const uint32_t port)
+inline HcclResult UrmaEndpoint::ServerSocketStopListenImpl(const uint32_t port)
 {
     Hccl::IpAddress ipAddr{};
     CHK_RET(CommAddrToIpAddress(endpointDesc_.commAddr, ipAddr));
@@ -117,6 +117,11 @@ HcclResult UrmaEndpoint::ServerSocketStopListen(const uint32_t port)
 
     CHK_RET(ServerSocketManager::GetInstance().ServerSocketStopListen(localPort, Hccl::NicType::DEVICE_NIC_TYPE, port));
     return HCCL_SUCCESS;
+}
+
+HcclResult UrmaEndpoint::ServerSocketStopListen(const uint32_t port)
+{
+    return ServerSocketStopListenImpl(port);
 }
 
 HcclResult UrmaEndpoint::ServerSocketGetListenPort(uint32_t *port)

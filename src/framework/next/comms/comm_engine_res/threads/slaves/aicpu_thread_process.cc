@@ -78,6 +78,7 @@ HcclResult AicpuThreadProcess::AicpuThreadDestroy(ThreadMgrAicpuParam *param)
     return HCCL_SUCCESS;
 }
 
+constexpr u32 MIN_WIDTH = 2;
 HcclResult AicpuThreadProcess::ResumeThread(ThreadMgrAicpuParam *param,
     std::vector<std::shared_ptr<Thread>> &outThreads, bool isSupplementNotify)
 {
@@ -91,7 +92,7 @@ HcclResult AicpuThreadProcess::ResumeThread(ThreadMgrAicpuParam *param,
             std::ostringstream oss;
             oss << "threadParam[" << i << "] raw bytes: ";
             for (u32 j = 0; j < THREAD_UNIQUE_ID_MAX_SIZE; ++j) {
-                oss << std::hex << std::setw(2) << std::setfill('0')
+                oss << std::hex << std::setw(MIN_WIDTH) << std::setfill('0')
                     << static_cast<unsigned int>(static_cast<unsigned char>(param->threadParam[i][j])) << " ";
             }
             HCCL_INFO("[HcclCommAicpu][%s] %s", __func__, oss.str().c_str());

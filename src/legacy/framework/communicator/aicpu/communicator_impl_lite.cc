@@ -460,6 +460,7 @@ void CommunicatorImplLite::InitCurrentOp(HcclKernelParamLite *kernelParam)
     HCCL_INFO("CommunicatorImplLite::InitCurrentOp end");
 }
 
+constexpr u32 TAILADDR_OFFSET_MULTIPLIER      = 2;
 void CommunicatorImplLite::SetDfxOpInfo(uint64_t beginTime)
 {
     u64 size = 4;
@@ -473,7 +474,7 @@ void CommunicatorImplLite::SetDfxOpInfo(uint64_t beginTime)
     dfxopInfo->commId_       = commId;
  	dfxopInfo->opIndex_      = opIndex_;
  	dfxopInfo->headOpCounterAddr_ = opCounterAddr + size;
- 	dfxopInfo->tailOpCounterAddr_ = opCounterAddr + size * 2;
+ 	dfxopInfo->tailOpCounterAddr_ = opCounterAddr + size * TAILADDR_OFFSET_MULTIPLIER;
     CHECK_NULLPTR(streamLiteMgr->GetMaster(), "[SetDfxOpInfo]master stream is nullptr!");
     mirrorTaskMgrLite->SetCurrDfxOpInfo(dfxopInfo);
 }
