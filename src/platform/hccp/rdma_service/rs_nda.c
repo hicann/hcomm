@@ -52,15 +52,18 @@ RS_ATTRI_VISI_DEF int RsNdaGetDirectFlag(unsigned int phyId, unsigned int rdevIn
 
 STATIC int RsNdaGetDirectFlagByDevAttr(struct ibv_device_attr *deviceAttr)
 {
-    unsigned int directFlagVendorPartIdList[] = {0x0230U, 0x0231U, 0x0232U};
+    struct {
+        uint32_t vendorId;
+        uint32_t vendorPartID;
+    } vendorInfoList[] = {
+        {0x19E5U, 0x0230U}, {0x19E5U, 0x0231U}, {0x19E5U, 0x0232U}, {0xCC08U, 0x8200U}, {0xCC08U, 0x8201U},
+    };
+    unsigned int listSize = sizeof(vendorInfoList) / sizeof(vendorInfoList[0]);
     unsigned int i;
 
-    if (deviceAttr->vendor_id != 0x19E5U) {
-        return DIRECT_FLAG_PCIE;
-    }
-
-    for (i = 0; i < sizeof(directFlagVendorPartIdList) / sizeof(directFlagVendorPartIdList[0]); i++) {
-        if (deviceAttr->vendor_part_id == directFlagVendorPartIdList[i]) {
+    for (i = 0; i < listSize; i++) {
+        if ((deviceAttr->vendor_id == vendorInfoList[i].vendorId) &&
+            (deviceAttr->vendor_part_id == vendorInfoList[i].vendorPartID)) {
             return DIRECT_FLAG_UB;
         }
     }
