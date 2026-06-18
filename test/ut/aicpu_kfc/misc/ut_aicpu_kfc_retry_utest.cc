@@ -1208,6 +1208,17 @@ TEST_F(MC2AicpuRetry_UT, ut_InitProcess_BatchSendRecv_hcclCommAicpu)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
+HcclResult QuerySqStatusByTypeStub(uint32_t devId, uint32_t sqId, drvSqCqPropType_t type, uint32_t &outVal)
+{
+    if (type == DRV_SQCQ_PROP_SQ_TAIL) {
+        outVal = 1;
+    }
+    else if (type == DRV_SQCQ_PROP_SQ_HEAD) {
+        outVal = 0;
+    }
+    return HCCL_SUCCESS;
+}
+
 TEST_F(MC2AicpuRetry_UT, ut_WaitEndProcess_hcclCommAicpu)
 {
     HcclResult ret = HCCL_SUCCESS;
@@ -1222,7 +1233,7 @@ TEST_F(MC2AicpuRetry_UT, ut_WaitEndProcess_hcclCommAicpu)
     MOCKER(QuerySqStatusByType)
     .stubs()
     .with(any())
-    .will(returnValue(HCCL_SUCCESS));
+    .will(invoke(QuerySqStatusByTypeStub));
 
     MOCKER_CPP(&Stream::ClearLocalBuff)
     .stubs()

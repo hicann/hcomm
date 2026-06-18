@@ -3636,7 +3636,7 @@ HcclResult HcclCommAicpu::WaitFinishWhileLoop(Stream &mainStream, std::vector<St
     uint32_t sqTail = 0;
     CHK_RET(QuerySqStatusByType(devId_, sqId, DRV_SQCQ_PROP_SQ_TAIL, sqTail));
     CHK_RET(QuerySqStatusByType(devId_, sqId, DRV_SQCQ_PROP_SQ_HEAD, sqHead));
-    do {
+    while (sqHead != sqTail) {
         HcclResult ret = CheckOpExecStatus(); // 检查执行状态，判断是否有异常cq或中断命令
         CHK_PRT_RET(ret != HCCL_SUCCESS,
             HCCL_RUN_INFO("[HcclCommAicpu][WaitFinishWhileLoop]CheckOpExecStatus exception, ret[%u]", ret), ret);
@@ -3660,7 +3660,7 @@ HcclResult HcclCommAicpu::WaitFinishWhileLoop(Stream &mainStream, std::vector<St
                 "group[%s] tag[%s]", devId_, sqId, sqHead, sqTail, identifier_.c_str(), tag.c_str());
         }
         CHK_RET(CheckTaskTimeout(mainStream, startUsec));
-    } while (sqHead != sqTail);
+    }
     return HCCL_SUCCESS;
 }
 
