@@ -15,7 +15,7 @@
 
 namespace Hccl {
 
-FlushHandle::FlushHandle() : flushIsInitialied(false) {}
+FlushHandle::FlushHandle() : flushIsInitialized(false) {}
 
 FlushHandle::~FlushHandle()
 {
@@ -35,8 +35,8 @@ HcclResult FlushHandle::Init(IpAddress ip, u32 devPhyId)
         SetFlushOpcodeSupport();
     }
 
-    // 分配 Host Memory
-    CHK_RET(AllocateHostMemory());
+    // 分配 Local Memory
+    CHK_RET(AllocateLocalMemory());
 
     // 分配 Device Memory
     CHK_RET(AllocateDeviceMemory());
@@ -50,7 +50,7 @@ HcclResult FlushHandle::Init(IpAddress ip, u32 devPhyId)
     // 注册 Remote MR
     CHK_RET(RegisterRemoteMr());
 
-    flushIsInitialied = true;
+    flushIsInitialized = true;
     return HCCL_SUCCESS;
 }
 
@@ -61,7 +61,7 @@ HcclResult FlushHandle::GetLbMax(int *lbMax) const
         HCCL_ERROR("[GetLbMax]Failed to get load balance max value. error_code=%d.", ret);
         return HCCL_E_ROCE_CONNECT;
     }
-    HCCL_DEBUG("[GetLbMax]Get load balance max value successfully");
+    HCCL_INFO("[GetLbMax]Get load balance max value successfully, ibMax = %d", *lbMax);
     return HCCL_SUCCESS;
 }
 
@@ -71,7 +71,7 @@ HcclResult FlushHandle::Destroy()
     finalResult = std::max(finalResult, DeregisterMr(remoteMrHandle, "Remote"));
     finalResult = std::max(finalResult, DeregisterMr(localMrHandle, "Local"));
     finalResult = std::max(finalResult, DestroyLoopbackQp());
-    finalResult = std::max(finalResult, FreeHostMemory());
+    finalResult = std::max(finalResult, FreeLocalMemory());
     finalResult = std::max(finalResult, FreeDeviceMemory());
     return finalResult;
 }
@@ -87,24 +87,29 @@ HcclResult FlushHandle::GetRdmaHandle(IpAddress ip, u32 devPhyId, void **rdmaHan
     return HCCL_SUCCESS;
 }
 
-HcclResult FlushHandle::AllocateHostMemory()
+HcclResult FlushHandle::AllocateLocalMemory()
 {
     u64 bufferSize = FLUSH_BUFFER_SIZE;
-    hostMem = malloc(bufferSize);
-    if (hostMem == nullptr) {
+    if (flushOpcodeSupport_) {
+        // 1825 主动排空要求使用device 内存
+        localMem = HrtMalloc(bufferSize, static_cast<int>(ACL_MEM_TYPE_HIGH_BAND_WIDTH));
+    } else {
+        localMem = malloc(bufferSize);
+    }
+
+    if (localMem == nullptr) {
         HcclResult eRet = Destroy();
-        HCCL_ERROR("[AllocateHostMemory]Failed to Allocate Host Memory. Destroy Flush code=%d", eRet);
+        HCCL_ERROR("[%s]Failed to Allocate Local Memory. Destroy Flush code=%d", __func__, eRet);
         return HCCL_E_MEMORY;
     }
-    memset_s(hostMem, bufferSize, 0, bufferSize);
-    HCCL_DEBUG("[AllocateHostMemory]Host memory allocated at %p, size=%u", hostMem, bufferSize);
+    HCCL_DEBUG("[%s]Local memory allocated at %p, size=%u", __func__, localMem, bufferSize);
     return HCCL_SUCCESS;
 }
 
 HcclResult FlushHandle::AllocateDeviceMemory()
 {
     u64 bufferSize = FLUSH_BUFFER_SIZE;
-	deviceMem = HrtMalloc(bufferSize, static_cast<int>(ACL_MEM_TYPE_HIGH_BAND_WIDTH));
+    deviceMem = HrtMalloc(bufferSize, static_cast<int>(ACL_MEM_TYPE_HIGH_BAND_WIDTH));
     if (deviceMem == nullptr) {
         HcclResult eRet = Destroy();
         HCCL_ERROR("[AllocateDeviceMemory]Failed to Allocate Device Memory. Destroy Flush code=%d", eRet);
@@ -129,7 +134,7 @@ HcclResult FlushHandle::CreateLoopbackQp()
 HcclResult FlushHandle::RegisterLocalMr()
 {
     u64 bufferSize = FLUSH_BUFFER_SIZE;
-    loopBackQpMrLocalInfo.addr = hostMem;
+    loopBackQpMrLocalInfo.addr = localMem;
     loopBackQpMrLocalInfo.size = bufferSize;
     loopBackQpMrLocalInfo.access = RA_ACCESS_LOCAL_WRITE;
 
@@ -210,20 +215,33 @@ HcclResult FlushHandle::DestroyLoopbackQp()
     return HCCL_SUCCESS;
 }
 
-// 释放 Host 内存
-HcclResult FlushHandle::FreeHostMemory()
+// 释放 Local MR 内存
+HcclResult FlushHandle::FreeLocalMemory()
 {
-    HCCL_DEBUG("[FreeHostMemory] Starting to free host memory...");
+    HCCL_DEBUG("[%s] Starting to free local memory...", __func__);
 
-    if (hostMem == nullptr) {
-        HCCL_DEBUG("[FreeHostMemory] Host memory already null, skipping.");
+    if (localMem == nullptr) {
+        HCCL_DEBUG("[%s] Local memory already null, skipping.", __func__);
         return HCCL_SUCCESS;
     }
 
-    free(hostMem);
-
-    hostMem = nullptr;
-    HCCL_DEBUG("[FreeHostMemory] Host memory successfully freed.");
+    try {
+        if (flushOpcodeSupport_) {
+            HrtFree(localMem);
+        } else {
+            free(localMem);
+        }
+        localMem = nullptr;
+    } catch (HcclException & e) {
+        HCCL_ERROR("[%s] Exception occurred: %s", __func__, e.what());
+        localMem = nullptr;
+        return e.GetErrorCode();
+    } catch (...) {
+        HCCL_ERROR("[%s] Exception caught while freeing local memory.", __func__);
+        localMem = nullptr;
+        return HcclResult::HCCL_E_INTERNAL;
+    }
+    HCCL_DEBUG("[%s] Local memory successfully freed.", __func__);
     return HCCL_SUCCESS;
 }
 

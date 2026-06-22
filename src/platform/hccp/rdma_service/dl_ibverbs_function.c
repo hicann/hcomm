@@ -486,7 +486,7 @@ STATIC int RsOpenHrnSo(void)
 {
 #ifndef CA_CONFIG_LLT
     if (gHrnApiHandle == NULL) {
-        gHrnApiHandle = HccpDlopen("libhrn3-rdmav34.so", RTLD_NOW);
+        gHrnApiHandle = HccpDlopen("libhrn5-rdmav34.so", RTLD_NOW);
         if (gHrnApiHandle != NULL) {
             return 0;
         }

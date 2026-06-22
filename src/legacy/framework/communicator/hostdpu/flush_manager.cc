@@ -136,7 +136,6 @@ HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_se
     struct timespec start;
     struct timespec current;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    int count = 1;
     while (true) {
         // 计算已流逝时间（毫秒）
         clock_gettime(CLOCK_MONOTONIC, &current);
@@ -155,7 +154,6 @@ HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_se
             HCCL_ERROR("[ExecuteRdmaRead] ibv_poll_cq returned error: %s", strerror(errno));
             return HCCL_E_NETWORK;
         }
-        HCCL_INFO("[ExecuteRdmaRead] count [%d], numCqes = [%d].", count, numCqes);
         // 成功收到完成事件
         if (numCqes > 0) {
             if (wc.status == IBV_WC_SUCCESS) {
@@ -168,7 +166,6 @@ HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_se
                 return HCCL_E_NETWORK;
             }
         }
-        count++;
     }
 }
 

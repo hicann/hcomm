@@ -54,6 +54,10 @@ void CollServiceBase::RegisterCclLocRmaBuffer() const // 注册CCL buffer
             HCCL_INFO("rmaBufManager reg");
             PortData portData(comm->GetMyRank(), *connIface);
             HCCL_INFO("rmaBufManager reg portData[%s]", portData.Describe().c_str());
+            if (portData.GetType() == PortDeploymentType::HOST_NET && portData.GetProto() == LinkProtoType::RDMA) {
+                HCCL_WARNING("HostNet RDMA port will not be reged here"); // 1825不支持重复注册MR
+                continue;
+            }
             rmaBufManager.Reg(comm->GetId(), BufferType::SCRATCH, comm->GetCclBuffer(), portData, *(protocols.begin()));
         }
     }

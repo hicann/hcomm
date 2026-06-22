@@ -45,8 +45,8 @@ public:
 
 private:
     bool           flushOpcodeSupport_{false};
-    bool           flushIsInitialied{false};
-    void*          hostMem{nullptr};
+    bool           flushIsInitialized{false};
+    void*          localMem{nullptr};
     void*          deviceMem{nullptr};
     MrHandle       localMrHandle{nullptr};
     MrHandle       remoteMrHandle{nullptr};
@@ -57,7 +57,7 @@ private:
     HcclResult GetRdmaHandle(IpAddress ip, u32 devPhyId, void **rdmaHandle) const;
     HcclResult GetLbMax(int *lbMax) const;
     HcclResult AllocateDeviceMemory();
-    HcclResult AllocateHostMemory();
+    HcclResult AllocateLocalMemory();
     HcclResult CreateLoopbackQp();
     HcclResult RegisterLocalMr();
     HcclResult RegisterRemoteMr();
@@ -65,7 +65,7 @@ private:
     // 销毁方法
     HcclResult DeregisterMr(MrHandle &mrHandle, std::string logTag) const;
     HcclResult DestroyLoopbackQp();
-    HcclResult FreeHostMemory();
+    HcclResult FreeLocalMemory();
     HcclResult FreeDeviceMemory();
 };
 
