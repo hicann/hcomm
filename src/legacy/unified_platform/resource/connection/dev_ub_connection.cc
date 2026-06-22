@@ -1101,7 +1101,7 @@ HcclResult DevUbConnection::Ipv4ToIpArray(const char *ipv4Str, uint8_t ipArr[16U
     return HCCL_SUCCESS;
 }
 
-bool DevUbConnection::IpArrayCompare(uint8_t ipArrLeft[16U], uint8_t ipArrRight[16U]) const
+bool DevUbConnection::IpArrayCompare(const uint8_t ipArrLeft[16U], const uint8_t ipArrRight[16U]) const
 {
     for (unsigned int i = 0; i < 16U; i++) {
         if (ipArrLeft[i] != ipArrRight[i]) {

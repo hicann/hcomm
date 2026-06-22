@@ -78,8 +78,8 @@ static uint32_t MapUboeEightTpSlFromMask(uint32_t qos, uint16_t slMask, uint32_t
     return TpQosSlValueAtRankInMask16(slMask, slRank);
 }
 
-static bool ApplyUbcQosTpSlPolicyGrouped(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask,
-    uint32_t slRawCnt, uint32_t slAvailableCnt, uint32_t &tpListIndexOut, uint32_t &mappedSlOut,
+static bool ApplyUbcQosTpSlPolicyGrouped(const TpQosPolicyInput &policy, const uint32_t nTp, const uint16_t slMask,
+    const uint32_t slRawCnt, const uint32_t slAvailableCnt, uint32_t &tpListIndexOut, uint32_t &mappedSlOut,
     const char *logTag);
 
 static bool TryApplyUboeEightTpQosPolicy(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask,

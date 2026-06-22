@@ -108,7 +108,7 @@ u32 RtsqBase::QueryCqeStatus() const
     return QuerySqStatusByType(drvSqCqPropType_t::DRV_SQCQ_PROP_SQ_CQE_STATUS);
 }
 
-void RtsqBase::ConfigSqStatusByType(drvSqCqPropType_t givenType, u32 value)
+void RtsqBase::ConfigSqStatusByType(drvSqCqPropType_t givenType, u32 value) const
 {
     halSqCqConfigInfo configInfo;
     configInfo.tsId     = 0;

@@ -251,7 +251,7 @@ private:
     u32 QueryCqeStatus() const;
 
     u32 QuerySqStatusByType(drvSqCqPropType_t givenType) const;
-    void ConfigSqStatusByType(drvSqCqPropType_t givenType, u32 value);
+    void ConfigSqStatusByType(drvSqCqPropType_t givenType, u32 value) const;
 };
 
 } // namespace Hccl

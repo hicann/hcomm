@@ -327,6 +327,7 @@ HcclResult TpManager::ReleaseTpInfo(const RaUbGetTpInfoParam &param, const TpInf
 
 HcclResult TpManager::ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo &tpAttrInfo)
 {
+    (void)tpAttrInfo;
     std::lock_guard<std::mutex> lock(tpAttrCtxMutex);
     auto attrIter = tpAttrCtxMap.find(tpHandle);
     if (attrIter == tpAttrCtxMap.end()) {

@@ -30,7 +30,7 @@ public:
 
     string Describe() const override;
 
-    void Grant(u32 pid);
+    void Grant(u32 pid) const;
 
 private:
     char_t ipcName[RTS_IPC_MEM_NAME_LEN]{0};

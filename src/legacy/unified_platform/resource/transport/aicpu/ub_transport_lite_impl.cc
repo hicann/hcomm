@@ -667,7 +667,7 @@ HcclResult UbTransportLiteImpl::ExecuteBatchTransfer(StreamLite *streamLitePtr,
 
         ret = BuildLocRmaBufferLite(reinterpret_cast<uintptr_t>(loc), len, locRmaBuf);
         CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[%s] FAIL at BuildLocRmaBufferLite for index %u. rmt[0x%llx], loc[0x%llx], len[0x%llx], tfType[%u], dataType[%d], reduceOp[%d].",
+            HCCL_ERROR("[%s] FAIL at BuildLocRmaBufferLite for index %u. rmt[%p], loc[%p], len[0x%llx], tfType[%u], dataType[%d], reduceOp[%d].",
             __func__, i, rmt, loc, len, tfType, dataType, reduceOp), ret);
         locSlices.push_back(locRmaBuf);
 
@@ -677,7 +677,7 @@ HcclResult UbTransportLiteImpl::ExecuteBatchTransfer(StreamLite *streamLitePtr,
         Hccl::ReduceIn reduceIn{mapHcommDataTypeA5.at(dataType), mapHcommReduceOpA5.at(reduceOp)};
         transferOps.push_back(Hccl::BaseTransportLiteImpl::TransferOp{tfType, reduceIn});
 
-        HCCL_DEBUG("[%s] Prepared transfer op for index %u. rmt[0x%llx], loc[0x%llx], len[0x%llx], tfType[%u], dataType[%d], reduceOp[%d].",
+        HCCL_DEBUG("[%s] Prepared transfer op for index %u. rmt[%p], loc[%p], len[0x%llx], tfType[%u], dataType[%d], reduceOp[%d].",
             __func__, i, rmt, loc, len, tfType, dataType, reduceOp);
     }
     EXECEPTION_CATCH(BatchTransfer(locSlices, rmtSlices, transferOps, *streamLitePtr), return HCCL_E_INTERNAL);

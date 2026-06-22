@@ -48,7 +48,7 @@ string IpcLocalNotify::Describe() const
     return StringFormat("IpcLocalNotify[notify=%s]", GetNotify()->Describe().c_str());
 }
 
-void IpcLocalNotify::Grant(u32 pid)
+void IpcLocalNotify::Grant(u32 pid) const
 {
     u32 myPid = HrtDeviceGetBareTgid();
     if (pid != myPid) {

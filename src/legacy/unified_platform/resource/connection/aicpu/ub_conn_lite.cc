@@ -97,6 +97,7 @@ void UbConnLite::ProcessSlices(const RmaBufSliceLite &loc, const RmtRmaBufSliceL
                                std::function<void(const RmaBufSliceLite &, const RmtRmaBufSliceLite &, u32)> processOneSlice,
                                DataType                                                                      dataType) const
 {
+    (void)dataType;
     // reduce操作需要保证切片大小是数据类型大小的整数倍
     u64 sliceSize = UB_DMA_MAX_READ_WEITE_SIZE;
 

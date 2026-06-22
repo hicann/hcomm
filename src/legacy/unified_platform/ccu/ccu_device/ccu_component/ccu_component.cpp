@@ -453,6 +453,7 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(const uint8_t dieId, const Ip
 
 TpInfo CcuComponent::RequestNewTpInfo(const IpAddress &srcIpAddr, const IpAddress &dstIpAddr) const
 {
+    (void)dstIpAddr;
     TpInfo tpInfo{};
 
     auto &tpManager = TpManager::GetInstance(devLogicId);
