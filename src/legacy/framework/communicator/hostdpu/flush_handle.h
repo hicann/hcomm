@@ -17,7 +17,7 @@
 #include "rdma_handle_manager.h"
 
 namespace Hccl {
-constexpr u64 FLUSH_BUFFER_SIZE = 4096U;  // 每次读取8字节
+constexpr u64 FLUSH_BUFFER_SIZE = 4096U;  // 每次读取4096字节
 class FlushHandle {
 public:
     FlushHandle();

@@ -3626,6 +3626,7 @@ TEST_F(CommunicatorImplTest, Ut_GetKFCWorkSpaceVA_When_UbPath_Expect_Success)
         .will(returnValue(HCCL_SUCCESS));
     MOCKER(halHostRegister).stubs().with(any(), any(), any(), any(), outBoundP(&stubRegAddr))
         .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(HrtMallocHost).stubs().with(any()).will(returnValue(reinterpret_cast<void *>(0x3000)));
 
     auto ret = fakeComm.GetKFCWorkSpaceVA(tag, &size, &addr, &newCreated);
 
@@ -3635,7 +3636,6 @@ TEST_F(CommunicatorImplTest, Ut_GetKFCWorkSpaceVA_When_UbPath_Expect_Success)
     EXPECT_TRUE(fakeComm.tagWorkspaceVAMap_.find(tag) != fakeComm.tagWorkspaceVAMap_.end());
     EXPECT_NE(fakeComm.va_, nullptr);
     // free the malloc'd memory allocated by GetKFCWorkSpaceVA in UB path
-    free(fakeComm.va_);
     fakeComm.va_ = nullptr;
 }
 

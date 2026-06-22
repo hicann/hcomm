@@ -590,6 +590,11 @@ aclError aclrtMemP2PMap(void *devPtr, size_t size, int32_t dstDevId, uint64_t fl
 	return ACL_SUCCESS;
 }
 
+aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevId, int32_t *const logicDevId)
+{
+    return ACL_SUCCESS;
+}
+
 namespace aicpu {
 std::mutex g_sqeIdMtx;
 constexpr uint32_t INITAL_SQE_ID = 0x80000000U;

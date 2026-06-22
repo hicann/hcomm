@@ -15,7 +15,6 @@
 
 namespace Hccl
 {
-    
 HcclResult HrtHalDrvQueryProcessHostPid(int pid, unsigned int *chipId, unsigned int *vfid,
     unsigned int *hostPid, unsigned int *cpType)
 {
@@ -42,4 +41,24 @@ HcclResult HrtHalGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoT
     return HCCL_SUCCESS;
 }
 
+HcclResult HrtHalHostRegister(void *srcPtr, uint64_t size, uint32_t flag, int32_t deviceLogicId, void **dstPtr)
+{
+    CHK_PTR_NULL(srcPtr);
+    CHK_PTR_NULL(dstPtr);
+
+    drvError_t ret = halHostRegister(srcPtr, size, flag, deviceLogicId, dstPtr);
+    CHK_PRT_RET(ret != DRV_ERROR_NONE, HCCL_ERROR("errNo[0x%016llx] HrtHalHostRegister fail,"
+        "return[%d].", HCCL_ERROR_CODE(HCCL_E_DRV), ret), HCCL_E_DRV);
+    return HCCL_SUCCESS;
+}
+
+HcclResult HrtHalHostUnregister(void *ptr, int32_t deviceLogicId)
+{
+    CHK_PTR_NULL(ptr);
+
+    drvError_t ret = halHostUnregister(ptr, deviceLogicId);
+    CHK_PRT_RET(ret != DRV_ERROR_NONE, HCCL_ERROR("errNo[0x%016llx] HrtHalHostUnregister fail,"
+        "return[%d].", HCCL_ERROR_CODE(HCCL_E_DRV), ret), HCCL_E_DRV);
+    return HCCL_SUCCESS;
+}
 }

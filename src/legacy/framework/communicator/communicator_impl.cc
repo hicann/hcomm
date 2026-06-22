@@ -3404,30 +3404,39 @@ HcclResult CommunicatorImpl::GetDevMemWorkSpace(const std::string &memTag, uint6
 
 HcclResult CommunicatorImpl::AllocAndRegKFCWorkSpace(uint64_t size)
 {
-    CHK_RET(HrtHalGetDeviceInfo(devLogicId, MODULE_TYPE_SYSTEM, INFO_TYPE_HD_CONNECT_TYPE, &connectType_));
-    accessVA_ = nullptr;
-    drvError_t ret = DRV_ERROR_NONE;
+    if (accessVA_ != nullptr && va_ != nullptr) {
+        HCCL_WARNING("[HcclCommunicator::%s] accessVA_ is not nullptr, maybe already register, accessVA_: %p", __func__, accessVA_);
+        CHK_RET(DestroyKFCWorkSpaceVA());
+    }
+    int32_t deviceLogicId = 0;
+    aclError aclRet = aclrtGetLogicDevIdByUserDevId(devLogicId, &deviceLogicId);  // userDevId 转 logicDevId
+    if (aclRet != ACL_SUCCESS) {
+        HCCL_ERROR("[HcclCommunicator::%s] aclrtGetLogicDevIdByUserDevId failed, devLogicId: %d, ret: %d", __func__, devLogicId, aclRet);
+        return HCCL_E_RUNTIME;
+    }
+    CHK_RET(HrtHalGetDeviceInfo(deviceLogicId, MODULE_TYPE_SYSTEM, INFO_TYPE_HD_CONNECT_TYPE, &connectType_));
+    HcclResult ret = HCCL_SUCCESS;
     if (connectType_ == HOST_DEVICE_CONNECT_TYPE_PCIE) {
         va_ = HrtMalloc(size, ACL_MEM_TYPE_HIGH_BAND_WIDTH);
-        ret = halHostRegister(va_, size, DEV_SVM_MAP_HOST, devLogicId, &accessVA_);
+        ret = HrtHalHostRegister(va_, size, DEV_SVM_MAP_HOST, deviceLogicId, &accessVA_);
     } else if (connectType_ == HOST_DEVICE_CONNECT_TYPE_UB) {
-        va_ = malloc(size);
-        CHK_PTR_NULL(va_);
-        ret = halHostRegister(va_, size, HOST_SVM_MAP_DEV, devLogicId, &accessVA_);
+        va_ = HrtMallocHost(size);
+        ret = HrtHalHostRegister(va_, size, HOST_MEM_MAP_DEV_PCIE_TH, deviceLogicId, &accessVA_);
     } else {
         return HCCL_E_NOT_SUPPORT;
     }
-    if (ret != DRV_ERROR_NONE) {
-        HCCL_ERROR("halHostRegister failed, ret: %d, connect type: %ld", ret, connectType_);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR("[HcclCommunicator::%s] HrtHalHostRegister failed, ret: %d, connect type: %ld", __func__, ret, connectType_);
         if (va_ != nullptr) {
             if (connectType_ == HOST_DEVICE_CONNECT_TYPE_PCIE) {
                 HrtFree(va_);
             } else if (connectType_ == HOST_DEVICE_CONNECT_TYPE_UB) {
-                free(va_);
+                HrtFreeHost(va_);
             }
             va_ = nullptr;
         }
-        return HCCL_E_DRV;
+        accessVA_ = nullptr;
+        return ret;
     }
     return HCCL_SUCCESS;
 }
@@ -3468,19 +3477,26 @@ HcclResult CommunicatorImpl::DestroyKFCWorkSpaceVA()
         return HCCL_SUCCESS;
     }
 
+    int32_t deviceLogicId = 0;
+    aclError aclRet = aclrtGetLogicDevIdByUserDevId(devLogicId, &deviceLogicId); // userDevId 转 logicDevId
+    if (aclRet != ACL_SUCCESS) {
+        HCCL_ERROR("[HcclCommunicator::%s] aclrtGetLogicDevIdByUserDevId failed, devLogicId: %d, ret: %d", __func__, devLogicId, aclRet);
+        return HCCL_E_RUNTIME;
+    }
+
     // 必须先halHostUnregister解除映射，再释放设备内存，否则HrtFree会因内存被pin住而异常
     if (accessVA_ != nullptr) {
-        drvError_t drvRet = halHostUnregister(accessVA_, devLogicId);
-        if (drvRet != DRV_ERROR_NONE) {
-            HCCL_ERROR("halHostUnregister failed, drvRet[%d]", drvRet);
+        HcclResult ret = HrtHalHostUnregister(accessVA_, deviceLogicId);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR("[HcclCommunicator::%s] HrtHalHostUnregister failed, ret[%d]", __func__, ret);
         }
     }
 
     if (va_ != nullptr) {
         if (connectType_ == HOST_DEVICE_CONNECT_TYPE_PCIE) {
-            DECTOR_TRY_CATCH("KFCWorkSpace", HrtFree(va_));
+            DECTOR_TRY_CATCH("CommunicatorImpl", HrtFree(va_));
         } else if (connectType_ == HOST_DEVICE_CONNECT_TYPE_UB) {
-            free(va_);
+            DECTOR_TRY_CATCH("CommunicatorImpl", HrtFreeHost(va_));
         }
     }
 
