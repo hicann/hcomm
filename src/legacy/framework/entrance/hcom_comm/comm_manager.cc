@@ -500,6 +500,18 @@ HcclResult HcomDestroyV2(void)
 {
     HcclCommInfoV2 &hcomCommInfoV2 = GetCommInfoV2();
     if (hcomCommInfoV2.pComm != nullptr) {
+        bool isSetDeviceByHcomm = false;
+        if (hcomCommInfoV2.devId != HOST_DEVICE_ID) {
+            s32 logicDevId = 0;
+            aclError ret = aclrtGetDevice(&logicDevId);
+            if (ret == ACL_ERROR_RT_CONTEXT_NULL) {
+                // 若当前线程获取不到context，则由hccl进行setDevice，并在通信域析构完成后resetDevice
+                HrtSetDevice(hcomCommInfoV2.devId);
+                isSetDeviceByHcomm = true;
+            } else if (ret != ACL_SUCCESS) {
+                HCCL_ERROR("[HcomDestroyV2] get device failed, ret[%d]", ret);
+            }
+        }
         // 通信域销毁，更新ccu使用情况
         hcomCommInfoV2.ccuStatus.RemoveCommId(hcomCommInfoV2.pComm->GetId());
         hcomCommInfoV2.pComm = nullptr;
@@ -510,6 +522,9 @@ HcclResult HcomDestroyV2(void)
             hcomCommInfoV2.ccuStatus.RemoveCommId(iterGroup.first);
         }
         hcomCommInfoV2.hcclGroupMap.clear();
+        if (isSetDeviceByHcomm) {
+            HrtResetDevice(hcomCommInfoV2.devId);
+        }
     }
     return HCCL_SUCCESS;
 }
@@ -643,6 +658,7 @@ HcclResult HcomInitByStringV2(const char *rankTableM, const char *identify)
 
     hcomCommInfoV2.pComm->RegisterAcceStateCallBack(CommunicatorCallback());
     s32 logicDevId = HrtGetDevice();
+    hcomCommInfoV2.devId = logicDevId;
     CHK_RET(CommManager::GetInstance(logicDevId).SetCommAcceleratorV2(hcomCommInfoV2.pComm.get(), 0)); // 全局通信域创建，设置默认accelerator
 
     res = hcomCommInfoV2.pComm->GetRankSize(&commParams.rankSize);

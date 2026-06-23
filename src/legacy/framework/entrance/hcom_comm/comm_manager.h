@@ -25,6 +25,7 @@
 #include "ccu_driver_handle.h"
 
 const u64 RANKTABLE_FILE_MAX_SIZE = 1024ULL * 1024 * 1024;
+ constexpr s32 HOST_DEVICE_ID = -1; // device id 无效值
 u64 GetFileSize(const std::string& path);
 
 using HcclGroupParamsV2 = struct TagHcclGroupParamsInfoV2 {
@@ -55,7 +56,7 @@ struct CcuStatus {
 };
 
 using HcclCommInfoV2 = struct HcclCommInfoCtxV2 {
-    s32 devId{-1};
+    s32 devId{HOST_DEVICE_ID};
     std::shared_ptr<Hccl::HcclCommunicator> pComm{nullptr};
     Hccl::CommParams commParams;
     std::map<std::string, HcclGroupParamsV2> hcclGroupMap;

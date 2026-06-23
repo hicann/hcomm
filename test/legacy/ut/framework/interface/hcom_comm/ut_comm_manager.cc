@@ -163,6 +163,7 @@ TEST_F(HcomutCommManagerTest, ut_hcomv2_backlog_group)
     CommManager::GetInstance(0).GetCommInfoV2().commParams = commParams;
     CommManager::GetInstance(0).GetCommInfoV2().isUsed = true;
     CommManager::GetInstance(0).GetCommInfoV2().pComm = hcclComm;
+    CommManager::GetInstance(0).GetCommInfoV2().devId = 0;
     MOCKER(HrtGetDevice).stubs().with(any()).will(returnValue(0));
     
     HcclGroupParamsV2 params;
