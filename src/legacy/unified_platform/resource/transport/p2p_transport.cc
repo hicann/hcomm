@@ -260,16 +260,6 @@ void P2PTransport::Grant()
 {
     // 暂时不做Grant处理
     return;
-
-    for (auto it : commonLocRes.notifyVec) {
-        static_cast<IpcLocalNotify *>(it)->Grant(rmtPid);
-    }
-
-    for (auto it : commonLocRes.bufferVec) {
-        if (it != nullptr) {
-            static_cast<LocalIpcRmaBuffer *>(it)->Grant(rmtPid);
-        }
-    }
 }
 
 void P2PTransport::SendExchangeData()

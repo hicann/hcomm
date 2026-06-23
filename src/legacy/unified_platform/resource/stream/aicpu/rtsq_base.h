@@ -232,8 +232,8 @@ protected:
 
     std::string GetHwSqDescribe() const;
 
-    void ConfigSqTail(u32 value);
-    void ConfigDisableToEnable(u32 value);
+    void ConfigSqTail(u32 value) const;
+    void ConfigDisableToEnable(u32 value) const;
 
     inline void SetTaskIdBySqeId()
     {
