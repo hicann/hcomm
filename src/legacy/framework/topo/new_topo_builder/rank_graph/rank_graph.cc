@@ -736,6 +736,10 @@ void RankGraph::CreateSubNetInstances(const std::vector<RankId> rankIds, Level2I
             NetType netType = oldNetInstance->GetNetType();
             string netInstId = oldNetInstance->GetNetInstId();
             shared_ptr<NetInstance> subNetInstance = GetOrCreateNetInstance(netLayer, netInstId, netType, subNetInstances, subRankGraph);
+            if (subNetInstance == nullptr) {
+                THROW<NullPtrException>(
+                    StringFormat("[RankGraph][CreateSubNetInstances] subNetInstance is nullptr"));
+            }
 
             // subNetInstance Add RankId and subPeer
             shared_ptr<NetInstance::Peer> subPeer = peers.at(subRankId);

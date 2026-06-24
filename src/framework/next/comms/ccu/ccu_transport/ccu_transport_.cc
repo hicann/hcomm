@@ -416,7 +416,7 @@ HcclResult CcuTransport::ConnInfoUnpackProc(Hccl::BinaryStream &binaryStream) co
     std::vector<char> dtoData{};
     binaryStream >> dtoData;
     CHK_RET(ccuConnection_->Deserialize(dtoData));
-    HCCL_INFO("[CcuTransport][%s] start unpack connInfo, dtoData.size[%u]", __func__, dtoData.size());
+    HCCL_INFO("[CcuTransport][%s] start unpack connInfo, dtoData.size[%zu]", __func__, dtoData.size());
     return HcclResult::HCCL_SUCCESS;
 }
 

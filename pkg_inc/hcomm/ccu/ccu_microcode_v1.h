@@ -18,6 +18,7 @@ constexpr uint16_t CCU_REDUCE_SUM = 0;
 constexpr uint16_t CCU_REDUCE_MAX = 1;
 constexpr uint16_t CCU_REDUCE_MIN = 2;
 
+constexpr uint16_t CCU_REDUCE_MIN_MS = 2;
 constexpr uint16_t CCU_REDUCE_MAX_MS = 8;
 
 constexpr uint64_t CCU_MS_SIZE               = 4096;

@@ -33,6 +33,9 @@ bool CcuRepBufReduce::Translate(CcuInstr *&instr, uint16_t &instrId, const Trans
     if (count > CCU_REDUCE_MAX_MS || mem.size() > CCU_REDUCE_MAX_MS) {
         Hccl::THROW<Hccl::CcuApiException>("count and mem size must less than %u", CCU_REDUCE_MAX_MS);
     }
+    if (count < CCU_REDUCE_MIN_MS) {
+        Hccl::THROW<Hccl::CcuApiException>("count must be at least %u", CCU_REDUCE_MIN_MS);
+    }
 
     // 这里需要注意，在数据格式膨胀的情况下，需要传入用来存放输出的MSId
     // 特别是2P场景，输入MS的数目为2，但是在8bit进，32bit出的场景，输出MS的数目为4

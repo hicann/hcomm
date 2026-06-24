@@ -405,7 +405,7 @@ void CcuTransport::ConnInfoUnpackProc(BinaryStream &binaryStream) const
     std::vector<char> dtoData{};
     binaryStream >> dtoData;
     ccuConnection->Deserialize(dtoData);
-    HCCL_INFO("[CcuTransport][%s] start unpack connInfo, dtoData.size[%u]", __func__, dtoData.size());
+    HCCL_INFO("[CcuTransport][%s] start unpack connInfo, dtoData.size[%zu]", __func__, dtoData.size());
 }
 
 void CcuTransport::TransResUnpackProc(BinaryStream &binaryStream)
