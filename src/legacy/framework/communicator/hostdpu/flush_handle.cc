@@ -232,7 +232,7 @@ HcclResult FlushHandle::FreeLocalMemory()
             free(localMem);
         }
         localMem = nullptr;
-    } catch (HcclException & e) {
+    } catch (HcclException &e) {
         HCCL_ERROR("[%s] Exception occurred: %s", __func__, e.what());
         localMem = nullptr;
         return e.GetErrorCode();

@@ -43,7 +43,7 @@ public:
         HcclReduceOp opType, HcclDataType dataType);
     static HcclResult IpcCpyWin2Rcv(void *rcvAddr, u64 dataSize, u64 *winOffsets, u64 *rcvOffsets, HcclReduceOp opType,
         HcclDataType dataType);
-    static HcclResult IpcCpyWin2RcvEx(void *rcvAddr, u64 dataSize, u64 *rcvOffsets, u64 sendOff, HcclReduceOp opType,
+    static HcclResult IpcCpyWin2RcvEx(void *rcvAddr, u64 dataSize, u64 *rcvOffsets, u64 winOffset, HcclReduceOp opType,
         HcclDataType dataType);
     static HcclResult IpcCpyWin2RcvEx(void *rcvAddr, u64 *dataSize, u64 *rcvOffsets, u64 winOffset, HcclReduceOp opType,
         HcclDataType dataType);

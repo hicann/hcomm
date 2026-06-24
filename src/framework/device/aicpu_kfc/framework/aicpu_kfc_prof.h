@@ -26,7 +26,7 @@ public:
     static bool IsDebugModeEquals(const uint8_t mode);
     static bool NeedRecordTimeTaken();
     static AicpuComProf *GetCurrentAicpuProf();
-    static void OutputProfLog(bool debugFlag, AicpuComProf *prof, AicpuComProf *backupProf = nullptr);
+    static void OutputProfLog(bool debugFlag, AicpuComProf *profInfo, AicpuComProf *backupProfInfo = nullptr);
     static void AddProfLoopCnt(u32 addCnt = 1U);
     static AicpuComProf &GetProInst(AicpuComContext &ctx);
     static AicpuComProf *GetaicpuProfInst();

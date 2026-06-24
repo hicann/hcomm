@@ -815,8 +815,7 @@ void ClusterMonitor::GetCqeErrInfoFromTaskException(u32 remoteLocalId, uint16_t 
     auto total_us = duration_us.count();
     // 分离秒和微秒部分
     auto microseconds = total_us % 1000000;
-    struct tm *now;
-    now = localtime(&tmpt);
+    struct tm *now = localtime(&tmpt);
     char errorLinkLogBuffer[LOG_TMPBUF_SIZE];
 
     s32 stringRet = snprintf_s(errorLinkLogBuffer, LOG_TMPBUF_SIZE, LOG_TMPBUF_SIZE- 1U,

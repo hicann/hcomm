@@ -3411,7 +3411,7 @@ HcclResult CommunicatorImpl::AllocAndRegKFCWorkSpace(uint64_t size)
     int32_t deviceLogicId = 0;
     aclError aclRet = aclrtGetLogicDevIdByUserDevId(devLogicId, &deviceLogicId);  // userDevId 转 logicDevId
     if (aclRet != ACL_SUCCESS) {
-        HCCL_ERROR("[HcclCommunicator::%s] aclrtGetLogicDevIdByUserDevId failed, devLogicId: %d, ret: %d", __func__, devLogicId, aclRet);
+        HCCL_ERROR("[HcclCommunicator::%s] aclrtGetLogicDevIdByUserDevId failed, devLogicId: %u, ret: %d", __func__, devLogicId, aclRet);
         return HCCL_E_RUNTIME;
     }
     CHK_RET(HrtHalGetDeviceInfo(deviceLogicId, MODULE_TYPE_SYSTEM, INFO_TYPE_HD_CONNECT_TYPE, &connectType_));
@@ -3480,7 +3480,7 @@ HcclResult CommunicatorImpl::DestroyKFCWorkSpaceVA()
     int32_t deviceLogicId = 0;
     aclError aclRet = aclrtGetLogicDevIdByUserDevId(devLogicId, &deviceLogicId); // userDevId 转 logicDevId
     if (aclRet != ACL_SUCCESS) {
-        HCCL_ERROR("[HcclCommunicator::%s] aclrtGetLogicDevIdByUserDevId failed, devLogicId: %d, ret: %d", __func__, devLogicId, aclRet);
+        HCCL_ERROR("[HcclCommunicator::%s] aclrtGetLogicDevIdByUserDevId failed, devLogicId: %u, ret: %d", __func__, devLogicId, aclRet);
         return HCCL_E_RUNTIME;
     }
 

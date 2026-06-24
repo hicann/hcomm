@@ -303,13 +303,13 @@ HcclResult RankGraph::GetTopoType(const u32 netLayer, const u32 topoInstId, Topo
 {
     auto *netInstance = GetNetInstanceByRankId(netLayer, myRank_);
     CHK_PRT_RET(netInstance == nullptr,
-                HCCL_ERROR("[RankGraph::GetTopoType] netInstance is nullptr, myRank[%u], netLayer[%u], "
+                HCCL_ERROR("[RankGraph::GetTopoType] netInstance is nullptr, myRank[%d], netLayer[%u], "
                            "topoInstId[%u]", myRank_, netLayer, topoInstId),
                 HCCL_E_PTR);
 
     auto ret = netInstance->GetTopoType(topoInstId, topoType);
     CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[%s] Failed to GetTopoType, myRank[%u], netLayer[%u], netInstId[%s], topoInstId[%u], "
+                HCCL_ERROR("[%s] Failed to GetTopoType, myRank[%d], netLayer[%u], netInstId[%s], topoInstId[%u], "
                            "ret[%d]", __func__, myRank_, netLayer, netInstance->GetNetInstId().c_str(), topoInstId,
                            ret),
                 ret);
@@ -321,13 +321,13 @@ HcclResult RankGraph::GetRanksByTopoInst(
 {
     auto *netInstance = GetNetInstanceByRankId(netLayer, myRank_);
     CHK_PRT_RET(netInstance == nullptr,
-                HCCL_ERROR("[RankGraph::GetRanksByTopoInst] netInstance is nullptr, myRank[%u], netLayer[%u], "
+                HCCL_ERROR("[RankGraph::GetRanksByTopoInst] netInstance is nullptr, myRank[%d], netLayer[%u], "
                            "topoInstId[%u]", myRank_, netLayer, topoInstId),
                 HCCL_E_PTR);
 
     auto ret = netInstance->GetRanksByTopoInst(topoInstId, ranks, rankNum);
     CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[%s] Failed to GetRanksByTopoInst, myRank[%u], netLayer[%u], netInstId[%s], "
+                HCCL_ERROR("[%s] Failed to GetRanksByTopoInst, myRank[%d], netLayer[%u], netInstId[%s], "
                            "topoInstId[%u], ret[%d]", __func__, myRank_, netLayer,
                            netInstance->GetNetInstId().c_str(), topoInstId, ret),
                 ret);
@@ -575,7 +575,7 @@ bool NeedUpdateTopoInstForSubGraph(const NetInstance *oldNetInstance, u32 topoIn
 {
     auto topoInstIter = oldNetInstance->topoInsts_.find(topoInstId);
     if (topoInstIter == oldNetInstance->topoInsts_.end()) {
-        HCCL_DEBUG("[SubRankGraph][NeedUpdateTopoInstForSubGraph] skip topoInstId[%u], parentMyRank[%u], "
+        HCCL_DEBUG("[SubRankGraph][NeedUpdateTopoInstForSubGraph] skip topoInstId[%u], parentMyRank[%d], "
                    "not found in parent netInstId[%s]",
                    topoInstId, parentMyRank, oldNetInstance->GetNetInstId().c_str());
         return false;

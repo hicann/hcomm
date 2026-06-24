@@ -31,7 +31,7 @@ private:
     HcclResult RunDeterministicReduceScatter(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
         HcclDataType dataType, u64 strideCount);
     HcclResult RunDeterministicReduceScatterLocal(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType, u64 strideCount);
+        HcclDataType dataType, u64 strideLen);
     HcclResult RunCurrentDeterministicReduceScatter(HcclReduceOp opType, uint8_t *curInputPtr, uint8_t *curOutputPtr,
         u64 strideSize, u64 curSize, HcclDataType dataType);
 

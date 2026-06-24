@@ -37,6 +37,9 @@ constexpr uint32_t BASE = 10;           // 进制基数
 constexpr uint32_t MAX_DOT_COUNT = 3;   // IPv4地址.分割符的最大个数
 constexpr uint32_t MAX_IPV4_SEGMENT_VALUE = 255;     // 每个段的最大值
 constexpr uint32_t URMA_EID_IPV4_PREFIX = 0x0;
+constexpr uint32_t EID_WORD_SHIFT_0 = 48;  // EID 64位值中第0个16位字的右移位数
+constexpr uint32_t EID_WORD_SHIFT_1 = 32;  // EID 64位值中第1个16位字的右移位数
+constexpr uint32_t EID_WORD_SHIFT_2 = 16;  // EID 64位值中第2个16位字的右移位数
 
 union Eid {
     uint8_t raw[URMA_EID_LEN]{0};
@@ -55,13 +58,13 @@ union Eid {
         uint64_t subnet = be64toh(in6.subnetPrefix);
         uint64_t ifId = be64toh(in6.interfaceId);
         return StringFormat("%04llx:%04llx:%04llx:%04llx:%04llx:%04llx:%04llx:%04llx",
-                            static_cast<unsigned long long>((subnet >> 48) & 0xFFFF),
-                            static_cast<unsigned long long>((subnet >> 32) & 0xFFFF),
-                            static_cast<unsigned long long>((subnet >> 16) & 0xFFFF),
+                            static_cast<unsigned long long>((subnet >> EID_WORD_SHIFT_0) & 0xFFFF),
+                            static_cast<unsigned long long>((subnet >> EID_WORD_SHIFT_1) & 0xFFFF),
+                            static_cast<unsigned long long>((subnet >> EID_WORD_SHIFT_2) & 0xFFFF),
                             static_cast<unsigned long long>(subnet & 0xFFFF),
-                            static_cast<unsigned long long>((ifId >> 48) & 0xFFFF),
-                            static_cast<unsigned long long>((ifId >> 32) & 0xFFFF),
-                            static_cast<unsigned long long>((ifId >> 16) & 0xFFFF),
+                            static_cast<unsigned long long>((ifId >> EID_WORD_SHIFT_0) & 0xFFFF),
+                            static_cast<unsigned long long>((ifId >> EID_WORD_SHIFT_1) & 0xFFFF),
+                            static_cast<unsigned long long>((ifId >> EID_WORD_SHIFT_2) & 0xFFFF),
                             static_cast<unsigned long long>(ifId & 0xFFFF));
     }
 

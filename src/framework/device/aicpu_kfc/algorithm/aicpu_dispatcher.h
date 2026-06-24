@@ -27,7 +27,7 @@ public:
         HcclReduceOp reduceOp, u32 remoteRank);
     static HcclResult CopyData(uint16_t streamId, u64 src, u64 dst, uint32_t len, HcclDataType dataType,
         HcclReduceOp reduceOp, u32 remoteRank);
-    static HcclResult LaunchTask(uint32_t rankId);
+    static HcclResult LaunchTask(uint32_t streamId);
     static HcclResult AddCcoreWait(uint16_t streamId, u64 waitAddr, uint32_t turnNum, bool isLast);
     static HcclResult AddWaitStartTaskOnMainStream(u16 streamId);
     static HcclResult AddCcoreNotify(uint16_t streamId, uint32_t turnNum);
