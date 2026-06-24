@@ -41,6 +41,7 @@
 #include "env_config.h"
 #include "base_config.h"
 #include "topo_addr_info.h"
+#include "communicator_impl.h"
 
 using namespace Hccl;
 
@@ -335,3 +336,188 @@ TEST_F(RankInfoDetectClientTest, Ut_VerifyRankTable_When_TlsStatus_Expect_Throw)
     EXPECT_THROW(rankInfoDetectClient_->VerifyRankTable(), InvalidParamsException);
 }
 
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_EmptyRankLevelInfos_Expect_NoThrow)
+{
+    // Given: rankInfo with empty rankLevelInfos
+    NewRankInfo rankInfo;
+    rankInfo.rankId = 0;
+    rankInfo.deviceId = 0;
+    rankInfo.localId = 0;
+    // rankLevelInfos is empty by default
+
+    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
+
+    string topoFilePath{HCOMM_CODE_ROOT_DIR "/test/legacy/ut/framework/communicator/topohost.json"};
+    MOCKER_CPP(&CommunicatorImpl::GetTopoFilePath)
+        .stubs()
+        .will(returnValue(topoFilePath));
+
+    // When & Then: loop iterates zero times, returns without error
+    EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
+    EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
+    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoTopoGraph_Expect_NoThrow)
+{
+    // Given: rankInfo with rankLevelInfos but netLayer doesn't match any built topo graph
+    NewRankInfo rankInfo;
+    rankInfo.rankId = 0;
+    rankInfo.deviceId = 0;
+    rankInfo.localId = 0;
+
+    AddressInfo addrInfo;
+    addrInfo.addr = IpAddress("192.168.1.1");
+    addrInfo.socketPort_ = 0;
+    RankLevelInfo levelInfo;
+    levelInfo.netLayer = 0;
+    levelInfo.rankAddrs.push_back(addrInfo);
+    rankInfo.rankLevelInfos.push_back(levelInfo);
+
+    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
+
+    string topoFilePath{HCOMM_CODE_ROOT_DIR "/test/legacy/ut/framework/communicator/topohost.json"};
+    MOCKER_CPP(&CommunicatorImpl::GetTopoFilePath)
+        .stubs()
+        .will(returnValue(topoFilePath));
+
+    // When: PhyTopo built but netLayer=0 has no graph → GetTopoGraph returns nullptr
+    // Then: skip nullptr graph, log debug, continue, return without error
+    EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
+    EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
+    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_MultipleRankLevelInfos_Expect_NoThrow)
+{
+    // Given: multiple rankLevelInfos, none with a matching topo graph
+    NewRankInfo rankInfo;
+    rankInfo.rankId = 0;
+    rankInfo.deviceId = 0;
+    rankInfo.localId = 0;
+
+    for (u32 i = 0; i < 3; i++) {
+        AddressInfo addrInfo;
+        addrInfo.addr = IpAddress(StringFormat("192.168.%u.1", i + 1));
+        addrInfo.socketPort_ = 0;
+        RankLevelInfo levelInfo;
+        levelInfo.netLayer = i;
+        levelInfo.rankAddrs.push_back(addrInfo);
+        rankInfo.rankLevelInfos.push_back(levelInfo);
+    }
+
+    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
+
+    string topoFilePath{HCOMM_CODE_ROOT_DIR "/test/legacy/ut/framework/communicator/topohost.json"};
+    MOCKER_CPP(&CommunicatorImpl::GetTopoFilePath)
+        .stubs()
+        .will(returnValue(topoFilePath));
+
+    // When & Then: iterate all level infos, all graphs nullptr, no throw
+    EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
+    EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
+    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_RdmaLinkEmptyRankAddrs_Expect_Continue)
+{
+    // Given: topohost.json has HOST+ROCE at netLayer=3, but rankAddrs is empty
+    NewRankInfo rankInfo;
+    rankInfo.rankId = 0;
+    rankInfo.deviceId = 0;
+    rankInfo.localId = 0;
+
+    RankLevelInfo levelInfo;
+    levelInfo.netLayer = 3;  // HOST+ROCE link at netLayer=3
+    // rankAddrs left EMPTY — triggers rankLevelInfo.rankAddrs.empty() check
+    rankInfo.rankLevelInfos.push_back(levelInfo);
+
+    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
+
+    string topoFilePath{HCOMM_CODE_ROOT_DIR "/test/legacy/ut/framework/communicator/topohost.json"};
+    MOCKER_CPP(&CommunicatorImpl::GetTopoFilePath)
+        .stubs()
+        .will(returnValue(topoFilePath));
+
+    // When & Then: ROCE → RDMA but rankAddrs.empty() → skip, hostPort unchanged
+    PhyTopo::GetInstance()->Clear();
+    EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
+    EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
+    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+}
+
+// basePort configured, portRange empty → listenPort = basePort + devPhyId
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_BasePort_Expect_HostPortSet)
+{
+    // Given: HOST+ROCE link at netLayer=3, basePort configured
+    EnvHostNicConfig fakeConfig;
+    fakeConfig.hcclHostSocketPortRange = CfgField<std::vector<SocketPortRange>>{"HCCL_HOST_SOCKET_PORT_RANGE", {},
+        [] (const std::string &s) -> std::vector<SocketPortRange> { return CastSocketPortRange(s, "HCCL_HOST_SOCKET_PORT_RANGE"); }};
+    fakeConfig.hcclHostSocketPortRange.isParsed = true;
+    // hcclIfBasePort: configured to valid value 50000
+    fakeConfig.hcclIfBasePort = CfgField<u32>{"HCCL_IF_BASE_PORT", 50000, Str2T<u32>};
+    fakeConfig.hcclIfBasePort.isParsed = true;
+    MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeConfig));
+
+    NewRankInfo rankInfo;
+    rankInfo.rankId = 0;
+    rankInfo.deviceId = 0;
+    rankInfo.localId = 0;
+
+    AddressInfo addrInfo;
+    addrInfo.addr = IpAddress("192.168.1.1");
+    RankLevelInfo levelInfo;
+    levelInfo.netLayer = 3;  // HOST+ROCE link at netLayer=3
+    levelInfo.rankAddrs.push_back(addrInfo);
+    rankInfo.rankLevelInfos.push_back(levelInfo);
+
+    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
+
+    string topoFilePath{HCOMM_CODE_ROOT_DIR "/test/legacy/ut/framework/communicator/topohost.json"};
+    MOCKER_CPP(&CommunicatorImpl::GetTopoFilePath)
+        .stubs()
+        .will(returnValue(topoFilePath));
+
+    // When: basePort valid → listenPort = basePort + devPhyId = 50000 + 0
+    PhyTopo::GetInstance()->Clear();
+    EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
+
+    // Then: hostPort should be set to basePort + devPhyId
+    EXPECT_EQ(rankInfo.hostPort, 50000u);
+
+    // Cleanup: TearDown resets hostSocket_
+    SocketManager::TearDown(0);
+    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoHostLink_Expect_HostPortUnchanged)
+{
+    // Given: topohost.json has HOST+ROCE at netLayer=3, but rankAddrs has DEV position instead
+    // This tests the path where graph has edges but none match HOST position
+    NewRankInfo rankInfo;
+    rankInfo.rankId = 0;
+    rankInfo.deviceId = 0;
+    rankInfo.localId = 0;
+
+    AddressInfo addrInfo;
+    addrInfo.addr = IpAddress("192.168.1.1");
+    RankLevelInfo levelInfo;
+    levelInfo.netLayer = 1;  // netLayer=1 has DEV links, not HOST
+    levelInfo.rankAddrs.push_back(addrInfo);
+    rankInfo.rankLevelInfos.push_back(levelInfo);
+
+    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
+
+    string topoFilePath{HCOMM_CODE_ROOT_DIR "/test/legacy/ut/framework/communicator/topohost.json"};
+    MOCKER_CPP(&CommunicatorImpl::GetTopoFilePath)
+        .stubs()
+        .will(returnValue(topoFilePath));
+
+    // When: netLayer=1 graph exists but has no HOST position links
+    PhyTopo::GetInstance()->Clear();
+    EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
+
+    // Then: hostPort should remain at default since no HOST RDMA link found
+    EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
+    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+}

@@ -21,10 +21,12 @@
 #include "socket_manager.h"
 #include "topo_addr_info.h"
 #include "adapter_error_manager_pub.h"
+#include "communicator_impl.h"
+#include "phy_topo_builder.h"
 
 namespace Hccl {
 
-void RankInfoDetectClient::Setup(RankTableInfo &rankTable, u32 hostPort)
+void RankInfoDetectClient::Setup(RankTableInfo &rankTable)
 {
     // 1. 构造localRankTable
     RankTableInfo localRankTable{};
@@ -32,7 +34,7 @@ void RankInfoDetectClient::Setup(RankTableInfo &rankTable, u32 hostPort)
 
     // 若启用单卡多进程抢占端口则执行
     SocketManager::ServerInitAll(localRankTable.ranks[0]);
-    localRankTable.ranks[0].hostPort = hostPort;
+    HostListenPortDetect(localRankTable.ranks[0]);
 
     // 2. 连接root节点
     Connect();
@@ -464,10 +466,44 @@ HcclResult RankInfoDetectClient::VerifyTlsConsistency() const
     return HCCL_SUCCESS;
 }
 
+void RankInfoDetectClient::HostListenPortDetect(NewRankInfo &rankInfo)
+{
+    const std::string &topoPath = CommunicatorImpl::GetTopoFilePath();
+    PhyTopoBuilder::GetInstance().Build(topoPath);
+    auto devLogicId = HrtGetDevice();
+    u32 devPhyId = rankInfo.deviceId;
+    for (auto &rankLevelInfo : rankInfo.rankLevelInfos) {
+        shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> graph = PhyTopo::GetInstance()->GetTopoGraph(rankLevelInfo.netLayer);
+        if (graph == nullptr) {
+            HCCL_DEBUG("[HostListenPortDetect::%s]Can't find the layout %u Graph!", __func__, rankLevelInfo.netLayer);
+            continue;
+        }
+        std::vector<std::shared_ptr<PhyTopo::Link>> links = graph->GetEdges(rankInfo.localId);
+        for (auto &link : links) {
+            if (link->GetSourceIFace()->GetPos() != AddrPosition::HOST) {
+                continue;
+            }
+            const std::set<LinkProtocol> &protocols = link->GetLinkProtocols();
+            for (auto &protocol : protocols) {
+                LinkProtoType protoType = LinkProtocol2LinkProtoType(protocol);
+                if (protoType != LinkProtoType::RDMA || rankLevelInfo.rankAddrs.empty()) {
+                    continue;
+                }
+                HCCL_DEBUG("[HostListenPortDetect::%s] find the host rdma link %s", __func__, link->Describe().c_str());
+                const IpAddress& hostIp = rankLevelInfo.rankAddrs[0].addr;
+                uint32_t hostPort = 0;
+                SocketManager::SetupHostListenPort(devLogicId, devPhyId, hostIp, hostPort);
+                rankInfo.hostPort = hostPort;
+                return;
+            }
+        }
+    }
+}
+
 void RankInfoDetectClient::TearDown()
 {
     HCCL_INFO("[RankInfoDetectClient::%s] start.", __func__);
-    
+    SocketManager::TearDown(devPhyId_);
     // close socket
     clientSocket_->Close();
     

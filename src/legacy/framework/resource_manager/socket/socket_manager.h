@@ -57,6 +57,8 @@ public:
     void ServerInit(PortData &localPort);
 
     static void ServerInitAll(NewRankInfo &rankInfo);
+    static void SetupHostListenPort(u32 devLogicId, u32 devPhyId, const IpAddress &hostIp, uint32_t &hostPort);
+    static void TearDown(u32 devPhyId);
 
     bool ServerDeInit(PortData &localPort) const;
 
@@ -109,6 +111,9 @@ private:
     std::set<LinkData>      availableLinks;
 
     std::string socketTag_{};
+    static std::mutex socketLock;
+    static shared_ptr<Socket> hostSocket_;
+    static std::mutex hostSocketLock_;
 };
 
 } // namespace Hccl

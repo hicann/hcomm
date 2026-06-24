@@ -18,6 +18,8 @@
 #include "communicator_impl.h"
 #include "ranktable_stub_clos.h"
 #include "preempt_port_manager.h"
+#include "host_socket_handle_manager.h"
+#include "phy_topo.h"
 #undef protected
 #undef private
 
@@ -181,6 +183,14 @@ TEST_F(SocketManagerTest, test_BatchCreateSockets_with_SocketConfig) {
     Hccl::SocketConfig socketConfig(link.GetRemoteRankId(), link, "test");
     socketMgr.BatchCreateSockets(socketConfig);
     socketMgr.GetConnectedSocket(socketConfig);
+}
+
+TEST_F(SocketManagerTest, Ut_TearDown_HostSocketNull_Expect_EarlyReturn)
+{
+    // Given: hostSocket_ is nullptr (default state, no HostListenPortDetect called)
+
+    // When & Then: TearDown should return immediately without any side effects
+    EXPECT_NO_THROW(SocketManager::TearDown(0));
 }
 
 TEST_F(SocketManagerTest, test_CheckServerPortListening_When_Port_Inconsistent_Expected_False) {

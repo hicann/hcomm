@@ -167,18 +167,6 @@ void RankInfoDetect::SetupAgent(u32 rankSize, u32 rankId, const HcclRootHandleV2
     CHK_PRT_THROW(hostIp_.IsInvalid(), HCCL_ERROR("[RankInfoDetect::%s] get hostIp fail.", __func__),
         InternalException, "get hostIp fail");
 
-    // 获取hostPort（与SetupServer中获取监听端口的逻辑一致）
-    hostPort_ = GetHostListenPort();
-    if (hostPort_ == HCCL_INVALID_PORT) {
-        auto portRange = EnvConfig::GetInstance().GetHostNicConfig().GetHostSocketPortRange();
-        SocketHandle hostSocketHandle = HostSocketHandleManager::GetInstance().Create(devPhyId_, hostIp_);
-        hostPortSocket_ = std::make_shared<Socket>(
-            hostSocketHandle, hostIp_, HCCL_INVALID_PORT, hostIp_,
-            "hostport_preempt", SocketRole::SERVER, NicType::HOST_NIC_TYPE);
-        PreemptPortManager::GetInstance(devLogicId_).ListenPreempt(hostPortSocket_, portRange, hostPort_);
-        HCCL_INFO("[RankInfoDetect::%s] preempt hostPort[%u] success.", __func__, hostPort_);
-    }
-
     // 创建clientSocket
     std::shared_ptr<Socket> clientSocket = ClientInit(rootHandle);
 
@@ -186,7 +174,7 @@ void RankInfoDetect::SetupAgent(u32 rankSize, u32 rankId, const HcclRootHandleV2
     rankInfoDetectClient = std::make_shared<RankInfoDetectClient>(devPhyId_, rankSize, rankId, clientSocket);
 
     // 2. 调用RankInfoDetectClient.Setup, 获取rankTable
-    rankInfoDetectClient->Setup(rankTable_, hostPort_);
+    rankInfoDetectClient->Setup(rankTable_);
 
     HCCL_INFO("[RankInfoDetect::%s] setup agent end.", __func__);
 }
@@ -342,10 +330,5 @@ void RankInfoDetect::WaitComplete(u32 listenPort, u32 listenStatus) const
 
 RankInfoDetect::~RankInfoDetect()
 {
-    if (hostPortSocket_ != nullptr) {
-        PreemptPortManager::GetInstance(devLogicId_).Release(hostPortSocket_);
-        hostPortSocket_->StopListen();
-        HostSocketHandleManager::GetInstance().Destroy(devPhyId_, hostIp_);
-    }
 }
 }  // namespace Hccl
