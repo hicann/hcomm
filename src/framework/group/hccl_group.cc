@@ -50,7 +50,7 @@ HcclResult taskAppend(HcclComm comm, hcclOpInfo& info) {
 
     HcclResult ret = HCCL_SUCCESS;
     if (info.coll == HcclCMDType::HCCL_CMD_SEND || info.coll == HcclCMDType::HCCL_CMD_RECEIVE) {
-        hcclComm->SetGroupMode(true);
+        hcclComm->SetGroupMode(false);
         bool isSendOp = (info.coll == HcclCMDType::HCCL_CMD_SEND);
         HcclSendRecvItem item;
         item.sendRecvType = isSendOp ? HcclSendRecvType::HCCL_SEND : HcclSendRecvType::HCCL_RECV;
@@ -161,8 +161,8 @@ static HcclResult doLaunches(HcclComm comm)
     HcclUs startutime = TIME_NOW();
     if (planner->nTasksP2p != 0) { 
         // 将所有send/recv的任务打包作为一个集合通信算子来执行
-        HCCL_INFO("HcclBatchSendRecvGroup, sendRecvInfo.size()[%u]", static_cast<u32>(planner->sendRecvInfo.size()));
-        CHK_RET(HcclBatchSendRecvGroup(planner->sendRecvInfo.data(), planner->sendRecvInfo.size(), comm, planner->sendRecvMainStream));
+        HCCL_INFO("HcclBatchSendRecvInner, sendRecvInfo.size()[%u]", static_cast<u32>(planner->sendRecvInfo.size()));
+        CHK_RET(HcclBatchSendRecvInner(planner->sendRecvInfo.data(), planner->sendRecvInfo.size(), comm, planner->sendRecvMainStream));
     }
     HCCL_INFO("[doLaunches] take time [%lld]us.", DURATION_US(TIME_NOW() - startutime));
     if (planner->nTasksColl != 0) {
