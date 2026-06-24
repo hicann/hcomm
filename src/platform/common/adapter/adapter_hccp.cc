@@ -2268,7 +2268,7 @@ HcclResult CreateAiQp(RdmaHandle rdmaHandle, struct AiQpInfo &aiQpInfo, QpInfo &
     struct QpExtAttrs attrs{};
     QueueDepthAttr qpDepth{};
     CHK_RET(ConstructQpAttrs(info.qpMode, attrs, qpDepth, false));
-    attrs.qpAttr.cap.max_send_wr = DEFAULT_OFFLINE_MAX_SEND_WR;
+    attrs.qpAttr.cap.max_send_wr = HETEROG_OFFLINE_EXT_MAX_SEND_WR;
     attrs.cqAttr.sendCqDepth = DEFAULT_MAX_ONE_SIDED_SEND_CQ_DEPTH;
     attrs.udpSport = 0;
 
