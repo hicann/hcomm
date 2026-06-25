@@ -1022,7 +1022,10 @@ HcclResult HostCpuRoceChannel::WriteWithNotify(
         struct ibv_send_wr writeWithNotifyWr{};
         struct ibv_sge sgList{};
         writeWithNotifyWr.sg_list = &sgList;
-        CHK_RET(PrepareWriteWrResource(static_cast<char *>(tailDst) + tileLen * i, static_cast<const char *>(tailSrc) + tileLen * i, wrLen, remoteNotifyIdx, writeWithNotifyWr, taskParam));
+        uint64_t offset = (wrLen == 0) ? 0 : (tileLen * i);
+        CHK_RET(PrepareWriteWrResource(static_cast<char *>(tailDst) + offset,
+            static_cast<const char *>(tailSrc) + offset, wrLen, remoteNotifyIdx,
+            writeWithNotifyWr, taskParam));
         CHK_RET(PostAndCheckSend(qpInfo[i].qp, i, __func__, writeWithNotifyWr));
         HCCL_INFO("[HostCpuRoceChannel::%s] SUCCESS. qp[%u], wrlen[0x%llx], newWqe[%u], wqeNums_[%u].",
                   __func__, i, wrLen, wqeNums_[i] - wqeNumBefore[i], wqeNums_[i]);
@@ -1131,6 +1134,12 @@ HcclResult HostCpuRoceChannel::PostRdmaOp(const char *caller, ibv_wr_opcode opco
         } else {
             wrLen = 0;
         }
+
+        if (wrLen == 0) {
+            HCCL_DEBUG("[HostCpuRoceChannel::%s] wrLen is 0, qp[%u] qpn[%u] skip post send.", __func__, i, qpInfo[i].qp->qp_num);
+            continue;
+        }
+
         struct ibv_send_wr wr{};
         struct ibv_sge sg;
         BuildRdmaWr(caller, opcode, static_cast<char*>(localAddr) + tileLen * i, static_cast<const char*>(remoteAddr) + tileLen * i, wrLen, localIdx, rmtIdx, wr, sg);
