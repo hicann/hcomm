@@ -14,12 +14,17 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <new>
 
 namespace Hccl {
 
 InsCollAlgRegistry *InsCollAlgRegistry::Global()
 {
-    static InsCollAlgRegistry *globalAlgImplRegistry = new InsCollAlgRegistry;
+    static InsCollAlgRegistry *globalAlgImplRegistry = new (std::nothrow) InsCollAlgRegistry;
+    if (globalAlgImplRegistry == nullptr) {
+        HCCL_ERROR("[Alg][Registry] allocate global InsCollAlgRegistry failed, out of memory.");
+        return nullptr;
+    }
     return globalAlgImplRegistry;
 }
 

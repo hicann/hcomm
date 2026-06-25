@@ -13,6 +13,7 @@
 
 #include <mutex>
 #include <map>
+#include <new>
 
 #include "base_selector.h"
 
@@ -34,7 +35,9 @@ private:
 
 #define REGISTER_SELECTOR_HELPER(ctr, priority, name, selector)                                                        \
     static HcclResult g_func_##priority##_##name##_##ctr                                                               \
-        = SelectorRegistry::Global()->Register(priority, new selector())
+        = (SelectorRegistry::Global() != nullptr)                                                                      \
+            ? SelectorRegistry::Global()->Register(priority, new (std::nothrow) selector())                            \
+            : HcclResult::HCCL_E_MEMORY
 
 #define REGISTER_SELECTOR_HELPER_1(ctr, priority, name, selector)                                                      \
     REGISTER_SELECTOR_HELPER(ctr, priority, name, selector)
@@ -44,7 +47,9 @@ private:
 
 #define REGISTER_SELECTOR_BY_OPTYPE_HELPER(ctr, optype, priority, name, selector)    \
     static HcclResult g_func_##priority##_##name##_##ctr                                                               \
-        = SelectorRegistry::Global()->RegisterByOpType(optype, priority, new selector())
+        = (SelectorRegistry::Global() != nullptr)                                                                      \
+            ? SelectorRegistry::Global()->RegisterByOpType(optype, priority, new (std::nothrow) selector())            \
+            : HcclResult::HCCL_E_MEMORY
 
 #define REGISTER_SELECTOR_BY_OPTYPE_HELPER_1(ctr, optype, priority, name, selector)  \
     REGISTER_SELECTOR_BY_OPTYPE_HELPER(ctr, optype, priority, name, selector)

@@ -318,7 +318,7 @@ HcclResult SetPathNumMapByLinkMgrMultiLevel(ConnectedLinkMgr*linkMgr, std::vecto
         if (linkNum != 0){
             rank2PathNumMap[rankIdx] = linkNum;
         }
-        HCCL_INFO("[%s]rankIdx[%d] linkNum[%d]", __func__, rankIdx, linkNum);
+        HCCL_INFO("[%s]rankIdx[%u] linkNum[%d]", __func__, rankIdx, linkNum);
     }
     if(rank2PathNumMap.size() == 0){
         HCCL_ERROR("No path to all remoteRank");
