@@ -49,8 +49,9 @@ HcclResult CollAllGatherPipelineFor91093Executor::CalcStreamNum(u32& streamNum)
     }
 
     // 为三级流水线增加额外的流
-    // 主流用于L2 NHR，从流用于L1 NHR + L0 DoubleRing
-    totalStreamNum += 2; // 增加一个主流用于L2流水线，2个notify用于两块内存的主从流之间的同步
+    // 从流用于L2，主流用于L1 + L0
+    // 新增从流中，一条用于L2流水线，一条用于多申请2个notify，共新增4个notify用于两块内存的主从流之间的同步
+    totalStreamNum += 2;
 
     streamNum = totalStreamNum - 1;
     HCCL_INFO("[CollAllGatherPipelineFor91093Executor][CalcStreamNum] tag[%s] streamNum[%u]",
@@ -137,15 +138,18 @@ HcclResult CollAllGatherPipelineFor91093Executor::Orchestrate(
     CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
     level2CommInfo_ = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
 
-    // 准备通信资源和流，资源待商榷
-    mainStreamL2_ = param.stream;
+    // L1/L0 runs on the main stream; L2 runs on the reserved slave stream.
+    mainStreamL1L0_ = param.stream;
     subStreams_ = algResResp_->slaveStreams;
-    mainStreamL1L0_ = subStreams_.back();
+    mainStreamL2_ = subStreams_.back();
     const u32 baseStreamNum = algResResp_->slaveStreams.size() - PIPELINE_NUM;
-    notifyL1L0ToL2A_ = algResResp_->notifiesMain[baseStreamNum];
-    notifyL1L0ToL2B_ = algResResp_->notifiesMain[baseStreamNum + 1];
-    notifyL2ToL1L0A_ = algResResp_->notifiesAux[baseStreamNum];
-    notifyL2ToL1L0B_ = algResResp_->notifiesAux[baseStreamNum + 1];
+    notifyL1L0ToL2A_ = algResResp_->notifiesAux[baseStreamNum];
+    notifyL1L0ToL2B_ = algResResp_->notifiesAux[baseStreamNum + 1];
+    notifyL2ToL1L0A_ = algResResp_->notifiesMain[baseStreamNum];
+    notifyL2ToL1L0B_ = algResResp_->notifiesMain[baseStreamNum + 1];
+    HCCL_INFO("[CollAllGatherPipelineFor91093Executor][RunLoop] NotifyIds: "
+        "L1L0ToL2A: Aux[%u], L1L0ToL2B: Aux[%u], L2ToL1L0A: Main[%u], L2ToL1L0B: Main[%u]",
+       baseStreamNum, baseStreamNum + 1, baseStreamNum, baseStreamNum + 1);
     notifyRingMain_.assign(algResResp_->notifiesMain.begin(), algResResp_->notifiesMain.end() - PIPELINE_NUM);
     notifyRingSub_.assign(algResResp_->notifiesAux.begin(), algResResp_->notifiesAux.end() - PIPELINE_NUM);
     ringSubStreams_.assign(subStreams_.begin(), subStreams_.end() - PIPELINE_NUM);
@@ -174,8 +178,8 @@ HcclResult CollAllGatherPipelineFor91093Executor::RunL2Stage(
     if (loopIdx >= bufferSliceNum) {
         return HCCL_SUCCESS;
     }
-    // 同步：等待 loopIdx-2 的 L1+L0 通信完成，释放 DMA buffer 后 L2 再复用
-    if (loopIdx >= 2) {
+    // Loop 0 waits for the main stream start signal. Later ping-pong buffer reuse waits for L1/L0.
+    if (loopIdx == 0 || loopIdx >= PIPELINE_NUM) {
         auto notifyL1L0ToL2 = (memIdx == 0) ? notifyL1L0ToL2A_ : notifyL1L0ToL2B_;
         CHK_RET(LocalNotify::Wait(mainStreamL2_, dispatcher_, notifyL1L0ToL2, INVALID_VALUE_STAGE));
     }
@@ -216,8 +220,10 @@ HcclResult CollAllGatherPipelineFor91093Executor::RunL1L0Stage(
     }
     CHK_RET(KernelRunIntraServer(param, lastExecMem, baseOffset));
 
-    auto notifyL1L0ToL2 = (memIdx == 0) ? notifyL1L0ToL2A_ : notifyL1L0ToL2B_;
-    CHK_RET(LocalNotify::Post(mainStreamL1L0_, dispatcher_, notifyL1L0ToL2, INVALID_VALUE_STAGE));
+    if (loopIdx + 1 < bufferSliceNum) {
+        auto notifyL1L0ToL2 = (memIdx == 0) ? notifyL1L0ToL2A_ : notifyL1L0ToL2B_;
+        CHK_RET(LocalNotify::Post(mainStreamL1L0_, dispatcher_, notifyL1L0ToL2, INVALID_VALUE_STAGE));
+    }
     return HCCL_SUCCESS;
 }
 
@@ -241,6 +247,8 @@ HcclResult CollAllGatherPipelineFor91093Executor::RunLoop(OpParam &param)
 
     u32 memIdx = 0;
     ExecMem lastExecMem;
+    // AllGather starts with L2, so the main stream releases the first L2 stage before the loop.
+    CHK_RET(LocalNotify::Post(mainStreamL1L0_, dispatcher_, notifyL1L0ToL2A_, INVALID_VALUE_STAGE));
     for (u64 loopIdx = 0; loopIdx < loopNum; loopIdx++) {
         u64 curCount = countLeft > maxCountPerLoop ? maxCountPerLoop : countLeft; // 当前循环处理的数据量
         countLeft -= curCount;
@@ -263,15 +271,6 @@ HcclResult CollAllGatherPipelineFor91093Executor::RunLoop(OpParam &param)
         memIdx = 1 - memIdx; // 双缓冲交替使用
         lastExecMem = execMem;
     }
-
-    // 只有 L1L0 阶段实际运行的 buffer 才需要等待
-    // 当 bufferSliceNum >= 2 时两路都用到，否则只用了一路
-    CHK_RET(LocalNotify::Wait(mainStreamL2_, dispatcher_, notifyL1L0ToL2A_, INVALID_VALUE_STAGE));
-    if (bufferSliceNum >= 2) {
-        CHK_RET(LocalNotify::Wait(mainStreamL2_, dispatcher_, notifyL1L0ToL2B_, INVALID_VALUE_STAGE));
-    }
-
-    CHK_RET(LaunchTaskExtend(dispatcher_, param.stream, algResResp_->slaveStreams));
 
     return HCCL_SUCCESS;
 }

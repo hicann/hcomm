@@ -58,10 +58,13 @@ HcclResult CollReduceScatterPipelineFor91093Executor::RunLoop(OpParam &param, Al
     Stream streamL0L1 = param.stream;
     Stream streamL2 = algResResp_->slaveStreams.back();
     const u32 baseNotifyIndex = algResResp_->notifiesMain.size() - PIPELINE_PINGPONG_NOTIFY_PAIRS;
-    auto notifyL0L1toL2A = algResResp_->notifiesMain[baseNotifyIndex];
-    auto notifyL0L1toL2B = algResResp_->notifiesMain[baseNotifyIndex + 1];
-    auto notifyL2toL0L1A = algResResp_->notifiesAux[baseNotifyIndex];
-    auto notifyL2toL0L1B = algResResp_->notifiesAux[baseNotifyIndex + 1];
+    auto notifyL0L1toL2A = algResResp_->notifiesAux[baseNotifyIndex];
+    auto notifyL0L1toL2B = algResResp_->notifiesAux[baseNotifyIndex + 1];
+    auto notifyL2toL0L1A = algResResp_->notifiesMain[baseNotifyIndex];
+    auto notifyL2toL0L1B = algResResp_->notifiesMain[baseNotifyIndex + 1];
+    HCCL_INFO("[CollReduceScatterPipelineFor91093Executor][RunLoop] NotifyIds: "
+        "L0L1toL2A: Aux[%u], L0L1toL2B: Aux[%u], L2toL0L1A: Main[%u], L2toL0L1B: Main[%u]",
+        baseNotifyIndex, baseNotifyIndex + 1, baseNotifyIndex, baseNotifyIndex + 1);
     PipelineLoopContext ctx;
     CHK_RET(BuildPipelineLoopContext(param, algRes, unitSize, ctx));
     CHK_RET(GetLevelCommInfo());

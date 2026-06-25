@@ -39,7 +39,8 @@ private:
     u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize) override;
     HcclResult RunLoop(OpParam &param);
     HcclResult RunL2Stage(const OpParam &param, ExecMem &execMem, u64 loopIdx, u64 memIdx, u64 bufferSliceNum);
-    HcclResult RunL1L0Stage(const OpParam &param, ExecMem &lastExecMem, u64 loopIdx, u64 memIdx, u64 bufferSliceNum);
+    HcclResult RunL1L0Stage(const OpParam &param, ExecMem &lastExecMem, u64 loopIdx, u64 memIdx,
+        u64 bufferSliceNum);
 
     // 层级算法调用方法（从模板移动到执行器）
     HcclResult KernelRunInterSuperPod(const OpParam &param, ExecMem &execMem, u64 baseOffset); // 跨超
@@ -69,9 +70,9 @@ private:
     // 成员变量
     u32 unitSize_ = 0;
 
-    Stream mainStreamL2_; // SDMA+localcopy
+    Stream mainStreamL2_; // Reserved slave stream for L2.
     std::vector<Stream> subStreams_;
-    Stream mainStreamL1L0_;
+    Stream mainStreamL1L0_; // Main stream for L1/L0.
     std::vector<Stream> ringSubStreams_;
     std::shared_ptr<LocalNotify> notifyL2ToL1L0A_{nullptr};
     std::shared_ptr<LocalNotify> notifyL1L0ToL2A_{nullptr};
