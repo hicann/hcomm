@@ -181,26 +181,24 @@ union OpGetVersionData {
 };
 
 struct HdcOps {
-    DLLEXPORT hdcError_t (*getCapacity)(struct drvHdcCapacity *capacity);
-    DLLEXPORT hdcError_t (*clientCreate)(HDC_CLIENT *client, int maxSessionNum, int serviceType, int flag);
-    DLLEXPORT hdcError_t (*clientDestroy)(HDC_CLIENT client);
-    DLLEXPORT hdcError_t (*sessionConnect)(int peerNode, int peerLogicid, HDC_CLIENT client, HDC_SESSION *session);
-    DLLEXPORT hdcError_t (*sessionConnectEx)(int peerNode, int peerDevid, int peerPid, HDC_CLIENT client,
-        HDC_SESSION *pSession);
-    DLLEXPORT hdcError_t (*serverCreate)(int chipId, int serviceType, HDC_SERVER *server);
-    DLLEXPORT hdcError_t (*serverDestroy)(HDC_SERVER server);
-    DLLEXPORT hdcError_t (*sessionAccept)(HDC_SERVER server, HDC_SESSION *session);
-    DLLEXPORT hdcError_t (*sessionClose)(HDC_SESSION session);
-    DLLEXPORT hdcError_t (*allocMsg)(HDC_SESSION session, struct drvHdcMsg **ppMsg, int count);
-    DLLEXPORT hdcError_t (*freeMsg)(struct drvHdcMsg *msg);
-    DLLEXPORT hdcError_t (*reuseMsg)(struct drvHdcMsg *msg);
-    DLLEXPORT hdcError_t (*addMsgBuffer)(struct drvHdcMsg *msg, char *pBuf, int len);
-    DLLEXPORT hdcError_t (*getMsgBuffer)(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen);
-    DLLEXPORT hdcError_t (*recv)(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen, unsigned long long flag,
-                          int *recvBufCount, unsigned int timeout);
-    DLLEXPORT hdcError_t (*send)(HDC_SESSION session, struct drvHdcMsg *msg, unsigned long long flag,
-                          unsigned int timeout);
-    DLLEXPORT hdcError_t (*setSessionReference)(HDC_SESSION session) ;
+    hdcError_t (*getCapacity)(struct drvHdcCapacity *capacity);
+    hdcError_t (*clientCreate)(HDC_CLIENT *client, int maxSessionNum, int serviceType, int flag);
+    hdcError_t (*clientDestroy)(HDC_CLIENT client);
+    hdcError_t (*sessionConnect)(int peerNode, int peerLogicid, HDC_CLIENT client, HDC_SESSION *session);
+    hdcError_t (*sessionConnectEx)(int peerNode, int peerDevid, int peerPid, HDC_CLIENT client, HDC_SESSION *pSession);
+    hdcError_t (*serverCreate)(int chipId, int serviceType, HDC_SERVER *server);
+    hdcError_t (*serverDestroy)(HDC_SERVER server);
+    hdcError_t (*sessionAccept)(HDC_SERVER server, HDC_SESSION *session);
+    hdcError_t (*sessionClose)(HDC_SESSION session);
+    hdcError_t (*allocMsg)(HDC_SESSION session, struct drvHdcMsg **ppMsg, int count);
+    hdcError_t (*freeMsg)(struct drvHdcMsg *msg);
+    hdcError_t (*reuseMsg)(struct drvHdcMsg *msg);
+    hdcError_t (*addMsgBuffer)(struct drvHdcMsg *msg, char *pBuf, int len);
+    hdcError_t (*getMsgBuffer)(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen);
+    hdcError_t (*recv)(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen, unsigned long long flag,
+        int *recvBufCount, unsigned int timeout);
+    hdcError_t (*send)(HDC_SESSION session, struct drvHdcMsg *msg, unsigned long long flag, unsigned int timeout);
+    hdcError_t (*setSessionReference)(HDC_SESSION session);
 };
 
 #define RA_PTHREAD_MUTEX_LOCK(mutex) do { \
