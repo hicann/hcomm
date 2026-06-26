@@ -17,8 +17,10 @@
 
 #include "log.h"
 #include "hccp.h"
+#include "hccp_ctx.h"
 #include "exception_util.h"
 #include "orion_adapter_hccp.h"
+#include "rdma_handle_manager.h"
 
 namespace Hccl {
 
@@ -27,9 +29,9 @@ namespace {
 constexpr uint32_t kUboeEightTpPolicyCount = 8U;
 constexpr uint8_t kUboeDefaultDscp = 33U;
 
-// GetTpInfo 写 SL/DSCP 需在返回前完成；HrtRaSetTpAttrAsync 内部会 WaitRequestResult 阻塞轮询，
-// 调用返回时 SetTpAttr 已完成，故此处为同步语义（非可重复 poll 的 RaSetTpAttrAsync）。
-static HcclResult SetTpAttrSync(RdmaHandle ctxHandle, uint64_t tpHandle, uint32_t attrBitmap,
+// GetTpInfo 写 SL/DSCP 需在返回前完成。
+// 异步路径：HrtRaSetTpAttrAsync 内部已 WaitRequestResult，返回时 SetTpAttr 已完成。
+static HcclResult SetTpAttrAsync(RdmaHandle ctxHandle, uint64_t tpHandle, uint32_t attrBitmap,
     struct TpAttr &attr, const char *logTag)
 {
     RequestHandle reqHandle = 0;
@@ -40,6 +42,48 @@ static HcclResult SetTpAttrSync(RdmaHandle ctxHandle, uint64_t tpHandle, uint32_
             static_cast<int>(hret), tpHandle);
     }
     return hret;
+}
+
+static HcclResult SetTpAttrSync(RdmaHandle ctxHandle, uint64_t tpHandle, uint32_t attrBitmap,
+    struct TpAttr &attr, const char *logTag)
+{
+    const s32 ret = RaCtxSetTpAttr(ctxHandle, tpHandle, attrBitmap, &attr);
+    if (ret != 0) {
+        HCCL_ERROR("[%s] RaCtxSetTpAttr failed ret[%d] tpHandle[%llu] attrBitmap[0x%x].", logTag, ret,
+            tpHandle, attrBitmap);
+        return HcclResult::HCCL_E_NETWORK;
+    }
+    return HcclResult::HCCL_SUCCESS;
+}
+
+static HcclResult SetTpAttrByPath(bool isSync, RdmaHandle ctxHandle, uint64_t tpHandle, uint32_t attrBitmap,
+    struct TpAttr &attr, const char *logTag)
+{
+    if (isSync) {
+        return SetTpAttrSync(ctxHandle, tpHandle, attrBitmap, attr, logTag);
+    }
+    return SetTpAttrAsync(ctxHandle, tpHandle, attrBitmap, attr, logTag);
+}
+
+static HcclResult CommitMappedSlToTpAttr(bool isSync, RdmaHandle ctxHandle, uint64_t tpHandle, uint32_t mappedSl,
+    const char *logTag)
+{
+    if (tpHandle == 0U || !ctxHandle) {
+        return HcclResult::HCCL_E_INTERNAL;
+    }
+    struct TpAttr tpSlAttr {};
+    tpSlAttr.sl = static_cast<uint8_t>(mappedSl & 0xFU);
+    return SetTpAttrByPath(isSync, ctxHandle, tpHandle, kTpQosAttrBitmapSl, tpSlAttr, logTag);
+}
+
+static HcclResult CommitUboeDscpToTpAttr(bool isSync, RdmaHandle ctxHandle, uint64_t tpHandle, uint8_t dscp)
+{
+    if (tpHandle == 0U || !ctxHandle) {
+        return HcclResult::HCCL_E_INTERNAL;
+    }
+    struct TpAttr tpDscpAttr {};
+    tpDscpAttr.dscp = static_cast<uint8_t>(dscp & 0x3FU);
+    return SetTpAttrByPath(isSync, ctxHandle, tpHandle, kTpQosAttrBitmapDscp, tpDscpAttr, "CommitUboeDscpToTpAttr");
 }
 
 static uint32_t ResolveSlAvailableCntForPolicy(uint16_t slMask, uint32_t slLevelCount)
@@ -350,6 +394,43 @@ bool TpQosGetDscpByQosFromHccnCfg(uint32_t devPhyId, uint8_t qos, uint8_t &dscpO
     return ParseDscpFromCfgByQos(cfg, qos, dscpOut);
 }
 
+uint32_t TpQosBuildBootstrapAttrBitmap(TpProtocol tpProtocol)
+{
+    uint32_t bitmap = (1U << kTpQosAttrSlAvailableBit) | kTpQosAttrBitmapSl;
+    if (tpProtocol == TpProtocol::UBOE) {
+        bitmap |= kTpQosAttrBitmapDscp | (1U << kTpQosAttrDscpConfigModeBit);
+    }
+    return bitmap;
+}
+
+RdmaHandle TpQosResolveUbRdmaHandle(const bool isSync, const uint32_t devPhyId, const IpAddress &locAddr)
+{
+    if (isSync) {
+        IpAddress addr = locAddr;
+        return RdmaHandleManager::GetInstance().GetByAddr(devPhyId, LinkProtoType::UB, addr,
+            PortDeploymentType::HOST_NET);
+    }
+    return RdmaHandleManager::GetInstance().GetByIp(devPhyId, locAddr);
+}
+
+HcclResult TpQosSyncGetTpAttr(RdmaHandle rdmaHandle, const uint64_t tpHandle, const TpProtocol tpProtocol,
+    struct TpAttr &tpAttr, uint32_t &attrBitmap, const char *logTag)
+{
+    (void)memset_s(&tpAttr, sizeof(tpAttr), 0, sizeof(tpAttr));
+    attrBitmap = TpQosBuildBootstrapAttrBitmap(tpProtocol);
+    if (!rdmaHandle) {
+        HCCL_ERROR("[%s][SyncGetTpAttr] rdmaHandle is null tpHandle[%llu].", logTag, tpHandle);
+        return HcclResult::HCCL_E_INTERNAL;
+    }
+    const s32 ret = RaCtxGetTpAttr(rdmaHandle, tpHandle, &attrBitmap, &tpAttr);
+    if (ret != 0) {
+        HCCL_ERROR("[%s][SyncGetTpAttr] RaCtxGetTpAttr failed ret[%d] tpHandle[%llu].", logTag, ret, tpHandle);
+        return HcclResult::HCCL_E_NETWORK;
+    }
+    HCCL_INFO("[%s][SyncGetTpAttr] RaCtxGetTpAttr ok, tpHandle[%llu] attrBitmap[0x%x].", logTag, tpHandle, attrBitmap);
+    return HcclResult::HCCL_SUCCESS;
+}
+
 HcclResult TpQosCommitMappedSlToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle, uint32_t mappedSl,
     const char *logTag)
 {
@@ -361,9 +442,7 @@ HcclResult TpQosCommitMappedSlToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle,
         HCCL_ERROR("[%s][CommitMappedSlToTpAttr] rdmaHandle is null tpHandle[%llu]", logTag, tpHandle);
         return HcclResult::HCCL_E_INTERNAL;
     }
-    struct TpAttr tpSlAttr {};
-    tpSlAttr.sl = static_cast<uint8_t>(mappedSl & 0xFU);
-    return SetTpAttrSync(rdmaHandle, tpHandle, kTpQosAttrBitmapSl, tpSlAttr, logTag);
+    return CommitMappedSlToTpAttr(false, rdmaHandle, tpHandle, mappedSl, logTag);
 }
 
 HcclResult TpQosCommitUboeDscpToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle, uint8_t dscp, const char *logTag)
@@ -371,14 +450,13 @@ HcclResult TpQosCommitUboeDscpToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle,
     if (tpHandle == 0U || !rdmaHandle) {
         return HcclResult::HCCL_E_INTERNAL;
     }
-    struct TpAttr tpDscpAttr {};
-    tpDscpAttr.dscp = static_cast<uint8_t>(dscp & 0x3FU);
-    return SetTpAttrSync(rdmaHandle, tpHandle, kTpQosAttrBitmapDscp, tpDscpAttr, logTag);
+    (void)logTag;
+    return CommitUboeDscpToTpAttr(false, rdmaHandle, tpHandle, dscp);
 }
 
 HcclResult TpQosCommitAttrsAfterSlMapping(RdmaHandle rdmaHandle, bool isPcieStd, const TpQosPolicyInput &policy,
     const struct TpAttr &tpAttr, uint64_t tpHandle, uint32_t mappedSl, uint32_t nTp, uint16_t slMask,
-    uint32_t devPhyId, const char *logTag)
+    uint32_t devPhyId, const char *logTag, const bool isSync)
 {
     if (isPcieStd) {
         HCCL_INFO("[%s] pcie std mainboard: skip SetTpAttr, devPhyId[%u] tpProtocol[%s] tpHandle[%llu].", logTag,
@@ -386,7 +464,7 @@ HcclResult TpQosCommitAttrsAfterSlMapping(RdmaHandle rdmaHandle, bool isPcieStd,
         return HcclResult::HCCL_SUCCESS;
     }
     if (TpQosProtocolCommitsMappedSl(policy.tpProtocol)) {
-        CHK_RET(TpQosCommitMappedSlToTpAttr(rdmaHandle, tpHandle, mappedSl, logTag));
+        CHK_RET(CommitMappedSlToTpAttr(isSync, rdmaHandle, tpHandle, mappedSl, logTag));
     }
     if (policy.tpProtocol == TpProtocol::UBOE && tpAttr.dscpConfigMode == 0) {
         const uint8_t dscpBefore = static_cast<uint8_t>(tpAttr.dscp & 0x3FU);
@@ -400,7 +478,7 @@ HcclResult TpQosCommitAttrsAfterSlMapping(RdmaHandle rdmaHandle, bool isPcieStd,
                 tpHandle);
             dscp = kUboeDefaultDscp;
         }
-        CHK_RET(TpQosCommitUboeDscpToTpAttr(rdmaHandle, tpHandle, dscp, logTag));
+        CHK_RET(CommitUboeDscpToTpAttr(isSync, rdmaHandle, tpHandle, dscp));
         HCCL_INFO("[%s] UBOE dscp updated: tpHandle[%llu] requestQos[%u] dscpLookupQos[%u] dscpBefore[%u] "
                   "dscpAfter[%u].",
             logTag, tpHandle, static_cast<unsigned>(requestQos), static_cast<unsigned>(dscpLookupQos),

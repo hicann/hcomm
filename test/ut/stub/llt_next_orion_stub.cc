@@ -2638,7 +2638,21 @@ HcclResult TpManager::GetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo,
 
 HcclResult TpManager::ReleaseTpInfo(const RaUbGetTpInfoParam &param, const TpInfo &tpInfo)
 {
+    (void)param;
+    (void)tpInfo;
     return HcclResult::HCCL_SUCCESS;
+}
+
+void ReleaseUbConnectionTp(const int32_t devLogicId, const IpAddress &locAddr, const IpAddress &rmtAddr,
+    const TpProtocol tpProtocol, TpInfo &tpInfo, const uint32_t requestQos)
+{
+    if (tpInfo.tpHandle == 0) {
+        return;
+    }
+    RaUbGetTpInfoParam relParam(locAddr, rmtAddr, tpProtocol);
+    relParam.qos = requestQos;
+    (void)TpManager::GetInstance(devLogicId).ReleaseTpInfo(relParam, tpInfo);
+    tpInfo.tpHandle = 0;
 }
 
 HrtRaUbJettyCreatedOutParam HrtRaUbCreateJetty(RdmaHandle handle, const HrtRaUbCreateJettyParam &in)

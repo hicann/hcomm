@@ -86,7 +86,8 @@ class TpManager {
 public:
     static TpManager &GetInstance(const int32_t deviceLogicId);
     void Init();
-    /// `isSync==true`：主端 HostUb 同步路径（GetByAddr + `RaUbGetTpInfo`）；默认 `false` 走异步 + QoS/SL 逻辑
+    /// `isSync==true`：Host 同步路径（HOST_NET ctx + RaCtx*），一次返回 SUCCESS。
+    /// `isSync==false`：Device 异步三阶段，轮询返回 HCCL_E_AGAIN。
     HcclResult GetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo, bool isSync = false);
     // unimport jetty 会由 URMA 销毁 tp 资源，hccl 配套删除记录
     HcclResult ReleaseTpInfo(const RaUbGetTpInfoParam &param, const TpInfo &tpInfo);
@@ -98,11 +99,8 @@ public:
     static uint32_t TaHwValueToMs(uint8_t hwValue);
     static uint8_t FindMinTaHwValue(uint32_t tpTotalTimeoutMs);
 
-    void SetIsHost();
-
 private:
     bool initFlag{false};
-    bool isHost{false};
     uint32_t devLogicId{0};
     uint32_t devPhyId{0};
 
@@ -128,7 +126,6 @@ private:
      * Request 上下文，保存查询 TP 信息相关异步接口出参
      * handle: 异步接口调用 handle，用于查询处理结果
      * tpInfoNum: 查询到的 TP 信息个数，当前为复用 TP，只会申请 1 个
-     * isSync: 与主端一致；true 时走同步 `RaUbGetTpInfo`，不参与异步 handle 轮询
      * dataBuffer: 查询到的 TP 信息数据，原始数据保留缓冲区
      */
     struct RequestCtx {
@@ -136,7 +133,6 @@ private:
         ReqPhase phase{ReqPhase::WAIT_LIST};
         RequestHandle handle{0};
         uint32_t tpInfoNum{0};
-        bool isSync{false};
         std::vector<char_t> dataBuffer;
         TpAttr tpAttr{};
         uint32_t tpAttrBitmap{0};
@@ -188,11 +184,13 @@ private:
     TpManager &operator=(const TpManager &that) = delete;
 
     HcclResult FindAndGetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo);
-    HcclResult PollGetTpInfoReqCtx(const RaUbGetTpInfoParam &param, TpInfo &tpInfo, const bool isSync);
+    HcclResult RunSyncGetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo);
+    HcclResult RunAsyncGetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo);
+    HcclResult StoreTpInfoResult(const RaUbGetTpInfoParam &param, TpInfo &tpInfo);
+    HcclResult SyncGetFirstTpAttrForSlPolicy(const RaUbGetTpInfoParam &param, uint64_t firstTpHandle, TpAttr &tpAttr,
+        uint32_t &attrBitmap) const;
     HcclResult AdvanceDeviceWaitListPhase(const RaUbGetTpInfoParam &param, RequestCtx &reqCtx, ReqQosMap &qosReqMap,
-        const ReqQosMap::iterator it, std::unique_lock<std::mutex> &reqCtxLock, TpInfo &tpInfo);
-    HcclResult FinishGetTpInfoFromReq(ReqQosMap &qosReqMap, const ReqQosMap::iterator it,
-        std::unique_lock<std::mutex> &reqCtxLock, const RaUbGetTpInfoParam &param, TpInfo &tpInfo, const bool withSlPolicy);
+        ReqQosMap::iterator it, std::unique_lock<std::mutex> &reqCtxLock, TpInfo &tpInfo);
     void StartGetTpInfoListRequest(const RaUbGetTpInfoParam &param, RequestCtx &reqCtx, bool isSync) const;
     HcclResult FindAndGetTpAttr(const TpHandle tpHandle, TpAttrInfo &tpAttrInfo);
     HcclResult StartGetTpAttrRequest(const GetTpAttrParam &param, TpAttrRequestCtx &reqCtx, RdmaHandle rdmaHandle) const;
@@ -202,7 +200,8 @@ private:
     void StartGetTpAttrForFirstTpDevice(const RaUbGetTpInfoParam &param, RequestCtx &reqCtx) const;
     HcclResult HandleCompletedRequest(const RequestCtx reqCtx, const RaUbGetTpInfoParam &param, TpInfo &tpInfo,
         bool withSlPolicy);
-    HcclResult MapTpInfoFromTpAttr(const RaUbGetTpInfoParam &param, const RequestCtx &reqCtx, TpInfo &outTpInfo) const;
+    HcclResult MapTpInfoFromTpAttr(const RaUbGetTpInfoParam &param, const RequestCtx &reqCtx, TpInfo &outTpInfo,
+        bool isSync);
 
     bool CheckRequestResult(RequestHandle &reqHandle) const;
     InfoCtxMap &GetInfoCtxMap(const TpProtocol tpProtocol);
@@ -210,6 +209,10 @@ private:
     std::mutex &GetInfoCtxMutex(const TpProtocol tpProtocol);
     std::mutex &GetReqCtxMutex(const TpProtocol tpProtocol);
 };
+
+/// UbConnection 释放 TpInfo：Release 键须与 GetTpInfo 时的业务 QoS 一致
+void ReleaseUbConnectionTp(int32_t devLogicId, const IpAddress &locAddr, const IpAddress &rmtAddr,
+    TpProtocol tpProtocol, TpInfo &tpInfo, uint32_t requestQos);
 
 } // namespace Hccl
 

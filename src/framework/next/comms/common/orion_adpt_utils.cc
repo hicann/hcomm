@@ -10,6 +10,9 @@
 #include "orion_adpt_utils.h"
 
 // Orion
+#include "adapter_rts.h"
+#include "orion_adapter_hccp.h"
+#include "tp_manager.h"
 #include "transport_status.h"
 #include "topo_common_types.h"
 #include "virtual_topo.h"
@@ -219,6 +222,24 @@ HcclResult EndpointDescPairToLinkDataWithRankIds(const uint32_t myRank, const ui
     );
     linkData.UpdateIpAddrWithPCIE();
 
+    return HCCL_SUCCESS;
+}
+
+HcclResult PrepareUbConnBuildContext(const EndpointDesc &locEp, const EndpointDesc &rmtEp, uint32_t channelQos,
+    UbConnBuildContext &ctx)
+{
+    CHK_RET(CommProtocolToLinkProtocol(locEp.protocol, ctx.protocol));
+    CHK_RET(CommAddrToIpAddress(locEp.commAddr, ctx.locAddr));
+    CHK_RET(CommAddrToIpAddress(rmtEp.commAddr, ctx.rmtAddr));
+    CHK_RET(hrtGetDevice(&ctx.deviceLogicId));
+    Hccl::TpManager::GetInstance(ctx.deviceLogicId).Init();
+    if (channelQos > 7U) {
+        HCCL_WARNING("[PrepareUbConnBuildContext] invalid channelQos[%u], expect [0, 7], use default qos[%u].",
+            channelQos, Hccl::kRaUbGetTpInfoParamDefaultQos);
+        ctx.qosPre = static_cast<u8>(Hccl::kRaUbGetTpInfoParamDefaultQos);
+    } else {
+        ctx.qosPre = static_cast<u8>(channelQos);
+    }
     return HCCL_SUCCESS;
 }
 

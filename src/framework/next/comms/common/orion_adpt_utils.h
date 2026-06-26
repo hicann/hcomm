@@ -31,6 +31,17 @@ HcclResult EndpointDescPairToLinkDataWithRankIds(const uint32_t myRank, const ui
     const EndpointDesc &locEp, const EndpointDesc &rmtEp, Hccl::LinkData &linkData, uint32_t devicePhyId, uint32_t remoteDevicePhyId,
     u32 reuseIdx = 0);
 
+struct UbConnBuildContext {
+    Hccl::LinkProtocol protocol{};
+    Hccl::IpAddress    locAddr{};
+    Hccl::IpAddress    rmtAddr{};
+    s32                deviceLogicId{0};
+    u8                 qosPre{0};
+};
+
+HcclResult PrepareUbConnBuildContext(const EndpointDesc &locEp, const EndpointDesc &rmtEp, uint32_t channelQos,
+    UbConnBuildContext &ctx);
+
 } // namespace hcomm
 
 #endif // ORION_ADPT_UTILS_H

@@ -11,7 +11,6 @@
 #include "tp_mgr.h"
 
 #include <algorithm>
-#include <cctype>
 #include <vector>
 
 #include "hccp_ctx.h"
@@ -31,19 +30,24 @@
 
 namespace hcomm {
 
+static Hccl::TpProtocol ToHcclTpProtocol(const TpProtocol tpProtocol)
+{
+    if (tpProtocol == TpProtocol::CTP) {
+        return Hccl::TpProtocol::CTP;
+    }
+    if (tpProtocol == TpProtocol::RTP) {
+        return Hccl::TpProtocol::TP;
+    }
+    return Hccl::TpProtocol::UBOE;
+}
+
 static Hccl::TpQosPolicyInput ToTpQosPolicyInput(const GetTpInfoParam &param)
 {
     Hccl::TpQosPolicyInput out{};
+    out.tpProtocol = ToHcclTpProtocol(param.tpProtocol);
     out.qos = param.qos;
     out.slLevelCount = param.slLevelCount;
     out.loopFirstTpLowestSl = param.loopFirstTpLowestSl;
-    if (param.tpProtocol == TpProtocol::CTP) {
-        out.tpProtocol = Hccl::TpProtocol::CTP;
-    } else if (param.tpProtocol == TpProtocol::RTP) {
-        out.tpProtocol = Hccl::TpProtocol::TP;
-    } else {
-        out.tpProtocol = Hccl::TpProtocol::UBOE;
-    }
     return out;
 }
 
@@ -346,10 +350,7 @@ HcclResult TpMgr::StartGetTpAttrForFirstTp(const GetTpInfoParam &param, RequestC
 {
     EXCEPTION_HANDLE_BEGIN
     (void)memset_s(&reqCtx.tpAttr, sizeof(reqCtx.tpAttr), 0, sizeof(reqCtx.tpAttr));
-    reqCtx.tpAttrBitmap = (1U << Hccl::kTpQosAttrSlAvailableBit) | Hccl::kTpQosAttrBitmapSl;
-    if (param.tpProtocol == TpProtocol::UBOE) {
-        reqCtx.tpAttrBitmap |= Hccl::kTpQosAttrBitmapDscp | (1U << Hccl::kTpQosAttrDscpConfigModeBit);
-    }
+    reqCtx.tpAttrBitmap = Hccl::TpQosBuildBootstrapAttrBitmap(ToHcclTpProtocol(param.tpProtocol));
 
     const struct HccpTpInfo *list = reinterpret_cast<const struct HccpTpInfo *>(reqCtx.dataBuffer.data());
     const uint64_t firstTpHandle = list[0].tpHandle;
@@ -541,12 +542,12 @@ uint8_t TpMgr::CalcTaTimeout(const TpAttrInfo &tpAttrInfo)
 }
 
 HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(const GetTpInfoParam &param, const RequestCtx &reqCtx,
-    const struct HccpTpInfo *baseInfoPtr, const uint32_t tpListIndex, const uint32_t mappedSl, TpInfo &tmpTpInfo)
+    const struct HccpTpInfo *baseInfoPtr, const uint32_t tpListIndex, const uint32_t mappedSl, TpInfo &tpInfo)
 {
-    tmpTpInfo = TpInfo{};
-    tmpTpInfo.tpHandle = baseInfoPtr[tpListIndex].tpHandle;
-    tmpTpInfo.mappedJettyPriority = mappedSl & 0xFU;
-    tmpTpInfo.hasMappedJettyPriority = true;
+    tpInfo = TpInfo{};
+    tpInfo.tpHandle = baseInfoPtr[tpListIndex].tpHandle;
+    tpInfo.mappedJettyPriority = mappedSl & 0xFU;
+    tpInfo.hasMappedJettyPriority = true;
 
     const Hccl::TpQosPolicyInput policy = ToTpQosPolicyInput(param);
     bool isPcieStd = false;
@@ -558,16 +559,16 @@ HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(const GetTpInfoParam &param, const
     CHK_PTR_NULL(rdmaHandle);
 
     const uint16_t slMask = Hccl::TpQosReadSlAvailableMask16(reqCtx.tpAttr);
-    CHK_RET(Hccl::TpQosCommitAttrsAfterSlMapping(rdmaHandle, isPcieStd, policy, reqCtx.tpAttr, tmpTpInfo.tpHandle,
+    CHK_RET(Hccl::TpQosCommitAttrsAfterSlMapping(rdmaHandle, isPcieStd, policy, reqCtx.tpAttr, tpInfo.tpHandle,
         mappedSl, reqCtx.tpInfoNum, slMask, devPhyId_, "TpMgr"));
 
     HCCL_INFO("[TpMgr][%s] tp qos mapping ok: tpHandle[%llu] tpListIndex[%u] mappedSl[%u] jettyPriority[%u] qos[%u] param[%s].",
-        __func__, tmpTpInfo.tpHandle, tpListIndex, static_cast<unsigned>(mappedSl & 0xFU), tmpTpInfo.mappedJettyPriority,
+        __func__, tpInfo.tpHandle, tpListIndex, static_cast<unsigned>(mappedSl & 0xFU), tpInfo.mappedJettyPriority,
         param.qos & 0xFFU, param.Describe().c_str());
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult TpMgr::CommitTpInfoToCache(const GetTpInfoParam &param, TpInfo tmpTpInfo, TpInfo &tpInfo)
+HcclResult TpMgr::CommitTpInfoToCache(const GetTpInfoParam &param, TpInfo &tpInfo)
 {
     Hccl::IpAddress locAddr{};
     Hccl::IpAddress rmtAddr{};
@@ -578,8 +579,7 @@ HcclResult TpMgr::CommitTpInfoToCache(const GetTpInfoParam &param, TpInfo tmpTpI
     std::lock_guard<std::mutex> lock(GetInfoCtxMutex(param.tpProtocol));
     auto &infoMap = GetInfoCtxMap(param.tpProtocol);
     auto &rmtMap = infoMap[locAddr][rmtAddr];
-    rmtMap[qosKey] = TpInfoCtx{std::move(tmpTpInfo), 1U};
-    tpInfo = rmtMap[qosKey].tpInfo;
+    rmtMap[qosKey] = TpInfoCtx{tpInfo, 1U};
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -592,18 +592,19 @@ HcclResult TpMgr::HandleCompletedRequest(RequestCtx reqCtx, const GetTpInfoParam
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
+    tpInfo = TpInfo{};
+
     const struct HccpTpInfo *baseInfoPtr = reinterpret_cast<const struct HccpTpInfo *>(reqCtx.dataBuffer.data());
     bool isPcieStd = false;
     CHK_RET(IsPcieStdMainboardByPhyId(devPhyId_, isPcieStd));
     if (isPcieStd) {
-        TpInfo tmpTpInfo{};
-        tmpTpInfo.tpHandle = baseInfoPtr[0].tpHandle;
-        tmpTpInfo.mappedJettyPriority = Hccl::kTpQosPcieStdMappedSl;
-        tmpTpInfo.hasMappedJettyPriority = true;
+        tpInfo.tpHandle = baseInfoPtr[0].tpHandle;
+        tpInfo.mappedJettyPriority = Hccl::kTpQosPcieStdMappedSl;
+        tpInfo.hasMappedJettyPriority = true;
         HCCL_INFO("[TpMgr][%s] pcie std mainboard: skip GetTpAttr/SetTpAttr, devPhyId[%u] tpInfoNum[%u] "
                   "mappedSl[%u] tpHandle[%llu] param[%s].",
-            __func__, devPhyId_, tpInfoNum, Hccl::kTpQosPcieStdMappedSl, tmpTpInfo.tpHandle, param.Describe().c_str());
-        return CommitTpInfoToCache(param, std::move(tmpTpInfo), tpInfo);
+            __func__, devPhyId_, tpInfoNum, Hccl::kTpQosPcieStdMappedSl, tpInfo.tpHandle, param.Describe().c_str());
+        return CommitTpInfoToCache(param, tpInfo);
     }
 
     const Hccl::TpQosPolicyInput policy = ToTpQosPolicyInput(param);
@@ -619,9 +620,8 @@ HcclResult TpMgr::HandleCompletedRequest(RequestCtx reqCtx, const GetTpInfoParam
     uint32_t mappedSl = 0;
     CHK_RET(Hccl::TpQosSelectTpListEntry(policy, tpInfoNum, slMask, tpListIndex, mappedSl, "TpMgr"));
 
-    TpInfo tmpTpInfo{};
-    CHK_RET(BuildTpInfoAndCommitQosAttr(param, reqCtx, baseInfoPtr, tpListIndex, mappedSl, tmpTpInfo));
-    return CommitTpInfoToCache(param, std::move(tmpTpInfo), tpInfo);
+    CHK_RET(BuildTpInfoAndCommitQosAttr(param, reqCtx, baseInfoPtr, tpListIndex, mappedSl, tpInfo));
+    return CommitTpInfoToCache(param, tpInfo);
 }
 
 TpMgr::InfoCtxMap &TpMgr::GetInfoCtxMap(const TpProtocol tpProtocol)

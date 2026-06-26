@@ -105,35 +105,24 @@ HcclResult AicpuTsUrmaChannel::BuildAttr()
 
 HcclResult AicpuTsUrmaChannel::BuildConnection()
 {
-    Hccl::OpMode        opMode = Hccl::OpMode::OPBASE;
-    bool                devUsed  = true;  // aicpu 为 true
-    Hccl::LinkProtocol  protocol;
-    CHK_RET(CommProtocolToLinkProtocol(localEp_.protocol, protocol));
-    
-    Hccl::IpAddress     locAddr;
-    Hccl::IpAddress     rmtAddr;
-    CHK_RET(CommAddrToIpAddress(localEp_.commAddr, locAddr));
-    CHK_RET(CommAddrToIpAddress(remoteEp_.commAddr, rmtAddr));
+    UbConnBuildContext ctx;
+    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_.qos, ctx));
 
-    s32 deviceLogicId;
-    CHK_RET(hrtGetDevice(&deviceLogicId));
-    Hccl::TpManager::GetInstance(deviceLogicId).Init();
-
-    const u8 ubQos = static_cast<u8>((channelDesc_.qos > 7U) ? EnvConfig::UB_QOS_DEFAULT
-                                                               : (channelDesc_.qos & 7U));
+    Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
+    bool devUsed = true; // aicpu 为 true
     std::unique_ptr<Hccl::DevUbConnection> ubConn = nullptr;
-    switch (protocol) {
+    switch (ctx.protocol) {
         case Hccl::LinkProtocol::UB_TP:
             EXECEPTION_CATCH(
-                ubConn = std::make_unique<Hccl::DevUbTpConnection>(rdmaHandle_, locAddr, rmtAddr, opMode, devUsed,
-                    Hccl::HrtUbJfcMode::STARS_POLL, Hccl::IpAddress(), Hccl::IpAddress(), ubQos),
+                ubConn = std::make_unique<Hccl::DevUbTpConnection>(rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed,
+                    Hccl::HrtUbJfcMode::STARS_POLL, Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre),
                 return HCCL_E_PTR
             );
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXECEPTION_CATCH(
-                ubConn = std::make_unique<Hccl::DevUbCtpConnection>(rdmaHandle_, locAddr, rmtAddr, opMode, devUsed,
-                    Hccl::HrtUbJfcMode::STARS_POLL, Hccl::IpAddress(), Hccl::IpAddress(), ubQos),
+                ubConn = std::make_unique<Hccl::DevUbCtpConnection>(rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed,
+                    Hccl::HrtUbJfcMode::STARS_POLL, Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre),
                 return HCCL_E_PTR
             );
             break;

@@ -27,9 +27,9 @@ constexpr u32 UB_MAX_TRANS_SIZE       = 256 * 1024 * 1024; // UB单次最大传�
 constexpr u32 WQE_NUM_PER_SQE         = 4; // URMA约束每个SQE包含4个WQEBB
 
 HostUbConnection::HostUbConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
-                                const OpMode opMode, const HrtUbJfcMode jfcMode)
+                                const OpMode opMode, const HrtUbJfcMode jfcMode, const u8 qos)
     : RmaConnection(nullptr, RmaConnType::UB), rdmaHandle(rdmaHandle), locAddr(locAddr), rmtAddr(rmtAddr),
-    opMode(opMode), jfcMode(jfcMode), rmtEid(rmtAddr.GetReverseEid()), locEid(locAddr.GetReverseEid())
+    opMode(opMode), jfcMode(jfcMode), rmtEid(rmtAddr.GetReverseEid()), locEid(locAddr.GetReverseEid()), qos_(qos)
 {
     HCCL_INFO("[HostUbConnection::HostUbConnection] rmtEid=%s", rmtEid.Describe().c_str());
 
@@ -49,20 +49,18 @@ HostUbConnection::HostUbConnection(const RdmaHandle rdmaHandle, const IpAddress 
     if (sqDepth > (UINT32_MAX / UB_SQ_WQEBB_SIZE / WQE_NUM_PER_SQE)) {
         THROW<InternalException>("integer overflow occurs");
     }
-
-    CreateJetty();
 }
 
 HostUbTpConnection::HostUbTpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
-                                    const OpMode opMode, const HrtUbJfcMode jfcMode)
-    : HostUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, jfcMode)
+                                    const OpMode opMode, const HrtUbJfcMode jfcMode, const u8 qos)
+    : HostUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, jfcMode, qos)
 {
     tpProtocol = TpProtocol::TP;
 }
 
 HostUbCtpConnection::HostUbCtpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
-                                    const OpMode opMode, const HrtUbJfcMode jfcMode)
-    : HostUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, jfcMode)
+                                    const OpMode opMode, const HrtUbJfcMode jfcMode, const u8 qos)
+    : HostUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, jfcMode, qos)
 {
     tpProtocol = TpProtocol::CTP;
 }
@@ -135,17 +133,20 @@ RmaConnStatus HostUbConnection::GetStatus()
         case UbConnStatus::INIT: {
             HCCL_INFO("[HostUbConnection][%s] start, status[%s], ubConnStatus[%s].", __func__, status.Describe().c_str(),
                     ubConnStatus.Describe().c_str());
-            SetJettyInfo();
             if (!GetTpInfo()) {
                 ubConnStatus = UbConnStatus::TP_INFO_GETTING;
                 break;
             }
+            CreateJetty();
+            SetJettyInfo();
             ubConnStatus = UbConnStatus::JETTY_CREATED;
             status       = RmaConnStatus::EXCHANGEABLE;
             break;
         }
         case UbConnStatus::TP_INFO_GETTING: {
             if (GetTpInfo()) {
+                CreateJetty();
+                SetJettyInfo();
                 ubConnStatus = UbConnStatus::JETTY_CREATED;
                 status       = RmaConnStatus::EXCHANGEABLE;
             }
@@ -277,6 +278,11 @@ void HostUbConnection::CreateJetty()
         0, // HOST展开与AICPU展开传入jetty id为0，申请一个新的jetty
         0, // va由底层分配，此处填0即可。
         size, 0, sqDepth}; // 非CCUv2不需要填写sqeBufIndex
+    if (tpInfo.hasMappedJettyPriority) {
+        req.qos = static_cast<u8>(tpInfo.mappedJettyPriority & 0xFU);
+    }
+    HCCL_INFO("[HostUbConnection][%s] jetty create qos[%u] (maps to attr.ub.priority lower 4 bits).", __func__,
+        static_cast<unsigned int>(req.qos));
 
     repJetty_ = HrtRaUbCreateJetty(rdmaHandle, req);
 }
@@ -301,8 +307,12 @@ bool HostUbConnection::GetTpInfo()
     }
 
     int32_t devLogicId = HrtGetDevice();
-    auto ret = TpManager::GetInstance(devLogicId).GetTpInfo(
-        {locAddr, rmtAddr, tpProtocol}, tpInfo, true);
+    RaUbGetTpInfoParam p{};
+    p.locAddr = locAddr;
+    p.rmtAddr = rmtAddr;
+    p.tpProtocol = tpProtocol;
+    p.qos = static_cast<uint32_t>(qos_);
+    auto ret = TpManager::GetInstance(devLogicId).GetTpInfo(p, tpInfo, true);
 
     switch (ret) {
         case HcclResult::HCCL_E_AGAIN:
@@ -314,8 +324,9 @@ bool HostUbConnection::GetTpInfo()
         default:
             HCCL_ERROR("[HostUbConnection][%s] failed, hccl result[%d]", __func__, ret);
             ThrowAbnormalStatus(std::string(__func__));
+            break;
     }
-    return true;
+    return false;
 }
 
 void HostUbConnection::GenerateLocalPsn()
@@ -351,12 +362,7 @@ void HostUbConnection::SetImportInfo()
 
 void HostUbConnection::ReleaseTp()
 {
-    int32_t devLogicId = HrtGetDevice();
-    if (tpInfo.tpHandle != 0) {
-        (void)TpManager::GetInstance(devLogicId)
-            .ReleaseTpInfo({locAddr, rmtAddr, tpProtocol}, tpInfo);
-        tpInfo.tpHandle = 0;
-    }
+    ReleaseUbConnectionTp(HrtGetDevice(), locAddr, rmtAddr, tpProtocol, tpInfo, static_cast<uint32_t>(qos_));
 }
 
 void HostUbConnection::ReleaseResource()

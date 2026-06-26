@@ -419,9 +419,11 @@ void DevUbConnection::CreateJetty(const bool devUsed)
         HCCL_INFO("[DevUbConnection][%s] HrtJettyMode is DEV_USED.", __func__);
     }
 
-    req.qos = qos_;
+    if (tpInfo.hasMappedJettyPriority) {
+        req.qos = static_cast<u8>(tpInfo.mappedJettyPriority & 0xFU);
+    }
     HCCL_INFO("[DevUbConnection][%s] jetty create qos[%u] (maps to attr.ub.priority lower 4 bits).", __func__,
-        static_cast<unsigned int>(qos_));
+        static_cast<unsigned int>(req.qos));
 
     reqHandle = RaUbCreateJettyAsync(rdmaHandle, req, reqDataBuffer, jettyHandlePtr);
 }
@@ -455,7 +457,7 @@ bool DevUbConnection::GetTpInfo()
     p.locAddr = locAddr;
     p.rmtAddr = rmtAddr;
     p.tpProtocol = tpProtocol;
-    p.qos = qos_;
+    p.qos = static_cast<uint32_t>(qos_);
     p.slLevelCount = 0;
     p.loopFirstTpLowestSl = false;
 
@@ -463,13 +465,6 @@ bool DevUbConnection::GetTpInfo()
 
     switch (ret) {
         case HcclResult::HCCL_SUCCESS:
-            if (!tpMgrReleaseQosCaptured_) {
-                tpMgrReleaseQos_ = p.qos;
-                tpMgrReleaseQosCaptured_ = true;
-            }
-            if (tpInfo.hasMappedJettyPriority) {
-                qos_ = static_cast<u8>(tpInfo.mappedJettyPriority & 0xFU);
-            }
             GenerateLocalPsn();
             return true;
         case HcclResult::HCCL_E_AGAIN:
@@ -515,15 +510,7 @@ void DevUbConnection::SetImportInfo()
 
 void DevUbConnection::ReleaseTp()
 {
-    if (tpInfo.tpHandle != 0) {
-        RaUbGetTpInfoParam relParam(locAddr, rmtAddr, tpProtocol);
-        if (tpMgrReleaseQosCaptured_) {
-            relParam.qos = tpMgrReleaseQos_;
-        }
-        (void)TpManager::GetInstance(devLogicId).ReleaseTpInfo(relParam, tpInfo);
-        tpInfo.tpHandle = 0;
-        tpMgrReleaseQosCaptured_ = false;
-    }
+    ReleaseUbConnectionTp(devLogicId, locAddr, rmtAddr, tpProtocol, tpInfo, static_cast<uint32_t>(qos_));
 }
 
 void DevUbConnection::ReleaseResource()

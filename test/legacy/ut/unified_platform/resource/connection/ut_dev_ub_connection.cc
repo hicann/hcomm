@@ -1048,7 +1048,7 @@ TEST_F(DevUbConnectionTest, Ut_DevUsed_DeferJettyUntilTpReady_And_MapQos)
     EXPECT_EQ(devUbConnection.ubConnStatus, DevUbConnection::UbConnStatus::TP_INFO_GETTING);
     EXPECT_EQ(devUbConnection.GetStatus(), RmaConnStatus::INIT);
     EXPECT_EQ(devUbConnection.ubConnStatus, DevUbConnection::UbConnStatus::JETTY_CREATING);
-    EXPECT_EQ(devUbConnection.qos_, static_cast<u8>(6U));
+    EXPECT_EQ(devUbConnection.qos_, requestQos);
     EXPECT_EQ(gCapturedJettyCreateQos, static_cast<u8>(6U));
     EXPECT_EQ(devUbConnection.GetStatus(), RmaConnStatus::EXCHANGEABLE);
     GlobalMockObject::verify();
@@ -1067,6 +1067,8 @@ TEST_F(DevUbConnectionTest, Ut_CreateJetty_PassesConfiguredQos)
     DevUbCtpConnection devUbCtpConn(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE,
         false, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(), 5U);
     devUbCtpConn.tpInfo.tpHandle = 0x100ULL;
+    devUbCtpConn.tpInfo.hasMappedJettyPriority = true;
+    devUbCtpConn.tpInfo.mappedJettyPriority = 5U;
     devUbCtpConn.CreateJetty(false);
     EXPECT_EQ(gCapturedJettyCreateQos, static_cast<u8>(5U));
     GlobalMockObject::verify();

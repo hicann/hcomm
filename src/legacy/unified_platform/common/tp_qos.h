@@ -15,6 +15,7 @@
 
 #include "hccl_types.h"
 #include "hccp_tp.h"
+#include "ip_address.h"
 #include "orion_adapter_hccp.h"
 
 namespace Hccl {
@@ -73,6 +74,16 @@ uint8_t TpQosResolveUboeDscpLookupQos(const TpQosPolicyInput &policy, uint32_t n
 
 bool TpQosGetDscpByQosFromHccnCfg(uint32_t devPhyId, uint8_t qos, uint8_t &dscpOut);
 
+/// GetTpAttr 启动阶段 attrBitmap（含 sl_available / SL / UBOE dscp 位）
+uint32_t TpQosBuildBootstrapAttrBitmap(TpProtocol tpProtocol);
+
+/// Host 同步路径用 HOST_NET ctx；Device 异步路径用 GetByIp
+RdmaHandle TpQosResolveUbRdmaHandle(bool isSync, uint32_t devPhyId, const IpAddress &locAddr);
+
+/// Host 同步 GetTpAttr（RaCtxGetTpAttr）
+HcclResult TpQosSyncGetTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle, TpProtocol tpProtocol,
+    struct TpAttr &tpAttr, uint32_t &attrBitmap, const char *logTag = "TpQos");
+
 HcclResult TpQosCommitMappedSlToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle, uint32_t mappedSl,
     const char *logTag = "TpQos");
 
@@ -80,9 +91,10 @@ HcclResult TpQosCommitUboeDscpToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle,
     const char *logTag = "TpQos");
 
 /// 将 SL/DSCP 写回 TP（PCIe 标卡跳过；CTP 不写 SL）
+/// isSync=true：Host 走 RaCtxSetTpAttr；false：Device 走 HrtRaSetTpAttrAsync
 HcclResult TpQosCommitAttrsAfterSlMapping(RdmaHandle rdmaHandle, bool isPcieStd, const TpQosPolicyInput &policy,
     const struct TpAttr &tpAttr, uint64_t tpHandle, uint32_t mappedSl, uint32_t nTp, uint16_t slMask,
-    uint32_t devPhyId, const char *logTag = "TpQos");
+    uint32_t devPhyId, const char *logTag = "TpQos", bool isSync = false);
 
 } // namespace Hccl
 

@@ -116,35 +116,28 @@ HcclResult HostCpuUrmaChannel::BuildSocket()
 
 HcclResult HostCpuUrmaChannel::BuildConnection()
 {
-    Hccl::OpMode        opMode = Hccl::OpMode::OPBASE;
-    Hccl::LinkProtocol  protocol;
-    CHK_RET(CommProtocolToLinkProtocol(localEp_.protocol, protocol));
+    UbConnBuildContext ctx;
+    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_.qos, ctx));
 
-    Hccl::IpAddress     locAddr;
-    Hccl::IpAddress     rmtAddr;
-    CHK_RET(CommAddrToIpAddress(localEp_.commAddr, locAddr));
-    CHK_RET(CommAddrToIpAddress(remoteEp_.commAddr, rmtAddr));
-
-    s32 deviceLogicId;
-    CHK_RET(hrtGetDevice(&deviceLogicId));
-    Hccl::TpManager::GetInstance(deviceLogicId).Init();
-
+    Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     std::unique_ptr<Hccl::HostUbConnection> ubConn = nullptr;
-    switch (protocol) {
+    switch (ctx.protocol) {
         case Hccl::LinkProtocol::UB_TP:
             EXECEPTION_CATCH(
-                ubConn = std::make_unique<Hccl::HostUbTpConnection>(rdmaHandle_, locAddr, rmtAddr, opMode),
+                ubConn = std::make_unique<Hccl::HostUbTpConnection>(rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode,
+                    Hccl::HrtUbJfcMode::NORMAL, ctx.qosPre),
                 return HCCL_E_PTR
             );
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXECEPTION_CATCH(
-                ubConn = std::make_unique<Hccl::HostUbCtpConnection>(rdmaHandle_, locAddr, rmtAddr, opMode),
+                ubConn = std::make_unique<Hccl::HostUbCtpConnection>(rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode,
+                    Hccl::HrtUbJfcMode::NORMAL, ctx.qosPre),
                 return HCCL_E_PTR
             );
             break;
         default:
-            HCCL_ERROR("%s No LinkProtocol protocol[%s] to match", __func__, protocol.Describe().c_str());
+            HCCL_ERROR("%s No LinkProtocol protocol[%s] to match", __func__, ctx.protocol.Describe().c_str());
             break;
     }
     CHK_SMART_PTR_NULL(ubConn);
