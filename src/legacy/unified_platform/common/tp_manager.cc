@@ -149,16 +149,6 @@ HcclResult TpManager::AdvanceDeviceWaitListPhase(const RaUbGetTpInfoParam &param
     return HandleCompletedRequest(std::move(completedReqCtx), param, tpInfo, false);
 }
 
-HcclResult TpManager::StoreTpInfoResult(const RaUbGetTpInfoParam &param, TpInfo &tpInfo)
-{
-    const QosKey qosKey = TpQosMapKeyFromQos(param.qos);
-    std::lock_guard<std::mutex> lock(GetInfoCtxMutex(param.tpProtocol));
-    auto &infoMap = GetInfoCtxMap(param.tpProtocol);
-    auto &qosMap = infoMap[param.locAddr][param.rmtAddr];
-    qosMap[qosKey] = TpInfoCtx{tpInfo, 1U};
-    return HcclResult::HCCL_SUCCESS;
-}
-
 HcclResult TpManager::SyncGetFirstTpAttrForSlPolicy(const RaUbGetTpInfoParam &param, const uint64_t firstTpHandle,
     TpAttr &tpAttr, uint32_t &attrBitmap) const
 {
@@ -258,6 +248,7 @@ HcclResult TpManager::GetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo,
 {
     CHK_RET(CheckTpProtocol(param.tpProtocol));
     if (FindAndGetTpInfo(param, tpInfo) == HcclResult::HCCL_SUCCESS) {
+        HCCL_INFO("[TpManager][%s] tpInfo found, param[%s].", __func__, param.Describe().c_str());
         return HcclResult::HCCL_SUCCESS;
     }
 
@@ -363,10 +354,9 @@ HcclResult TpManager::ReleaseTpInfo(const RaUbGetTpInfoParam &param, const TpInf
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
+    // 未入缓存的并发 GetTpInfo 结果：与缓存 tpHandle 不一致，无需操作缓存。
     if (tpInfo.tpHandle != qit->second.tpInfo.tpHandle) {
-        HCCL_ERROR("[TpManager][%s] failed, tp info[%llu] is not expected[%llu].",
-            __func__, tpInfo.tpHandle, qit->second.tpInfo.tpHandle);
-        return HcclResult::HCCL_E_PARA;
+        return HcclResult::HCCL_SUCCESS;
     }
 
     if (qit->second.useCnt > 1) {
@@ -492,6 +482,7 @@ HcclResult TpManager::FindAndGetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &
     if (qit == rit->second.end()) {
         return HcclResult::HCCL_E_NOT_FOUND;
     }
+    // 复用缓存：useCnt 仅在此处（命中）递增，与 StoreTpInfoResult 写入路径分离。
     qit->second.useCnt += 1;
     tpInfo = qit->second.tpInfo;
     return HcclResult::HCCL_SUCCESS;
@@ -575,6 +566,29 @@ HcclResult TpManager::MapTpInfoFromTpAttr(const RaUbGetTpInfoParam &param, const
               "mappedJettyPriority[%u] qos[%u] param[%s].",
         __func__, tpInfoNum, outTpInfo.tpHandle, tpListIndex, outTpInfo.mappedJettyPriority,
         param.qos & 0xFFU, param.Describe().c_str());
+    return HcclResult::HCCL_SUCCESS;
+}
+
+// GetTpInfo 完成后写入缓存。useCnt 仅在 FindAndGetTpInfo 命中时 +1，此处不做引用计数。
+// 并发首次 GetTpInfo 时，先完成者写入缓存；后完成者若 tpHandle 不同则跳过写入，直接使用本地结果。
+HcclResult TpManager::StoreTpInfoResult(const RaUbGetTpInfoParam &param, TpInfo &tpInfo)
+{
+    const QosKey qosKey = TpQosMapKeyFromQos(param.qos);
+    std::lock_guard<std::mutex> lock(GetInfoCtxMutex(param.tpProtocol));
+    auto &infoMap = GetInfoCtxMap(param.tpProtocol);
+    auto &qosMap = infoMap[param.locAddr][param.rmtAddr];
+    const auto qIt = qosMap.find(qosKey);
+
+    if (qIt == qosMap.end()) {
+        qosMap[qosKey] = TpInfoCtx{tpInfo, 1U};
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    // 缓存已存在：不再覆盖（避免并发后写覆盖先写的 tpHandle）；tpInfo 保持 GetTpInfo 本地结果。
+    if (qIt->second.tpInfo.tpHandle != tpInfo.tpHandle) {
+        HCCL_WARNING("[TpManager][%s] skip cache store, cached tpHandle[%llu] != local tpHandle[%llu] param[%s].",
+            __func__, qIt->second.tpInfo.tpHandle, tpInfo.tpHandle, param.Describe().c_str());
+    }
     return HcclResult::HCCL_SUCCESS;
 }
 

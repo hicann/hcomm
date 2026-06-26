@@ -27,6 +27,8 @@ constexpr uint32_t kTpQosAttrSlAvailableBit = 17U;
 constexpr uint32_t kTpQosAttrBitmapSl = (1U << 10U);
 constexpr uint32_t kTpQosAttrBitmapDscp = (1U << 8U);
 constexpr uint32_t kTpQosAttrDscpConfigModeBit = 18U;
+/// UBOE SetTpAttr 网络属性位图：bit2~8（0x1FC，sip/dip/smac/dmac/vlan + dscp，不含 sl）；HCCP 自动 urma_get_smac/get_dmac
+constexpr uint32_t kTpQosAttrBitmapUboeNetWithDscp = 0x1FCU;
 
 using TpQosMapKey = uint32_t;
 
@@ -36,6 +38,8 @@ struct TpQosPolicyInput {
     uint32_t qos{kRaUbGetTpInfoParamDefaultQos};
     uint32_t slLevelCount{0U};
     bool loopFirstTpLowestSl{false};
+    IpAddress locIpv4Addr{};
+    IpAddress rmtIpv4Addr{};
 };
 
 inline TpQosMapKey TpQosMapKeyFromQos(uint32_t qos) noexcept
@@ -50,6 +54,8 @@ inline TpQosPolicyInput TpQosPolicyInputFrom(const RaUbGetTpInfoParam &param)
     out.qos = param.qos;
     out.slLevelCount = param.slLevelCount;
     out.loopFirstTpLowestSl = param.loopFirstTpLowestSl;
+    out.locIpv4Addr = param.locIpv4Addr;
+    out.rmtIpv4Addr = param.rmtIpv4Addr;
     return out;
 }
 
@@ -87,11 +93,8 @@ HcclResult TpQosSyncGetTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle, TpProtoc
 HcclResult TpQosCommitMappedSlToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle, uint32_t mappedSl,
     const char *logTag = "TpQos");
 
-HcclResult TpQosCommitUboeDscpToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle, uint8_t dscp,
-    const char *logTag = "TpQos");
-
-/// 将 SL/DSCP 写回 TP（PCIe 标卡跳过；CTP 不写 SL）
-/// isSync=true：Host 走 RaCtxSetTpAttr；false：Device 走 HrtRaSetTpAttrAsync
+/// 将 SL 写回 TP；UBOE 另一次 SetTpAttr（kTpQosAttrBitmapUboeNetWithDscp，sip/dip/dscp 等网络属性一并下发）
+/// isSync=true：Host 走 RaCtxSetTpAttr；false：Device 走 HrtRaSetTpAttrAsync（PCIe 标卡跳过；CTP 不写 SL）
 HcclResult TpQosCommitAttrsAfterSlMapping(RdmaHandle rdmaHandle, bool isPcieStd, const TpQosPolicyInput &policy,
     const struct TpAttr &tpAttr, uint64_t tpHandle, uint32_t mappedSl, uint32_t nTp, uint16_t slMask,
     uint32_t devPhyId, const char *logTag = "TpQos", bool isSync = false);

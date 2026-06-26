@@ -11,11 +11,13 @@
 #include "tp_qos.h"
 
 #include <algorithm>
+#include <arpa/inet.h>
 #include <cctype>
 #include <string>
 #include <vector>
 
 #include "log.h"
+#include "securec.h"
 #include "hccp.h"
 #include "hccp_ctx.h"
 #include "exception_util.h"
@@ -28,6 +30,23 @@ namespace {
 
 constexpr uint32_t kUboeEightTpPolicyCount = 8U;
 constexpr uint8_t kUboeDefaultDscp = 33U;
+
+static HcclResult Ipv4ToIpArray(const char *ipv4Str, uint8_t ipArr[16])
+{
+    struct in_addr addr {};
+    if (ipv4Str == nullptr || inet_pton(AF_INET, ipv4Str, &addr) != 1) {
+        return HcclResult::HCCL_E_PARA;
+    }
+    if (memset_s(ipArr, 16U, 0, 16U) != EOK) {
+        return HcclResult::HCCL_E_INTERNAL;
+    }
+    const uint32_t ipNet = addr.s_addr;
+    ipArr[12] = static_cast<uint8_t>(ipNet & 0xFFU);
+    ipArr[13] = static_cast<uint8_t>((ipNet >> 8U) & 0xFFU);
+    ipArr[14] = static_cast<uint8_t>((ipNet >> 16U) & 0xFFU);
+    ipArr[15] = static_cast<uint8_t>((ipNet >> 24U) & 0xFFU);
+    return HcclResult::HCCL_SUCCESS;
+}
 
 // GetTpInfo 写 SL/DSCP 需在返回前完成。
 // 异步路径：HrtRaSetTpAttrAsync 内部已 WaitRequestResult，返回时 SetTpAttr 已完成。
@@ -76,14 +95,26 @@ static HcclResult CommitMappedSlToTpAttr(bool isSync, RdmaHandle ctxHandle, uint
     return SetTpAttrByPath(isSync, ctxHandle, tpHandle, kTpQosAttrBitmapSl, tpSlAttr, logTag);
 }
 
-static HcclResult CommitUboeDscpToTpAttr(bool isSync, RdmaHandle ctxHandle, uint64_t tpHandle, uint8_t dscp)
+static HcclResult CommitUboeNetAttrsToTpAttr(bool isSync, RdmaHandle rdmaHandle, uint64_t tpHandle,
+    const TpAttr &tpAttr, const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, bool setDscp, uint8_t dscp,
+    const char *logTag)
 {
-    if (tpHandle == 0U || !ctxHandle) {
+    if (tpHandle == 0U || !rdmaHandle) {
         return HcclResult::HCCL_E_INTERNAL;
     }
-    struct TpAttr tpDscpAttr {};
-    tpDscpAttr.dscp = static_cast<uint8_t>(dscp & 0x3FU);
-    return SetTpAttrByPath(isSync, ctxHandle, tpHandle, kTpQosAttrBitmapDscp, tpDscpAttr, "CommitUboeDscpToTpAttr");
+    struct TpAttr netAttr = tpAttr;
+    const std::string localIp = locIpv4Addr.GetIpStr();
+    const std::string rmtIp = rmtIpv4Addr.GetIpStr();
+    CHK_RET(Ipv4ToIpArray(localIp.c_str(), netAttr.sip));
+    CHK_RET(Ipv4ToIpArray(rmtIp.c_str(), netAttr.dip));
+    if (setDscp) {
+        netAttr.dscp = static_cast<uint8_t>(dscp & 0x3FU);
+    }
+    HCCL_INFO("[%s][CommitUboeNetAttrsToTpAttr] tpHandle[%llu] localIpv4[%s] rmtIpv4[%s] setDscp[%d] "
+              "dscp[%u] attrBitmap[0x%x].",
+        logTag, tpHandle, localIp.c_str(), rmtIp.c_str(), static_cast<int>(setDscp),
+        static_cast<unsigned>(netAttr.dscp & 0x3FU), kTpQosAttrBitmapUboeNetWithDscp);
+    return SetTpAttrByPath(isSync, rdmaHandle, tpHandle, kTpQosAttrBitmapUboeNetWithDscp, netAttr, logTag);
 }
 
 static uint32_t ResolveSlAvailableCntForPolicy(uint16_t slMask, uint32_t slLevelCount)
@@ -445,15 +476,6 @@ HcclResult TpQosCommitMappedSlToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle,
     return CommitMappedSlToTpAttr(false, rdmaHandle, tpHandle, mappedSl, logTag);
 }
 
-HcclResult TpQosCommitUboeDscpToTpAttr(RdmaHandle rdmaHandle, uint64_t tpHandle, uint8_t dscp, const char *logTag)
-{
-    if (tpHandle == 0U || !rdmaHandle) {
-        return HcclResult::HCCL_E_INTERNAL;
-    }
-    (void)logTag;
-    return CommitUboeDscpToTpAttr(false, rdmaHandle, tpHandle, dscp);
-}
-
 HcclResult TpQosCommitAttrsAfterSlMapping(RdmaHandle rdmaHandle, bool isPcieStd, const TpQosPolicyInput &policy,
     const struct TpAttr &tpAttr, uint64_t tpHandle, uint32_t mappedSl, uint32_t nTp, uint16_t slMask,
     uint32_t devPhyId, const char *logTag, const bool isSync)
@@ -466,20 +488,20 @@ HcclResult TpQosCommitAttrsAfterSlMapping(RdmaHandle rdmaHandle, bool isPcieStd,
     if (TpQosProtocolCommitsMappedSl(policy.tpProtocol)) {
         CHK_RET(CommitMappedSlToTpAttr(isSync, rdmaHandle, tpHandle, mappedSl, logTag));
     }
-    if (policy.tpProtocol == TpProtocol::UBOE && tpAttr.dscpConfigMode == 0) {
+    if (policy.tpProtocol == TpProtocol::UBOE) {
+        if (tpAttr.dscpConfigMode == 1) {
+            CHK_RET(CommitUboeNetAttrsToTpAttr(isSync, rdmaHandle, tpHandle, tpAttr, policy.locIpv4Addr,
+                policy.rmtIpv4Addr, false, 0U, logTag));
+            return HcclResult::HCCL_SUCCESS;
+        }
         const uint8_t dscpBefore = static_cast<uint8_t>(tpAttr.dscp & 0x3FU);
         const uint8_t requestQos = static_cast<uint8_t>(policy.qos & 0xFFU);
         const uint8_t dscpLookupQos = TpQosResolveUboeDscpLookupQos(policy, nTp, slMask);
         uint8_t dscp = kUboeDefaultDscp;
-        if (!TpQosGetDscpByQosFromHccnCfg(devPhyId, dscpLookupQos, dscp)) {
-            HCCL_WARNING("[%s] UBOE dscp: read HCCN_CFG_QOS_DSCP failed, use default dscp[%u] devPhyId[%u] "
-                         "dscpLookupQos[%u] tpHandle[%llu].",
-                logTag, static_cast<unsigned>(kUboeDefaultDscp), devPhyId, static_cast<unsigned>(dscpLookupQos),
-                tpHandle);
-            dscp = kUboeDefaultDscp;
-        }
-        CHK_RET(CommitUboeDscpToTpAttr(isSync, rdmaHandle, tpHandle, dscp));
-        HCCL_INFO("[%s] UBOE dscp updated: tpHandle[%llu] requestQos[%u] dscpLookupQos[%u] dscpBefore[%u] "
+        (void)TpQosGetDscpByQosFromHccnCfg(devPhyId, dscpLookupQos, dscp);
+        CHK_RET(CommitUboeNetAttrsToTpAttr(isSync, rdmaHandle, tpHandle, tpAttr, policy.locIpv4Addr,
+            policy.rmtIpv4Addr, true, dscp, logTag));
+        HCCL_INFO("[%s] UBOE net attrs updated: tpHandle[%llu] requestQos[%u] dscpLookupQos[%u] dscpBefore[%u] "
                   "dscpAfter[%u].",
             logTag, tpHandle, static_cast<unsigned>(requestQos), static_cast<unsigned>(dscpLookupQos),
             static_cast<unsigned>(dscpBefore), static_cast<unsigned>(dscp));

@@ -604,6 +604,8 @@ using RaUbGetTpInfoParam = struct RaUbGetTpInfoParamDef {
     uint32_t slLevelCount{0U};
     bool loopFirstTpLowestSl{false};
     bool ccuLoopbackGetTpInfo{false};
+    IpAddress locIpv4Addr{};
+    IpAddress rmtIpv4Addr{};
 
     explicit RaUbGetTpInfoParamDef() = default;
     RaUbGetTpInfoParamDef(const IpAddress &locAddr, const IpAddress &rmtAddr, TpProtocol tpProtocol)
