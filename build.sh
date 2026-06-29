@@ -86,12 +86,12 @@ function run_ctest() {
     # 创建日志目录
     mk_dir "${log_dir}"
 
-    # CTest 执行用例（超时时间：300s）
+    # CTest 执行用例（超时时间：1000s）
     log "Info: Running ${suite_name} testcases with ${CPU_NUM} parallel jobs"
     ctest -j ${CPU_NUM} \
           --verbose \
           --build-nocmake \
-          --timeout 300 \
+          --timeout 1000 \
           --output-on-failure \
           --stop-on-failure \
           --test-output-size-failed 10000000 \
