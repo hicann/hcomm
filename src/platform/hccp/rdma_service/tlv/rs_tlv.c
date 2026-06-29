@@ -74,6 +74,7 @@ RS_ATTRI_VISI_DEF int RsTlvDeinit(unsigned int phyId)
         hccp_warn("rs_tlv not init or already deinit, phyId(%u)", phyId), 0);
 
     RS_PTHREAD_MUTEX_LOCK(&tlvCb->mutex);
+    tlvCb->initFlag = false;
     free(tlvCb->bufInfo.buf);
     tlvCb->bufInfo.buf = NULL;
     RS_PTHREAD_MUTEX_ULOCK(&tlvCb->mutex);
