@@ -36,7 +36,7 @@ constexpr u32 SOCKET_CONNECTING      = 3;
 constexpr u32 UB_WQE_SIZE_64  = 64;
 constexpr u32 UB_WQE_SIZE_128 = 128;
 constexpr u32 kRaUbGetTpInfoParamDefaultQos = HCOMM_UB_QOS_DEFAULT;
-constexpr uint32_t TP_HANDLE_REQUEST_NUM = 8U;
+constexpr uint32_t TP_HANDLE_REQUEST_NUM = 1U;
 
 // QP CQ default attr
 constexpr u32 DEFAULT_OPBASE_MAX_SEND_WR = 32768;

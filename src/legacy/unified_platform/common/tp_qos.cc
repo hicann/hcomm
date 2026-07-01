@@ -28,7 +28,6 @@ namespace Hccl {
 
 namespace {
 
-constexpr uint32_t kUboeEightTpPolicyCount = 8U;
 constexpr uint8_t kUboeDefaultDscp = 33U;
 
 static HcclResult Ipv4ToIpArray(const char *ipv4Str, uint8_t ipArr[16])
@@ -117,169 +116,17 @@ static HcclResult CommitUboeNetAttrsToTpAttr(bool isSync, RdmaHandle rdmaHandle,
     return SetTpAttrByPath(isSync, rdmaHandle, tpHandle, kTpQosAttrBitmapUboeNetWithDscp, netAttr, logTag);
 }
 
-static uint32_t ResolveSlAvailableCntForPolicy(uint16_t slMask, uint32_t slLevelCount)
-{
-    uint32_t slAvailableCnt = TpQosCalSlAvailableCnt(slMask);
-    if (slLevelCount != 0U) {
-        slAvailableCnt = std::min(slLevelCount, slAvailableCnt);
-    }
-    return slAvailableCnt;
-}
-
-static uint32_t MapUboeEightTpSlFromMask(uint32_t qos, uint16_t slMask, uint32_t slAvailableCnt)
-{
-    const uint32_t q = qos & 7U;
-    if (slAvailableCnt == 0U) {
-        return 0U;
-    }
-    if (slAvailableCnt == 1U) {
-        return TpQosSlValueAtRankInMask16(slMask, 0U);
-    }
-    if (slAvailableCnt == 2U) {
-        const uint32_t slRank = (q >= 4U) ? 0U : 1U;
-        return TpQosSlValueAtRankInMask16(slMask, slRank);
-    }
-    uint32_t slRank = 0U;
-    if (q >= 5U) {
-        slRank = 0U;
-    } else if (q >= 3U) {
-        slRank = (slAvailableCnt - 1U) / 2U;
-    } else {
-        slRank = slAvailableCnt - 1U;
-    }
-    if (slRank >= slAvailableCnt) {
-        slRank = slAvailableCnt - 1U;
-    }
-    return TpQosSlValueAtRankInMask16(slMask, slRank);
-}
-
-static bool ApplyUbcQosTpSlPolicyGrouped(const TpQosPolicyInput &policy, const uint32_t nTp, const uint16_t slMask,
-    const uint32_t slRawCnt, const uint32_t slAvailableCnt, uint32_t &tpListIndexOut, uint32_t &mappedSlOut,
-    const char *logTag);
-
-static bool TryApplyUboeEightTpQosPolicy(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask,
-    uint32_t &tpListIndexOut, uint32_t &mappedSlOut, const char *logTag)
-{
-    if (policy.tpProtocol != TpProtocol::UBOE || policy.loopFirstTpLowestSl) {
-        return false;
-    }
-    const uint32_t slAvailableCnt = ResolveSlAvailableCntForPolicy(slMask, policy.slLevelCount);
-    if (nTp != kUboeEightTpPolicyCount || slAvailableCnt == 0U) {
-        return false;
-    }
-    const uint32_t qos = policy.qos & 7U;
-    static constexpr uint8_t kUboeEightTpIndexByQos[8] = {7U, 6U, 5U, 4U, 3U, 2U, 1U, 0U};
-    tpListIndexOut = kUboeEightTpIndexByQos[qos];
-    mappedSlOut = MapUboeEightTpSlFromMask(qos, slMask, slAvailableCnt);
-    HCCL_INFO("[%s][TryApplyUboeEightTpQosPolicy] qos[%u] tpListIndex[%u] mappedSl[%u] slMask[0x%x] "
-              "slAvailableCnt[%u] tpProtocol[%s].",
-        logTag, qos, tpListIndexOut, mappedSlOut, static_cast<unsigned>(slMask), slAvailableCnt,
-        policy.tpProtocol.Describe().c_str());
-    return true;
-}
-
-static bool ApplyLoopFirstTpLowestSl(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask,
-    uint32_t slRawCnt, uint32_t slAvailableCnt, uint32_t &tpListIndexOut, uint32_t &mappedSlOut,
-    const char *logTag)
+static bool ApplyLoopFirstTpLowestSl(const TpQosPolicyInput &policy, uint16_t slMask,
+    uint32_t slAvailableCnt, uint32_t &tpListIndexOut, uint32_t &mappedSlOut, const char *logTag)
 {
     (void)policy;
-    tpListIndexOut = 0;
-    mappedSlOut = TpQosSlValueAtRankInMask16(slMask, 0);
-    HCCL_INFO("[%s][ApplyUbcQosTpSlPolicy] loopFirstTpLowestSl: nTp[%u] slRawCnt[%u] slAvailableCnt[%u] "
+    tpListIndexOut = 0U;
+    mappedSlOut = TpQosSlValueAtRankInMask16(slMask, 0U);
+    HCCL_INFO("[%s][ApplyQosTpSlPolicy] loopFirstTpLowestSl: slAvailableCnt[%u] "
               "slMask[0x%x] tpListIdx[0] mappedSl[%u].",
-        logTag, nTp, slRawCnt, slAvailableCnt, static_cast<unsigned>(slMask),
+        logTag, slAvailableCnt, static_cast<unsigned>(slMask),
         static_cast<unsigned>(mappedSlOut & 0xFU));
     return true;
-}
-
-static bool ApplyUbcQosTpSlPolicyGrouped(const TpQosPolicyInput &policy, const uint32_t nTp, const uint16_t slMask,
-    const uint32_t slRawCnt, const uint32_t slAvailableCnt, uint32_t &tpListIndexOut, uint32_t &mappedSlOut,
-    const char *logTag)
-{
-    if (nTp == 0U || slAvailableCnt == 0U) {
-        HCCL_WARNING("[%s][ApplyUbcQosTpSlPolicy] nTp or slAvailableCnt zero: nTp[%u] slAvailableCnt[%u] "
-                     "slMask[0x%x].",
-            logTag, nTp, slAvailableCnt, static_cast<unsigned>(slMask));
-        return false;
-    }
-    const uint32_t k = std::min(nTp, slAvailableCnt);
-    if (k == 0U) {
-        return false;
-    }
-    const uint32_t numGroups = std::min(8U, k);
-    const uint32_t qos = policy.qos & 7U;
-    const uint32_t groupIdx =
-        (k == 3U) ? (qos < 3U ? 0U : (qos < 5U ? 1U : 2U)) : ((qos * numGroups) / 8U);
-    const uint32_t slotIdx = (groupIdx * k) / numGroups;
-    if (slotIdx >= k || slotIdx >= nTp) {
-        HCCL_WARNING("[%s][ApplyUbcQosTpSlPolicy] slotIdx out of range: nTp[%u] slRawCnt[%u] slAvailableCnt[%u] "
-                     "k[%u] numGroups[%u] qos[%u] groupIdx[%u] slotIdx[%u] slMask[0x%x].",
-            logTag, nTp, slRawCnt, slAvailableCnt, k, numGroups, qos, groupIdx, slotIdx,
-            static_cast<unsigned>(slMask));
-        return false;
-    }
-    const uint32_t slRank = (slAvailableCnt - 1U) - slotIdx;
-    if (slRank >= slAvailableCnt) {
-        HCCL_WARNING("[%s][ApplyUbcQosTpSlPolicy] slRank out of range: nTp[%u] slAvailableCnt[%u] k[%u] slRank[%u] "
-                     "slMask[0x%x].",
-            logTag, nTp, slAvailableCnt, k, slRank, static_cast<unsigned>(slMask));
-        return false;
-    }
-    tpListIndexOut = (k - 1U) - slotIdx;
-    mappedSlOut = TpQosSlValueAtRankInMask16(slMask, slRank);
-    return true;
-}
-
-static bool ApplyUbcQosTpSlPolicy(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask,
-    uint32_t &tpListIndexOut, uint32_t &mappedSlOut, const char *logTag)
-{
-    const uint32_t slRawCnt = TpQosCalSlAvailableCnt(slMask);
-    uint32_t slAvailableCnt = slRawCnt;
-    if (slAvailableCnt == 0U) {
-        HCCL_WARNING("[%s][ApplyUbcQosTpSlPolicy] slMask empty: nTp[%u] slMask[0x%x].", logTag, nTp,
-            static_cast<unsigned>(slMask));
-        return false;
-    }
-    if (policy.slLevelCount != 0U) {
-        slAvailableCnt = std::min(policy.slLevelCount, slAvailableCnt);
-    }
-    if (policy.loopFirstTpLowestSl) {
-        return ApplyLoopFirstTpLowestSl(policy, nTp, slMask, slRawCnt, slAvailableCnt, tpListIndexOut, mappedSlOut,
-            logTag);
-    }
-    return ApplyUbcQosTpSlPolicyGrouped(policy, nTp, slMask, slRawCnt, slAvailableCnt, tpListIndexOut, mappedSlOut,
-        logTag);
-}
-
-static bool ApplyTpQosSlPolicyInternal(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask,
-    uint32_t &tpListIndexOut, uint32_t &mappedSlOut, const char *logTag)
-{
-    if (TryApplyUboeEightTpQosPolicy(policy, nTp, slMask, tpListIndexOut, mappedSlOut, logTag)) {
-        return true;
-    }
-    return ApplyUbcQosTpSlPolicy(policy, nTp, slMask, tpListIndexOut, mappedSlOut, logTag);
-}
-
-static uint32_t ResolveUbcGroupFirstHcclQos(uint32_t qos, uint32_t nTp, uint32_t slAvailableCnt)
-{
-    const uint32_t q = qos & 7U;
-    if (nTp == 0U || slAvailableCnt == 0U) {
-        return q;
-    }
-    const uint32_t k = std::min(nTp, slAvailableCnt);
-    const uint32_t numGroups = std::min(8U, k);
-    const uint32_t groupIdx =
-        (k == 3U) ? (q < 3U ? 0U : (q < 5U ? 1U : 2U)) : ((q * numGroups) / 8U);
-    if (k == 3U) {
-        static constexpr uint8_t kUboeGroupFirstQos[3] = {0U, 3U, 5U};
-        return (groupIdx < 3U) ? static_cast<uint32_t>(kUboeGroupFirstQos[groupIdx]) : 0U;
-    }
-    for (uint32_t candidate = 0U; candidate <= 7U; ++candidate) {
-        if (((candidate * numGroups) / 8U) == groupIdx) {
-            return candidate;
-        }
-    }
-    return q;
 }
 
 static bool ParseDscpFromCfgByQos(const std::string &cfg, uint8_t qos, uint8_t &dscpOut)
@@ -356,10 +203,32 @@ uint16_t TpQosReadSlAvailableMask16(const struct TpAttr &attr)
     return static_cast<uint16_t>(attr.slBitmap);
 }
 
-bool TpQosApplySlPolicy(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask,
+bool TpQosApplySlPolicy(const TpQosPolicyInput &policy, uint16_t slMask,
     uint32_t &tpListIndexOut, uint32_t &mappedSlOut, const char *logTag)
 {
-    return ApplyTpQosSlPolicyInternal(policy, nTp, slMask, tpListIndexOut, mappedSlOut, logTag);
+    const uint32_t slAvailableCnt = TpQosCalSlAvailableCnt(slMask);
+    if (slAvailableCnt == 0U) {
+        return false;
+    }
+    if (policy.loopFirstTpLowestSl) {
+        return ApplyLoopFirstTpLowestSl(policy, slMask, slAvailableCnt, tpListIndexOut, mappedSlOut, logTag);
+    }
+
+    const uint32_t qos = policy.qos & 7U;
+    const uint32_t numGroups = slAvailableCnt;
+    const uint32_t groupIdx =
+        (numGroups == 3U) ? (qos < 3U ? 0U : (qos < 5U ? 1U : 2U)) : ((qos * numGroups) / 8U);
+    if (groupIdx >= numGroups) {
+        return false;
+    }
+
+    tpListIndexOut = 0U;
+    const uint32_t slRank = (slAvailableCnt - 1U) - groupIdx;
+    if (slRank >= slAvailableCnt) {
+        return false;
+    }
+    mappedSlOut = TpQosSlValueAtRankInMask16(slMask, slRank);
+    return true;
 }
 
 HcclResult TpQosSelectTpListEntry(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask,
@@ -371,7 +240,7 @@ HcclResult TpQosSelectTpListEntry(const TpQosPolicyInput &policy, uint32_t nTp, 
             static_cast<unsigned>(slMask), policy.tpProtocol.Describe().c_str());
         return HcclResult::HCCL_E_INTERNAL;
     }
-    if (!TpQosApplySlPolicy(policy, nTp, slMask, tpListIndexOut, mappedSlOut, logTag)) {
+    if (!TpQosApplySlPolicy(policy, slMask, tpListIndexOut, mappedSlOut, logTag)) {
         HCCL_ERROR("[%s] ApplySlPolicy failed, nTp[%u] slAvailableCnt[%u] slMask[0x%x] qos[%u] tpProtocol[%s].",
             logTag, nTp, slAvailableCnt, static_cast<unsigned>(slMask), policy.qos & 0xFFU,
             policy.tpProtocol.Describe().c_str());
@@ -387,20 +256,12 @@ HcclResult TpQosSelectTpListEntry(const TpQosPolicyInput &policy, uint32_t nTp, 
 
 uint8_t TpQosResolveUboeDscpLookupQos(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask)
 {
-    const uint8_t requestQos = static_cast<uint8_t>(policy.qos & 0xFFU);
-    uint32_t dummyTpIdx = 0U;
-    uint32_t dummySl = 0U;
-    if (TryApplyUboeEightTpQosPolicy(policy, nTp, slMask, dummyTpIdx, dummySl, "TpQos")) {
-        return requestQos;
-    }
+    (void)nTp;
+    (void)slMask;
     if (policy.loopFirstTpLowestSl) {
         return 0U;
     }
-    uint32_t slAvailableCnt = TpQosCalSlAvailableCnt(slMask);
-    if (policy.slLevelCount != 0U) {
-        slAvailableCnt = std::min(policy.slLevelCount, slAvailableCnt);
-    }
-    return static_cast<uint8_t>(ResolveUbcGroupFirstHcclQos(policy.qos, nTp, slAvailableCnt));
+    return static_cast<uint8_t>(policy.qos & 0xFFU);
 }
 
 bool TpQosGetDscpByQosFromHccnCfg(uint32_t devPhyId, uint8_t qos, uint8_t &dscpOut)

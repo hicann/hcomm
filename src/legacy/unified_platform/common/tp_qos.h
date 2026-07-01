@@ -69,7 +69,7 @@ uint32_t TpQosSlValueAtRankInMask16(uint32_t mask, uint32_t rank);
 uint16_t TpQosReadSlAvailableMask16(const struct TpAttr &attr);
 
 /// 根据 hcclQos 与 slBitmap 选择 TP 列表下标及映射 SL；失败返回 false
-bool TpQosApplySlPolicy(const TpQosPolicyInput &policy, uint32_t nTp, uint16_t slMask,
+bool TpQosApplySlPolicy(const TpQosPolicyInput &policy, uint16_t slMask,
     uint32_t &tpListIndexOut, uint32_t &mappedSlOut, const char *logTag = "TpQos");
 
 /// 校验 slMask、应用策略并检查 tpListIndex 范围
