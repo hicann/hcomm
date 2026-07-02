@@ -17,6 +17,7 @@
 #include "aicpu_args_stub.h"
 #include "alg_param.h"
 #include "hccl_device_pub.h"
+#include "sim_common_api.h"
 #include "sim_log.h"
 #include "store_sim_memory_manager.h"
 
@@ -38,9 +39,9 @@ uint64_t d2hAddr = 0;
 
 void ExecuteAicpuKernel(uint32_t rankId, const std::string &kernelName, uint64_t args)
 {
-    HCCL_VM_INFO("[device] rankId[{}] kernel[{}] start run...", rankId, kernelName);
+    HCCL_VM_INFO("rankId[{}] kernel[{}] start run...", rankId, kernelName);
     if (!InitKernelFuncHandle()) {
-        HCCL_VM_ERROR("[device] rankId[{}] init func handle failed.", rankId);
+        HCCL_VM_ERROR("rankId[{}] init func handle failed.", rankId);
         return;
     }
 
@@ -72,7 +73,7 @@ void ExecuteAicpuKernel(uint32_t rankId, const std::string &kernelName, uint64_t
         uint32_t listNum = res->listNum;
         uint32_t totalListSize = res->uniqueIdSize;
         uint32_t listSize = totalListSize / listNum;
-        HCCL_VM_INFO("[device] start packing, listNum:{}, totalListSize:{}, listSize:{}", listNum, totalListSize, listSize);
+        HCCL_VM_INFO("start packing, listNum:{}, totalListSize:{}, listSize:{}", listNum, totalListSize, listSize);
         res->channelList = GetRealPtrByDevPtr(res->channelList);
         res->channelSizeAddr = GetRealPtrByDevPtr(res->channelSizeAddr);
         res->uniqueIdAddr = GetRealPtrByDevPtr(res->uniqueIdAddr);
@@ -82,7 +83,7 @@ void ExecuteAicpuKernel(uint32_t rankId, const std::string &kernelName, uint64_t
         for (auto i = 0; i < listNum; i++) {
             uint32_t startOffset = i * listSize;
             UniqueIdV2Header *header = reinterpret_cast<UniqueIdV2Header *>(startAddr + startOffset + UNIQUEID_HEADER_OFFSET);
-            HCCL_VM_INFO("[device] uniqueId header type:{} notifyNum:{} bufferNum:{} rmtBufferNum:{} connNum:{}.", header->type, header->notifyNum, header->bufferNum, header->rmtBufferNum, header->connNum);
+            HCCL_VM_INFO("uniqueId header type:{} notifyNum:{} bufferNum:{} rmtBufferNum:{} connNum:{}.", header->type, header->notifyNum, header->bufferNum, header->rmtBufferNum, header->connNum);
             // 根据UniqueIdV2Header计算偏移
             uint32_t offset = COMMON_DATA_SIZE + header->notifyNum * NOTIFY_ID_SIZE +
                             COMMON_DATA_SIZE + header->notifyNum * NOTIFY_BUFFER_SIZE +
@@ -101,10 +102,10 @@ void ExecuteAicpuKernel(uint32_t rankId, const std::string &kernelName, uint64_t
         hcclLaunchAicpuKernelPtr(opParam);
         UpdataKfcStatus(d2hAddr);
     } else {
-        HCCL_VM_ERROR("[device] rankId[{}] kernel[{}] not support.", rankId, kernelName);
+        HCCL_VM_ERROR("rankId[{}] kernel[{}] not support.", rankId, kernelName);
     }
 
-    HCCL_VM_INFO("[device] rankId[{}] kernel[{}] finish run...", rankId, kernelName);
+    HCCL_VM_INFO("rankId[{}] kernel[{}] finish run...", rankId, kernelName);
 }
 
 void* LoadLibrary(const std::string &libDir, const std::string &libName)
@@ -113,11 +114,11 @@ void* LoadLibrary(const std::string &libDir, const std::string &libName)
     std::string libPath = libDir + libName;
     handle = dlopen(libPath.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (handle != nullptr) {
-        HCCL_VM_INFO("[LoadLibrary] Load so {} from {}", libName, libPath);
+        HCCL_VM_INFO("Load so {} from {}", libName, libPath);
         return handle;
     }
         
-    HCCL_VM_ERROR("[LoadLibrary] Failed to load so {} from {}", libName, dlerror());
+    HCCL_VM_ERROR("Failed to load so {} from {}", libName, dlerror());
     return nullptr;
 }
 
@@ -126,14 +127,13 @@ bool InitKernelFuncHandle()
     if (gLibsLoaded) {
         return true;
     }
-    const char* installDir = getenv("HCCL_VM_INSTALL_DIR");
-    std::string libDir = installDir ? std::string(installDir) + "/lib/aarch64/" : "./lib/aarch64/";
+    std::string libDir = InstallPath::ResolveToInstallRoot("lib/" + GetArchStr()) + "/";
     gSlogHandle = LoadLibrary(libDir, "libslog.so");
     gCsecHandle = LoadLibrary(libDir, "libc_sec.so");
     gHcclKerHandle = LoadLibrary(libDir, "libscatter_aicpu_kernel.so");
     gHcommHandle = LoadLibrary(libDir, "libccl_kernel.so");
     if (gHcclKerHandle == nullptr || gHcommHandle == nullptr || gSlogHandle == nullptr || gCsecHandle == nullptr) {
-        HCCL_VM_ERROR("[InitKernelFuncHandle] Failed to load kernel libs.");
+        HCCL_VM_ERROR("Failed to load kernel libs.");
         return false;
     }
     runAicpuIndOpCommInitPtr = reinterpret_cast<uint32_t (*)(void *)>(dlsym(gHcommHandle, "RunAicpuIndOpCommInit"));
@@ -143,10 +143,10 @@ bool InitKernelFuncHandle()
     hcclLaunchAicpuKernelPtr = reinterpret_cast<unsigned int (*)(OpParam *)>(dlsym(gHcclKerHandle, "HcclLaunchAicpuKernel"));
     if (runAicpuIndOpCommInitPtr == nullptr || runAicpuIndOpThreadInitPtr == nullptr || runAicpuIndOpChannelInitV2Ptr == nullptr ||
         runAicpuDfxOpInfoInitV2Ptr == nullptr || hcclLaunchAicpuKernelPtr == nullptr) {
-        HCCL_VM_ERROR("[InitKernelFuncHandle] Failed to get kernel func handle.");
+        HCCL_VM_ERROR("Failed to get kernel func handle.");
         return false;
     }
-    HCCL_VM_INFO("[InitKernelFuncHandle] Load kernel libs and get func handles successfully.");
+    HCCL_VM_INFO("Load kernel libs and get func handles successfully.");
     gLibsLoaded = true;
     return true;
 }

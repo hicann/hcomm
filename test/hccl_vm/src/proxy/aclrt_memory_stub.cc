@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "MEM_STUB"
+
 #include <atomic>
 #include <cstdint>
 #include <iostream>
@@ -26,6 +29,7 @@
 #include "store_sim_run_mode.h"
 #include "sim_models.h"
 #include "db_sim_runner_ops.h"
+
 
 // rank 进程加载本库时先于 main 预热仅校验模式缓存，使后续引流判定拿到确定值。
 // 只读 DB、不打日志（此刻日志组件可能尚未初始化）。
@@ -141,7 +145,7 @@ aclError aclrtMallocHost(void **hostPtr, size_t size)
     bool checkOnlyMode = sim::IsCheckOnlyMode();
     // 超过复用区上界直接报错，不回退真实分配。
     if (sim::CommPoolPolicy::ExceedsCeiling(size, checkOnlyMode)) {
-        HCCL_VM_ERROR("[MEM] malloc host size:{:d} exceeds pool ceiling, reject", size);
+        HCCL_VM_ERROR("malloc host size:{:d} exceeds pool ceiling, reject", size);
         return ACL_ERROR_INTERNAL_ERROR;
     }
     // 仅校验模式下大块引流到共享复用区 HcclCommPool
@@ -150,16 +154,16 @@ aclError aclrtMallocHost(void **hostPtr, size_t size)
         if (base == nullptr) {
             base = sim::MemoryManager::GetInstance().AcquireMemByName(sim::CommPoolPolicy::kPoolName);
             if (base == nullptr) {
-                HCCL_VM_ERROR("[MEM] malloc host acquire HcclCommPool failed, size:{:d}", size);
+                HCCL_VM_ERROR("malloc host acquire HcclCommPool failed, size:{:d}", size);
                 return ACL_ERROR_INTERNAL_ERROR;
             }
             CacheCommPoolBase(base);
         }
         *hostPtr = base;
-        HCCL_VM_INFO("[MEM] malloc host (SHM) addr:{:p}, size:{:d}", *hostPtr, size);
+        HCCL_VM_INFO("malloc host (SHM) addr:{:p}, size:{:d}", *hostPtr, size);
     } else {
         *hostPtr = malloc(size);
-        HCCL_VM_INFO("[MEM] malloc host addr:{:p}, size:{:d}", *hostPtr, size);
+        HCCL_VM_INFO("malloc host addr:{:p}, size:{:d}", *hostPtr, size);
     }
     return ACL_SUCCESS;
 }
@@ -172,10 +176,10 @@ aclError aclrtMallocHostWithCfg(void **ptr, uint64_t size, aclrtMallocConfig *cf
 
 aclError aclrtFreeHost(void *hostPtr)
 {
-    HCCL_VM_INFO("[MEM] free host addr:{:p}", hostPtr);
+    HCCL_VM_INFO("free host addr:{:p}", hostPtr);
     // 池内地址：空操作（复用区生命周期由主进程管理，不在此 free）
     if (IsInCommPool(hostPtr)) {
-        HCCL_VM_INFO("[MEM] free host (SHM noop) addr:{:p}", hostPtr);
+        HCCL_VM_INFO("free host (SHM noop) addr:{:p}", hostPtr);
         return ACL_SUCCESS;
     }
     free(hostPtr);
@@ -250,12 +254,14 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 
 aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 {
+    HCCL_VM_INFO("..");
     size_t realSize = ((size + 31) / 32) * 32;
     return aclrtMalloc(devPtr, realSize, policy);
 }
 
 aclError aclrtMallocCached(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 {
+    HCCL_VM_INFO("..");
     return aclrtMalloc(devPtr, size, policy);
 }
 
@@ -263,6 +269,7 @@ aclError aclrtMemFlush(void *devPtr, size_t size)
 {
     (void) devPtr;
     (void) size;
+    HCCL_VM_INFO("..");
     return ACL_SUCCESS;
 }
 
@@ -270,18 +277,21 @@ aclError aclrtMemInvalidate(void *devPtr, size_t size)
 {
     (void) devPtr;
     (void) size;
+    HCCL_VM_INFO("..");
     return ACL_SUCCESS;
 }
 
 aclError aclrtMallocWithCfg(void **devPtr, size_t size, aclrtMemMallocPolicy policy, aclrtMallocConfig *cfg)
 {
     (void) cfg;
+    HCCL_VM_INFO("..");
     return aclrtMalloc(devPtr, size, policy);
 }
 
 aclError aclrtMallocForTaskScheduler(void **devPtr, size_t size, aclrtMemMallocPolicy policy, aclrtMallocConfig *cfg)
 {
     (void) cfg;
+    HCCL_VM_INFO("..");
     return aclrtMalloc(devPtr, size, policy);
 }
 
@@ -341,20 +351,20 @@ aclError aclrtMemset(void *devPtr, size_t maxCount, int32_t value, size_t count)
     uint32_t offset = 0;
     if (!GetPtrNameByVirPtr(devPtr, offset, phyMem)) {
         memset(devPtr, value, count);
-        HCCL_VM_INFO("[MEM] sys mem memset ptr:{:p}, maxCount: {:d}, value: {:d}, count: {:d}", devPtr, maxCount, value, count);
+        HCCL_VM_INFO("sys mem memset ptr:{:p}, maxCount: {:d}, value: {:d}, count: {:d}", devPtr, maxCount, value, count);
         return ACL_SUCCESS;
     }
 
     char* hostPtr = (char*)sim::DeviceMemoryManager::GetInstance().AcquirePhyMem(phyMem.name, phyMem.device_id, phyMem.size);
     if (hostPtr == nullptr) {
-        HCCL_VM_INFO("[MEM] dev mem memset ptr:{:p} name:{} can not get host ptr", devPtr, phyMem.name);
+        HCCL_VM_INFO("dev mem memset ptr:{:p} name:{} can not get host ptr", devPtr, phyMem.name);
         return ACL_ERROR_INTERNAL_ERROR;
     }
 
     // 目的设备块按 size 判是否在复用区，与申请一致，命中则跳过实际写入并按池释放。
     bool pooled = sim::CommPoolPolicy::ShouldRedirect(phyMem.size, sim::IsCheckOnlyMode());
     if (pooled) {
-        HCCL_VM_INFO("[MEM] memset skip (pool) ptr:{:p}, size:{:d}, count:{:d}", devPtr, phyMem.size, count);
+        HCCL_VM_INFO("memset skip (pool) ptr:{:p}, size:{:d}, count:{:d}", devPtr, phyMem.size, count);
     } else {
         memset(hostPtr + offset, value, count);
     }
@@ -363,13 +373,14 @@ aclError aclrtMemset(void *devPtr, size_t maxCount, int32_t value, size_t count)
     } else {
         sim::DeviceMemoryManager::GetInstance().ReleasePhyMem(phyMem.name, phyMem.device_id);
     }
-    HCCL_VM_INFO("[MEM] dev mem memset ptr:{:p}, memName:{}, count: {:d}", devPtr, phyMem.name, count);
+    HCCL_VM_INFO("dev mem memset ptr:{:p}, memName:{}, count: {:d}", devPtr, phyMem.name, count);
     return ACL_SUCCESS;
 }
 
 aclError aclrtMemsetAsync(void *devPtr, size_t maxCount, int32_t value, size_t count, aclrtStream stream)
 {
     (void) stream;
+    HCCL_VM_INFO("..");
     // 当前先不生成任务，后续有需要再根据实际情况生成任务
     return aclrtMemset(devPtr, maxCount, value, count);
 }
@@ -391,17 +402,17 @@ aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, a
     } else if (kind == ACL_MEMCPY_DEVICE_TO_DEVICE) {
         auto dstAddr =  GetRealPtrByAddr(dst);
         if (dstAddr == nullptr) {
-            HCCL_VM_WARN("[aclrtMemcpy D2D] only support self D2D memcpy");
+            HCCL_VM_WARN(" only support self D2D memcpy");
             return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         }
         auto srcAddr =  GetRealPtrByAddr(src);
         if (srcAddr == nullptr) {
-            HCCL_VM_WARN("[aclrtMemcpy D2D] only support self D2D memcpy");
+            HCCL_VM_WARN("only support self D2D memcpy");
             return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         }
-        // 目的地址在复用区（dst 是引流过来的大块）：跳过实际拷贝。
+        // 目的设备块按 size 判是否在复用区，与申请一致，命中则跳过实际拷贝。
         if (IsInCommPool(dstAddr)) {
-            HCCL_VM_INFO("[MEM] memcpy D2D skip (dst big->pool) count:{:d}", count);
+            HCCL_VM_INFO("memcpy D2D skip (dst big->pool) count:{:d}", count);
         } else {
             memcpy(dstAddr, srcAddr, count);
         }
@@ -414,14 +425,14 @@ aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, a
     sim::PhyMemBlock phyMem{};
     uint32_t offset = 0;
     if (!GetPtrNameByVirPtr(devPtr, offset, phyMem)) {  
-        HCCL_VM_INFO("[MEM] dev mem memcpy ptr:{:p}, count: {:d}", devPtr, count);
+        HCCL_VM_INFO("dev mem memcpy ptr:{:p}, count: {:d}", devPtr, count);
         return ACL_ERROR_INTERNAL_ERROR;
     }
 
     HCCL_VM_INFO("host:{:p} dev:{:p} memName:{} size:{:d} type:{:d}", hostPtr, devPtr, phyMem.name, count, (int)kind);
     char* hostDevPtr = (char*)sim::DeviceMemoryManager::GetInstance().AcquirePhyMem(phyMem.name, phyMem.device_id, phyMem.size);
     if (hostDevPtr == nullptr) {
-        HCCL_VM_INFO("[MEM] dev mem memcpy ptr:{:p} name:{} can not get host ptr", devPtr, phyMem.name);
+        HCCL_VM_INFO(" dev mem memcpy ptr:{:p} name:{} can not get host ptr", devPtr, phyMem.name);
         return ACL_ERROR_INTERNAL_ERROR;
     }
 
@@ -430,13 +441,13 @@ aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, a
     bool devPooled = sim::CommPoolPolicy::ShouldRedirect(phyMem.size, sim::IsCheckOnlyMode());
     if (kind == ACL_MEMCPY_HOST_TO_DEVICE) {
         if (devPooled) {
-            HCCL_VM_INFO("[MEM] memcpy H2D skip (dst big->pool) count:{:d}", count);
+            HCCL_VM_INFO("memcpy H2D skip (dst big->pool) count:{:d}", count);
         } else {
             memcpy(hostDevPtr + offset, hostPtr, count);
         }
     } else if (kind == ACL_MEMCPY_DEVICE_TO_HOST) {
         if (IsInCommPool(hostPtr)) {
-            HCCL_VM_INFO("[MEM] memcpy D2H skip (dst host pool) count:{:d}", count);
+            HCCL_VM_INFO("memcpy D2H skip (dst host pool) count:{:d}", count);
         } else {
             memcpy(hostPtr, hostDevPtr + offset, count);
         }
@@ -502,7 +513,7 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
     sim::PhyMemBlock phyMem{};
     uint32_t offset = 0;
     if (!GetPtrNameByVirPtr(devPtr, offset, phyMem)) {
-        HCCL_VM_INFO("[MEM] dev mem memcpy ptr:{:p}, count: {:d}", devPtr, count);
+        HCCL_VM_INFO("dev mem memcpy ptr:{:p}, count: {:d}", devPtr, count);
         return ACL_ERROR_INTERNAL_ERROR;
     }
 
@@ -510,7 +521,7 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
 
     char* hostDevPtr = (char*)sim::DeviceMemoryManager::GetInstance().AcquirePhyMem(phyMem.name, phyMem.device_id, phyMem.size);
     if (hostDevPtr == nullptr) {
-        HCCL_VM_INFO("[MEM] dev mem memcpy ptr:{:p} name:{} can not get host ptr", devPtr, phyMem.name);
+        HCCL_VM_INFO("dev mem memcpy ptr:{:p} name:{} can not get host ptr", devPtr, phyMem.name);
         return ACL_ERROR_INTERNAL_ERROR;
     }
 
@@ -519,13 +530,13 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
     bool devPooled = sim::CommPoolPolicy::ShouldRedirect(phyMem.size, sim::IsCheckOnlyMode());
     if (kind == ACL_MEMCPY_HOST_TO_DEVICE) {
         if (devPooled) {
-            HCCL_VM_INFO("[MEM] memcpy H2D skip (dst big->pool) count:{:d}", count);
+            HCCL_VM_INFO("memcpy H2D skip (dst big->pool) count:{:d}", count);
         } else {
             memcpy(hostDevPtr + offset, hostPtr, count);
         }
     } else if (kind == ACL_MEMCPY_DEVICE_TO_HOST) {
         if (IsInCommPool(hostPtr)) {
-            HCCL_VM_INFO("[MEM] memcpy D2H skip (dst host pool) count:{:d}", count);
+            HCCL_VM_INFO("memcpy D2H skip (dst host pool) count:{:d}", count);
         } else {
             memcpy(hostPtr, hostDevPtr + offset, count);
         }
@@ -830,7 +841,7 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 
     auto phyMemRes = RunnerDB::GetById<sim::PhyMemBlock>(phyMemId);
     if (!phyMemRes.has_value()) {
-        HCCL_VM_ERROR("[aclrtMemExportToShareableHandle] cannot find phy Mem offset: {:d}", phyMemId);
+        HCCL_VM_ERROR("cannot find phy Mem offset: {:d}", phyMemId);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -872,7 +883,7 @@ aclError aclrtMemImportFromShareableHandle(uint64_t shareableHandle, int32_t dev
 
     auto phyMemRes = RunnerDB::GetById<sim::PhyMemBlock>(phyMemId);
     if (!phyMemRes.has_value()) {
-        HCCL_VM_ERROR("[aclrtMemImportFromShareableHandle] cannot find phy Mem offset: {:d}", phyMemId);
+        HCCL_VM_ERROR("cannot find phy Mem offset: {:d}", phyMemId);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -922,20 +933,20 @@ aclError aclrtPointerGetAttributes(const void *ptr, aclrtPtrAttributes *attribut
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
         [startPtr](const sim::VirtualMemBlock &virMem) { return virMem.start_ptr ==  startPtr && virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV;});
     if (!virMemRes.second) {
-        HCCL_VM_ERROR("[aclrtPointerGetAttributes] can not find this buff offset ptr: 0x{:x}", startPtr);
+        HCCL_VM_ERROR("can not find this buff offset ptr: 0x{:x}", startPtr);
         return ACL_ERROR_INVALID_PARAM;
     }
 
     auto phyMemId = virMemRes.first.phy_mem_id;
     auto phyMemRes = RunnerDB::GetById<sim::PhyMemBlock>(phyMemId);
     if (!phyMemRes.has_value()) {
-        HCCL_VM_ERROR("[aclrtPointerGetAttributes] cannot find phy Mem offset: {:d}", phyMemId);
+        HCCL_VM_ERROR("cannot find phy Mem offset: {:d}", phyMemId);
         return ACL_ERROR_INVALID_PARAM;
     }
 
     auto devRes = RunnerDB::GetById<sim::Device>(phyMemRes->device_id);
     if (!devRes.has_value()) {
-        HCCL_VM_ERROR("[aclrtPointerGetAttributes] cannot find phy Mem device: {:d}", phyMemRes->device_id);
+        HCCL_VM_ERROR("cannot find phy Mem device: {:d}", phyMemRes->device_id);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -952,7 +963,7 @@ aclError aclrtHostRegister(void *ptr, uint64_t size, aclrtHostRegisterType type,
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
         [startPtr](const sim::VirtualMemBlock &virMem) { return virMem.start_ptr ==  startPtr && virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_HOST;});
     if (!virMemRes.second) {
-        HCCL_VM_ERROR("[aclrtHostRegister] can not find this buff offset ptr: 0x{:x}", startPtr);
+        HCCL_VM_ERROR("can not find this buff offset ptr: 0x{:x}", startPtr);
         return ACL_ERROR_INVALID_PARAM;
     }
     *devPtr = ptr;
@@ -965,7 +976,7 @@ aclError aclrtHostUnregister(void *ptr)
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
         [startPtr](const sim::VirtualMemBlock &virMem) { return virMem.start_ptr ==  startPtr && virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_HOST;});
     if (!virMemRes.second) {
-        HCCL_VM_ERROR("[aclrtHostUnregister] can not find this buff offset ptr: 0x{:x}", startPtr);
+        HCCL_VM_ERROR("can not find this buff offset ptr: 0x{:x}", startPtr);
         return ACL_ERROR_INVALID_PARAM;
     }
     return ACL_SUCCESS;
@@ -996,15 +1007,15 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
     (void) flags;
     uint64_t startPtr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(devPtr));
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [startPtr](const sim::VirtualMemBlock &virMem) { return virMem.start_ptr ==  startPtr;});
+        [startPtr](const sim::VirtualMemBlock &virMem) { return virMem.start_ptr == startPtr; });
     if (!virMemRes.second) {
-        HCCL_VM_ERROR("[aclrtIpcMemGetExportKey] can not find this buff offset ptr: 0x{:x}", startPtr);
+        HCCL_VM_ERROR("can not find this buff offset ptr: 0x{:x}", startPtr);
         return ACL_ERROR_INVALID_PARAM;
     }
     auto phyMemId = virMemRes.first.phy_mem_id;
     auto phyMemRes = RunnerDB::GetById<sim::PhyMemBlock>(phyMemId);
     if (!phyMemRes.has_value()) {
-        HCCL_VM_ERROR("[aclrtIpcMemGetExportKey] cannot find phy Mem offset: {:d}", phyMemId);
+        HCCL_VM_ERROR("cannot find phy Mem offset: {:d}", phyMemId);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -1044,13 +1055,13 @@ aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)
     uint64_t ipcRecordIdx = *(const uint64_t *)key;
     auto recordRes = RunnerDB::GetById<sim::IpcMemRecord>(ipcRecordIdx);
     if (!recordRes.has_value()) {
-        HCCL_VM_ERROR("[aclrtIpcMemImportByKey] cannot find ipc record: {:d}", ipcRecordIdx);
+        HCCL_VM_ERROR("cannot find ipc record: {:d}", ipcRecordIdx);
         return ACL_ERROR_INVALID_PARAM;
     }
 
     auto virMemRes = RunnerDB::GetById<sim::VirtualMemBlock>(recordRes->vir_mem_id);
     if (!virMemRes.has_value()) {
-        HCCL_VM_ERROR("[aclrtIpcMemImportByKey] cannot find vir mem: {:d}", recordRes->vir_mem_id);
+        HCCL_VM_ERROR("cannot find vir mem: {:d}", recordRes->vir_mem_id);
         return ACL_ERROR_INVALID_PARAM;
     }
     *devPtr = (void *)virMemRes->start_ptr;
@@ -1063,7 +1074,7 @@ aclError aclrtIpcMemClose(const char *key)
     uint64_t ipcRecordIdx = *reinterpret_cast<const uint64_t*>(key);
     auto recordRes = RunnerDB::GetById<sim::IpcMemRecord>(ipcRecordIdx);
     if (!recordRes.has_value()) {
-        HCCL_VM_ERROR("[aclrtIpcMemClose] cannot find ipc record: {:d}", ipcRecordIdx);
+        HCCL_VM_ERROR("cannot find ipc record: {:d}", ipcRecordIdx);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -1151,7 +1162,7 @@ rtError_t rtMalloc(void **devPtr, uint64_t size, rtMemType_t type, const uint16_
 aclError rtFree(void* devPtr)
 {
     (void) devPtr;
-    HCCL_VM_ERROR("[aclstub] enter into rtFree not support");
+    HCCL_VM_ERROR("enter into rtFree not support");
     return ACL_ERROR_INTERNAL_ERROR;
 }
 
@@ -1178,7 +1189,7 @@ aclError aclrtReduceAsync(void *dst, const void *src, uint64_t count, aclrtReduc
 
     auto iter = rtDataType2CheckerDataType.find(type);
     if (iter == rtDataType2CheckerDataType.end()) {
-        HCCL_VM_ERROR("[ERROR][aclrtReduceAsync] not support data type: {}", static_cast<uint32_t>(type));
+        HCCL_VM_ERROR("not support data type: {}", static_cast<uint32_t>(type));
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
 
@@ -1206,10 +1217,10 @@ aclError aclrtReduceAsync(void *dst, const void *src, uint64_t count, aclrtReduc
     taskMetaData.taskData.reduce.reduceOp  = static_cast<uint8_t>(kind);
 
     uint32_t index{0};
-    HCCL_VM_DEBUG("[aclstub][aclrtReduceAsync] Get reduce task, streamId={:d}", streamId);
+    HCCL_VM_DEBUG("Get reduce task, streamId={:d}", streamId);
     auto ret = InsertTaskToCollection(&taskMetaData, &index);
     if (ret != HcclSim::HcclVmResult::HCCL_SIM_SUCCESS) {
-        HCCL_VM_ERROR("[aclstub] InsertTaskToCollection fail");
+        HCCL_VM_ERROR("InsertTaskToCollection fail");
         return ACL_ERROR_INTERNAL_ERROR;
     }
 

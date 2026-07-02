@@ -1452,16 +1452,15 @@ HcclResult TaskExceptionHandler::Init()
     if (communicatorCount_.fetch_add(1) == 0){
         HCCL_RUN_INFO("[TaskExceptionHandler][%s] register taskFailCallback", __func__);
         CHK_RET(hrtRegTaskFailCallbackByModule(Callback));
+        CHK_RET(hrtGetStreamAvailableNum(maxStrCount));	 
+        maxStrCount = (maxStrCount < STREAM_COUNT_UPPER_LIMIT) ? maxStrCount : STREAM_COUNT_UPPER_LIMIT; 
     }
-
-    CHK_RET(hrtGetStreamAvailableNum(maxStrCount));
-
-    maxStrCount = (maxStrCount < STREAM_COUNT_UPPER_LIMIT) ? maxStrCount : STREAM_COUNT_UPPER_LIMIT;
     maxTaskCount = TASK_COUNT_UPPER_LIMIT;
     // 单算子模式task过多的特殊处理
     if (GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         maxTaskCount = TASK_COUNT_UPPER_LIMIT_OP_BASE;
     }
+
     HCCL_INFO("get from RTS the max stream count[%u] the max task count[%u]", maxStrCount, maxTaskCount);
 
     if (GetExternalInputHcclEnableFfts() &&
@@ -1677,6 +1676,7 @@ HcclResult TaskExceptionHandler::InsertTaskMap(u32 &streamID, TaskInfo &tmpTaskI
     auto it = taskMap[deviceLogicId_].find(streamID);
     if (it == taskMap[deviceLogicId_].end()) {
         // streamID 复用且不会超过最大stream数量，因此Map的size超过最大stream数量属于异常场景
+        HCCL_INFO("streamID is [%u], deviceLogicId is [%u], taskMap size is [%u]",streamID, deviceLogicId_, taskMap[deviceLogicId_].size());
         CHK_PRT_RET(taskMap[deviceLogicId_].size() >= maxStrCount, HCCL_ERROR("[Insert][TaskMap]taskMap size is "
             "bigger than max stream count[%u]. stream add fail", maxStrCount), HCCL_E_INTERNAL);
         std::shared_ptr<deque<TaskInfo>> tmpTaskInfoQue = nullptr;

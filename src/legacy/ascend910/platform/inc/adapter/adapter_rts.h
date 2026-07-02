@@ -125,6 +125,7 @@ HcclResult hrtRDMASend(u32 qpn, u32 wqe_index, rtStream_t stream);
 HcclResult hrtCallbackLaunch(aclrtCallback callBackFunc, void *fnData, aclrtStream stream, bool isBlock);
 HcclResult hrtIpcSetNotifyName(aclrtNotify notify, u8* name, uint32_t len);
 HcclResult hrtMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t count, HcclRtMemcpyKind kind);
+HcclResult hrtMemcpyEx(void *dst, uint64_t destMax, void *src, uint64_t count, rtMemcpyKind_t kind);
 HcclResult hrtKernelLaunchWithFlagV2(const void *stubFunc, uint32_t numBlocks, rtArgsEx_t *argsInfo, rtSmDesc_t *smDesc,
     rtStream_t stream, uint32_t flags, const rtTaskCfgInfo_t *cfgInfo);
 HcclResult hrtRDMADBSend(uint32_t dbindex, uint64_t dbinfo, rtStream_t stream);

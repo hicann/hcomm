@@ -92,10 +92,10 @@ TEST_F(ProfilingReporterTest, Call_profilingReporter_api_test)
     dfxOpInfo->op_ = op;
     dfxOpInfo->comm_ = &comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo1 = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo2 = std::make_shared<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
-    mirrorTaskManager.AddTaskInfo(taskInfo1);
-    mirrorTaskManager.AddTaskInfo(taskInfo2);
+    auto taskInfo1 = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    auto taskInfo2 = std::make_unique<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo1));
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo2));
 
     ProfilingReporter profilingReporter(&mirrorTaskManager, &ProfilingHandler::GetInstance());
     profilingReporter.Init();
@@ -136,8 +136,8 @@ TEST_F(ProfilingReporterTest, Ut_ReportOp_When_CommImpNullptr_Expect_ReturnNorma
         .beginTime = 0,
         .endTime = 0,
         .taskPara = {.Notify = {.notifyID = 123, .value = 456}}};
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
-    mirrorTaskManager.AddTaskInfo(taskInfo);
+    std::unique_ptr<TaskInfo> taskInfo = std::make_unique<TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
     ProfilingReporter profilingReporter(&mirrorTaskManager, &ProfilingHandler::GetInstance());
     profilingReporter.Init();
     EXPECT_NO_THROW(profilingReporter.ReportOp(0, true, true));

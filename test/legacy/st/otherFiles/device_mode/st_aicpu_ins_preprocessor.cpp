@@ -162,7 +162,6 @@ TEST(AicpuInsPreprocessorTest, test_AllocAlltoallVOpMem)
     comm.currentCollOperator->opTag = "testTag";
     comm.currentCollOperator->opMode = OpMode::OFFLOAD;
     comm.currentCollOperator->opType = OpType::ALLTOALLV;
-    comm.currentCollOperator->debugCase = 0;
     comm.currentCollOperator->inputMem = DevBuffer::Create(0x100, 10);
     comm.currentCollOperator->outputMem = DevBuffer::Create(0x100, 10);
     comm.currentCollOperator->scratchMem = DevBuffer::Create(0x100, 10);

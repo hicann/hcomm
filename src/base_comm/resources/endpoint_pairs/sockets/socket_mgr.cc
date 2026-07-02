@@ -12,6 +12,7 @@
 #include <algorithm>
 
 #include "socket_mgr.h"
+#include "hcomm_adapter_runtime.h"
 #include "../channels/channel.h"
 #include "orion_adpt_utils.h"
 #include "host_socket_handle_manager.h"
@@ -22,6 +23,7 @@
 namespace hcomm {
 
 constexpr uint32_t TempServerListenPort = 60001;    // 临时固定监听端口，用于功能验证
+constexpr uint32_t kHostResourceId = 0U;
 
 s32 g_linkTimeout = 0;
 inline s32 EnvLinkTimeoutGet()
@@ -44,14 +46,21 @@ SocketMgr& SocketMgr::GetInstance(s32 phyId)
 
 HcclResult SocketMgr::Init()
 {
-    if (isLoaded_) {
+    uint32_t runtimeDevicePhyId = 0;
+    bool noDevice = false;
+    CHK_RET(ResolveRuntimeDevicePhyId(runtimeDevicePhyId, noDevice));
+    if (isLoaded_ && isHostOnlyInit_ == noDevice) {
         return HCCL_SUCCESS;
     }
+    // deviceCount > 0 时保留 GetInstance(phyId) 传入的 devicePhyId_，避免公共 Init 覆盖调用方的真实物理 ID。
+    if (noDevice) {
+        devicePhyId_ = kHostResourceId;
+    }
     isLoaded_ = true;
-    s32 devLogicId;
-    CHK_RET(hrtGetDevice(&devLogicId));
-    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<u32>(devLogicId), devicePhyId_));
+    isHostOnlyInit_ = noDevice;
     serverListenPort_ = TempServerListenPort;
+    HCCL_INFO("[SocketMgr][%s] init socket mgr, noDevice[%d], runtimeDevicePhyId[%u], devicePhyId[%u].",
+        __func__, noDevice, runtimeDevicePhyId, devicePhyId_);
     return HCCL_SUCCESS;
 }
 
@@ -249,6 +258,7 @@ HcclResult SocketMgr::GetHostSocket(const Hccl::SocketConfig &socketConfig, Hccl
 
     if (it != socketMap_.end()) {
         if (socketConfig.hostNic2DeviceNicMode_) {
+            socket = it->second.get();
             HCCL_INFO("[SocketMgr][%s] destroy a socket[%p] in hostNic2DeviceNicMode", __func__, static_cast<void*>(socket));
             socket->Destroy();
             socketMap_.erase(it);

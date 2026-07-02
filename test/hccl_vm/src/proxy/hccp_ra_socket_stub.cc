@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "RASOCKET_STUB"
+
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
@@ -61,7 +64,7 @@ static bool GenRaSocketBufKeyByPairId(uint64_t pairId)
     std::string c2s = RA_SOCK_BUF_PREFIX + std::to_string(pairId) + "_c2s";
     void *ptrC2s = sim::CommunicationMemoryManager::GetInstance().AllocCommMem(c2s.data());
     if (ptrC2s == nullptr) {
-        HCCL_VM_ERROR("[RASOCKET] alloc sock name {} mem failed", c2s.data());
+        HCCL_VM_ERROR(" alloc sock name {} mem failed", c2s.data());
         return false;
     }
 
@@ -69,7 +72,7 @@ static bool GenRaSocketBufKeyByPairId(uint64_t pairId)
     void *ptrS2c = sim::CommunicationMemoryManager::GetInstance().AllocCommMem(s2c.data());
     if (ptrS2c == nullptr) {
         sim::CommunicationMemoryManager::GetInstance().ReleaseCommMem(c2s.data());
-        HCCL_VM_ERROR("[RASOCKET] alloc sock name {} mem failed", s2c.data());
+        HCCL_VM_ERROR(" alloc sock name {} mem failed", s2c.data());
         return false;
     }
     return true;
@@ -80,7 +83,7 @@ static bool AcquireRaSocketBufKeyByPairId(uint64_t pairId)
     std::string c2s = RA_SOCK_BUF_PREFIX + std::to_string(pairId) + "_c2s";
     void *ptrC2s = sim::CommunicationMemoryManager::GetInstance().AcquireCommMem(c2s.data());
     if (ptrC2s == nullptr) {
-        HCCL_VM_ERROR("[RASOCKET] acquire sock name {} mem failed", c2s.data());
+        HCCL_VM_ERROR(" acquire sock name {} mem failed", c2s.data());
         return false;
     }
 
@@ -88,7 +91,7 @@ static bool AcquireRaSocketBufKeyByPairId(uint64_t pairId)
     void *ptrS2c = sim::CommunicationMemoryManager::GetInstance().AcquireCommMem(s2c.data());
     if (ptrS2c == nullptr) {
         sim::CommunicationMemoryManager::GetInstance().ReleaseCommMem(c2s.data());
-        HCCL_VM_ERROR("[RASOCKET] acquire sock name {} mem failed", s2c.data());
+        HCCL_VM_ERROR(" acquire sock name {} mem failed", s2c.data());
         return false;
     }
     return true;
@@ -127,7 +130,7 @@ int RaSocketInit(int mode, struct rdev rdevInfo, void **socketHandle)
     (void) mode;
     sim::Device device{};
     if (GetDeviceByPhysicalId(rdevInfo.phyId, device) != ACL_SUCCESS) {
-        HCCL_VM_ERROR("[RASOCKET] get device by phy id {} failed.", rdevInfo.phyId);
+        HCCL_VM_ERROR(" get device by phy id {} failed.", rdevInfo.phyId);
         return -1;
     }
 
@@ -137,7 +140,7 @@ int RaSocketInit(int mode, struct rdev rdevInfo, void **socketHandle)
     
     sim::EndPoint endPoint{};
     if (GetEndPointByIpAddr(ipAddr, endPoint) != 0) {
-        HCCL_VM_ERROR("[RASOCKET] cannot find remote ip {} ", ipAddr);
+        HCCL_VM_ERROR(" cannot find remote ip {} ", ipAddr);
         return -1;
     }
 
@@ -148,7 +151,7 @@ int RaSocketInit(int mode, struct rdev rdevInfo, void **socketHandle)
         [deviceIdx, endpointId](const sim::RaSocket &so) { return (so.device_id == deviceIdx && so.endpoint_id == endpointId); });
     if (ret.second) {
         *socketHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(ret.first.id));
-        HCCL_VM_INFO("[RASOCKET] Found socket socketFd:{:d}",ret.first.id);
+        HCCL_VM_INFO(" Found socket socketFd:{:d}", ret.first.id);
         return 0;
     }
 
@@ -162,15 +165,15 @@ int RaSocketInit(int mode, struct rdev rdevInfo, void **socketHandle)
             [deviceIdx, endpointId](const sim::RaSocket &so) { return (so.device_id == deviceIdx && so.endpoint_id == endpointId); });
         if (retry.second) {
             *socketHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(retry.first.id));
-            HCCL_VM_INFO("[RASOCKET] Insert failed, found existing socketFd:{:d}", retry.first.id);
+            HCCL_VM_WARN(" Insert conflict, reused existing socketFd:{:d}", retry.first.id);
             return 0;
         }
-        HCCL_VM_ERROR("[RASOCKET] Insert and re-lookup both failed for device:{:d} endpointId:{:d}", deviceIdx, endpointId);
+        HCCL_VM_ERROR(" Insert and re-lookup both failed for device:{:d} endpointId:{:d}", deviceIdx, endpointId);
         return -1;
     }
 
     *socketHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(socketfd));
-    HCCL_VM_INFO("[RASOCKET] add socketHandle:{:d} device:{:d} ip:{} endpointId:{:d}", socketfd, deviceIdx, ipAddr, endpointId);
+    HCCL_VM_INFO(" add socketHandle:{:d} device:{:d} ip:{} endpointId:{:d}", socketfd, deviceIdx, ipAddr, endpointId);
     return 0;
 }
 
@@ -187,7 +190,7 @@ int RaSocketDeinit(void *socketHandle)
     uint64_t localFd = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(socketHandle));
     RunnerDB::Delete<sim::RaSocket>(localFd);
 
-    HCCL_VM_INFO("[RASOCKET] delete socketHandle:{:d}\n", localFd);
+    HCCL_VM_INFO(" delete socketHandle:{:d}", localFd);
     return 0;
 }
 
@@ -197,13 +200,13 @@ int RaSocketListenStart(struct SocketListenInfoT conn[], uint32_t num)
         uint64_t socketHandle = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(conn[i].socketHandle));
         auto socketRes = RunnerDB::GetById<sim::RaSocket>(socketHandle);
         if (!socketRes.has_value()) {
-            HCCL_VM_ERROR("[RASOCKET] can not get Socket:{:d}", socketHandle);
+            HCCL_VM_ERROR(" can not get Socket:{:d}", socketHandle);
             return -1;
         }
         RunnerDB::Update<sim::RaSocket>(socketHandle, [](sim::RaSocket &s) {
             s.state = 1;
         });
-        HCCL_VM_INFO("[RASOCKET] socket {:d}  port:{:d}", socketHandle, conn[i].port);
+        HCCL_VM_INFO(" socket {:d} port:{:d}", socketHandle, conn[i].port);
     }
     return 0;
 }
@@ -214,13 +217,13 @@ int RaSocketListenStop(struct SocketListenInfoT conn[], unsigned int num)
         uint64_t socketHandle = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(conn[i].socketHandle));
         auto socketRes = RunnerDB::GetById<sim::RaSocket>(socketHandle);
         if (!socketRes.has_value()) {
-            HCCL_VM_ERROR("[RASOCKET] can not get Socket:{:d}", socketHandle);
+            HCCL_VM_ERROR(" can not get Socket:{:d}", socketHandle);
             return -1;
         }
         RunnerDB::Update<sim::RaSocket>(socketHandle, [](sim::RaSocket &s) {
             s.state = 0;
         });
-        HCCL_VM_INFO("[RASOCKET] socket {:d}  port:{:d}", socketHandle, conn[i].port);
+        HCCL_VM_INFO(" socket {:d} port:{:d}", socketHandle, conn[i].port);
     }
     return 0;
 }
@@ -231,7 +234,7 @@ int RaSocketBatchConnect(struct SocketConnectInfoT conn[], unsigned int num)
         uint64_t localFd = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(conn[i].socketHandle));
         auto localSock = RunnerDB::GetById<sim::RaSocket>(localFd);
         if (!localSock.has_value()) {
-            HCCL_VM_ERROR("[RASOCKET] can not get Local Ra Socket:{:d}", localFd);
+            HCCL_VM_ERROR(" can not get Local Ra Socket:{:d}", localFd);
             return -1;
         }
 
@@ -240,7 +243,7 @@ int RaSocketBatchConnect(struct SocketConnectInfoT conn[], unsigned int num)
         auto ipAddr = IpAddress(ba, AF_INET6).GetIpStr().substr(2);
         sim::EndPoint endPoint{};
         if (GetEndPointByIpAddr(ipAddr, endPoint) != 0) {
-            HCCL_VM_ERROR("[RASOCKET] cannot find remote ip{} addr:{:d}", ipAddr, conn[i].remoteIp.addr.s_addr);
+            HCCL_VM_ERROR(" cannot find remote ip:{}", ipAddr);
             return -1;
         }
 
@@ -249,11 +252,11 @@ int RaSocketBatchConnect(struct SocketConnectInfoT conn[], unsigned int num)
         uint64_t tagHash = ComputeTagHash(conn[i].tag);
         uint32_t remotePort = conn[i].port;
 
-        HCCL_VM_INFO("[RASOCKET] dev:{} sock:{} connect dev:{} ip addr:{} tag:{}", localSock->device_id, localFd, remoteDevId, ipAddr, conn[i].tag);
+        HCCL_VM_INFO(" dev:{} sock:{} connect dev:{} ip addr:{} tag:{}", localSock->device_id, localFd, remoteDevId, ipAddr, conn[i].tag);
         uint32_t count = 0;
         while (true) {
             if (count++ >= 600) { // 超时60s
-                HCCL_VM_ERROR("[RASOCKET] can not get break dev:{} sock:{} connect dev:{} ip addr:{} tag:{}", localSock->device_id, localFd, remoteDevId, ipAddr, conn[i].tag);
+                HCCL_VM_ERROR(" can not get break dev:{} sock:{} connect dev:{} ip addr:{} tag:{}", localSock->device_id, localFd, remoteDevId, ipAddr, conn[i].tag);
                 break;
             }
             auto remoteSockRes = RunnerDB::GetOneByPred<sim::RaSocket>(
@@ -262,7 +265,7 @@ int RaSocketBatchConnect(struct SocketConnectInfoT conn[], unsigned int num)
                 });
             if (!remoteSockRes.second) {
                 if (count % 100 == 0) {
-                    HCCL_VM_WARN("[RASOCKET] can not find remote dev:{}, endpoint:{}", remoteDevId, remoteEndPointId);
+                    HCCL_VM_WARN(" can not find remote dev:{}, endpoint:{}", remoteDevId, remoteEndPointId);
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -281,7 +284,7 @@ int RaSocketBatchConnect(struct SocketConnectInfoT conn[], unsigned int num)
             uint64_t pairId = 0;
             if (existPairRes.second) {
                 pairId = existPairRes.first.id;
-                HCCL_VM_INFO("[RASOCKET] pair already exists id:{:d}", pairId);
+                HCCL_VM_INFO(" pair already exists id:{:d}", pairId);
             } else {
                 sim::RaSocketPair socketpair{};
                 socketpair.client_id        = localFd;
@@ -292,7 +295,7 @@ int RaSocketBatchConnect(struct SocketConnectInfoT conn[], unsigned int num)
                 socketpair.buf_status       = 0;
                 pairId = RunnerDB::Add<sim::RaSocketPair>(socketpair);
                 if (pairId == 0) {
-                    HCCL_VM_WARN("[RASOCKET] add failed retry");
+                    HCCL_VM_WARN(" add failed retry");
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     continue;
                 }
@@ -307,7 +310,7 @@ int RaSocketBatchConnect(struct SocketConnectInfoT conn[], unsigned int num)
                 std::string sendBuf, recvBuf;
                 GetRaSendSocketkeyByFd(pairId, sendBuf);
                 GetRaRecvSocketkeyByFd(pairId, recvBuf);
-                HCCL_VM_INFO("[RASOCKET] add pair id:{:d} local:{:d} peer:{:d} port:{:d} sendBuf:{}, recvBuf:{}",
+                HCCL_VM_INFO(" add pair id:{:d} local:{:d} peer:{:d} port:{:d} sendBuf:{}, recvBuf:{}",
                               pairId, localFd, peerFd, remotePort, sendBuf, recvBuf);
             }
             break;
@@ -323,7 +326,7 @@ int RaGetSockets(unsigned int role, struct SocketInfoT conn[], unsigned int num,
         uint64_t loadFd = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(conn[i].socketHandle));
         auto localSock = RunnerDB::GetById<sim::RaSocket>(loadFd);
         if (!localSock.has_value()) {
-            HCCL_VM_ERROR("[RASOCKET] can not get Local Ra Socket:{:d}", loadFd);
+            HCCL_VM_ERROR(" can not get local socket fd:{:d}", loadFd);
             return -1;
         }
 
@@ -332,7 +335,7 @@ int RaGetSockets(unsigned int role, struct SocketInfoT conn[], unsigned int num,
         auto ipAddr = IpAddress(ba, AF_INET6).GetIpStr().substr(2);
         sim::EndPoint endPoint{};
         if (GetEndPointByIpAddr(ipAddr, endPoint) != 0) {
-            HCCL_VM_ERROR("[RASOCKET] cannot find remote ip:{}", ipAddr);
+            HCCL_VM_ERROR(" cannot find remote ip:{}", ipAddr);
             continue;
         }
 
@@ -340,7 +343,7 @@ int RaGetSockets(unsigned int role, struct SocketInfoT conn[], unsigned int num,
         auto remoteEndpointId = endPoint.id;
         uint64_t tagHash = ComputeTagHash(conn[i].tag);
 
-        HCCL_VM_INFO("[RASOCKET] dev:{} sock:{} get remote dev:{} addr:{} tag:{}", localSock->device_id, loadFd, remoteDevId, ipAddr, conn[i].tag);
+        HCCL_VM_INFO(" dev:{} sock:{} get remote dev:{} addr:{} tag:{}", localSock->device_id, loadFd, remoteDevId, ipAddr, conn[i].tag);
 
         uint32_t count = 0;
         bool found = false;
@@ -351,7 +354,7 @@ int RaGetSockets(unsigned int role, struct SocketInfoT conn[], unsigned int num,
                 });
             if (!remoteSockRes.second) {
                 if (count % 60 == 0) {
-                    HCCL_VM_WARN("[RASOCKET] waiting for remote socket dev:{}, endpoint:{}, attempt:{}/180",
+                    HCCL_VM_WARN(" waiting for remote socket dev:{}, endpoint:{}, attempt:{}/180",
                                  remoteDevId, remoteEndpointId, count);
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -369,7 +372,7 @@ int RaGetSockets(unsigned int role, struct SocketInfoT conn[], unsigned int num,
 
             if (!pairRes.second) {
                 if (count % 60 == 0) {
-                    HCCL_VM_WARN("[RASOCKET] waiting for socket pair local:{:d} peer:{:d} tag_hash:{:d}, attempt:{}/180",
+                    HCCL_VM_WARN(" waiting for socket pair local:{:d} peer:{:d} tag_hash:{:d}, attempt:{}/180",
                                  loadFd, peerFd, tagHash, count);
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -389,13 +392,13 @@ int RaGetSockets(unsigned int role, struct SocketInfoT conn[], unsigned int num,
             *connectedNum += 1;
             found = true;
 
-            HCCL_VM_INFO("[RASOCKET] get socket local:{:d} peer:{:d} pairId:{:d} role:{:d}",
+            HCCL_VM_INFO(" get socket local:{:d} peer:{:d} pairId:{:d} role:{:d}",
                           loadFd, peerFd, pairId, role);
             break;
         }
 
         if (!found) {
-            HCCL_VM_ERROR("[RASOCKET] get socket failed local:{:d} peerAddr:{} role:{:d}", loadFd, ipAddr, role);
+            HCCL_VM_ERROR(" get socket failed local:{:d} peerAddr:{} role:{:d}", loadFd, ipAddr, role);
         }
     }
     return 0;
@@ -409,7 +412,7 @@ int RaSocketBatchClose(struct SocketCloseInfoT conn[], unsigned int num)
 
         auto pairRes = RunnerDB::GetById<sim::RaSocketPair>(pairId);
         if (!pairRes.has_value()) {
-            HCCL_VM_WARN("[RASOCKET] pair {:d} not found during close", pairId);
+            HCCL_VM_WARN(" pair {:d} not found during close", pairId);
             continue;
         }
 
@@ -419,10 +422,10 @@ int RaSocketBatchClose(struct SocketCloseInfoT conn[], unsigned int num)
 
         if (pairRes->ref_cnt > 1) {
             RunnerDB::Update<sim::RaSocketPair>(pairId, [](sim::RaSocketPair &pair) { pair.ref_cnt -= 1; });
-            HCCL_VM_INFO("[RASOCKET] reduce pair:{:d} ref_cnt:{:d} sendBuf:{}, recvBuf:{}", pairId, pairRes->ref_cnt, sendBuf, recvBuf);
+            HCCL_VM_INFO(" reduce pair:{:d} ref_cnt:{:d} sendBuf:{}, recvBuf:{}", pairId, pairRes->ref_cnt, sendBuf, recvBuf);
         } else {
             RunnerDB::Delete<sim::RaSocketPair>(pairId);
-            HCCL_VM_INFO("[RASOCKET] delete pair:{:d} ref_cnt:{:d} sendBuf:{}, recvBuf:{}", pairId, pairRes->ref_cnt, sendBuf, recvBuf);
+            HCCL_VM_INFO(" delete pair:{:d} ref_cnt:{:d} sendBuf:{}, recvBuf:{}", pairId, pairRes->ref_cnt, sendBuf, recvBuf);
         }
 
         DestoryRaSocketBufKeyByPairId(pairId);
@@ -445,13 +448,13 @@ int RaSocketSend(const void *fdHandle, const void *data, unsigned long long size
 
     int ret = sim::CommunicationMemoryManager::GetInstance().WriteCommMem(socketKey.data(), data, size);
     if (ret != 0) {
-        HCCL_VM_ERROR("[RASOCKET] cannot pair socket:{:d} role:{:d}, key={}", FD_PAIR_ID(socketFd),
+        HCCL_VM_ERROR(" cannot pair socket:{:d} role:{:d}, key={}", FD_PAIR_ID(socketFd),
                       FD_ROLE(socketFd), socketKey);
         return -1;
     }
 
     *sentSize = size;
-    HCCL_VM_INFO("[RASOCKET] pair socket:{:d} role:{:d} key={} Send:{:d}", FD_PAIR_ID(socketFd),
+    HCCL_VM_INFO(" pair socket:{:d} role:{:d} key={} Send:{:d}", FD_PAIR_ID(socketFd),
         FD_ROLE(socketFd), socketKey.data(), size);
 
     return 0;
@@ -463,26 +466,21 @@ int RaSocketRecv(const void *fdHandle, void *data, unsigned long long size, unsi
     std::string socketKey;
     GetRaRecvSocketkeyByFd(socketFd, socketKey);
 
-    int retryCnt = 0;
-    while (retryCnt++ <= 200) {
-        int ret = sim::CommunicationMemoryManager::GetInstance().ReadCommMem(socketKey.data(), data, size);
-        if (ret == 0 && (retryCnt % 100 == 0)) {
-            HCCL_VM_WARN("[RASOCKET] socket pair:{:d} role:{:d}, key={} read try again :{:d}",
-                            FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey, retryCnt); 
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
-        } else if (ret == -1) {
-            HCCL_VM_ERROR("[RASOCKET] socket pair:{:d} role:{:d}, key={} recv failed",
-                          FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey);
-            return -1;
-        }
-
-        *receivedSize = ret;
-        HCCL_VM_INFO("[RASOCKET] socket pair:{:d} role:{:d}, key={} recv bytes:{:d} ",
-                     FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey, ret);
-        break;
+    int ret = sim::CommunicationMemoryManager::GetInstance().ReadCommMem(socketKey.data(), data, size);
+    if (ret == 0) {
+        HCCL_VM_WARN(" socket pair:{:d} role:{:d}, key={} read try again",
+                        FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        return 0;
+    } else if (ret == -1) {
+        HCCL_VM_ERROR(" socket pair:{:d} role:{:d}, key={} recv failed",
+                        FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey);
+        return -1;
+    } else if (ret > 0) {
+        HCCL_VM_INFO(" socket pair:{:d} role:{:d}, key={} recv bytes:{:d} ",
+                    FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey, ret);
     }
-
+    *receivedSize = ret;
     return 0;
 }
 
@@ -546,7 +544,7 @@ int RaSocketListenStopAsync(struct SocketListenInfoT conn[], unsigned int num, v
 int RaSocketBatchCloseAsync(struct SocketCloseInfoT conn[], unsigned int num, void **reqHandle)
 {
     (void) reqHandle;
-    HCCL_VM_INFO("[RASOCKET] close socket async");
+    HCCL_VM_INFO(" close socket async");
     return RaSocketBatchClose(conn, num);
 }
 
@@ -568,18 +566,18 @@ int RaSocketRecvAsync(const void *fdHandle, void *data, unsigned long long size,
 
     int ret = sim::CommunicationMemoryManager::GetInstance().ReadCommMem(socketKey.data(), data, size); 
     if (ret == 0) {
-        HCCL_VM_WARN("[RASOCKET] socket pair:{:d} role:{:d} key:{} try again",
+        HCCL_VM_WARN(" socket pair:{:d} role:{:d} key:{} try again",
                     FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         return 0;
     } else if (ret == -1) {
-        HCCL_VM_ERROR("[RASOCKET] socket pair:{:d} role:{:d} key:{} recv failed",
+        HCCL_VM_ERROR(" socket pair:{:d} role:{:d} key:{} recv failed",
                     FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey);
         return -1;
     }
 
     *receivedSize = ret;
-    HCCL_VM_INFO("[RASOCKET] socket pair:{:d} role:{:d} key:{} recv bytes:{:d} ",
+    HCCL_VM_INFO(" socket pair:{:d} role:{:d} key:{} recv bytes:{:d} ",
                     FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey, ret);
     return 0;
 }

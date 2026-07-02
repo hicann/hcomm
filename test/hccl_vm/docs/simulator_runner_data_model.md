@@ -1,8 +1,8 @@
 # HCCL 模拟运行器数据模型设计
 
-## 软硬件资源交互关系建模
+## 1. 软硬件资源交互关系建模
 
-数据流交互示意图
+数据流交互示意图。
 
 ```mermaid
 sequenceDiagram
@@ -35,9 +35,9 @@ sequenceDiagram
 
 只要是塞进 Stream 里的东西，都是由 Device 硬件执行的。
 
-## Device、Context、Stream 等硬件资源关系建模
+## 2. Device、Context、Stream 等硬件资源关系建模
 
-Device、Context、Stream 与用户主机线程之间的关系
+Device、Context、Stream 与用户主机线程之间的关系。
 
 ```mermaid
 graph TD
@@ -116,9 +116,9 @@ graph TD
  
 ```
 
-### 基础设备关系建模
+### 2.1 基础设备关系建模
 
-#### 层次结构总览
+#### 2.1.1 层次结构总览
 
 ```mermaid
 erDiagram
@@ -234,7 +234,7 @@ erDiagram
     Device ||--o{ DeviceConnection : "peer access"
 ```
 
-#### 网络通信资源
+#### 2.1.2 网络通信资源
 
 ```mermaid
 erDiagram
@@ -298,7 +298,7 @@ erDiagram
     CcuChannel }o..|| Link : "based-on"
 ```
 
-#### 关键关系说明
+#### 2.1.3 关键关系说明
 
 ##### 第一层：物理拓扑层
 
@@ -336,7 +336,7 @@ erDiagram
 | Link → EndPoint | 物理连接关联端点 | 由 topo.json 定义，描述物理拓扑 |
 | Link → Link-Protocol-Mapping | 连接支持的协议 | 一个Link可支持多种协议（UB_CTP/UB_MEM等） |
 
-#### 配套接口映射表
+#### 2.1.4 配套接口映射表
 
 ##### 基础与设备层 (Device / Server)
 
@@ -359,7 +359,7 @@ erDiagram
 | Stream.activated            | `rtStreamStop`                                                                                       |
 | Stream.failure-mode         | `rtSetStreamAttribute`,`rtGetStreamAttribute`                                                        |
 
-### 基础内存管理关系建模
+### 2.2 基础内存管理关系建模
 
 ```mermaid
 erDiagram
@@ -420,9 +420,9 @@ erDiagram
     %%}
 ```
 
-#### 关键关系说明（基础内存管理关系建模）
+#### 2.2.1 关键关系说明（基础内存管理关系建模）
 
-1. **物理内存核心地位**
+1. **物理内存核心地位**。
    `PhyMemBlock`作为基础实体，通过`phy_mem_id`与所有其他实体关联，体现华为昇腾"物理内存池化"的设计理念[3]。
 2. **三层映射体系**：
 
@@ -434,7 +434,7 @@ erDiagram
 4. **特殊映射类型**：
    `MemMapRecord`记录双虚拟地址映射场景（如`aclrtMapMem`产生的映射），支持华为NPU的零拷贝数据传输[3]。
 
-#### 配套接口映射表（基础内存管理关系建模）
+#### 2.1.2 配套接口映射表（基础内存管理关系建模）
 
 | 实体                           | 关键管理接口                                                                                                                                    |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -448,9 +448,9 @@ erDiagram
 | IpcMemWhiteList.pid            | `rtIpcMemSetImportPid`                                                                                                                          |
 | MemMapRecord                   | `rtHostRegister`, `rtHostUnRegister`                                                                                                            |
 
-## 在基础模型上扩展数据任务模型
+## 3. 在基础模型上扩展数据任务模型
 
-### 数据 / 任务流建模
+### 3.1 数据 / 任务流建模
 
 ```mermaid
 erDiagram
@@ -498,7 +498,7 @@ erDiagram
 
 ```
 
-### ccu资源建模
+### 3.2 ccu资源建模
 
 一个NPU device包含2个CCU，分别为die0和die1。
 
@@ -534,7 +534,7 @@ graph RL
 
 ```
 
-#### 配套接口映射表（ccu资源建模）
+#### 3.2.1 配套接口映射表（ccu资源建模）
 
 | 实体               | 关键管理接口                                             |
 | ------------------ | -------------------------------------------------------- |
@@ -545,24 +545,24 @@ graph RL
 | Local/Rmt-Addr     | `rtGetDeviceLocalAddr`, `rtGetDeviceRemoteAddr`          |
 | CCU资源查询        | `rtGetCcudieInfo`, `rtGetCcudieNum`                      |
 
-#### CCU资源生命周期说明
+#### 3.2.2 CCU资源生命周期说明
 
 **CCU初始化流程**：
 
-1. Device启动时，两个CCU（die0/die1）自动初始化
-2. 每个CCU分配独立的CcuBuf、Variable、Notify资源池
-3. CompletedEvent用于通知任务完成状态
+1. Device启动时，两个CCU（die0/die1）自动初始化。
+2. 每个CCU分配独立的CcuBuf、Variable、Notify资源池。
+3. CompletedEvent用于通知任务完成状态。
 
 **资源约束**：
 
 - 每个CCU的CcuBuf数量有限（与Device.soc-version相关）
-- Variable用于存储通信过程中的共享变量
-- Notify用于跨CCU的同步通知机制
-- Local/Rmt-Addr用于跨die通信时的地址转换
+- Variable用于存储通信过程中的共享变量。
+- Notify用于跨CCU的同步通知机制。
+- Local/Rmt-Addr用于跨die通信时的地址转换。
 
-### 异步 / 同步执行建模
+### 3.3 异步 / 同步执行建模
 
-#### [Notify资源管理](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850alpha001/appdevg/acldevg/aclcppdevg_000524.html)
+#### 3.3.1 [Notify资源管理](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850alpha001/appdevg/acldevg/aclcppdevg_000524.html)
 
 ```mermaid
 erDiagram
@@ -607,20 +607,20 @@ erDiagram
 
 - 每个Device的Notify数量上限为`max-notify-cnt`（如A3芯片为8192）
 - `device-notify-seq`是Notify在Device内的物理序号（0~8191）
-- Notify创建时必须指定所属Context，Context绑定到特定Device
+- Notify创建时必须指定所属Context，Context绑定到特定Device。
 
 **Notify的IPC共享机制**：
 
-- `IpcNotify`允许跨进程共享Notify实例
-- `name-or-key`是共享标识，通过`rtNotifyGetExportKey`获取
-- 其他进程通过`rtNotifyImportByKey`导入并使用
-- `IpcNotifyVistorList`记录有权访问该Notify的进程PID
+- `IpcNotify`允许跨进程共享Notify实例。
+- `name-or-key`是共享标识，通过`rtNotifyGetExportKey`获取。
+- 其他进程通过`rtNotifyImportByKey`导入并使用。
+- `IpcNotifyVistorList`记录有权访问该Notify的进程PID。
 
 **Notify状态管理**：
 
-- `value`字段映射到硬件寄存器，用于读写状态
-- `rtWaitAndResetNotify`等待Notify变为Ready状态并重置
-- Notify用于Stream间同步、跨进程同步场景
+- `value`字段映射到硬件寄存器，用于读写状态。
+- `rtWaitAndResetNotify`等待Notify变为Ready状态并重置。
+- Notify用于Stream间同步、跨进程同步场景。
 
 ##### 配套接口映射表（[Notify资源管理](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/850alpha001/appdevg/acldevg/aclcppdevg_000524.html)）
 
@@ -631,7 +631,7 @@ erDiagram
 | IpcNotify.name-or-key      | `rtNotifyGetExportKey`,`rtNotifyImportByKey`        |
 | IpcNotifyVistorList.ipc-id | `rtNotifySetImportPid`                              |
 
-#### Notify同步控制
+#### 3.3.2 Notify同步控制
 
 ```mermaid
 erDiagram
@@ -682,14 +682,14 @@ erDiagram
 
 **Notify任务类型**：
 
-- `NotifyRecordTask`：将Notify状态设置为Ready，表示某个事件已完成
-- `NotifyWaitTask`：等待Notify状态变为Ready，实现Stream间的同步
+- `NotifyRecordTask`：将Notify状态设置为Ready，表示某个事件已完成。
+- `NotifyWaitTask`：等待Notify状态变为Ready，实现Stream间的同步。
 
 **任务执行顺序**：
 
-- NotifyRecordTask在StreamA执行，设置Notify为Ready
-- NotifyWaitTask在StreamB执行，等待同一个Notify
-- 当Notify变为Ready后，StreamB后续任务才能继续执行
+- NotifyRecordTask在StreamA执行，设置Notify为Ready。
+- NotifyWaitTask在StreamB执行，等待同一个Notify。
+- 当Notify变为Ready后，StreamB后续任务才能继续执行。
 
 **跨Stream同步示例**：
 
@@ -706,7 +706,7 @@ StreamB: NotifyWaitTask(notify-id=1) -> Task3
 | NotifyRecordTask | `rtRecordNotify`        |
 | NotifyWaitTask   | `lrtWaitAndResetNotify` |
 
-#### Event资源管理
+#### 3.3.3 Event资源管理
 
 ```mermaid
 erDiagram
@@ -735,19 +735,19 @@ erDiagram
 
 - 每个Device的Event数量上限为`max-event-cnt`（如A3芯片为65536）
 - `device-res-seq`是Event在Device内的物理序号（0~65535）
-- Event创建时必须指定所属Context，Context绑定到特定Device
+- Event创建时必须指定所属Context，Context绑定到特定Device。
 
 **Event与Context的关系**：
 
-- `created-ctx-id`记录Event的创建Context
-- Event可在多个Stream间共享，但必须属于同一Context
+- `created-ctx-id`记录Event的创建Context。
+- Event可在多个Stream间共享，但必须属于同一Context。
 - 跨Context的Event共享需要通过IPC机制（类似Notify）
 
 **Event状态管理**：
 
-- `status`字段表示Event当前状态：NotRecorded/Recorded/Completed
+- `status`字段表示Event当前状态：NotRecorded/Recorded/Completed。
 - `event-flag`用于控制Event的行为（如是否自动重置）
-- `created-time`用于性能统计
+- `created-time`用于性能统计。
 
 ##### 配套接口映射表（Event资源管理）
 
@@ -756,7 +756,7 @@ erDiagram
 | Event.event-id | `rtCreateEvent`, `rtCreateEventWithFlag`,`rtDestroyEvent`,`rtGetEventId` |
 | Event.status   | `rtRecordEvent`,`rtQueryEventStatus`                                     |
 
-#### Event 流程控制
+#### 3.3.4 Event 流程控制
 
 ```mermaid
 erDiagram
@@ -834,19 +834,19 @@ erDiagram
 
 **Event任务类型分类**：
 
-- `EventRecordTask`：将Event状态设置为Recorded/Completed
-- `EventWaitTask`：等待Event状态变为Completed
+- `EventRecordTask`：将Event状态设置为Recorded/Completed。
+- `EventWaitTask`：等待Event状态变为Completed。
 - `EventSyncTask`：同步等待Event完成（阻塞调用）
-- `EventRICaptureTask`：RI Capture模式下的特殊记录任务
-- `EventTimeTask`：记录时间戳相关任务
-- `EventTraceTask`：用于性能追踪的任务记录
+- `EventRICaptureTask`：RI Capture模式下的特殊记录任务。
+- `EventTimeTask`：记录时间戳相关任务。
+- `EventTraceTask`：用于性能追踪的任务记录。
 
 **Event任务继承关系**：
 
-- `EventTask`是基类，包含task-id、event-id、execute-time、finish-time
-- `EventSyncTask`继承EventTask，增加op-timeout-s超时参数
-- `EventRecordTask`和`EventWaitTask`继承EventSyncTask
-- `EventRICaptureTask`、`EventTimeTask`、`EventTraceTask`直接继承EventTask
+- `EventTask`是基类，包含task-id、event-id、execute-time、finish-time。
+- `EventSyncTask`继承EventTask，增加op-timeout-s超时参数。
+- `EventRecordTask`和`EventWaitTask`继承EventSyncTask。
+- `EventRICaptureTask`、`EventTimeTask`、`EventTraceTask`直接继承EventTask。
 
 **Event执行流程**：
 
@@ -858,9 +858,9 @@ StreamB: EventWaitTask(event-id=1) -> KernelTask2
 
 **任务追踪关系**：
 
-- `first-capture-task-id`记录首次Capture的Task ID
-- `EventTraceTask.start-task-id`关联追踪的开始任务
-- EventRecordTask通过EventWaitTask映射实现跨Stream同步
+- `first-capture-task-id`记录首次Capture的Task ID。
+- `EventTraceTask.start-task-id`关联追踪的开始任务。
+- EventRecordTask通过EventWaitTask映射实现跨Stream同步。
 
 ##### 配套接口映射表（Event 流程控制）
 
@@ -872,16 +872,16 @@ StreamB: EventWaitTask(event-id=1) -> KernelTask2
 | EventTimeTask   | `rtResetEvent`, `rtRecordEvent`                      |
 | EventTraceTask  | `rtResetEvent`, `rtRecordEvent`                      |
 
-## 通信域建模
+## 4. 通信域建模
 
 跨机通信涉及到多通信域混合任务编排。
 通信域的本质是HCCL在框架层通过Rdma_Agent提供的建链能力，维护的一张多卡的网络拓扑，保存在host进程中。
 
-### 通信域核心概念
+### 4.1 通信域核心概念
 
 通信域（Communicator）是HCCL集合通信的基本抽象，每个通信域定义了一组参与通信的Rank及其拓扑关系。
 
-#### 通信域基础定义
+#### 4.1.1 通信域基础定义
 
 ```mermaid
 erDiagram
@@ -907,7 +907,7 @@ erDiagram
     Communicator ||--o{ Communicator : "派生(MPI_Comm_split)"
 ```
 
-#### 控制面：Socket通信
+#### 4.1.2 控制面：Socket通信
 
 ```mermaid
 erDiagram
@@ -949,7 +949,7 @@ erDiagram
     RaSocket ||--o{ RaEpoll : "被监控"
 ```
 
-#### 数据面：RDMA通信
+#### 4.1.3 数据面：RDMA通信
 
 ```mermaid
 erDiagram
@@ -1046,7 +1046,7 @@ erDiagram
     RaNdaQP ||--|| RaNdaCQ : "使用"
 ```
 
-#### 数据面：UB统一总线
+#### 4.1.4 数据面：UB统一总线
 
 ```mermaid
 erDiagram
@@ -1160,7 +1160,7 @@ erDiagram
     }
 ```
 
-#### 异步请求管理
+#### 4.1.5 异步请求管理
 
 ```mermaid
 erDiagram
@@ -1173,7 +1173,7 @@ erDiagram
     }
 ```
 
-#### 通信域架构总结
+#### 4.1.6 通信域架构总结
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
@@ -1204,7 +1204,7 @@ erDiagram
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-#### 关键实体对照表
+#### 4.1.7 关键实体对照表
 
 | 概念 | RDMA模式 | UB模式 | 说明 |
 | --- | --- | --- | --- |
@@ -1217,7 +1217,7 @@ erDiagram
 | 传输路径 | - | RaTp | 物理路径管理 |
 | 安全令牌 | - | RaTokenId | 访问控制 |
 
-#### HCCP接口分类
+#### 4.1.8 HCCP接口分类
 
 ```text
 HCCP Network API
@@ -1421,63 +1421,63 @@ HCCP Network API
 
 **通信域层次结构**：
 
-- `Communicator`是HCCL集合通信的核心抽象，定义了一组参与通信的Rank
-- `Rank`是通信域中的参与节点，每个Rank绑定到具体的Device
+- `Communicator`是HCCL集合通信的核心抽象，定义了一组参与通信的Rank。
+- `Rank`是通信域中的参与节点，每个Rank绑定到具体的Device。
 - 父通信域派生子通信域（如`color`属性实现分组）
 
 **控制平面与数据平面分离**：
 
-- **控制平面(Socket)**：用于建链、交换QP信息、控制信令，基于TCP协议
-- **数据平面(RDMA/UB)**：用于高性能数据传输，基于RDMA Verbs或UB协议
+- **控制平面(Socket)**：用于建链、交换QP信息、控制信令，基于TCP协议。
+- **数据平面(RDMA/UB)**：用于高性能数据传输，基于RDMA Verbs或UB协议。
 
 **RDMA资源层次**：
 
-- `RaDevice`是虚拟网卡抽象，一个Device可创建多个RaDevice
-- `RaQP`是队列对，包含Send Queue和Receive Queue
-- `RaCQ`是完成队列，用于轮询WR完成状态
-- `RaMR`是内存注册，将虚拟内存映射为RDMA可访问的物理内存
-- `RaSRQ`是共享接收队列，多个QP可共享同一SRQ以提高资源利用率
+- `RaDevice`是虚拟网卡抽象，一个Device可创建多个RaDevice。
+- `RaQP`是队列对，包含Send Queue和Receive Queue。
+- `RaCQ`是完成队列，用于轮询WR完成状态。
+- `RaMR`是内存注册，将虚拟内存映射为RDMA可访问的物理内存。
+- `RaSRQ`是共享接收队列，多个QP可共享同一SRQ以提高资源利用率。
 
 **UB资源层次**：
 
-- `RaContext`是UB统一上下文，替代RaDevice的设备抽象
+- `RaContext`是UB统一上下文，替代RaDevice的设备抽象。
 - `RaJetty`是QP等价物，支持多种模式（URMA_NORMAL/CCU等）
-- `RaJfc`是CQ等价物，用于完成请求管理
-- `RaLmem/RaRmem`是本地/远端内存管理，替代RaMR
-- `RaTp`是传输路径管理，支持RTP/CTP/UTP三种类型
-- `RaTokenId`是安全通信令牌，用于跨进程内存访问控制
+- `RaJfc`是CQ等价物，用于完成请求管理。
+- `RaLmem/RaRmem`是本地/远端内存管理，替代RaMR。
+- `RaTp`是传输路径管理，支持RTP/CTP/UTP三种类型。
+- `RaTokenId`是安全通信令牌，用于跨进程内存访问控制。
 
 **实体关联要点**：
 
-1. `RaSocketPair`需要两个`RaSocket`（client端和server端）才能建立连接
-2. `RaQP.state`必须经历RESET→INIT→RTR→RTS的状态转换才能正常通信
-3. `RaMR.lkey`用于本地访问，`RaMR.rkey`用于远端RDMA访问
-4. `RaJetty`通过`Bind`操作与对端Jetty建立逻辑连接
-5. `RaLmem`必须注册后，`RaRmem`才能从对端导入并访问
+1. `RaSocketPair`需要两个`RaSocket`（client端和server端）才能建立连接。
+2. `RaQP.state`必须经历RESET→INIT→RTR→RTS的状态转换才能正常通信。
+3. `RaMR.lkey`用于本地访问，`RaMR.rkey`用于远端RDMA访问。
+4. `RaJetty`通过`Bind`操作与对端Jetty建立逻辑连接。
+5. `RaLmem`必须注册后，`RaRmem`才能从对端导入并访问。
 
 **NDA(Network Direct Access)直接访问机制**：
 
-- `RaNdaQP`和`RaNdaCQ`是网络直接访问的QP/CQ变体
-- NDA模式允许绕过部分协议栈，降低延迟
-- `RaNdaGetDirectFlag`检查设备是否支持NDA模式
+- `RaNdaQP`和`RaNdaCQ`是网络直接访问的QP/CQ变体。
+- NDA模式允许绕过部分协议栈，降低延迟。
+- `RaNdaGetDirectFlag`检查设备是否支持NDA模式。
 
 **异步请求管理**：
 
-- `AsyncRequest`统一管理所有异步操作的请求句柄
-- 异步操作包括：连接、监听、QP创建/销毁、内存注册等
-- `RaGetAsyncReqResult`轮询异步操作结果
+- `AsyncRequest`统一管理所有异步操作的请求句柄。
+- 异步操作包括：连接、监听、QP创建/销毁、内存注册等。
+- `RaGetAsyncReqResult`轮询异步操作结果。
 
 **Socket事件机制**：
 
-- `RaSocketEvent`是事件等待机制的句柄
-- `RaEpoll`实现类似Linux Epoll的事件监控机制
-- 支持添加、修改、删除监控的Socket事件
+- `RaSocketEvent`是事件等待机制的句柄。
+- `RaEpoll`实现类似Linux Epoll的事件监控机制。
+- 支持添加、修改、删除监控的Socket事件。
 
 **网络接口与配置**：
 
-- `InterfaceInfo`描述网络接口的IP/MAC/MTU等属性
-- `HccnConfig`存储HCCN网络配置键值对
-- `Snapshot`支持设备状态的保存和恢复
+- `InterfaceInfo`描述网络接口的IP/MAC/MTU等属性。
+- `HccnConfig`存储HCCN网络配置键值对。
+- `Snapshot`支持设备状态的保存和恢复。
 
 ##### 控制平面 vs 数据平面
 
@@ -1501,11 +1501,11 @@ HCCP Network API
 
 ##### 关键点说明
 
-1. **RaContext/RaDevice**: 统一上下文实体，支持 RDMA 和 UB 双模式
-2. **RaJetty/RaJfc/RaQP/RaCQ**: UB 模式下的 QP/CQ 等价物
-3. **RaLmem/RaRmem/RaMR**:  UB 模式下的本地/远端内存管理
-4. **RaTp**: UB 传输路径管理
-5. **RaTokenId**: 安全通信令牌
+1. **RaContext/RaDevice**: 统一上下文实体，支持 RDMA 和 UB 双模式。
+2. **RaJetty/RaJfc/RaQP/RaCQ**: UB 模式下的 QP/CQ 等价物。
+3. **RaLmem/RaRmem/RaMR**:  UB 模式下的本地/远端内存管理。
+4. **RaTp**: UB 传输路径管理。
+5. **RaTokenId**: 安全通信令牌。
 
 ##### 关键属性补充
 
@@ -1576,7 +1576,7 @@ HCCP Network API
 | RaSocketEvent.events       | `RaEpollCtlAdd`, `RaEpollCtlMod`, `RaEpollCtlDel` 管理                   |
 | RaDevice.direct-flag       | `RaNdaGetDirectFlag` 检查NDA支持                                         |
 
-## 回调与报告关系建模
+## 5. 回调与报告关系建模
 
 ```mermaid
 erDiagram
@@ -1628,11 +1628,11 @@ erDiagram
 
 ```
 
-### 关键关系说明（回调与报告关系建模）
+### 5.1 关键关系说明（回调与报告关系建模）
 
-==**设备**==执行到 CallbackTask 时，触发 Host Runner 线程执行回调
+==**设备**==执行到 CallbackTask 时，触发 Host Runner 线程执行回调。
 
-#### 配套接口映射表（回调与报告关系建模）
+#### 5.1.1 配套接口映射表（回调与报告关系建模）
 
 | 实体          | 关键管理接口                                                          |
 | ------------- | --------------------------------------------------------------------- |
@@ -1640,7 +1640,7 @@ erDiagram
 | ReportChannel | `rtSubscribeReport`, `rtUnSubscribeReport`                            |
 | Runner        | `rtProcessReport`                                                     |
 
-## 基础`设备`模型细粒度底层扩展
+## 6. 基础`设备`模型细粒度底层扩展
 
 ```mermaid
 erDiagram
@@ -1701,52 +1701,52 @@ erDiagram
     }
 ```
 
-### 关键关系说明（基础`设备`模型细粒度底层扩展）
+### 6.1 关键关系说明（基础`设备`模型细粒度底层扩展）
 
 **设备调度器层次结构**：
 
-- `TaskSchedulerDevice`是设备调度器的抽象，一个Device可包含多个调度器
+- `TaskSchedulerDevice`是设备调度器的抽象，一个Device可包含多个调度器。
 - 调度器类型包括：`Scalar`（标量处理器）、`CCU`（集合通信单元）、`CPU`（AI CPU）
-- 不同类型调度器负责不同计算任务类型
+- 不同类型调度器负责不同计算任务类型。
 
 **ComputeDie计算单元**：
 
-- `ComputeDie`是计算单元的抽象，继承关系表示计算单元类型
-- `Vector`：向量计算单元，处理向量运算
-- `Cube`：立方计算单元，处理矩阵运算
-- `HybridComputeDie`：混合计算单元，同时支持Vector和Cube
+- `ComputeDie`是计算单元的抽象，继承关系表示计算单元类型。
+- `Vector`：向量计算单元，处理向量运算。
+- `Cube`：立方计算单元，处理矩阵运算。
+- `HybridComputeDie`：混合计算单元，同时支持Vector和Cube。
 
 **CCU内部结构**：
 
 - `xnNum`：XN节点数量（跨节点通信）
 - `ckeNum`：CKE引擎数量（Checksum引擎）
 - `msNum`：MS模块数量（Memory Scheduler）
-- `channelNum`：通信通道数量
+- `channelNum`：通信通道数量。
 - `version`：CCU版本（v1/v2，决定功能差异）
 
 **DeviceStatus状态管理**：
 
-- `overflow-status`：溢出状态
-- `synchronize-strategy`：同步策略配置
-- `synchronize-timeout`：同步超时设置
-- `capability-mask`：设备能力掩码
-- `run-by-host`：是否运行在Host模式
-- `ts-core`：调度器核心数量
-- `online-status`：设备在线状态
+- `overflow-status`：溢出状态。
+- `synchronize-strategy`：同步策略配置。
+- `synchronize-timeout`：同步超时设置。
+- `capability-mask`：设备能力掩码。
+- `run-by-host`：是否运行在Host模式。
+- `ts-core`：调度器核心数量。
+- `online-status`：设备在线状态。
 
 **Scalar调度关系**：
 
-- `Scalar`调度器管理`ComputeDie`的执行
-- 不同ComputeDie类型对应不同的计算负载
+- `Scalar`调度器管理`ComputeDie`的执行。
+- 不同ComputeDie类型对应不同的计算负载。
 
-#### 配套接口映射表（基础设备模型细粒度底层扩展）
+#### 6.1.1 配套接口映射表（基础设备模型细粒度底层扩展）
 
 | 实体                | 关键管理接口                       |
 | ------------------- | ---------------------------------- |
 | TaskSchedulerDevice | `rtGetDeviceInfo`, `rtSetTsDevice` |
 | DeviceStatus        | `rtGetRunMode`                     |
 
-## Kernel 运行时关系建模
+## 7. Kernel 运行时关系建模
 
 ```mermaid
 erDiagram
@@ -1791,21 +1791,21 @@ erDiagram
     }
 ```
 
-### 关键关系说明（Kernel 运行时关系建模）
+### 7.1 关键关系说明（Kernel 运行时关系建模）
 
 **KernelBinary加载流程**：
 
-1. `KernelBinary`存储.o/.so等二进制文件路径和创建进程PID
-2. `rtBinaryLoadFromFile`或`rtBinaryLoadFromData`将二进制加载到设备内存
-3. 加载后生成`KernelBinaryHandle`，包含handle-id和kernel-id
-4. `KernelFuncHandle`表示二进制中的具体函数，包含func-name、kernel-name、地址信息
+1. `KernelBinary`存储.o/.so等二进制文件路径和创建进程PID。
+2. `rtBinaryLoadFromFile`或`rtBinaryLoadFromData`将二进制加载到设备内存。
+3. 加载后生成`KernelBinaryHandle`，包含handle-id和kernel-id。
+4. `KernelFuncHandle`表示二进制中的具体函数，包含func-name、kernel-name、地址信息。
 
 **Kernel函数调用关系**：
 
-- `aic-addr`是AI Core函数地址
-- `aiv-addr`是AI Vector函数地址
-- `KernelFuncArgsHandle`存储函数参数信息
-- `KernelFuncArgsParamHandle`记录参数大小和是否占位符
+- `aic-addr`是AI Core函数地址。
+- `aiv-addr`是AI Vector函数地址。
+- `KernelFuncArgsHandle`存储函数参数信息。
+- `KernelFuncArgsParamHandle`记录参数大小和是否占位符。
 - `KernelLaunchCfg`配置Kernel启动参数（block/grid等）
 
 **Kernel生命周期**：
@@ -1818,11 +1818,11 @@ rtCreateBinary -> rtBinaryLoad -> rtBinaryGetFunction
 
 **参数管理机制**：
 
-- args-handle支持device和host两种类型
+- args-handle支持device和host两种类型。
 - is-place-holder标识参数是否为占位符（延迟绑定）
-- param-size记录单个参数大小
+- param-size记录单个参数大小。
 
-#### 配套接口映射表（Kernel 运行时关系建模）
+#### 7.1.1 配套接口映射表（Kernel 运行时关系建模）
 
 | 实体               | 关键管理接口                                                                                                    |
 | ------------------ | --------------------------------------------------------------------------------------------------------------- |
@@ -1830,4 +1830,4 @@ rtCreateBinary -> rtBinaryLoad -> rtBinaryGetFunction
 | KernelBinaryHandle | `rtBinaryLoad`, `rtBinaryUnLoad`,`rtBinaryLoadFromFile`,`rtBinaryLoadFromData`                                  |
 | KernelFuncHandle   | `rtBinaryGetFunction`, `rtBinaryGetFunctionByEntry`,`rtGetFunctionAddr`,`rtGetFunctionName`,`rtRegisterCpuFunc` |
 
-## 模型加载关系建模
+## 8. 模型加载关系建模

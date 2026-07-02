@@ -39,7 +39,7 @@
 #include "notify_pool.h"
 #include "i_hccl_one_sided_service.h"
 #include "hccl_one_sided_service.h"
-#include "hccl_one_sided_services.h"
+#include <hccl/hccl_one_sided_services.h>
 #include "hccl_one_sided_conn.h"
 #include "rma_buffer_mgr.h"
 #include "local_rdma_rma_buffer.h"
@@ -116,5 +116,75 @@ TEST_F(OneSidedUt, Prepare_When_PrepareFullMeshFail_With_NullptrConn_Expect_Skip
     HcclResult ret = service->Prepare(commIdentifier, &config, 1);
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
 
+    GlobalMockObject::verify();
+}
+
+TEST_F(OneSidedUt, HcclRegisterGlobalMem_ValidMem_Expect_ReinterpretCastCovered)
+{
+    auto buffer = std::vector<int8_t>(10);
+    CommMem mem{COMM_MEM_TYPE_DEVICE, buffer.data(), buffer.size()};
+    void* memHandle = nullptr;
+    HcclResult ret = HcclRegisterGlobalMem(&mem, &memHandle);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(memHandle, nullptr);
+
+    HcclDeregisterGlobalMem(memHandle);
+}
+
+TEST_F(OneSidedUt, HcclRemapRegistedMemory_ValidParams_Expect_ReinterpretCastCovered)
+{
+    auto commObj = std::make_unique<hccl::hcclComm>();
+    void* commArr[1] = {static_cast<void*>(commObj.get())};
+
+    unique_ptr<HcclSocketManager> socketManager = std::make_unique<HcclSocketManager>(NICDeployment::NIC_DEPLOYMENT_DEVICE, 0, 0, 0);
+    unique_ptr<NotifyPool> notifyPool = std::make_unique<NotifyPool>();
+    CommConfig commConfig;
+    hccl::HcclOneSidedService service(socketManager, notifyPool, commConfig);
+
+    hccl::IHcclOneSidedService* servicePtr = &service;
+
+    CommMem memInfoArray[1];
+    memInfoArray[0].type = COMM_MEM_TYPE_DEVICE;
+    memInfoArray[0].addr = reinterpret_cast<void*>(0x1000);
+    memInfoArray[0].size = 1024;
+
+    MOCKER_CPP(&hccl::hcclComm::GetOneSidedService)
+    .stubs()
+    .with(outBoundP(&servicePtr))
+    .will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret = HcclRemapRegistedMemory(commArr, memInfoArray, 1, 1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    commObj.reset();
+    GlobalMockObject::verify();
+}
+
+TEST_F(OneSidedUt, HcclEnableMemAccess_LegacyPath_Expect_ReinterpretCastCovered)
+{
+    auto commObj = std::make_unique<hccl::hcclComm>();
+
+    unique_ptr<HcclSocketManager> socketManager = std::make_unique<HcclSocketManager>(NICDeployment::NIC_DEPLOYMENT_DEVICE, 0, 0, 0);
+    unique_ptr<NotifyPool> notifyPool = std::make_unique<NotifyPool>();
+    CommConfig commConfig;
+    hccl::HcclOneSidedService service(socketManager, notifyPool, commConfig);
+
+    hccl::IHcclOneSidedService* servicePtr = &service;
+
+    MOCKER_CPP(&hccl::hcclComm::GetOneSidedService)
+    .stubs()
+    .with(outBoundP(&servicePtr))
+    .will(returnValue(HCCL_SUCCESS));
+
+    MOCKER_CPP(&HcclOneSidedService::EnableMemAccess, void(HcclOneSidedService::*)(const HcclMemDesc &, HcclMem &))
+    .stubs()
+    .will(returnValue(HCCL_SUCCESS));
+
+    HcclMemDesc remoteMemDesc{};
+    CommMem remoteMem{};
+    HcclResult ret = HcclEnableMemAccess(static_cast<HcclComm>(commObj.get()), &remoteMemDesc, &remoteMem);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    commObj.reset();
     GlobalMockObject::verify();
 }

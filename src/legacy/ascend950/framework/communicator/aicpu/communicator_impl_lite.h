@@ -232,6 +232,8 @@ private:
     std::unique_ptr<ProfilingReporterLite> profilingReporterLite
         = std::make_unique<ProfilingReporterLite>(mirrorTaskMgrLite.get(), &ProfilingHandlerLite::GetInstance());
 
+    HcclResult InitProfilingReporterLite();
+
     std::unique_ptr<MemTransportLiteMgr> transportLiteMgr = std::make_unique<MemTransportLiteMgr>( mirrorTaskMgrLite.get());
 
     std::unique_ptr<HostDeviceSyncNotifyLiteMgr> hostDeviceSyncNotifyLiteMgr

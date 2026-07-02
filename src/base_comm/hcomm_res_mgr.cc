@@ -10,6 +10,7 @@
 
 #include "hcomm_res_mgr.h"
 
+#include "adapter_rts_common.h"
 #include "hccl_common.h"
 
 // orion 通用平台层单例

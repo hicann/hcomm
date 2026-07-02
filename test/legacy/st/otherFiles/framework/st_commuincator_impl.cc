@@ -590,7 +590,6 @@ TEST(CommunicatorImplTest, LoadOpbasedCollOp_success_CovertToCurrentCollOperator
     fakeComm.currentCollOperator = std::make_unique<CollOperator>();
     fakeComm.currentCollOperator->opMode = OpMode::OPBASE;
     fakeComm.currentCollOperator->opType = OpType::DEBUGCASE;
-    fakeComm.currentCollOperator->debugCase = 0;
     fakeComm.currentCollOperator->inputMem = DevBuffer::Create(0x100, 10);
     fakeComm.currentCollOperator->outputMem = DevBuffer::Create(0x100, 10);
     fakeComm.queueWaitGroupCntNotifyManager = std::make_unique<QueueWaitGroupCntNotifyManager>();
@@ -804,7 +803,6 @@ TEST(CommunicatorImplTest, LoadOpbasedCollOp_success_CovertToCurrentCollOperator
     fakeComm.currentCollOperator = std::make_unique<CollOperator>();
     fakeComm.currentCollOperator->opMode = OpMode::OPBASE;
     fakeComm.currentCollOperator->opType = OpType::DEBUGCASE;
-    fakeComm.currentCollOperator->debugCase = 0;
     fakeComm.currentCollOperator->inputMem = DevBuffer::Create(0x100, 10);
     fakeComm.currentCollOperator->outputMem = DevBuffer::Create(0x100, 10);
     fakeComm.queueWaitGroupCntNotifyManager = std::make_unique<QueueWaitGroupCntNotifyManager>();
@@ -3233,7 +3231,6 @@ TEST(CommunicatorImplTest, st_GetAlgExecParam_When_Normal_Expect_ReturnHCCL_SUCC
     fakeComm.currentCollOperator = std::make_unique<CollOperator>();
     fakeComm.currentCollOperator->opMode = OpMode::OPBASE;
     fakeComm.currentCollOperator->opType = OpType::DEBUGCASE;
-    fakeComm.currentCollOperator->debugCase = 0;
     fakeComm.currentCollOperator->inputMem = DevBuffer::Create(0x100, 10);
     fakeComm.currentCollOperator->outputMem = DevBuffer::Create(0x100, 10);
     fakeComm.queueWaitGroupCntNotifyManager = std::make_unique<QueueWaitGroupCntNotifyManager>();

@@ -23,6 +23,7 @@ target_compile_definitions(hccl_plf PRIVATE
 # 编译选项
 target_compile_options(hccl_plf PRIVATE
     -Werror
+    -Wno-deprecated-declarations
     -Wall
     -fno-common
     -fno-strict-aliasing

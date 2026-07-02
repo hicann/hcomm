@@ -86,6 +86,8 @@ target_include_directories(hccl_v2 PRIVATE
     # hccp 头文件 (moved to base_comm/resources)
     ${HCOMM_DIR}/src/base_comm/resources/hccp/inc/network
     ${HCOMM_DIR}/src/base_comm/resources/hccp/orion/hcomm_dev/inc/network
+    # base_comm 公共头文件
+    ${HCOMM_DIR}/src/base_comm/common
     # 外部依赖
     ${HCOMM_DIR}/externel_depends/tsch
 )

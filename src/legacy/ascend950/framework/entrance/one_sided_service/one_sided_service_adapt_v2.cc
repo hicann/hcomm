@@ -9,6 +9,7 @@
  */
 
 #include "one_sided_service_adapt_v2.h"
+#include "task_param.h"
 #include "hccl_one_sided_data.h"
 #include "hccl_one_sided_service.h"
 #include "hccl_communicator.h"

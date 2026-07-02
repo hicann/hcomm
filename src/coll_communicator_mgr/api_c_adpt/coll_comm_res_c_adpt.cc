@@ -30,6 +30,7 @@
 #include "hccl_group.h"
 #include "../resource_mgr/local/my_rank/comm_engine_reses/kernel_launch/hccl_kernel_launch_aicpu.h"
 #include "param_check_basic_v2.h"
+#include "comm_engine_utils.h"
 
 using namespace hccl;
 /**
@@ -453,7 +454,7 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
  
     HcclResult ret = HCCL_SUCCESS;
     hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
-    HCCL_RUN_INFO("Entry-%s channelNum[%u], engine[%d] group[%s]", __func__, channelNum, engine, hcclComm->GetIdentifier().c_str());
+    HCCL_RUN_INFO("Entry-%s channelNum[%u], engine[%s] group[%s]", __func__, channelNum, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), hcclComm->GetIdentifier().c_str());
     std::vector<HcclChannelDesc> channelDescFinals;
     std::vector<std::vector<HcclMemHandle>> mergedMemHandles;
     for (uint32_t idx = 0; idx < channelNum; idx++) {
@@ -461,7 +462,7 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
         HcclChannelDescInit(&channelDescFinal, 1);
         ret = ProcessHcclResPackReq(channelDescs[idx], channelDescFinal, hcclComm);
         CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%d] channelNum[%llu], ret[%d]", idx, hcclComm->GetIdentifier().c_str(), engine, channelNum, ret), ret);
+            HCCL_ERROR("ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] channelNum[%llu], ret[%d]", idx, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
         channelDescFinals.push_back(channelDescFinal);
     }
  
@@ -474,15 +475,15 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
  
         const uint32_t opExpansionMode = myRank->GetOpExpansionMode();
         if (!CheckCommEngine(engine, opExpansionMode)) {
-            HCCL_ERROR("[%s] failed, coll comm[%p] group[%s] opExpansionMode[%d] is not supported by CCU engine[%d].", 
-                __func__, hcclComm, hcclComm->GetIdentifier().c_str(), opExpansionMode, engine);
+            HCCL_ERROR("[%s] failed, coll comm[%p] group[%s] opExpansionMode[%d] is not supported by CCU engine[%s].", 
+                __func__, hcclComm, hcclComm->GetIdentifier().c_str(), opExpansionMode, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
             return HcclResult::HCCL_E_PARA;
         }
 
         if (engine != CommEngine::COMM_ENGINE_CPU) { // host dpu场景暂不支持cluster monitor
             ret = RegisterToClusterMonitor(comm);
             CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("RegisterToClusterMonitor failed. group[%s], engine[%d], channelNum[%llu], ret[%d]", hcclComm->GetIdentifier().c_str(), engine, channelNum, ret), ret);
+                HCCL_ERROR("RegisterToClusterMonitor failed. group[%s], engine[%s], channelNum[%llu], ret[%d]", hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
         }
 
         if (!GetDebugConfigInited()) {
@@ -496,9 +497,9 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
             commTag.c_str(), engine, channelNum, hasSymmetricMemHandles, mergedMemHandles.size());
         ret = myRank->CreateChannels(engine, commTag, channelDescFinals.data(), channelNum, channels);
         CHK_PRT_RET((ret == HCCL_E_AGAIN || ret == HCCL_E_UNAVAIL),
-            HCCL_WARNING("CreateChannels group[%s], engine[%d] ret[%d]", commTag.c_str(), engine, ret), ret);
+            HCCL_WARNING("CreateChannels group[%s], engine[%s] ret[%d]", commTag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), ret), ret);
         CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("CreateChannels failed. group[%s], engine[%d] ret[%d]", commTag.c_str(), engine, ret), ret);
+            HCCL_ERROR("CreateChannels failed. group[%s], engine[%s] ret[%d]", commTag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), ret), ret);
         if (hasSymmetricMemHandles) {
             CHK_RET(UpdateSymmetricRemoteMems(collComm, myRank, channelDescFinals, channels, channelNum));
         }
@@ -544,11 +545,11 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
     }
  
     CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] Failed to acquire channel, group[%s], engine[%d], channelNum[%llu], ret[%d]", __func__, hcclComm->GetIdentifier().c_str(), engine, channelNum, ret), ret);
+        HCCL_ERROR("[%s] Failed to acquire channel, group[%s], engine[%s], channelNum[%llu], ret[%d]", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
 
     CHK_RET(ConvertAivChannelHandlesToDevicePtrs(engine, channelDescFinals.data(), channelNum, channels));
  
-    HCCL_RUN_INFO("[%s] acquire channel success, group[%s], engine[%d], channelNum[%llu], take time [%lld]us.", __func__, hcclComm->GetIdentifier().c_str(), engine, channelNum, DURATION_US(TIME_NOW() - startut));
+    HCCL_RUN_INFO("[%s] acquire channel success, group[%s], engine[%s], channelNum[%llu], take time [%lld]us.", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, DURATION_US(TIME_NOW() - startut));
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;
 }

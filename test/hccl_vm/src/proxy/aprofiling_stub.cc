@@ -78,6 +78,48 @@ int32_t MsprofReportCompactInfo(uint32_t agingFlag, const VOID_PTR data, uint32_
     return 0;
 }
 
+int32_t MsprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length)
+{
+    (void) nonPersistantFlag;
+    (void) data;
+    (void) length;
+    HCCL_VM_INFO("[APROF] stub");
+    return 0;
+}
+
+int32_t AdprofReportAdditionalInfo(uint32_t agingFlag, const void *data, uint32_t length)
+{
+    (void) agingFlag;
+    (void) data;
+    (void) length;
+    HCCL_VM_INFO("[APROF] stub");
+    return 0;
+}
+
+int32_t AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length)
+{
+    (void) nonPersistantFlag;
+    (void) data;
+    (void) length;
+    HCCL_VM_INFO("[APROF] stub");
+    return 0;
+}
+
+uint64_t AdprofGetHashId(const char *hashInfo, size_t length)
+{
+    (void) hashInfo;
+    (void) length;
+    HCCL_VM_INFO("[APROF] stub");
+    return 1;
+}
+
+int32_t AdprofCheckFeatureIsOn(uint64_t feature)
+{
+    (void) feature;
+    HCCL_VM_INFO("[APROF] stub");
+    return 0;
+}
+
 #ifdef __cplusplus
 }
 #endif  // __cplusplus

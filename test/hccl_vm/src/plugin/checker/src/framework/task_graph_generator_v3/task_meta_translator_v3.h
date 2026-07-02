@@ -59,7 +59,8 @@ private:
         }
     };
 
-    HcclResult TranslateOneTaskMeta(const HcclTaskMetaData &taskMeta, StorageManager &storage, NodeId &nodeId);
+    HcclResult TranslateOneTaskMeta(const HcclTaskMetaData &taskMeta, StorageManager &storage, uint32_t taskIndex,
+        NodeId &nodeId);
     HcclResult AddTaskNode(const TaskPosition &position, std::unique_ptr<TaskNode> node, NodeId &nodeId);
 
     std::vector<std::unique_ptr<TaskNode>> nodes_;

@@ -295,6 +295,7 @@ HcclResult TpMgr::FindAndGetTpInfo(const GetTpInfoParam &param, TpInfo &tpInfo)
     if (lookupRet != HcclResult::HCCL_SUCCESS) {
         return lookupRet;
     }
+    // 复用缓存：useCnt 仅在此处（命中）递增，与 CommitTpInfoToCache 写入路径分离。
     qosIt->second.useCnt += 1;
     tpInfo = qosIt->second.tpInfo;
     return HcclResult::HCCL_SUCCESS;
@@ -411,10 +412,9 @@ HcclResult TpMgr::ReleaseTpInfo(const GetTpInfoParam &param, const TpInfo &tpInf
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
+    // 未入缓存的并发 GetTpInfo 结果：与缓存 tpHandle 不一致，无需操作缓存。
     if (tpInfo.tpHandle != qosIt->second.tpInfo.tpHandle) {
-        HCCL_ERROR("[TpMgr][%s] failed, tp info[%llu] is not expected[%llu].", __func__, tpInfo.tpHandle,
-            qosIt->second.tpInfo.tpHandle);
-        return HcclResult::HCCL_E_PARA;
+        return HcclResult::HCCL_SUCCESS;
     }
 
     if (qosIt->second.useCnt > 1) {
@@ -724,6 +724,8 @@ HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(const GetTpInfoParam &param, const
     return HcclResult::HCCL_SUCCESS;
 }
 
+// GetTpInfo 完成后写入缓存。useCnt 仅在 FindAndGetTpInfo 命中时 +1，此处不做引用计数。
+// 并发首次 GetTpInfo 时，先完成者写入缓存；后完成者若 tpHandle 不同则跳过写入，直接使用本地结果。
 HcclResult TpMgr::CommitTpInfoToCache(const GetTpInfoParam &param, TpInfo &tpInfo)
 {
     Hccl::IpAddress locAddr{};
@@ -735,7 +737,18 @@ HcclResult TpMgr::CommitTpInfoToCache(const GetTpInfoParam &param, TpInfo &tpInf
     std::lock_guard<std::mutex> lock(GetInfoCtxMutex(param.tpProtocol));
     auto &infoMap = GetInfoCtxMap(param.tpProtocol);
     auto &rmtMap = infoMap[locAddr][rmtAddr];
-    rmtMap[qosKey] = TpInfoCtx{tpInfo, 1U};
+    const auto qIt = rmtMap.find(qosKey);
+
+    if (qIt == rmtMap.end()) {
+        rmtMap[qosKey] = TpInfoCtx{tpInfo, 1U};
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    // 缓存已存在：不再覆盖（避免并发后写覆盖先写的 tpHandle）；tpInfo 保持 GetTpInfo 本地结果。
+    if (qIt->second.tpInfo.tpHandle != tpInfo.tpHandle) {
+        HCCL_WARNING("[TpMgr][%s] skip cache store, cached tpHandle[%llu] != local tpHandle[%llu] param[%s].",
+            __func__, qIt->second.tpInfo.tpHandle, tpInfo.tpHandle, param.Describe().c_str());
+    }
     return HcclResult::HCCL_SUCCESS;
 }
 

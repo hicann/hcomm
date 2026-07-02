@@ -25,6 +25,7 @@
 #include "aiv_urma_channel.h"
 #include "mem_device_pub.h"
 #include "sal_pub.h"
+#include "comm_engine_utils.h"
 
 constexpr u32 MAX_MILLISECOND_OF_USLEEP = 1000;
 
@@ -588,7 +589,7 @@ HcclResult ChannelProcess::SaveChannels(ChannelHandle* targetChannels, ChannelHa
     } else if (engine == COMM_ENGINE_AIV) {
         CHK_RET(SaveAivChannels(targetChannels, userChannels, channelDescs, channelNum));
     } else {
-        HCCL_INFO("[%s] engine[%d] no need to KernelLaunch.", __func__, engine);
+        HCCL_INFO("[%s] engine[%s] no need to KernelLaunch.", __func__, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         for (uint32_t i = 0; i < channelNum; i++) {
             userChannels[i] = targetChannels[i];
         }

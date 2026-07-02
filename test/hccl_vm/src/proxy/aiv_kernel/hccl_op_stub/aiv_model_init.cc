@@ -38,15 +38,15 @@ void aiv_env_init(uint32_t rankId,
     executor.SetCurOp(opParam);
     const std::string inputMemDesc = AivSim::Mem{input, inputSize}.Describe();
     const std::string outputMemDesc = AivSim::Mem{output, outputSize}.Describe();
-    HCCL_VM_DEBUG("[aiv_env_init] begin");
+    HCCL_VM_DEBUG("begin");
     HCCL_VM_DEBUG(
-        "[aiv_env_init] rankId={}, blockNum={}, buffIn={:p}, rankSize={}",
+        "rankId={}, blockNum={}, buffIn={:p}, rankSize={}",
         rankId,
         blockNum,
         buffIn,
         rankSize);
     HCCL_VM_DEBUG(
-        "[aiv_env_init] input={}, output={}, "
+        "input={}, output={}, "
         "inputGlobalOffsetBase={}, outputGlobalOffsetBase={}, cclBufferSize={}, flagBufferSize={}",
         inputMemDesc,
         outputMemDesc,
@@ -55,7 +55,7 @@ void aiv_env_init(uint32_t rankId,
         cclBufferSize,
         flagBufferSize);
     HCCL_VM_DEBUG(
-        "[aiv_env_init] curOp: dataType={}, len={}, reduceOp={}, root={}, sliceId={}, inputStride={}, "
+        "curOp: dataType={}, len={}, reduceOp={}, root={}, sliceId={}, inputStride={}, "
         "outputStride={}, kernelName={}",
         opParam.dataType,
         opParam.len,
@@ -66,7 +66,7 @@ void aiv_env_init(uint32_t rankId,
         opParam.outputStride,
         opParam.kernelName);
 
-    HCCL_VM_DEBUG("[aiv_env_init] SetIoBuffer");
+    HCCL_VM_DEBUG("SetIoBuffer");
     executor.SetIoBuffer(
         input,
         inputSize,
@@ -76,7 +76,7 @@ void aiv_env_init(uint32_t rankId,
         outputGlobalOffsetBase);
 
     if (buffIn == nullptr) {
-        HCCL_VM_DEBUG("[aiv_env_init] buffIn is null, skip SetCommBuffer initialization");
+        HCCL_VM_DEBUG("buffIn is null, skip SetCommBuffer initialization");
         return;
     }
 
@@ -89,7 +89,7 @@ void aiv_env_init(uint32_t rankId,
         const std::string cclMemDesc = AivSim::Mem{cclBuffer, cclBufferSize}.Describe();
         const std::string flagMemDesc = AivSim::Mem{flagBuffer, flagBufferSize}.Describe();
         HCCL_VM_DEBUG(
-            "[aiv_env_init] SetCommBuffer rank={}, cclBuffer={}, flagBuffer={}",
+            "SetCommBuffer rank={}, cclBuffer={}, flagBuffer={}",
             i,
             cclMemDesc,
             flagMemDesc);

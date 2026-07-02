@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "hal.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 #include <dlfcn.h>
@@ -22,6 +23,7 @@
 #include <net/if.h>
 #include <net/if_arp.h>
 #include <errno.h>
+#include <pthread.h>
 #include <syslog.h>
 #include "securec.h"
 
@@ -32,8 +34,15 @@
 #define DRIVER_TOPO_FILE_DIR_PATH "driver/topo/950"
 #define MAX_TOPO_FILENAME_LEN   (64)
 
-#define HAL_TURE  (1)
+#define HAL_TRUE  (1)
 #define HAL_FALSE (0)
+
+#define MODULE_TYPE_SYSTEM (0)
+#define INFO_TYPE_SERVER_ID (27)
+#define INFO_TYPE_SPOD_ID (29)
+#define INFO_TYPE_MAINBOARD_ID (39)
+#define INFO_TYPE_CHASSI_ID (48)
+#define INFO_TYPE_SPOD_TYPE (49)
 
 enum dcmi_main_cmd {
     DCMI_MAIN_CMD_DVPP = 0,
@@ -77,13 +86,11 @@ static int (*dcmiv2_get_eid_list_by_urma_dev_index)(int npu_id,
                                                     dcmi_urma_eid_info_t* eid_list,
                                                     int* eid_cnt);
 
-static int (*dcmiv2_get_mainboard_id)(int npu_id, unsigned int* mainboard_id);
-
 static int (*dcmiv2_get_device_pcie_info)(int npu_id, struct dcmi_pcie_info_all* pcie_info);
 
-static int (*dcmiv2_get_device_info)(int npu_id, enum dcmi_main_cmd main_cmd, unsigned int sub_cmd, void *buf, unsigned int*size);
+static int (*get_logicid_from_phyid)(const int32_t phy_id, int32_t *const logic_id);
 
-static int (*get_logicid_from_phyid)(unsigned int phy_id, unsigned int* logic_id);
+static int (*halGetDeviceInfo)(unsigned int devId, uint32_t moduleType, int32_t infoType, int64_t *value);
 
 void* hal_dlopen(const char *filename, int flag)
 {
@@ -97,47 +104,42 @@ void* hal_dlsym(void *handle, const char *symbol)
 
 int load_dcmi()
 {
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     static void* dcmi = NULL;
-    static volatile int isInit = HAL_FALSE;
-    const int maxWaitTime = 10;
-    if (dcmi != NULL) {
-        for (int i = 0; i < maxWaitTime; i++) {
-            if (isInit == HAL_TURE) {
-                return 0;
-            }
-            sleep(1);
-        }
+    static void* acl = NULL;
+    static int isInit = HAL_FALSE;
+    pthread_mutex_lock(&mutex);
+    if (dcmi != NULL && acl != NULL && isInit == HAL_TRUE) {
+        pthread_mutex_unlock(&mutex);
         return 0;
     }
-    if(dcmi == NULL) {
-        dcmi=hal_dlopen("libdcmi.so", RTLD_LAZY);
+    if(dcmi == NULL || acl == NULL) {
+        dcmi = hal_dlopen("libdcmi.so", RTLD_LAZY);
+        acl = hal_dlopen("libacl_rt.so", RTLD_LAZY);
     }
-    if(dcmi == NULL) {
+
+    if(dcmi == NULL || acl == NULL) {
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
     dcmi_init = hal_dlsym(dcmi, "dcmiv2_init");
     dcmiv2_get_urma_device_cnt = hal_dlsym(dcmi, "dcmiv2_get_urma_device_cnt");
     dcmiv2_get_eid_list_by_urma_dev_index = hal_dlsym(dcmi, "dcmiv2_get_eid_list_by_urma_dev_index");
-    dcmiv2_get_mainboard_id = hal_dlsym(dcmi, "dcmiv2_get_mainboard_id");
     dcmiv2_get_device_pcie_info = hal_dlsym(dcmi, "dcmiv2_get_device_pcie_info");
-    dcmiv2_get_device_info = hal_dlsym(dcmi, "dcmiv2_get_device_info");
-    get_logicid_from_phyid = hal_dlsym(dcmi, "dcmiv2_get_dev_id_by_chip_phy_id");
-    if (get_logicid_from_phyid == NULL) {
-        get_logicid_from_phyid = hal_dlsym(dcmi, "dcmiv2_get_dev_id_from_chip_phyid");
-    }
+    get_logicid_from_phyid = hal_dlsym(acl, "aclrtGetLogicDevIdByPhyDevId");
+    halGetDeviceInfo = hal_dlsym(acl, "halGetDeviceInfo");
 
-    if ((dcmi_init == NULL)
-     || (dcmiv2_get_urma_device_cnt == NULL)
-     || (dcmiv2_get_eid_list_by_urma_dev_index == NULL) || (dcmiv2_get_mainboard_id == NULL)
-     || (dcmiv2_get_device_pcie_info ==NULL) || (dcmiv2_get_device_info == NULL)
-     || (get_logicid_from_phyid == NULL)) {
+    if ((dcmi_init == NULL) || (dcmiv2_get_urma_device_cnt == NULL)
+     || (dcmiv2_get_eid_list_by_urma_dev_index == NULL) || (halGetDeviceInfo == NULL)
+     || (dcmiv2_get_device_pcie_info ==NULL) || (get_logicid_from_phyid == NULL)) {
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
     (void)dcmi_init(); //  dcmi_init可能已经调用过了
-    isInit = HAL_TURE;
+    isInit = HAL_TRUE;
+    pthread_mutex_unlock(&mutex);
     return 0;
 }
-
 
 int hal_get_mainboard_id(int phyId, unsigned int* mainboardId)
 {
@@ -145,9 +147,13 @@ int hal_get_mainboard_id(int phyId, unsigned int* mainboardId)
     if (hal_get_logicid_from_phyid((unsigned int)phyId, &logicId) != 0) {
         return -1;
     }
-    return dcmiv2_get_mainboard_id(logicId, mainboardId);
+    int64_t value = 0;
+    int ret = halGetDeviceInfo(logicId, MODULE_TYPE_SYSTEM, INFO_TYPE_MAINBOARD_ID, &value);
+    if (ret == 0) {
+        *mainboardId = (unsigned int)value;
+    }
+    return ret;
 }
-
 
 #define MAX_IFREQ_NUM (16)
 int get_server_id(char* server_id, size_t len) {
@@ -255,8 +261,22 @@ int hal_get_spod_info(int phyId, struct dcmi_spod_info* spodInfo)
     if (hal_get_logicid_from_phyid((unsigned int)phyId, &logicId) != 0) {
         return -1;
     }
-    unsigned int bufSize = sizeof(struct dcmi_spod_info);
-    return dcmiv2_get_device_info(logicId, DCMI_MAIN_CMD_CHIP_INF, DCMI_CHIP_INFO_SUB_CMD_SPOD_INFO, spodInfo, &bufSize);
+    int64_t spodId = 0;
+    int64_t serverId = 0;
+    int64_t chassisId = 0;
+    int64_t spodType = 0;
+    int ret1 = halGetDeviceInfo(logicId, MODULE_TYPE_SYSTEM, INFO_TYPE_SPOD_ID, &spodId);
+    int ret2 = halGetDeviceInfo(logicId, MODULE_TYPE_SYSTEM, INFO_TYPE_SERVER_ID, &serverId);
+    int ret3 = halGetDeviceInfo(logicId, MODULE_TYPE_SYSTEM, INFO_TYPE_CHASSI_ID, &chassisId);
+    int ret4 = halGetDeviceInfo(logicId, MODULE_TYPE_SYSTEM, INFO_TYPE_SPOD_TYPE, &spodType);
+    if (ret1 != 0 || ret2 != 0 || ret3 != 0 || ret4 != 0) {
+        return -1;
+    }
+    spodInfo->super_pod_id = (unsigned int)spodId;
+    spodInfo->server_index = (unsigned int)serverId;
+    spodInfo->chassis_id = (unsigned int)chassisId;
+    spodInfo->super_pod_type = (unsigned int)spodType;
+    return 0;
 }
 
 int hal_get_npu_count()
@@ -279,9 +299,13 @@ int hal_get_logicid_from_phyid(unsigned int phyId, unsigned int* logicId)
     if (load_dcmi() != 0) {
         return -1;
     }
-    return get_logicid_from_phyid(phyId, logicId);
+    int value = -1;
+    int ret = get_logicid_from_phyid((int)phyId, &value);
+    if (ret == 0) {
+        *logicId = (unsigned int)value;
+    }
+    return ret;
 }
-
 
 // 去除字符串首尾的空白字符
 static char* trim_whitespace(char *str) {

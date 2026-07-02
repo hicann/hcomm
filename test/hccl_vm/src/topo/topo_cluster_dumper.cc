@@ -12,6 +12,7 @@
 #include <iostream>
 
 #include "topo_cluster_dumper.h"
+#include "sim_log.h"
 
 std::string ClusterTopoDumper::Indent(int level) {
     return std::string(level * 2, ' ');
@@ -20,12 +21,12 @@ std::string ClusterTopoDumper::Indent(int level) {
 void ClusterTopoDumper::DumpToFile(const Network& network, const std::string& filePath) {
     std::ofstream ofs(filePath);
     if (!ofs.is_open()) {
-        fprintf(stderr, "Error: cannot open file for writing: %s\n", filePath.c_str());
+        HCCL_VM_ERROR("cannot open file for writing: {}", filePath.c_str());
         return;
     }
     DumpToStream(network, ofs);
     ofs.close();
-    printf("IR data dumped to: %s\n", filePath.c_str());
+    HCCL_VM_INFO("IR data dumped to: {}", filePath.c_str());
 }
 
 void ClusterTopoDumper::DumpToStream(const Network& network, std::ostream& os) {

@@ -10,13 +10,16 @@
 
 #include "task_graph_reachability_v3.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <map>
 #include <queue>
 #include <set>
+#include <sstream>
 #include <utility>
 
 #include "sim_log.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
@@ -88,8 +91,8 @@ HcclResult AddReachableTaskNode(const TaskNode *node, ReachableTaskNodes &reacha
 
     const NodeId nodeId = node->GetNodeId();
     if (nodeId < 0) {
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] Invalid task node id, nodeId={}, node={}",
-            nodeId, node->Describe());
+        HCCL_VM_ERROR("{} Task node id is invalid, nodeId={}, node={}",
+            MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID), nodeId, node->Describe());
         return HCCL_E_PARA;
     }
 
@@ -99,14 +102,16 @@ HcclResult AddReachableTaskNode(const TaskNode *node, ReachableTaskNodes &reacha
         const size_t previousIndex = idResult.first->second;
         const TaskNode *previousNode = (previousIndex < reachable.nodes.size()) ?
             reachable.nodes[previousIndex] : nullptr;
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] Duplicate task node id, nodeId={}, lhs={}, rhs={}",
-            nodeId, (previousNode == nullptr) ? "null" : previousNode->Describe(), node->Describe());
+        HCCL_VM_ERROR("{} Two different nodes share the same task node id, nodeId={}, "
+            "firstNode={}, secondNode={}", MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID), nodeId,
+            (previousNode == nullptr) ? "null" : previousNode->Describe(), node->Describe());
         return HCCL_E_PARA;
     }
 
     const auto nodeResult = reachable.indexByNode.insert(std::make_pair(node, nodeIndex));
     if (!nodeResult.second) {
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] Duplicate task node pointer, node={}", node->Describe());
+        HCCL_VM_ERROR("{} The same task node object was inserted more than once, node={}",
+            MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID), node->Describe());
         return HCCL_E_INTERNAL;
     }
 
@@ -138,7 +143,9 @@ HcclResult CollectReachableTaskNodes(const TaskNode *start, ReachableTaskNodes &
 {
     reachable = ReachableTaskNodes();
     if (!IsMainGraphStartNode(start)) {
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] Invalid main start node.");
+        HCCL_VM_ERROR("{} Reachability analysis cannot start because the main start node is "
+            "invalid, mainStartNode={}", MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID),
+            start == nullptr ? "null" : start->Describe());
         return HCCL_E_PARA;
     }
 
@@ -158,7 +165,8 @@ HcclResult CollectReachableTaskNodes(const TaskNode *start, ReachableTaskNodes &
 
         for (const TaskNode *childNode : node->GetChildren()) {
             if (childNode == nullptr) {
-                HCCL_VM_ERROR("[TaskGraphReachabilityV3] Invalid null child, parent={}", node->Describe());
+                HCCL_VM_ERROR("{} Graph structure is broken because one child node is null, "
+                    "parent={}", MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID), node->Describe());
                 return HCCL_E_PTR;
             }
             if (visited.count(childNode) != 0) {
@@ -178,14 +186,16 @@ HcclResult GetValidChildIndex(const TaskNode *parent, const TaskNode *child,
         return HCCL_E_PTR;
     }
     if (child == nullptr) {
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] Invalid null child, parent={}", parent->Describe());
+        HCCL_VM_ERROR("{} Graph structure is broken because one child node is null, parent={}",
+            MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID), parent->Describe());
         return HCCL_E_PTR;
     }
 
     const auto iter = reachable.indexByNode.find(child);
     if (iter == reachable.indexByNode.end()) {
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] Invalid edge, parent={}, child={}",
-            parent->Describe(), child->Describe());
+        HCCL_VM_ERROR("{} One graph edge is invalid, so reachability analysis cannot continue, "
+            "parent={}, child={}", MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID), parent->Describe(),
+            child->Describe());
         return HCCL_E_PARA;
     }
 
@@ -268,10 +278,24 @@ HcclResult BuildReachabilityContext(const TaskNode *start, ReachabilityBuildCont
     }
 
     if (context.taskTopoNodes.size() != nodeCount) {
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] V3 graph is not fully reachable from mainStart or is not a DAG, "
-            "topoSize={}, expectedTopoSize={}, taskTopoSize={}, taskNodeCount={}, mainStartNodeId={}",
+        const TaskNode *firstUnreachedNode = nullptr;
+        for (const TaskNode *node : context.reachable.nodes) {
+            if (node == nullptr) {
+                continue;
+            }
+            const bool found = std::find(context.taskTopoNodes.begin(), context.taskTopoNodes.end(), node) !=
+                context.taskTopoNodes.end();
+            if (!found) {
+                firstUnreachedNode = node;
+                break;
+            }
+        }
+        HCCL_VM_ERROR("{} This V3 graph is not a complete DAG from the main start node, "
+            "topoSize={}, expectedTopoSize={}, reachableTaskCount={}, taskNodeCount={}, mainStartNodeId={}",
+            MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID),
             context.fullTopoOrder.size(), nodeCount + 1U, context.taskTopoNodes.size(), nodeCount,
-            MAIN_START_NODE_ID);
+            MAIN_START_NODE_ID,
+            firstUnreachedNode == nullptr ? "null" : firstUnreachedNode->Describe());
         return HCCL_E_INTERNAL;
     }
 
@@ -295,7 +319,8 @@ HcclResult BuildDenseReachabilityClosure(const ReachabilityBuildContext &context
         const TaskNode *node = *iter;
         const auto nodeIter = context.reachable.indexByNode.find(node);
         if (nodeIter == context.reachable.indexByNode.end()) {
-            HCCL_VM_ERROR("[TaskGraphReachabilityV3] Missing topo node index, node={}", node->Describe());
+            HCCL_VM_ERROR("{} This node is missing its topological index, node={}",
+                MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID), node->Describe());
             return HCCL_E_INTERNAL;
         }
         const size_t nodeIndex = nodeIter->second;
@@ -323,7 +348,8 @@ HcclResult BuildDenseReachabilityClosure(const ReachabilityBuildContext &context
         const size_t dataIndex = dataItem.second;
         const auto nodeIter = context.reachable.indexByNode.find(node);
         if (nodeIter == context.reachable.indexByNode.end() || dataIndex >= closure.matrix.size()) {
-            HCCL_VM_ERROR("[TaskGraphReachabilityV3] Missing data move node index, node={}", node->Describe());
+            HCCL_VM_ERROR("{} This data-move node is missing its reachability index, node={}",
+                MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID), node->Describe());
             return HCCL_E_INTERNAL;
         }
         closure.matrix[dataIndex] = reachableDataByNode[nodeIter->second];
@@ -361,23 +387,29 @@ HcclResult IsReachable(const ReachabilityClosure &closure, NodeId fromNodeId, No
     isReachable = false;
     const auto fromIter = closure.dataIndexByNodeId.find(fromNodeId);
     if (fromIter == closure.dataIndexByNodeId.end()) {
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] Reachability query only supports data move task nodes, "
-            "fromNodeId={}, toNodeId={}", fromNodeId, toNodeId);
+        HCCL_VM_ERROR("{} Task dependency query only supports memory-copy or reduce tasks, "
+            "but the source task is not in that set, sourceTaskId={}, targetTaskId={}, "
+            "sourceReachabilityIndex=null",
+            MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR), fromNodeId, toNodeId);
         return HCCL_E_PARA;
     }
     const auto toIter = closure.dataIndexByNodeId.find(toNodeId);
     if (toIter == closure.dataIndexByNodeId.end()) {
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] Reachability query only supports data move task nodes, "
-            "fromNodeId={}, toNodeId={}", fromNodeId, toNodeId);
+        HCCL_VM_ERROR("{} Task dependency query only supports memory-copy or reduce tasks, "
+            "but the target task is not in that set, sourceTaskId={}, targetTaskId={}, "
+            "sourceReachabilityIndex={}, targetReachabilityIndex=null",
+            MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR), fromNodeId, toNodeId, fromIter->second);
         return HCCL_E_PARA;
     }
 
     const size_t fromIndex = fromIter->second;
     const size_t toIndex = toIter->second;
     if (fromIndex >= closure.matrix.size() || toIndex / BITS_PER_WORD >= closure.matrix[fromIndex].size()) {
-        HCCL_VM_ERROR("[TaskGraphReachabilityV3] Invalid data move reachability index, fromNodeId={}, "
-            "toNodeId={}, fromIndex={}, toIndex={}, matrixSize={}",
-            fromNodeId, toNodeId, fromIndex, toIndex, closure.matrix.size());
+        HCCL_VM_ERROR("{} Reachability index is invalid for this data-move task pair, "
+            "sourceTaskId={}, targetTaskId={}, sourceIndex={}, targetIndex={}, matrixRowCount={}, "
+            "matrixWordCountInSourceRow={}",
+            MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID), fromNodeId, toNodeId, fromIndex, toIndex,
+            closure.matrix.size(), fromIndex < closure.matrix.size() ? closure.matrix[fromIndex].size() : 0U);
         return HCCL_E_INTERNAL;
     }
     isReachable = TestBit(closure.matrix[fromIndex], toIndex);
@@ -390,13 +422,13 @@ HcclResult IsReachable(const ReachabilityClosure &closure, NodeId fromNodeId, No
 //     isReachable = false;
 //     const auto fromIter = closure.dataIndexByNodeId.find(fromNodeId);
 //     if (fromIter == closure.dataIndexByNodeId.end()) {
-//         HCCL_VM_ERROR("[TaskGraphReachabilityV3] Roaring reachability query only supports data move task nodes, "
+//         HCCL_VM_ERROR("Roaring reachability query only supports data move task nodes, "
 //             "fromNodeId={}, toNodeId={}", fromNodeId, toNodeId);
 //         return HCCL_E_PARA;
 //     }
 //     const auto toIter = closure.dataIndexByNodeId.find(toNodeId);
 //     if (toIter == closure.dataIndexByNodeId.end()) {
-//         HCCL_VM_ERROR("[TaskGraphReachabilityV3] Roaring reachability query only supports data move task nodes, "
+//         HCCL_VM_ERROR("Roaring reachability query only supports data move task nodes, "
 //             "fromNodeId={}, toNodeId={}", fromNodeId, toNodeId);
 //         return HCCL_E_PARA;
 //     }
@@ -404,7 +436,7 @@ HcclResult IsReachable(const ReachabilityClosure &closure, NodeId fromNodeId, No
 //     const size_t fromIndex = fromIter->second;
 //     const size_t toIndex = toIter->second;
 //     if (fromIndex >= closure.matrix.size()) {
-//         HCCL_VM_ERROR("[TaskGraphReachabilityV3] Invalid roaring data move reachability index, fromNodeId={}, "
+//         HCCL_VM_ERROR("Invalid roaring data move reachability index, fromNodeId={}, "
 //             "toNodeId={}, fromIndex={}, toIndex={}, matrixSize={}",
 //             fromNodeId, toNodeId, fromIndex, toIndex, closure.matrix.size());
 //         return HCCL_E_INTERNAL;
@@ -472,8 +504,8 @@ HcclResult CheckDataMoveTaskReachability(const TaskNode *start, DataTaskReachabi
         }
     }
 
-    HCCL_VM_INFO("[TaskGraphReachabilityV3] V3 data move reachability generated, nodeCount={}, edgeCount={}, "
-        "dataTaskNodeCount={}, dataTaskPairs={}, reachablePairs={}, unreachablePairs={}",
+    HCCL_VM_INFO("Task dependency summary generated, nodeCount={}, edgeCount={}, "
+        "memoryTaskCount={}, taskPairsChecked={}, orderedTaskPairs={}, parallelTaskPairs={}",
         localStats.nodeCount, localStats.edgeCount, localStats.dataTaskNodeCount,
         localStats.dataTaskPairCount, localStats.reachablePairCount, localStats.unreachablePairCount);
 

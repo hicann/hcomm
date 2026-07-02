@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "TSD_STUB"
+
 #include <atomic>
 #include <cstdint>
 #include <iostream>
@@ -15,6 +18,7 @@
 #include <vector>
 
 #include "sim_log.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,7 +29,7 @@ uint32_t TsdCapabilityGet(const uint32_t logicDeviceId, const int32_t type, cons
     (void) logicDeviceId;
     (void) type;
     (void) ptr;
-    HCCL_VM_ERROR("[TSD] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 #ifdef __cplusplus

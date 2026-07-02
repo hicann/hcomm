@@ -9,6 +9,21 @@
 
 set -e
 
+function usage() {
+  echo "Usage:"
+  echo "  sh build_pkg.sh [-h | --help]"
+  echo "                  [--install <hccl|hcomm>]"
+  echo "                  [--tool_path <PATH>]"
+  echo ""
+  echo "Options:"
+  echo "    -h, --help     Print usage"
+  echo "    --install <hccl|hcomm>"
+  echo "                   Specify which component to build/install, default: both"
+  echo "    --tool_path <PATH>"
+  echo "                   Set HCCL_VM_PATH, default: current directory"
+  echo ""
+}
+
 # ==========================================
 # 第一步：解析脚本参数和环境变量
 # ==========================================
@@ -21,6 +36,10 @@ TOOL_PATH=""
 # 2.解析命令行参数
 while [[ $# -gt 0 ]]; do
     case $1 in
+        -h | --help)
+            usage
+            exit 0
+            ;;
         --install)
             if [ "$2" == "hccl" ]; then
                 BUILD_HCCL=true
@@ -45,6 +64,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "错误: 未知参数 $1"
+            usage
             exit 1
             ;;
     esac
@@ -63,7 +83,7 @@ fi
 
 # 4.校验并获取 CANN 安装目录
 if [ -z "$ASCEND_HOME_PATH" ]; then
-    echo "错误: 环境变量 ASCEND_HOME_PATH 未设置，请参照source /home/myuser/workspace/Ascend/cann/set_env.sh设置"
+    echo "错误: 环境变量 ASCEND_HOME_PATH 未设置，请参照source /home/workspace/Ascend/cann/set_env.sh设置"
     exit 1
 fi
 

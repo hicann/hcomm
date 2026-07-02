@@ -12,6 +12,7 @@
 #define SIM_COMMON_MACRO_H
 
 #include <iostream>
+#include "sim_log.h"
 
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
 
@@ -20,7 +21,7 @@
     do {                                                                                        \
         auto hcclRet = call;                                                                    \
         if (UNLIKELY(hcclRet != 0)) {                                                           \
-            std::cout << "[" << __func__ << "]call trace: hcclRet -> " << hcclRet << std::endl; \
+            HCCL_VM_INFO("call trace: hcclRet -> {}", static_cast<int>(hcclRet));               \
             return hcclRet;                                                                     \
         }                                                                                       \
     } while (0)
@@ -29,9 +30,9 @@
 #define HCCLVM_CHK_PTR(ptr)                                                                           \
     do {                                                                                              \
         if (UNLIKELY((ptr) == nullptr)) {                                                             \
-            std::cout << "[" << __func__ << "]errNo[0x" << std::hex << HCCL_SIM_E_PTR << "]ptr [" << #ptr \
-                      << "] is nullptr, return HCCL_E_PTR" << std::endl;                              \
-            return HCCL_SIM_E_PTR;                                                                        \
+            HCCL_VM_INFO("errNo[0x{:x}], ptr [{}] is nullptr, return HCCL_E_PTR",                     \
+                            static_cast<unsigned int>(HCCL_SIM_E_PTR), #ptr);                                                    \
+            return HCCL_SIM_E_PTR;                                                                    \
         }                                                                                             \
     } while (0)
 

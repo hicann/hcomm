@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "CTX_STUB"
+
 #include <atomic>
 #include <cstdint>
 #include <iostream>
@@ -20,6 +23,7 @@
 #include "sim_common_macro.h"
 #include "sim_log.h"
 #include "db_sim_runner_ops.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +38,7 @@ aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)
         return d.logic_id  == (uint32_t)deviceId;
     });
     if (!ret.second) {
-        HCCL_VM_ERROR("cannot find device: {:d}", deviceId);
+        HCCL_VM_ERROR("device not found:{:d}", deviceId);
         return HcclResult::HCCL_E_NOT_FOUND;
     }
     // 找不到context，则默认新增一个context
@@ -61,7 +65,7 @@ aclError aclrtDestroyContext(aclrtContext context)
         return stm.ctx_id  == ctxId && stm.is_primary_default == 1;
     });
     if (!ret.second) {
-        HCCL_VM_ERROR("cannot find stream by ctx: {:d}", ctxId);
+        HCCL_VM_ERROR("stream not found ctxId:{:d}", ctxId);
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
@@ -98,7 +102,7 @@ aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)
         return stm.ctx_id  == curCtxId && stm.is_primary_default == 1;
     });
     if (!stm.second) {
-        HCCL_VM_ERROR("cannot find stream by ctx: {:d}", curCtxId);
+        HCCL_VM_ERROR("stream not found ctxId:{:d}", curCtxId);
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
@@ -117,7 +121,7 @@ aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *act
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);
     if (!currCtx.has_value()) {
         // not find
-        HCCL_VM_ERROR("can not get currContext: {:d}", runner.current_ctx_id);
+        HCCL_VM_ERROR("ctx not found:{:d}", runner.current_ctx_id);
         return ACL_ERROR_INVALID_PARAM;
     }
 

@@ -16,7 +16,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # 全局变量
-WORKSPACE=${WORKSPACE:-/home/myuser/workspace}
+WORKSPACE=${WORKSPACE:-/home/workspace}
 ASCEND_PATH=${ASCEND_PATH:-}
 HCOMM_PATH=${HCOMM_PATH:-}
 HCCL_PATH=${HCCL_PATH:-}
@@ -168,8 +168,8 @@ show_help() {
     echo "  bash install.sh [选项]"
     echo ""
     echo "选项:"
-    echo "  --workspace <路径>      设置工作目录 (默认: /home/myuser/workspace)"
-    echo "  --ascend-path <路径>    设置CANN安装路径 (默认: /home/myuser/workspace/Ascend)"
+    echo "  --workspace <路径>      设置工作目录 (默认: /home/workspace)"
+    echo "  --ascend-path <路径>    设置CANN安装路径 (默认: /home/workspace/Ascend)"
     echo "  --hcomm-path <路径>     设置hcomm源码路径 (默认: <工作目录>/hcomm)"
     echo "  --checker-path <路径>   设置CheckerL2源码路径 (默认: <工作目录>/CheckerL2)"
     echo "  --topo-type <类型>      设置拓扑类型"

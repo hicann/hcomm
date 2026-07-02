@@ -51,6 +51,7 @@
 #include "store_sim_device_memory_manager.h"
 #include "sim_process_syncer.h"
 #include "db_sim_runner_common.h"
+#include "sim_common_api.h"
 #include "db_sim_runner_db.h"
 #include "yaml-cpp/yaml.h"
 
@@ -93,7 +94,7 @@ static void RemoveMessageQueue(const char *name)
 { 
     const std::string mqName = ToPosixMqName(name); 
     if (mq_unlink(mqName.c_str()) == -1 && errno != ENOENT) { 
-        HCCL_VM_WARN("[HVM] {}", MakeMqErrorMessage("remove", mqName, errno)); 
+        HCCL_VM_WARN("{}", MakeMqErrorMessage("remove", mqName, errno)); 
     } 
 } 
 
@@ -282,27 +283,23 @@ bool TryParseAivRankIdFromTaskFileName(const std::string &fileName, uint32_t &ra
 
 HcclVmResult ValidateAivTaskJsonByRank(const std::vector<sim::Rank> &allRank) 
 { 
-    const char *installDirEnv = std::getenv("HCCL_VM_INSTALL_DIR"); 
-    if (installDirEnv == nullptr || installDirEnv[0] == '\0') { 
-        HCCL_VM_ERROR("[HVM] env HCCL_VM_INSTALL_DIR is not set in AIV mode."); 
-        return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD; 
-    } 
+    const std::string &installDir = InstallPath::GetHcclVmInstallAbsPath();
 
     if (allRank.empty()) { 
         return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD; 
     } 
 
-    const fs::path dataDir = fs::path(installDirEnv) / "data"; 
+    const fs::path dataDir = fs::path(InstallPath::ResolveToInstallRoot("data")); 
     std::error_code ec; 
     if (!fs::exists(dataDir, ec) || ec || !fs::is_directory(dataDir, ec)) { 
-        HCCL_VM_ERROR("[HVM] AIV data directory is missing: {}", dataDir.string()); 
+        HCCL_VM_ERROR("AIV data directory is missing: {}", dataDir.string()); 
         return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD; 
     } 
 
     std::unordered_set<uint32_t> existingRanks; 
     for (const auto &entry : fs::directory_iterator(dataDir, ec)) { 
         if (ec) { 
-            HCCL_VM_ERROR("[HVM] failed to iterate AIV data directory: {}", dataDir.string()); 
+            HCCL_VM_ERROR("failed to iterate AIV data directory: {}", dataDir.string()); 
             return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD; 
         } 
         if (!entry.is_regular_file()) { 
@@ -317,7 +314,7 @@ HcclVmResult ValidateAivTaskJsonByRank(const std::vector<sim::Rank> &allRank)
 
     for (const auto &rank : allRank) { 
         if (existingRanks.find(rank.rank_id) == existingRanks.end()) { 
-            HCCL_VM_ERROR("[HVM] missing AIV task json file for rank {}", rank.rank_id); 
+            HCCL_VM_ERROR("missing AIV task json file for rank {}", rank.rank_id); 
             return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD; 
         } 
     } 
@@ -336,7 +333,7 @@ std::string GetBinLocation() {
         return binDir.parent_path().string();
     }
     return binDir.string();
-} 
+}
 
 std::string ArgvToString(int argc, char *argv[]) { 
     std::string cmd; 
@@ -356,7 +353,7 @@ std::string ArgvToString(int argc, char *argv[]) {
 } 
 
 void RemoveFromLDPreload(const std::string& targetValue) { 
-    HCCL_VM_DEBUG("[HVM] clean LD_PRELOAD env: {}", targetValue); 
+    HCCL_VM_DEBUG("clean LD_PRELOAD env: {}", targetValue); 
     const char* curVal = std::getenv("LD_PRELOAD"); 
 
     if (curVal == nullptr) { 
@@ -397,14 +394,14 @@ void RemoveFromLDPreload(const std::string& targetValue) {
 
 std::string FileInModelDir(const std::string& fileName) { 
     if (fileName == "ranktable") { 
-        std::string clusterInfo = GetBinLocation() + "/" + fileName + ".json"; 
+        std::string clusterInfo = InstallPath::ResolveToInstallRoot(fileName + ".json"); 
         std::ifstream f(clusterInfo.c_str()); 
         if (!f.good()) { 
             return "config ranktable, but rank table file not found: " + clusterInfo; 
         } 
         return ""; 
     } 
-    std::string filePath = GetBinLocation() + "/config/topo_meta/" + fileName + ".yaml"; 
+    std::string filePath = InstallPath::ResolveToInstallRoot("config/topo_meta/" + fileName + ".yaml"); 
     auto fileExistd = [&]()->bool { 
         std::ifstream f(filePath.c_str()); 
         return f.good(); 
@@ -423,52 +420,52 @@ std::string GenerateClusterTopo(const std::string& topoFileName) {
         topoName.erase(topoName.find(".yaml"), 5); 
     } 
 
-    std::string generateShellPath = GetBinLocation() + "/script/generate_cluster_topo.sh"; 
+    std::string generateShellPath = InstallPath::ResolveToInstallRoot("script/generate_cluster_topo.sh"); 
     if (!fs::exists(generateShellPath)) { 
-        HCCL_VM_ERROR("[HVM] generate_cluster_topo.sh not found: {}", generateShellPath); 
+        HCCL_VM_ERROR("generate_cluster_topo.sh not found: {}", generateShellPath); 
         return "[HVM] generate_cluster_topo.sh not found: " + generateShellPath; 
     } 
-    std::string clusterConfigFilePath = GetBinLocation() + "/config/cluster/" + topoName + ".yaml"; 
+    std::string clusterConfigFilePath = InstallPath::ResolveToInstallRoot("config/cluster/" + topoName + ".yaml"); 
     if (!fs::exists(clusterConfigFilePath)) { 
-        HCCL_VM_ERROR("[HVM] cluster config file not found: {}", clusterConfigFilePath); 
+        HCCL_VM_ERROR("cluster config file not found: {}", clusterConfigFilePath); 
         return "[HVM] cluster config file not found: " + clusterConfigFilePath; 
     } 
     // 执行generate_cluster_topo.sh脚本（默认路径），生成集群组网 
     std::string cmd = "bash " + generateShellPath + " " + clusterConfigFilePath; 
     if (std::system(cmd.c_str()) != 0) { 
-        HCCL_VM_ERROR("[HVM] generate_cluster_topo.sh failed: {}", cmd); 
+        HCCL_VM_ERROR("generate_cluster_topo.sh failed: {}", cmd); 
         return "[HVM] generate_cluster_topo.sh failed: " + cmd; 
     } 
     return ""; 
 } 
 
 void ShowModel() { 
-    std::string modelPath = GetBinLocation() + "/cluster_model"; 
+    std::string modelPath = InstallPath::ResolveToInstallRoot("cluster_model"); 
     if (!fs::exists(modelPath)) { 
-        HCCL_VM_ERROR("[HVM] path not exist -> {}", modelPath); 
+        HCCL_VM_ERROR("path not exist -> {}", modelPath); 
         return; 
     } 
     if (!fs::is_directory(modelPath)) { 
-        HCCL_VM_ERROR("[HVM] path not a dict -> {}", modelPath); 
+        HCCL_VM_ERROR("path not a dict -> {}", modelPath); 
         return; 
     } 
     bool hasFiles = false; 
-    std::cout << "model : " << std::endl; 
+    HCCL_VM_INFO("model : ");
     for (const auto& entry : fs::directory_iterator(modelPath)) { 
         // 过滤：只关心"常规文件"，忽略子文件夹 
         if (entry.is_regular_file()) { 
             hasFiles = true; 
             fs::path filePath = entry.path(); 
-            std::cout << "  " << filePath.stem().string() << "  [description] : "; 
+            HCCL_VM_INFO("  {}  [description] : ", filePath.stem().string());
             YAML::Node root = YAML::LoadFile(filePath); 
             uint32_t podNum = root["meta"]["podNum"].as<uint32_t>(); 
             uint32_t serNum = root["meta"]["serNum"].as<uint32_t>(); 
             uint32_t rankNum = root["meta"]["rankNum"].as<uint32_t>(); 
-            std::cout << "PodNum: " << podNum << ", SerNum: " << serNum << ", RankNum: " << rankNum << std::endl; 
+            HCCL_VM_INFO("podNum: {}, serNum: {}, rankNum: {}", podNum, serNum, rankNum);
         } 
     } 
     if (!hasFiles) { 
-        HCCL_VM_WARN("[HVM] there is no model"); 
+        HCCL_VM_WARN("there is no model"); 
     } 
     return; 
 } 
@@ -483,13 +480,13 @@ HcclVmResult InitHvmEnv(const std::string& configClusterDir, uint32_t level, boo
         void* commPool = sim::MemoryManager::GetInstance().AllocMemByName(
             sim::CommPoolPolicy::kPoolName, sim::CommPoolPolicy::kPoolSize);
         if (commPool == nullptr) {
-            HCCL_VM_ERROR("[HVM] create HcclCommPool fail");
+            HCCL_VM_ERROR("create HcclCommPool fail");
             return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD;
         }
     }
     void *shmptr =sim::MemoryManager::GetInstance().AllocMemByName("HcclAicpuData", sizeof(HcclAicpuData));
     if (shmptr == nullptr) {  
-        HCCL_VM_ERROR("[HVM] Alloc Shared Memory fail ");  
+        HCCL_VM_ERROR("Alloc Shared Memory fail ");  
         return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD;  
     } 
 
@@ -500,13 +497,13 @@ HcclVmResult InitHvmEnv(const std::string& configClusterDir, uint32_t level, boo
     std::string checkerTag = "@checker"; 
     auto chkInstallRet = InstallUserPlugin(checkerTag); 
     if (chkInstallRet != HCCL_SIM_HOST_SUCCESS_CMD) { 
-        HCCL_VM_ERROR("[HVM] default plugin install fail, please check your plugin path"); 
+        HCCL_VM_ERROR("default plugin install fail, please check your plugin path"); 
     } 
 
-    std::cout << "======================================"<< std::endl; 
+    HCCL_VM_INFO("===================================="); 
     ShowUserPlugin(); 
 
-    std::cout << "======================================="<< std::endl; 
+    HCCL_VM_INFO("======================================"); 
 
     return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD; 
 } 
@@ -525,7 +522,7 @@ HcclVmResult InitHvmCommEnv(const TopoMeta& topoMeta, const std::string& configF
         ret = AscendClusterTopoParser::GetInstance().InitCommunicationDomain(topoMeta, false); 
     } else { 
         HCCL_VM_INFO("mock-comm cmd config rank table file, config by ranktable.json"); 
-        std::string clusterInfo = GetBinLocation() + "/data/ranktable.json"; 
+        std::string clusterInfo = InstallPath::ResolveToInstallRoot("data/ranktable.json"); 
         std::ifstream f(clusterInfo.c_str()); 
         if (!f.good()) { 
             HCCL_VM_ERROR("ranktable.json file not found: {}", clusterInfo); 
@@ -535,9 +532,10 @@ HcclVmResult InitHvmCommEnv(const TopoMeta& topoMeta, const std::string& configF
         ret = AscendClusterTopoParser::GetInstance().ParseRanktableAndInitCommDomain(clusterInfo); 
     } 
     if (ret != HcclVmResult::HCCL_SIM_SUCCESS) { 
-        HCCL_VM_ERROR("[HVM] InitHvmCommEnv failed"); 
+        HCCL_VM_ERROR("InitHvmCommEnv failed"); 
         return ret; 
     } 
+    setenv("RANK_TABLE_FILE", InstallPath::ResolveToInstallRoot("data/ranktable.json").c_str(), 1);
 
     return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD; 
 } 
@@ -553,7 +551,7 @@ HcclVmResult HcclVmExit()
     HcclPluginManager &pluginManager = HcclPluginManager::GetInstance(); 
     auto ret = pluginManager.StopAllPlugins(); 
 
-    const fs::path backupDir = fs::path(g_binDir) / "data" / MakeDataBackupTimestamp();
+    const fs::path backupDir = fs::path(InstallPath::ResolveToInstallRoot("data/" + MakeDataBackupTimestamp()));
     BackupAivTaskFiles(backupDir);
 
     HCCL_VM_INFO("start Destroy ALL Resources.");
@@ -565,6 +563,7 @@ HcclVmResult HcclVmExit()
     }
     int ret1 = system("sudo rm -fr /dev/shm/* 2>/dev/null");
     ret1 |= system("sudo rm -fr /tmp/hccl_sim.db* 2>/dev/null"); 
+
     return ret; 
 } 
 
@@ -572,7 +571,7 @@ HcclVmResult InstallUserPlugin(std::string argStr) {
     // 处理插件tag和路径
     HcclVmResult ret {HcclVmResult::HCCL_SIM_HOST_ERROR_CMD}; 
     if (argStr.empty() || argStr[0] != '@') { 
-        HCCL_VM_ERROR("[HVM] plugin tag should start with '@', invalid tag: {}", argStr); 
+        HCCL_VM_ERROR("plugin tag should start with '@', invalid tag: {}", argStr); 
         return ret; 
     } 
     argStr.erase(argStr.begin()); 
@@ -581,13 +580,13 @@ HcclVmResult InstallUserPlugin(std::string argStr) {
     HcclPluginManager &pluginManager = HcclPluginManager::GetInstance(); 
     ret = pluginManager.RegisterPlugin(argStr);
     if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
-        HCCL_VM_ERROR("[HVM] Install plugin [{}] failed", argStr);
+        HCCL_VM_ERROR("Install plugin [{}] failed", argStr);
         return ret;
     }
 
     // 装 Runner 时若仅校验模式开着，复用池仍在、大块仍会引流，可能覆盖 Runner 真实数据，告警提示。
     if (argStr == "runner" && sim::IsCheckOnlyMode()) {
-        HCCL_VM_WARN("[HVM] check-only mode on while runner installed; big-block contents are not guaranteed");
+        HCCL_VM_WARN("check-only mode on while runner installed; big-block contents are not guaranteed");
     }
 
     return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD;
@@ -631,7 +630,7 @@ HcclVmResult UninstallUserPlugin(std::string argStr) {
 
     for (int i = 0; i < pluginTags.size(); ++i) {
         if (rets[i] != HcclVmResult::HCCL_SIM_SUCCESS) {
-            HCCL_VM_ERROR("[HVM] plugin Uninstall fail : {}", pluginTags[i]);
+            HCCL_VM_ERROR("plugin Uninstall fail : {}", pluginTags[i]);
             return rets[i];
         }
     }
@@ -645,10 +644,10 @@ void ShowUserPlugin() {
     listPlugins = pluginManager.GetPluginStatus(); 
 
     if (listPlugins.empty()) { 
-        HCCL_VM_INFO("[HVM] no plugin installed in hccl_vm"); 
+        HCCL_VM_INFO("no plugin installed in hccl_vm"); 
     } else { 
         for (auto &plugin : listPlugins) { 
-            std::cout << plugin << std::endl; 
+            HCCL_VM_INFO("{}", plugin);
         } 
     } 
     return; 
@@ -656,18 +655,18 @@ void ShowUserPlugin() {
 
 HcclVmResult SetConsoleLogLevel(int level) { 
     (void)level;
-    HCCL_VM_WARN("[HVM] set console log level is disabled because ProxyConfig shared memory is removed");
+    HCCL_VM_WARN("set console log level is disabled because ProxyConfig shared memory is removed");
     return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD;
 } 
 
 HcclVmResult SetFileLogLevel(int level) { 
     (void)level;
-    HCCL_VM_WARN("[HVM] set file log level is disabled because ProxyConfig shared memory is removed");
+    HCCL_VM_WARN("set file log level is disabled because ProxyConfig shared memory is removed");
     return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD;
 } 
 
 HcclVmResult ShowCurrentLogLevel() { 
-    HCCL_VM_WARN("[HVM] show log level is disabled because ProxyConfig shared memory is removed");
+    HCCL_VM_WARN("show log level is disabled because ProxyConfig shared memory is removed");
     return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD;
 } 
 
@@ -683,10 +682,10 @@ HcclVmResult StartHvmCmd() {
 
     // Child Process(Bash) 
     // 劫持库存在性判断 
-    std::string hcclVmbin = g_binDir + "/bin/hccl-vm";
-    std::string proxyPath = g_binDir + "/lib/x86_64/libhccl_proxy_level" + std::to_string(g_hcclVmLevel) + ".so";
+    std::string hcclVmbin = InstallPath::ResolveToInstallRoot("bin/hccl-vm");
+    std::string proxyPath = InstallPath::ResolveToInstallRoot("lib/x86_64/libhccl_proxy_level" + std::to_string(g_hcclVmLevel) + ".so");
     if (!fs::exists(proxyPath)) { 
-        HCCL_VM_ERROR("[HVM] [ERROR] proxy hacking .so not found {}, please check your proxy hacking .so:" 
+        HCCL_VM_ERROR("proxy hacking .so not found {}, please check your proxy hacking .so:" 
             "1. Whether the hook library has been successfully built and installed. 2. Whether the simulation level matches the proxy hook library version. Current simulation level: {}, Default simulation level: 2" 
             , proxyPath, g_hcclVmLevel); 
         return HCCL_SIM_HOST_ERROR_CMD; 
@@ -695,7 +694,7 @@ HcclVmResult StartHvmCmd() {
     // 管道处理的用途是隔绝进程终端在std::cout中的残留 
     int pipefds[2] = {-1, -1}; 
     if (pipe(pipefds) == -1) { 
-        HCCL_VM_ERROR("[HVM] pipe failed"); 
+        HCCL_VM_ERROR("pipe failed"); 
         return HCCL_SIM_HOST_ERROR_CMD; 
     } 
 
@@ -712,7 +711,7 @@ HcclVmResult StartHvmCmd() {
 
     ssize_t written = write(pipefds[1], bashrcHack.c_str(), bashrcHack.size()); 
     if (written != static_cast<ssize_t>(bashrcHack.size())) { 
-        HCCL_VM_ERROR("[HVM] Failed to write full script to pipe"); 
+        HCCL_VM_ERROR("Failed to write full script to pipe"); 
         close(pipefds[0]); 
         close(pipefds[1]); 
         return HCCL_SIM_HOST_ERROR_CMD; 
@@ -733,14 +732,15 @@ HcclVmResult StartHvmCmd() {
     // Fork Bash 
     pid_t pid = fork(); 
     if (pid == -1) { 
-        auto ret = HcclVmExit(); 
-        perror("fork failed"); 
+        auto ret = HcclVmExit();
+        HCCL_VM_ERROR("fork failed: {}", std::strerror(errno));
         close(pipefds[0]); 
         return (ret == HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) ? HcclVmResult::HCCL_SIM_HOST_ERROR_CMD : ret; 
     } else if (pid == 0) { 
         setenv(HVM_BASH_ENV_KEY.c_str(), g_binDir.c_str(), 1); 
         setenv("LD_PRELOAD", proxyPath.c_str(), 1); 
-        setenv("HCCL_VM_INSTALL_ROOT", g_binDir.c_str(), 1); 
+        setenv("HCCL_VM_INSTALL_ROOT", g_binDir.c_str(), 1);
+        setenv("RANK_TABLE_FILE", InstallPath::ResolveToInstallRoot("data/ranktable.json").c_str(), 1); 
         execv("/bin/bash", bashArgv); 
         exit(1); 
     } else { 
@@ -749,7 +749,7 @@ HcclVmResult StartHvmCmd() {
         int status; 
         waitpid(pid, &status, 0);
         auto ret = HcclVmExit(); 
-        HCCL_VM_INFO("[HVM] Shell exited. Host shutting down."); 
+        HCCL_VM_INFO("Shell exited. Host shutting down."); 
     } 
     return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD; 
 } 
@@ -772,9 +772,9 @@ void StartHostClient(int argc, char *argv[]) {
     unsigned int priority = 0; 
     bool hasMessage = mqResp.TimedReceive(&buffer, MAX_MSG_SIZE, &priority, deadline, recvdSize); 
     if (hasMessage) { 
-        HCCL_VM_DEBUG("[HVM] Client : Command parsing response received: {}", std::string(buffer, recvdSize)); 
+        HCCL_VM_DEBUG("Client : Command parsing response received: {}", std::string(buffer, recvdSize)); 
     } else { 
-        HCCL_VM_WARN("[HVM] Client : Command parsing out of time, Client quit"); 
+        HCCL_VM_WARN("Client : Command parsing out of time, Client quit"); 
     } 
 } 
 
@@ -783,7 +783,7 @@ void ServerListen() {
     mq_attr attr = MakeMessageQueueAttr(); 
     PosixMessageQueue mqReq(MQ_REQ_NAME, O_CREAT | O_EXCL | O_RDWR, &attr); 
     PosixMessageQueue mqResp(MQ_RESP_NAME, O_CREAT | O_EXCL | O_RDWR, &attr); 
-    HCCL_VM_INFO("[HVM] HOST Server listening..."); 
+    HCCL_VM_INFO("HOST Server listening..."); 
 
     while(true) { 
         char buffer[MAX_MSG_SIZE]; 
@@ -792,7 +792,7 @@ void ServerListen() {
         ssize_t recvdSize = mqReq.Receive(&buffer, MAX_MSG_SIZE, &priority); 
 
         std::string cmd(buffer, recvdSize); 
-        HCCL_VM_DEBUG("[HVM] HOST : Command parsing request received: {}", cmd); 
+        HCCL_VM_DEBUG("HOST : Command parsing request received: {}", cmd); 
 
         // 执行接收到的命令逻辑 
         ParseCommand(cmd); 
@@ -804,7 +804,7 @@ void ServerListen() {
 
 // 监听proxy和runner进程，中转进程状态 
 void RunnerListen() { 
-    HCCL_VM_INFO("[HVM] Runner listening..."); 
+    HCCL_VM_INFO("Runner listening..."); 
 
     sim::ProcessSyncer syncer; 
     syncer.Init(); 
@@ -818,6 +818,27 @@ void RunnerListen() {
         if (allStatus.size() != allRank.size() || allRank.empty()) { 
             std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
             continue; 
+        }
+        auto ret = HcclVmResult::HCCL_SIM_SUCCESS; 
+        // 单算子场景才dump数据 
+        if (syncer.getCurrentRound() == 0) { 
+            if (IsBinDumpDisabled()) { 
+                HCCL_VM_INFO("skip dumping bin files (HCCL_VM_SKIP_BIN_DUMP=1)"); 
+            } else { 
+                ret = DumpDataToFile("runner"); 
+                if (ret == HcclVmResult::HCCL_SIM_E_SKIP) { 
+                    HCCL_VM_INFO("skip dumping data (multi-op scenario)"); 
+                } else if (ret != HcclVmResult::HCCL_SIM_SUCCESS) { 
+                    HCCL_VM_ERROR("dump data to file failed. ret: {:d}", static_cast<int>(ret)); 
+                    return; 
+                } 
+            } 
+        } else if(syncer.getCurrentRound() >= 1){ 
+            HCCL_VM_INFO("skip dumping data for round {:d}", syncer.getCurrentRound()); 
+            std::string dataDir = InstallPath::ResolveToInstallRoot("data") + "/"; 
+            std::remove((dataDir + "runner_hcclvm_instr_data.bin").c_str()); 
+            std::remove((dataDir + "runner_hcclvm_syn_data.bin").c_str()); 
+            std::remove((dataDir + "runner_hcclvm_task_data.bin").c_str()); 
         } 
 
         bool isRunnerRunning = true;
@@ -848,33 +869,12 @@ void RunnerListen() {
 
         HCCL_VM_INFO("{:d} rank ready, start runner...", allStatus.size()); 
         // 2. AIV 模式校验各 rank task json，其他模式保持原 runner dump 流程 
-        auto ret = HcclVmResult::HCCL_SIM_SUCCESS; 
         if (IsAivExpansionModeEnabled()) { 
             ret = ValidateAivTaskJsonByRank(allRank); 
             if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) { 
                 HCCL_VM_ERROR("validate aiv task json failed. ret: {:d}", static_cast<int>(ret)); 
                 return; 
             } 
-        } 
-        // 单算子场景才dump数据 
-        if (syncer.getCurrentRound() == 0) { 
-            if (IsBinDumpDisabled()) { 
-                HCCL_VM_INFO("skip dumping bin files (HCCL_VM_SKIP_BIN_DUMP=1)"); 
-            } else { 
-                ret = DumpDataToFile("runner"); 
-                if (ret == HcclVmResult::HCCL_SIM_E_SKIP) { 
-                    HCCL_VM_INFO("skip dumping data (multi-op scenario)"); 
-                } else if (ret != HcclVmResult::HCCL_SIM_SUCCESS) { 
-                    HCCL_VM_ERROR("dump data to file failed. ret: {:d}", static_cast<int>(ret)); 
-                    return; 
-                } 
-            } 
-        } else if(syncer.getCurrentRound() >= 1){ 
-            HCCL_VM_INFO("skip dumping data for round {:d}", syncer.getCurrentRound()); 
-            std::string dataDir = g_binDir + "/data/"; 
-            std::remove((dataDir + "runner_hcclvm_instr_data.bin").c_str()); 
-            std::remove((dataDir + "runner_hcclvm_syn_data.bin").c_str()); 
-            std::remove((dataDir + "runner_hcclvm_task_data.bin").c_str()); 
         } 
         
         // 3. 清除DeviceStatus表项 
@@ -932,11 +932,11 @@ void ParseCommand(std::string& cmd) {
 static void BackupDatabase(const std::string& srcPath) 
 { 
     if (!fs::exists(srcPath)) { 
-        HCCL_VM_ERROR("[HVM] Source database {} does not exist, skipping backup.", srcPath); 
+        HCCL_VM_INFO("Source database {} does not exist, skipping backup.", srcPath); 
         return; 
     } 
 
-    fs::path dataDir = fs::path(g_binDir) / "data"; 
+    fs::path dataDir = fs::path(InstallPath::ResolveToInstallRoot("data")); 
     fs::create_directories(dataDir); 
 
     auto now = std::chrono::system_clock::now(); 
@@ -950,9 +950,9 @@ static void BackupDatabase(const std::string& srcPath)
 
     auto ret = HcclSim::DB::OpDbOps::Instance().Backup(destPath); 
     if (ret != HcclSim::HCCL_SIM_SUCCESS) { 
-        HCCL_VM_ERROR("[HVM] Failed to backup database to {}", destPath); 
+        HCCL_VM_ERROR("Failed to backup database to {}", destPath); 
     } else { 
-        HCCL_VM_INFO("[HVM] Database backed up to: {}", destPath); 
+        HCCL_VM_INFO("Database backed up to: {}", destPath); 
     } 
 } 
 
@@ -972,7 +972,7 @@ static bool EnsureBackupDir(const fs::path &backupDir)
     std::error_code ec;
     fs::create_directories(backupDir, ec);
     if (ec) {
-        HCCL_VM_WARN("[HVM] failed to create backup directory {}: {}", backupDir.string(), ec.message());
+        HCCL_VM_WARN("failed to create backup directory {}: {}", backupDir.string(), ec.message());
         return false;
     }
     return true;
@@ -980,7 +980,7 @@ static bool EnsureBackupDir(const fs::path &backupDir)
 
 static void BackupBinFiles(const fs::path &backupDir)
 {
-    fs::path dataDir = fs::path(g_binDir) / "data";
+    fs::path dataDir = fs::path(InstallPath::ResolveToInstallRoot("data"));
     std::vector<fs::path> binFiles = {
         dataDir / "runner_hcclvm_instr_data.bin",
         dataDir / "runner_hcclvm_syn_data.bin",
@@ -1002,18 +1002,18 @@ static void BackupBinFiles(const fs::path &backupDir)
         } 
         fs::rename(f, backupDir / f.filename(), ec); 
         if (ec) { 
-            HCCL_VM_WARN("[HVM] failed to move {} to {}: {}", f.string(),(backupDir / f.filename()).string(), ec.message()); 
+            HCCL_VM_WARN("failed to move {} to {}: {}", f.string(),(backupDir / f.filename()).string(), ec.message()); 
         } 
     } 
 } 
 
 static void BackupAivTaskFiles(const fs::path &backupDir)
 {
-    fs::path dataDir = fs::path(g_binDir) / "data";
+    fs::path dataDir = fs::path(InstallPath::ResolveToInstallRoot("data"));
     std::error_code ec;
     if (!fs::exists(dataDir, ec) || ec || !fs::is_directory(dataDir, ec)) {
         if (ec) {
-            HCCL_VM_WARN("[HVM] failed to access data directory {}: {}", dataDir.string(), ec.message());
+            HCCL_VM_WARN("failed to access data directory {}: {}", dataDir.string(), ec.message());
         }
         return;
     }
@@ -1022,12 +1022,12 @@ static void BackupAivTaskFiles(const fs::path &backupDir)
     static const std::string aivFilePrefix = "hcclvm_aiv_";
     fs::directory_iterator iter(dataDir, ec);
     if (ec) {
-        HCCL_VM_WARN("[HVM] failed to iterate data directory {}: {}", dataDir.string(), ec.message());
+        HCCL_VM_WARN("failed to iterate data directory {}: {}", dataDir.string(), ec.message());
         return;
     }
     for (const fs::directory_iterator end; iter != end; iter.increment(ec)) {
         if (ec) {
-            HCCL_VM_WARN("[HVM] failed to iterate data directory {}: {}", dataDir.string(), ec.message());
+            HCCL_VM_WARN("failed to iterate data directory {}: {}", dataDir.string(), ec.message());
             return;
         }
 
@@ -1055,7 +1055,7 @@ static void BackupAivTaskFiles(const fs::path &backupDir)
         ec.clear();
         fs::rename(f, backupDir / f.filename(), ec);
         if (ec) {
-            HCCL_VM_WARN("[HVM] failed to move {} to {}: {}", f.string(), (backupDir / f.filename()).string(),
+            HCCL_VM_WARN("failed to move {} to {}: {}", f.string(), (backupDir / f.filename()).string(),
                 ec.message());
         }
     }
@@ -1067,7 +1067,7 @@ static void CleanShmFilesByPrefix(const std::vector<std::string> &prefixes)
     std::error_code ec;
     if (!fs::exists(shmDir, ec) || ec || !fs::is_directory(shmDir, ec)) {
         if (ec) {
-            HCCL_VM_WARN("[HVM] failed to access shared memory directory {}: {}", shmDir.string(), ec.message());
+            HCCL_VM_WARN("failed to access shared memory directory {}: {}", shmDir.string(), ec.message());
         }
         return;
     }
@@ -1076,12 +1076,12 @@ static void CleanShmFilesByPrefix(const std::vector<std::string> &prefixes)
     uint32_t failedCount = 0;
     fs::directory_iterator iter(shmDir, ec);
     if (ec) {
-        HCCL_VM_WARN("[HVM] failed to iterate shared memory directory {}: {}", shmDir.string(), ec.message());
+        HCCL_VM_WARN("failed to iterate shared memory directory {}: {}", shmDir.string(), ec.message());
         return;
     }
     for (const fs::directory_iterator end; iter != end; iter.increment(ec)) {
         if (ec) {
-            HCCL_VM_WARN("[HVM] failed to iterate shared memory directory {}: {}", shmDir.string(), ec.message());
+            HCCL_VM_WARN("failed to iterate shared memory directory {}: {}", shmDir.string(), ec.message());
             return;
         }
 
@@ -1103,21 +1103,21 @@ static void CleanShmFilesByPrefix(const std::vector<std::string> &prefixes)
         std::error_code removeEc;
         if (!fs::remove(filePath, removeEc) || removeEc) {
             ++failedCount;
-            HCCL_VM_WARN("[HVM] failed to remove shared memory file {}: {}", filePath.string(),
+            HCCL_VM_WARN("failed to remove shared memory file {}: {}", filePath.string(),
                 removeEc.message());
             continue;
         }
         ++removedCount;
     }
-    HCCL_VM_INFO("[HVM] cleaned {} shared memory files in {}, failed {}", removedCount, shmDir.string(), failedCount);
+    HCCL_VM_INFO("cleaned {} shared memory files in {}, failed {}", removedCount, shmDir.string(), failedCount);
 }
 
 HcclVmResult ClearDbTables() 
 { 
-    const fs::path backupDir = fs::path(g_binDir) / "data" / MakeDataBackupTimestamp();
+    const fs::path backupDir = fs::path(InstallPath::ResolveToInstallRoot("data/" + MakeDataBackupTimestamp()));
     BackupBinFiles(backupDir);
     BackupAivTaskFiles(backupDir);
-    BackupDatabase(g_binDir + "/data/hccl_vm_data.db"); 
+    BackupDatabase(InstallPath::ResolveToInstallRoot("data/hccl_vm_data.db")); 
 
     // 1. 清空 OpDbOps (SQLite) 中的静态表数据 
     std::vector<std::string> staticTables = { 
@@ -1191,8 +1191,8 @@ HcclVmResult HcclVmResetCommDomain()
 HcclVmResult CopyFile(const std::string& clusterDir) {
     // 1. 拼接源文件和目标文件路径
     auto srcPath = clusterDir + "/superpod0/server0/topo.json";
-    fs::create_directories(fs::path(GetBinLocation() + "/data"));
-    auto destPath = GetBinLocation() + "/data/topo.json";
+    fs::create_directories(fs::path(InstallPath::ResolveToInstallRoot("data")));
+    auto destPath = InstallPath::ResolveToInstallRoot("data/topo.json");
 
     // 显式提示：文件已存在，将覆盖
     if (fs::exists(destPath)) {

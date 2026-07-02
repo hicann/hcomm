@@ -62,3 +62,6 @@ target_link_libraries(cmd PRIVATE
 if(TARGET third_party_yaml_cpp)
     add_dependencies(cmd third_party_yaml_cpp)
 endif()
+
+# 日志染色: 模块 tag
+target_compile_definitions(cmd PRIVATE HCCL_VM_MODULE="CMD")

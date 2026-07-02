@@ -46,7 +46,7 @@ void TransRmtMSToLocMSExecutor::Process(CcuResourceManager &ccuResMgr)
     // 1.根据channel id获取remote rank id
     auto rmtCcu = ccuResMgr.GetRmtCcu(rankId_, dieId_, channelId_);
     if (rmtCcu.second != rmtDieId_) {
-        HCCL_VM_WARN("[TransRmtMSToLocMSExecutor][Process] dieId[{}] from channel is not same as rmtDieId[{}]. curCcu[{}:{}], rmtCcu[{}:{}]",
+        HCCL_VM_WARN("dieId[{}] from channel is not same as rmtDieId[{}]. curCcu[{}:{}], rmtCcu[{}:{}]",
             rmtCcu.second, rmtDieId_, rankId_, dieId_, rmtCcu.first, rmtCcu.second);
         return;
     }
@@ -57,13 +57,13 @@ void TransRmtMSToLocMSExecutor::Process(CcuResourceManager &ccuResMgr)
         locMSId_ += msOffset;
         rmtMSId_ += msOffset;
         setCKEId_ += ckeOffset;
-        HCCL_VM_DEBUG("[TransRmtMSToLocMSExecutor][Process] ccuId=[{}:{}], Get ms offset = [{:04x}], cke offset = [{:04x}]",
+        HCCL_VM_DEBUG("ccuId=[{}:{}], Get ms offset = [{:04x}], cke offset = [{:04x}]",
                rankId_, dieId_, msOffset, ckeOffset);
     }
     // 3.要搬运的本端内存地址及数据长度
     transLength_ = (lengthEn_ == 0) ? HcclSim::BYTE_NUM_4K : ccuResMgr.GetXnValue(rankId_, dieId_, lengthXnId_);
     // 4.搬运动作
-    HCCL_VM_DEBUG("[TransRmtMSToLocMSExecutor][Process] ccuId=[{}:{}-{}:{}] Trans data "
+    HCCL_VM_DEBUG("ccuId=[{}:{}-{}:{}] Trans data "
            "from rmtMsId[{}] to locMsId[{}], "
            "with lengthXnId[{}] transLength[{}].",
            rankId_, dieId_, rmtCcu.first, rmtCcu.second, rmtMSId_, locMSId_, lengthXnId_, transLength_);

@@ -46,6 +46,7 @@ private:
     SocketMgr& operator=(const SocketMgr&) = delete;
 
     bool isLoaded_{false};
+    bool isHostOnlyInit_{false};
     uint32_t devicePhyId_{};
     uint32_t serverListenPort_{};
     std::unordered_map<Hccl::SocketConfig, std::unique_ptr<Hccl::Socket>> socketMap_{};

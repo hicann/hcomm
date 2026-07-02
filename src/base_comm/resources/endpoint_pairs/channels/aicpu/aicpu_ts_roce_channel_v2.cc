@@ -260,7 +260,8 @@ HcclResult AicpuTsRoceChannelV2::BuildSocket()
         port = DEFAULT_LISTENING_PORT;
         HCCL_INFO("[AicpuTsRoceChannelV2::%s] channelDesc port is 0, use default port [%u]", __func__, port);
     }
-    std::string socketTag = "AUTOMATIC_SOCKET_TAG";
+    std::string socketTag = (channelDesc_.channelName != nullptr)
+        ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
     bool isServer = (channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER);
     Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, port, socketTag, isServer);
     CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket_));
@@ -407,9 +408,6 @@ HcclResult AicpuTsRoceChannelV2::ProcessStatus()
 {
     switch (channelStatus_) {
         case ChannelStatus::READY:
-            if (channelDesc_.socket == nullptr && socket_ != nullptr) {
-                SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
-            }
             return HCCL_SUCCESS;
         case ChannelStatus::SOCKET_TIMEOUT:
             HCCL_ERROR("[AicpuTsRoceChannelV2::ProcessStatus] get socket timeout");
@@ -1178,5 +1176,4 @@ HcommChannelKind AicpuTsRoceChannelV2::GetChannelKind() const
     return HcommChannelKind::AICPU_TS_ROCE_V2;
 }
 } // namespace hcomm
-
 

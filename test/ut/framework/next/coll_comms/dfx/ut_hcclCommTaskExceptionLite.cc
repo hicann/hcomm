@@ -301,7 +301,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintCommTaskException)
     EXPECT_EQ(thread->InitStreamLite(streamParam, 0), HCCL_SUCCESS);
 
     aicpuComm.threads_.push_back(thread);
-    EXPECT_EQ(aicpuComm.dfx_.Init(aicpuComm.devId_, aicpuComm.identifier_), HCCL_SUCCESS);
+    EXPECT_EQ(aicpuComm.dfx_.Init(aicpuComm.devId_, aicpuComm.identifier_, 0), HCCL_SUCCESS);
     auto dfxOpInfoOnce = std::make_shared<Hccl::DfxOpInfo>();
     aicpuComm.dfx_.mirrorTaskManagerLite_->SetCurrDfxOpInfo(dfxOpInfoOnce);
 
@@ -311,7 +311,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintCommTaskException)
     taskParam.taskPara.Notify.value = 1;
 
     auto taskInfo = std::make_shared<Hccl::TaskInfo>(streamId, taskId, INVALID_U64, taskParam, dfxOpInfoOnce);
-    MOCKER_CPP(&Hccl::MirrorTaskManagerLite::GetTaskInfo).stubs().will(returnValue(taskInfo));
+    MOCKER_CPP(&Hccl::MirrorTaskManagerLite::GetTaskInfo).stubs().will(returnValue(taskInfo.get()));
 
     EXPECT_EQ(hcomm::HcclCommTaskExceptionLite::GetInstance().PrintCommTaskException(&aicpuComm), HCCL_SUCCESS);
 }

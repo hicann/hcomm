@@ -42,7 +42,7 @@ void SyncXnExecutor::Process(CcuResourceManager &ccuResMgr) {
     auto rmtCcu = ccuResMgr.GetRmtCcu(rankId_, dieId_, channelId_);
     // 将本端的xn内容写到目的端的xn中
     auto locXnValue = ccuResMgr.GetXnValue(rankId_, dieId_, locXnId_);
-    HCCL_VM_INFO("[SyncXnExecutor]sync xn, rankId{}, dieId{}, xnId{}, channelId{}, locXnValue: {}", rmtCcu.first, rmtCcu.second, rmtXnId_, channelId_, locXnValue);
+    HCCL_VM_INFO("sync xn, rankId{}, dieId{}, xnId{}, channelId{}, locXnValue: {}", rmtCcu.first, rmtCcu.second, rmtXnId_, channelId_, locXnValue);
     ccuResMgr.UpdateXnValue(rmtCcu.first, rmtCcu.second, rmtXnId_, locXnValue);
 
     // 设置目的端的cke

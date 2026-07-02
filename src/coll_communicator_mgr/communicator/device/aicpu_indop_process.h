@@ -36,8 +36,7 @@ public:
     static HcclResult AicpuGetCommAll(std::vector<std::pair<std::string, CollCommAicpuMgr *>> &aicpuCommInfo);
     static HcclResult AicpuDestroyCommbyGroup(const std::string &group);
 
-    static HcclResult ProfilingReportDeviceOp(const std::string &group);
-    static HcclResult ReportAllTasks(const std::string &group);
+    static HcclResult ProfilingReportDeviceOp();
     static HcclResult UpdateTask(const std::string &group);
 };
 #endif // __AICPU_INDOP_PROCESS_H__

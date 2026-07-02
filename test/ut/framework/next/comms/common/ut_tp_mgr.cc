@@ -656,7 +656,7 @@ TEST_F(TpMgrTest, Ut_TpMgr_ReleaseTpInfo_UseCntDecrement_Expect_Success)
     EXPECT_EQ(mgr.ReleaseTpInfo(param, tpInfo), HCCL_SUCCESS);
 }
 
-TEST_F(TpMgrTest, Ut_TpMgr_ReleaseTpInfo_TpHandleMismatch_Expect_EPara)
+TEST_F(TpMgrTest, Ut_TpMgr_ReleaseTpInfo_TpHandleMismatch_Expect_Skip)
 {
     TpMgr &mgr = TpMgr::GetInstance(0);
     const GetTpInfoParam param = MakeParam("10.10.22.1", "10.10.22.2", TpProtocol::RTP, 3U);
@@ -664,7 +664,7 @@ TEST_F(TpMgrTest, Ut_TpMgr_ReleaseTpInfo_TpHandleMismatch_Expect_EPara)
     ASSERT_EQ(PollGetTpInfo(mgr, param, tpInfo), HCCL_SUCCESS);
     TpInfo wrongTpInfo{};
     wrongTpInfo.tpHandle = tpInfo.tpHandle + 1U;
-    EXPECT_EQ(mgr.ReleaseTpInfo(param, wrongTpInfo), HCCL_E_PARA);
+    EXPECT_EQ(mgr.ReleaseTpInfo(param, wrongTpInfo), HCCL_SUCCESS);
     EXPECT_EQ(mgr.ReleaseTpInfo(param, tpInfo), HCCL_SUCCESS);
 }
 

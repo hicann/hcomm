@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "COMM_STUB"
 
 #include <atomic>
 #include <cstdint>
@@ -24,12 +26,11 @@
 #include "runtime/base.h"
 #include "db_sim_runner_common.h"
 #include "db_sim_runner_ops.h"
-#include "db_sim_runner_ops.h"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
-
 extern HcclResult HcclGetRootInfo(HcclRootInfo *rootInfo);
 extern HcclResult HcclCommInitRootInfo(uint32_t nRanks, const HcclRootInfo *rootInfo, uint32_t rank, HcclComm *comm);
 extern HcclResult HcclCommInitRootInfoConfig(uint32_t nRanks, const HcclRootInfo *rootInfo, uint32_t rank,
@@ -41,7 +42,6 @@ extern HcclResult HcclCommInitClusterInfoConfig(const char *clusterInfo, uint32_
 HcclResult HcclGetRootInfo(HcclRootInfo *rootInfo)
 {
     (void) rootInfo;
-    HCCL_VM_DEBUG("HcclGetRootInfo stub ...");
     return HCCL_SUCCESS;
 }
 
@@ -49,7 +49,6 @@ HcclResult HcclCommInitRootInfo(uint32_t nRanks, const HcclRootInfo *rootInfo, u
 {
     (void) nRanks;
     (void) rootInfo;
-    HCCL_VM_DEBUG("HcclCommInitRootInfo stub  ...");
     // 解析ranktable文件，初始化通信域相关数据库表项
     const char* clusterInfo = std::getenv("RANK_TABLE_FILE");
     if (!clusterInfo) {
@@ -65,7 +64,6 @@ HcclResult HcclCommInitRootInfoConfig(uint32_t nRanks, const HcclRootInfo *rootI
 {
     (void) nRanks;
     (void) rootInfo;
-    HCCL_VM_DEBUG("HcclCommInitRootInfoConfig stub  ...");
     const char* clusterInfo = getenv("RANK_TABLE_FILE");
     HcclCommConfig *cfg = const_cast<HcclCommConfig *>(config);
     return HcclCommInitClusterInfoConfig(clusterInfo, rank, cfg, comm);

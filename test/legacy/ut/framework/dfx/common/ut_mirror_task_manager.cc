@@ -67,9 +67,9 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_AddTaskInfo_1)
 
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
 
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
+    auto taskInfo = std::make_unique<TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
 
-    mirrorTaskManager.AddTaskInfo(taskInfo);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
 
     mirrorTaskManager.GetCurrDfxOpInfo();
 
@@ -84,7 +84,8 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_AddTaskInfo_2)
 
     MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 0);
 
-    EXPECT_THROW(mirrorTaskManager.AddTaskInfo(nullptr), InternalException);
+    std::unique_ptr<TaskInfo> nullTaskInfo = nullptr;
+    EXPECT_THROW(mirrorTaskManager.AddTaskInfo(std::move(nullTaskInfo)), InternalException);
 }
 
 TEST_F(MirrorTaskManagerTest, MirrorTaskManager_GetQueue_1)
@@ -118,22 +119,22 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_Iterator_1)
 
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
 
-    std::shared_ptr<TaskInfo> taskInfo1 = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo2 = std::make_shared<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
+    auto taskInfo1 = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    auto taskInfo2 = std::make_unique<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
 
-    mirrorTaskManager.AddTaskInfo(taskInfo1);
-    mirrorTaskManager.AddTaskInfo(taskInfo2);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo1));
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo2));
 
     // 枚举所有streamId
     for (auto queueIter = mirrorTaskManager.Begin(); queueIter != mirrorTaskManager.End(); queueIter++) {
 
         // 获取对应streamId和任务队列的指针
         auto streamId = queueIter->first;
-        Queue<std::shared_ptr<TaskInfo>> *taskInfoQueue = queueIter->second;
+        Queue<std::unique_ptr<TaskInfo>> *taskInfoQueue = queueIter->second.queue;
 
         // 枚举所有任务信息
-        for (auto taskInfoIter = taskInfoQueue->Begin(); (*taskInfoIter) != *taskInfoQueue->End(); (*taskInfoIter)++) {
-            std::cout << (*(*taskInfoIter))->Describe().c_str() << std::endl;
+        for (auto taskInfoIter = taskInfoQueue->Begin(); *taskInfoIter != *taskInfoQueue->End(); (*taskInfoIter)++) {
+            std::cout << (**taskInfoIter)->Describe().c_str() << std::endl;
         }
     }
 }
@@ -167,13 +168,13 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_Iterator_2)
 
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
 
-    std::shared_ptr<TaskInfo> taskInfo1 = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo2 = std::make_shared<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
+    auto taskInfo1 = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
 
-    mirrorTaskManager.AddTaskInfo(taskInfo1);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo1));
     mirrorTaskManager.GetQueue(3)->PopFront();
     for(int i = 0; i < 10000; i++) {
-        mirrorTaskManager.AddTaskInfo(taskInfo2);
+        auto taskInfo = std::make_unique<TaskInfo>(0, 1, i, taskParam, dfxOpInfo);
+        mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
     }
     EXPECT_EQ(callBackCalled, true);
 
@@ -183,11 +184,11 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_Iterator_2)
         // 获取对应streamId和任务队列的指针
         auto streamId = queueIter->first;
         std::cout<<"streamId"<<streamId<<std::endl;
-        Queue<std::shared_ptr<TaskInfo>> *taskInfoQueue = queueIter->second;
+        Queue<std::unique_ptr<TaskInfo>> *taskInfoQueue = queueIter->second.queue;
 
         // 枚举所有任务信息
         int32_t cnt = 0;
-        for (auto taskInfoIter = taskInfoQueue->Begin(); (*taskInfoIter) != *taskInfoQueue->End(); (*taskInfoIter)++) {
+        for (auto taskInfoIter = taskInfoQueue->Begin(); *taskInfoIter != *taskInfoQueue->End(); (*taskInfoIter)++) {
             cnt++;
         }
         if (streamId == 0) {
@@ -202,7 +203,7 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_Iterator_2)
             do {
                 (*taskInfoIterBack)--;
                 cnt--;
-            } while ((*taskInfoIterBack) != *taskInfoQueue->Begin());
+            } while (*taskInfoIterBack != *taskInfoQueue->Begin());
         }
         EXPECT_EQ(cnt, 0);
     }
@@ -244,7 +245,7 @@ TEST_F(MirrorTaskManagerTest, Ut_GetQueueType_When_CurrDfxOpInfoNullptr_Expect_R
         .beginTime = 0,
         .endTime = 0,
         .taskPara = {.Notify = {.notifyID = 123, .value = 456}}};
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(0, 0, 0, taskParam, nullptr);
-    EXPECT_NO_THROW(mirrorTaskManager.AddTaskInfo(taskInfo));
+    std::unique_ptr<TaskInfo> taskInfo = std::make_unique<TaskInfo>(0, 0, 0, taskParam, nullptr);
+    EXPECT_NO_THROW(mirrorTaskManager.AddTaskInfo(std::move(taskInfo)));
     EXPECT_EQ(mirrorTaskManager.GetQueueType(), QueueType::Circular_Queue);
 }

@@ -56,11 +56,11 @@ void TransLocMemToLocMSExecutor::Process(CcuResourceManager &ccuResMgr)
         locAddr  += addrOffset;
         locMSId_ += msOffset;
         setCKEId_ += ckeOffset;
-        HCCL_VM_DEBUG("[TransLocMemToLocMSExecutor][Process] locCcu[{}:{}], Get gsa "
+        HCCL_VM_DEBUG("locCcu[{}:{}], Get gsa "
                "addr offset = [{:04x}], ms offset = [{:04x}], cke offset = [{:04x}]",
                rankId_, dieId_, addrOffset, msOffset, ckeOffset);
     }
-    HCCL_VM_DEBUG("[TransLocMemToLocMSExecutor][Process] locCcu[{}:{}] Trans data "
+    HCCL_VM_DEBUG("locCcu[{}:{}] Trans data "
            "from locGSAId_[{}] locAddr[{:x}] to locMsId[{:04x}], "
            "with lengthXnId[{}] transLength[{}], lengthEn_[{}].",
            rankId_, dieId_, locGSAId_, locAddr, locMSId_, lengthXnId_,

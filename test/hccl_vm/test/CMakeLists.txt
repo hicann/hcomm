@@ -32,7 +32,6 @@ include_directories(
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include/toolchain
     ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/asc/include/adv_api
-    ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/driver
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/trace
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/runtime

@@ -13,6 +13,7 @@
 #include "log.h"
 #include "adapter_rts_common.h"
 #include "hcomm_c_adpt.h"
+#include "comm_engine_utils.h"
 
 namespace hccl {
 EngineCtxs::EngineCtxs()
@@ -30,13 +31,13 @@ HcclResult EngineCtxs::CreateCommEngineCtx(const std::string &tag, CommEngine en
     if (contextMap_.find(tag) != contextMap_.end()) {
         auto engineCtxMap = contextMap_[tag];
         CHK_PRT_RET(engineCtxMap.find(engine) != engineCtxMap.end(),
-            HCCL_ERROR("[%s] already exist a context with same key, tag[%s], engine[%d]",
-            __func__, tag.c_str(), engine), HCCL_E_PARA);
+            HCCL_ERROR("[%s] already exist a context with same key, tag[%s], engine[%s]",
+            __func__, tag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str()), HCCL_E_PARA);
     }
 
     CHK_RET(static_cast<HcclResult>(HcommEngineCtxCreate(engine, size, ctx)));
     contextMap_[tag][engine] = {HCCL_MEM_TYPE_NUM, *ctx, size}; // type不需要使用
-    HCCL_INFO("[%s]create context success, tag[%s], engine[%d]", __func__, tag.c_str(), engine);
+    HCCL_INFO("[%s]create context success, tag[%s], engine[%s]", __func__, tag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
     return HCCL_SUCCESS;
 }
 
@@ -53,14 +54,14 @@ HcclResult EngineCtxs::GetCommEngineCtx(const std::string &tag, CommEngine engin
     const auto &engineCtxMap = tagIter->second;
     const auto &engineIter = engineCtxMap.find(engine);
     if (engineIter == engineCtxMap.end()) {
-        HCCL_INFO("[%s] not exist a context with tag[%s], engine[%d]", __func__, tag.c_str(), engine);
+        HCCL_INFO("[%s] not exist a context with tag[%s], engine[%s]", __func__, tag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         return HCCL_E_NOT_FOUND;
     }
 
     const auto &ctxRes = engineIter->second;
     *ctx = ctxRes.addr;
     *size = ctxRes.size;
-    HCCL_INFO("[%s] get context success, tag[%s], engine[%d]", __func__, tag.c_str(), engine);
+    HCCL_INFO("[%s] get context success, tag[%s], engine[%s]", __func__, tag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
     return HCCL_SUCCESS;
 }
 
@@ -71,12 +72,12 @@ HcclResult EngineCtxs::CopyCommEngineCtx(const std::string &tag, CommEngine engi
     uint64_t dstSize = 0;
     CHK_RET(GetCommEngineCtx(tag, engine, &dstCtx, &dstSize));
     CHK_PRT_RET(dstCtxOffset + size > dstSize, 
-        HCCL_ERROR("[%s]Copy engine ctx failed: buffer overflow detected. tag[%s], engine[%d], "
+        HCCL_ERROR("[%s]Copy engine ctx failed: buffer overflow detected. tag[%s], engine[%s], "
                     "dstSize[%llu], dstCtxOffset[%llu], copySize[%llu]",
-                    __func__, tag.c_str(), engine, dstSize, dstCtxOffset, size), HCCL_E_PARA);
+                    __func__, tag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), dstSize, dstCtxOffset, size), HCCL_E_PARA);
     CHK_RET(static_cast<HcclResult>(HcommEngineCtxCopy(
         engine, reinterpret_cast<uint8_t*>(dstCtx) + dstCtxOffset, srcCtx, size))); // 增加大小判断，增加强转
-    HCCL_INFO("[%s]copy engine ctx success, tag[%s], engine[%d]", __func__, tag.c_str(), engine);
+    HCCL_INFO("[%s]copy engine ctx success, tag[%s], engine[%s]", __func__, tag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
     return HCCL_SUCCESS;
 }
 
@@ -90,7 +91,7 @@ HcclResult EngineCtxs::DestroyEngineCtx(const std::string &tag, CommEngine engin
     }
     auto& engineCtxMap = contextMap_[tag];
     if (engineCtxMap.find(engine) == engineCtxMap.end()) {
-        HCCL_ERROR("[%s] not exist a context with tag[%s], engine[%d]", __func__, tag.c_str(), engine);
+        HCCL_ERROR("[%s] not exist a context with tag[%s], engine[%s]", __func__, tag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         return HCCL_E_PARA;
     }
     // 获取内存信息
@@ -102,7 +103,7 @@ HcclResult EngineCtxs::DestroyEngineCtx(const std::string &tag, CommEngine engin
         contextMap_.erase(tag);
     }
 
-    HCCL_INFO("[%s]destroy context success, tag[%s], engine[%d]", __func__, tag.c_str(), engine);   
+    HCCL_INFO("[%s]destroy context success, tag[%s], engine[%s]", __func__, tag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());   
     return HCCL_SUCCESS;
 }
 }

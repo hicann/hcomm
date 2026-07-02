@@ -9,9 +9,7 @@
  */
 
 #include "db_hccl_db_sqlite.h"
-
 #include <cstdint>
-
 #include "sim_common_macro.h"
 #include "sim_log.h"
 
@@ -34,7 +32,7 @@ HcclVmResult HcclDBSqlite::Connect(const sim::DBConfig& config) {
     int ret = sqlite3_open(config.dbPath.c_str(), &m_db);
     if (ret != SQLITE_OK) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::Connect] Failed: {}, path: {}", m_lastError, config.dbPath);
+        HCCL_VM_ERROR("Failed: {}, path: {}", m_lastError, config.dbPath);
         sqlite3_close(m_db);
         m_db = nullptr;
         return HCCL_SIM_E_OPEN_FILE_FAILURE;
@@ -52,7 +50,7 @@ HcclVmResult HcclDBSqlite::Connect(const sim::DBConfig& config) {
     sqlite3_exec(m_db, "PRAGMA wal_autocheckpoint = 200;", nullptr, nullptr, nullptr);
     sqlite3_exec(m_db, "PRAGMA mmap_size = 268435456;", nullptr, nullptr, nullptr);
 
-    HCCL_VM_INFO("[HcclDBSqlite::Connect] Connected: {}", config.dbPath);
+    HCCL_VM_INFO("Connected: {}", config.dbPath);
     return HCCL_SIM_SUCCESS;
 }
 
@@ -80,7 +78,7 @@ HcclVmResult HcclDBSqlite::Execute(const std::string& sql, const std::vector<Val
     int ret = sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("Prepare failed: {} sql:{}", m_lastError, sql);
+        HCCL_VM_ERROR("Prepare failed: {}, sql: {}", m_lastError, sql);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -118,7 +116,7 @@ HcclVmResult HcclDBSqlite::Query(const std::string& sql, const std::vector<Value
     int ret = sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::Query] Prepare failed: {}", m_lastError);
+        HCCL_VM_ERROR("Prepare failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -150,7 +148,7 @@ HcclVmResult HcclDBSqlite::Query(const std::string& sql, const std::vector<Value
 
     if (ret != SQLITE_DONE) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::Query] Step failed: {}", m_lastError);
+        HCCL_VM_ERROR("Step failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -166,7 +164,7 @@ HcclVmResult HcclDBSqlite::QueryBlob(const std::string& sql, const std::vector<V
     int ret = sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::QueryBlob] Prepare failed: {}", m_lastError);
+        HCCL_VM_ERROR("Prepare failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -195,7 +193,7 @@ HcclVmResult HcclDBSqlite::QueryBlob(const std::string& sql, const std::vector<V
 
     if (ret != SQLITE_ROW && ret != SQLITE_DONE) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::QueryBlob] Step failed: {}", m_lastError);
+        HCCL_VM_ERROR("Step failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -211,7 +209,7 @@ HcclVmResult HcclDBSqlite::QueryBlobColumns(const std::string& sql, const std::v
     int ret = sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::QueryBlobColumns] Prepare failed: {}", m_lastError);
+        HCCL_VM_ERROR("Prepare failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -244,7 +242,7 @@ HcclVmResult HcclDBSqlite::QueryBlobColumns(const std::string& sql, const std::v
 
     if (ret != SQLITE_ROW && ret != SQLITE_DONE) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::QueryBlobColumns] Step failed: {}", m_lastError);
+        HCCL_VM_ERROR("Step failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -260,7 +258,7 @@ HcclVmResult HcclDBSqlite::QueryEx(const std::string& sql, const std::vector<Val
     int ret = sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::QueryEx] Prepare failed: {}", m_lastError);
+        HCCL_VM_ERROR("Prepare failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -308,7 +306,7 @@ HcclVmResult HcclDBSqlite::QueryEx(const std::string& sql, const std::vector<Val
 
     if (ret != SQLITE_DONE) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::QueryEx] Step failed: {}", m_lastError);
+        HCCL_VM_ERROR("Step failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -325,7 +323,7 @@ HcclVmResult HcclDBSqlite::Execute(const std::string& sql) {
 
     if (ret != SQLITE_OK) {
         m_lastError = errMsg ? errMsg : "Unknown error";
-        HCCL_VM_ERROR("[HcclDBSqlite::Execute] SQL error: {}, sql: {}", m_lastError, sql);
+        HCCL_VM_ERROR("SQL error: {}, sql: {}", m_lastError, sql);
         if (errMsg) {
             sqlite3_free(errMsg);
         }
@@ -344,7 +342,7 @@ HcclVmResult HcclDBSqlite::Query(const std::string& sql, std::vector<std::vector
     int ret = sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::Query] Prepare failed: {}", m_lastError);
+        HCCL_VM_ERROR("Prepare failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -363,7 +361,7 @@ HcclVmResult HcclDBSqlite::Query(const std::string& sql, std::vector<std::vector
 
     if (ret != SQLITE_DONE) {
         m_lastError = sqlite3_errmsg(m_db);
-        HCCL_VM_ERROR("[HcclDBSqlite::Query] Step failed: {}", m_lastError);
+        HCCL_VM_ERROR("Step failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 
@@ -412,7 +410,7 @@ HcclVmResult HcclDBSqlite::Backup(const std::string& destPath) {
     rc = sqlite3_open(destPath.c_str(), &pDest);
     if (rc != SQLITE_OK) {
         m_lastError = sqlite3_errstr(rc);
-        HCCL_VM_ERROR("[HcclDBSqlite::Backup] Failed to open destination DB: {}", m_lastError);
+        HCCL_VM_ERROR("Failed to open destination DB: {}", m_lastError);
         return HCCL_SIM_E_OPEN_FILE_FAILURE;
     }
 
@@ -430,18 +428,18 @@ HcclVmResult HcclDBSqlite::Backup(const std::string& destPath) {
     } else {
         rc = sqlite3_errcode(pDest);
         m_lastError = sqlite3_errmsg(pDest);
-        HCCL_VM_ERROR("[HcclDBSqlite::Backup] Backup init failed: {}", m_lastError);
+        HCCL_VM_ERROR("Backup init failed: {}", m_lastError);
     }
 
     // 5. Close destination
     sqlite3_close(pDest);
 
     if (rc == SQLITE_OK) {
-        HCCL_VM_INFO("[HcclDBSqlite::Backup] Backup completed successfully to: {}", destPath);
+        HCCL_VM_INFO("Backup completed successfully to: {}", destPath);
         return HCCL_SIM_SUCCESS;
     } else {
         m_lastError = sqlite3_errstr(rc);
-        HCCL_VM_ERROR("[HcclDBSqlite::Backup] Backup failed: {}", m_lastError);
+        HCCL_VM_ERROR("Backup failed: {}", m_lastError);
         return HCCL_SIM_E_INTERNAL;
     }
 }
@@ -455,7 +453,7 @@ HcclVmResult HcclDBSqlite::RunInTransaction(std::function<HcclVmResult()> fn) {
     int rc = sqlite3_exec(m_db, "BEGIN IMMEDIATE", nullptr, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
         m_lastError = errMsg ? errMsg : "BEGIN IMMEDIATE failed";
-        HCCL_VM_ERROR("[HcclDBSqlite::RunInTransaction] BEGIN failed: {}", m_lastError);
+        HCCL_VM_ERROR("BEGIN failed: {}", m_lastError);
         if (errMsg) {
             sqlite3_free(errMsg);
         }
@@ -468,7 +466,7 @@ HcclVmResult HcclDBSqlite::RunInTransaction(std::function<HcclVmResult()> fn) {
         rc = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, &errMsg);
         if (rc != SQLITE_OK) {
             m_lastError = errMsg ? errMsg : "COMMIT failed";
-            HCCL_VM_ERROR("[HcclDBSqlite::RunInTransaction] COMMIT failed: {}, rolling back", m_lastError);
+            HCCL_VM_ERROR("COMMIT failed: {}, rolling back", m_lastError);
             if (errMsg) {
                 sqlite3_free(errMsg);
             }

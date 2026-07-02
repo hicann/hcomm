@@ -24,6 +24,7 @@
 
 #include "sim_log.h"
 #include "task_graph_reachability_v3.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
@@ -143,26 +144,6 @@ struct ConflictCandidate {
 
 using ConflictCandidates = std::vector<ConflictCandidate>;
 
-const char *MemTypeName(MemType memType)
-{
-    switch (memType) {
-        case MemType::INPUT:
-            return "INPUT";
-        case MemType::OUTPUT:
-            return "OUTPUT";
-        case MemType::CCL:
-            return "CCL";
-        case MemType::UB_AIV:
-            return "UB_AIV";
-        case MemType::FLAG_AIV:
-            return "FLAG_AIV";
-        case MemType::MS_CCU:
-            return "MS_CCU";
-        default:
-            return "INVALID";
-    }
-}
-
 const char *AccessKindName(MemoryAccessKind kind)
 {
     return kind == MemoryAccessKind::WRITE ? "WRITE" : "READ";
@@ -216,7 +197,7 @@ uint64_t ElapsedMemConflictMs(MemConflictClock::time_point start, MemConflictClo
 
 void LogMemConflictStageTime(const char *stage, const char *status, MemConflictClock::time_point start)
 {
-    HCCL_VM_WARN("[TaskGraphMemConflictV3][StageTime] {} {}, costMs={}", stage, status,
+    HCCL_VM_INFO("Stage finished, stage={}, status={}, costMs={}", stage, status,
         ElapsedMemConflictMs(start, MemConflictClock::now()));
 }
 
@@ -230,18 +211,29 @@ bool IsDataMoveTaskNode(const TaskNode *node)
 std::string DescribeKey(const MemoryKey &key)
 {
     std::ostringstream os;
-    os << "{rank=" << key.rankId << ", mem=" << MemTypeName(key.memType) << ", aivUbIdx=" << key.aivUbIdx << "}";
+    os << "{rankId=";
+    if (key.rankId == INVALID_RANK_ID) {
+        os << "invalid";
+    } else {
+        os << key.rankId;
+    }
+    os << ", memoryType=" << DescribeMemType(key.memType);
+    if (key.memType == MemType::UB_AIV) {
+        os << ", aivBlockIndex=" << key.aivUbIdx;
+    }
+    os << "}";
     return os.str();
 }
 
 std::string DescribeAccess(const MemoryAccess &access)
 {
     std::ostringstream os;
-    os << "{nodeId=" << access.nodeId << ", access=" << AccessKindName(access.kind)
-       << ", range=[0x" << std::hex << access.start << ",0x" << access.end << ")" << std::dec
-       << ", key=" << DescribeKey(access.key);
+    os << "{taskNodeId=" << access.nodeId << ", taskAction="
+       << (access.kind == MemoryAccessKind::WRITE ? "write" : "read")
+       << ", memory=" << DescribeKey(access.key)
+       << ", byteRange=[0x" << std::hex << access.start << ",0x" << access.end << ")" << std::dec;
     if (access.node != nullptr) {
-        os << ", desc=" << access.node->Describe();
+        os << ", task=" << access.node->Describe();
     }
     os << "}";
     return os.str();
@@ -284,7 +276,8 @@ HcclResult CollectReachableTaskNodes(const TaskNode *start, std::vector<const Ta
 
         for (const TaskNode *childNode : node->GetChildren()) {
             if (childNode == nullptr) {
-                HCCL_VM_ERROR("[TaskGraphMemConflictV3] Invalid null child, parent={}", node->Describe());
+                HCCL_VM_ERROR("{} Graph structure is broken because one child node is null, "
+                    "parent={}", MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID), node->Describe());
                 return HCCL_E_PTR;
             }
             if (visited.count(childNode) != 0) {
@@ -331,20 +324,26 @@ HcclResult AddAccess(const MemSlice &slice, MemoryAccessKind kind, const TaskNod
         return HCCL_E_PTR;
     }
     if (node->GetNodeId() < 0) {
-        HCCL_VM_ERROR("[TaskGraphMemConflictV3] Invalid data task node id, node={}", node->Describe());
+        HCCL_VM_ERROR("{} Data task node id is invalid, nodeId={}, task={}",
+            MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR), node->GetNodeId(), node->Describe());
         return HCCL_E_PARA;
     }
     if (slice.len == 0) {
         return HCCL_SUCCESS;
     }
     if (slice.rankId == INVALID_RANK_ID || slice.memType == MemType::INVALID) {
-        HCCL_VM_ERROR("[TaskGraphMemConflictV3] Invalid memory slice, node={}, rank={}, memType={}",
-            node->Describe(), slice.rankId, static_cast<uint32_t>(slice.memType));
+        HCCL_VM_ERROR("{} One memory slice is missing a valid rank or memory type, "
+            "task={}, rankId={}, memType={}, offset=0x{:x}, length=0x{:x}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+            slice.rankId == INVALID_RANK_ID ? "invalid" : std::to_string(slice.rankId),
+            DescribeMemType(slice.memType), slice.offset, slice.len);
         return HCCL_E_PARA;
     }
     if (slice.len > std::numeric_limits<uint64_t>::max() - slice.offset) {
-        HCCL_VM_ERROR("[TaskGraphMemConflictV3] Memory slice overflow, node={}, offset=0x{:x}, len=0x{:x}",
-            node->Describe(), slice.offset, slice.len);
+        HCCL_VM_ERROR("{} One memory slice is invalid because offset + length overflowed, "
+            "task={}, offset=0x{:x}, length=0x{:x}, endLimit=0x{:x}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(), slice.offset, slice.len,
+            std::numeric_limits<uint64_t>::max());
         return HCCL_E_PARA;
     }
 
@@ -387,7 +386,8 @@ HcclResult BuildTaskMemoryAccesses(const TaskNode *node, TaskMemoryAccesses &acc
         }
         const std::vector<MemSlice> &srcs = reduce->GetSrcs();
         if (srcs.empty()) {
-            HCCL_VM_ERROR("[TaskGraphMemConflictV3] Reduce source list is empty, node={}", node->Describe());
+            HCCL_VM_ERROR("{} This reduce task has no source data, task={}",
+                MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe());
             return HCCL_E_PARA;
         }
         for (size_t index = 0; index < srcs.size(); ++index) {
@@ -429,13 +429,17 @@ HcclResult BuildTaskMemoryAccesses(const TaskNode *node, TaskMemoryAccesses &acc
         const auto &srcGroups = reduce->GetMergedSrcs();
         const auto &dsts = reduce->GetMergedDsts();
         if (srcGroups.empty() || srcGroups.size() != dsts.size()) {
-            HCCL_VM_ERROR("[TaskGraphMemConflictV3] Batch reduce group size mismatch, node={}", node->Describe());
+            HCCL_VM_ERROR("{} Batch reduce has different counts of source groups and target "
+                "memory slices, task={}, srcGroupCount={}, dstCount={}",
+                MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(), srcGroups.size(),
+                dsts.size());
             return HCCL_E_PARA;
         }
         for (size_t groupIndex = 0; groupIndex < srcGroups.size(); ++groupIndex) {
             if (srcGroups[groupIndex].empty()) {
-                HCCL_VM_ERROR("[TaskGraphMemConflictV3] Batch reduce source list is empty, node={}",
-                    node->Describe());
+                HCCL_VM_ERROR("{} One reduce group has no source data at all, task={}, "
+                    "groupIndex={}", MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+                    groupIndex);
                 return HCCL_E_PARA;
             }
             for (const auto &src : srcGroups[groupIndex]) {
@@ -632,9 +636,10 @@ HcclResult CheckCollectedConflictCandidates(const ConflictCandidates &candidates
         ++stats.parallelCandidatePairCount;
         const uint64_t overlapStart = std::max(candidate.current->start, candidate.history->start);
         const uint64_t overlapEnd = std::min(candidate.current->end, candidate.history->end);
-        HCCL_VM_ERROR("[TaskGraphMemConflictV3] Memory conflict detected, memory={}, overlap=[0x{:x},0x{:x}), "
-            "current={}, history={}", DescribeKey(candidate.current->key), overlapStart, overlapEnd,
-            DescribeAccess(*candidate.current), DescribeAccess(*candidate.history));
+        HCCL_VM_ERROR("{} Memory conflict detected, memory={}, overlap=[0x{:x},0x{:x}), "
+            "conflictTask1={}, conflictTask2={}", MakeErrorCodeText(ErrorCode::MEMCONFLICT_DETECTED),
+            DescribeKey(candidate.current->key), overlapStart, overlapEnd, DescribeAccess(*candidate.current),
+            DescribeAccess(*candidate.history));
         return HCCL_E_MEMORY;
     }
     return HCCL_SUCCESS;
@@ -687,8 +692,8 @@ HcclResult CollectMemoryAccessBuckets(const std::vector<const TaskNode *> &nodes
             accessCountByTaskType[TaskTypeName(node->GetType())]++;
             accessCountByTaskTypeAndKind[std::string(TaskTypeName(node->GetType())) + ":" +
                 AccessKindName(access.kind)]++;
-            accessCountByMemType[MemTypeName(access.key.memType)]++;
-            accessCountByMemTypeAndKind[std::string(MemTypeName(access.key.memType)) + ":" +
+            accessCountByMemType[DescribeMemType(access.key.memType)]++;
+            accessCountByMemTypeAndKind[std::string(DescribeMemType(access.key.memType)) + ":" +
                 AccessKindName(access.kind)]++;
             accessCountByBucket[DescribeKey(access.key)]++;
         }

@@ -13,10 +13,12 @@
 #include <algorithm>
 #include <cstdint>
 #include <limits>
+#include <sstream>
 #include <utility>
 
 #include "data_slice.h"
 #include "sim_log.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
@@ -112,6 +114,56 @@ CcuSqeParam MakeCcuSqeParam(const CcuTask &ccuTask)
     return param;
 }
 
+std::string DescribeTaskMetaForLog(const HcclTaskMetaData &taskMeta)
+{
+    std::ostringstream os;
+    os << "{taskType=" << static_cast<int32_t>(taskMeta.taskType)
+       << ", rankId=" << taskMeta.rankId
+       << ", streamId=" << taskMeta.streamId;
+    switch (taskMeta.taskType) {
+        case HccLTaskMetaType::MEM_CPY:
+            os << ", srcRankId=" << taskMeta.taskData.transMem.srcRankId
+               << ", dstRankId=" << taskMeta.taskData.transMem.dstRankId
+               << ", srcOffset=" << taskMeta.taskData.transMem.srcOffset
+               << ", dstOffset=" << taskMeta.taskData.transMem.dstOffset
+               << ", len=" << taskMeta.taskData.transMem.len
+               << ", protocol=" << static_cast<uint32_t>(taskMeta.taskData.transMem.protocol);
+            break;
+        case HccLTaskMetaType::REDUCE:
+            os << ", srcRankId=" << taskMeta.taskData.reduce.srcRankId
+               << ", dstRankId=" << taskMeta.taskData.reduce.dstRankId
+               << ", srcOffset=" << taskMeta.taskData.reduce.srcOffset
+               << ", dstOffset=" << taskMeta.taskData.reduce.dstOffset
+               << ", dataCount=" << taskMeta.taskData.reduce.dataCount
+               << ", dataType=" << static_cast<uint32_t>(taskMeta.taskData.reduce.dataType)
+               << ", reduceOp=" << static_cast<uint32_t>(taskMeta.taskData.reduce.reduceOp);
+            break;
+        case HccLTaskMetaType::NOTIFY_RECORD:
+        case HccLTaskMetaType::NOTIFY_WAIT:
+            os << ", srcRankId=" << taskMeta.taskData.notify.srcRankId
+               << ", dstRankId=" << taskMeta.taskData.notify.dstRankId
+               << ", notifyId=" << taskMeta.taskData.notify.notifyId
+               << ", notifyCount=" << taskMeta.taskData.notify.notifyCount
+               << ", protocol=" << static_cast<uint32_t>(taskMeta.taskData.notify.protocol);
+            break;
+        case HccLTaskMetaType::CCU_GRAPH:
+            os << ", dieId=" << taskMeta.taskData.ccu.dieId
+               << ", missionId=" << taskMeta.taskData.ccu.missionId
+               << ", instStartId=" << taskMeta.taskData.ccu.instStartId
+               << ", instCnt=" << taskMeta.taskData.ccu.instCnt
+               << ", argSize=" << taskMeta.taskData.ccu.argSize
+               << ", key=" << taskMeta.taskData.ccu.key;
+            break;
+        case HccLTaskMetaType::AIV_GRAPH:
+            os << ", launchId=" << taskMeta.taskData.aiv.launchIdx;
+            break;
+        default:
+            break;
+    }
+    os << "}";
+    return os.str();
+}
+
 bool IsContiguousCcuSqe(const TaskCcuGraph &missionNode, const CcuSqeParam &sqe)
 {
     constexpr size_t DEFAULT_CCU_QUEUE_ID = 0U;
@@ -160,14 +212,17 @@ HcclResult TaskMetaTranslatorV3::Translate(StorageManager &storage)
 
     const HcclVmTaskMetaData &taskMetaData = storage.GetHvmTaskMetaData();
     const auto &taskMetaVec = taskMetaData.task_meta;
-    HCCL_VM_INFO("[TaskMetaTranslatorV3][Translate] Start translate task meta, taskMetaCount={}",
+    HCCL_VM_INFO("Start converting task metadata into graph nodes, taskMetaCount={}",
         taskMetaVec.size());
     for (uint32_t i = 0; i < taskMetaVec.size(); ++i) {
         NodeId nodeId = INVALID_NODE_ID;
-        const HcclResult ret = TranslateOneTaskMeta(taskMetaVec[i], storage, nodeId);
+        const HcclResult ret = TranslateOneTaskMeta(taskMetaVec[i], storage, i, nodeId);
         if (ret != HCCL_SUCCESS) {
-            HCCL_VM_ERROR("[TaskMetaTranslatorV3] Translate task meta failed, index={}, taskType={}, ret={}",
-                i, static_cast<int32_t>(taskMetaVec[i].taskType), static_cast<uint32_t>(ret));
+            HCCL_VM_ERROR("{} Failed to convert one task into a graph node, taskIndex={}, "
+                "taskType={}, rankId={}, streamId={}, ret={}, taskMeta={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_TRANSLATE_FAILED), i,
+                static_cast<int32_t>(taskMetaVec[i].taskType), taskMetaVec[i].rankId, taskMetaVec[i].streamId,
+                static_cast<uint32_t>(ret), DescribeTaskMetaForLog(taskMetaVec[i]));
             return ret;
         }
     }
@@ -180,8 +235,8 @@ HcclResult TaskMetaTranslatorV3::Translate(StorageManager &storage)
             }
         }
     }
-    HCCL_VM_INFO("[TaskMetaTranslatorV3][Translate] Translate task meta success, taskMetaCount={}, nodeCount={}, "
-        "rankCount={}, streamCount={}", taskMetaVec.size(), nodes_.size(), taskQueues_.size(), streamCount);
+    HCCL_VM_INFO("Finished converting task metadata into graph nodes, taskMetaCount={}, nodeCount={}, "
+        "rankCount={}, nonEmptyStreamCount={}", taskMetaVec.size(), nodes_.size(), taskQueues_.size(), streamCount);
     return HCCL_SUCCESS;
 }
 
@@ -209,7 +264,7 @@ HcclResult TaskMetaTranslatorV3::AddTaskNode(const TaskPosition &position, std::
 }
 
 HcclResult TaskMetaTranslatorV3::TranslateOneTaskMeta(const HcclTaskMetaData &taskMeta, StorageManager &storage,
-    NodeId &nodeId)
+    uint32_t taskIndex, NodeId &nodeId)
 {
     TaskPosition position;
     HcclResult ret = MakeTaskPosition(taskMeta, position);
@@ -322,8 +377,10 @@ HcclResult TaskMetaTranslatorV3::TranslateOneTaskMeta(const HcclTaskMetaData &ta
         case HccLTaskMetaType::EVENT_WAIT:
         case HccLTaskMetaType::EVENT_RECORD:
         default:
-            HCCL_VM_WARN("[TaskMetaTranslatorV3] Unsupported task meta type: {}",
-                static_cast<int32_t>(taskMeta.taskType));
+            HCCL_VM_WARN("{} This task type is not supported for CheckerV3 graph generation, "
+                "taskIndex={}, taskType={}, rankId={}, streamId={}, taskMeta={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED), taskIndex, static_cast<int32_t>(taskMeta.taskType),
+                taskMeta.rankId, taskMeta.streamId, DescribeTaskMetaForLog(taskMeta));
             return HCCL_E_NOT_SUPPORT;
     }
 }

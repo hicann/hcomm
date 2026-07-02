@@ -97,7 +97,7 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
         m_checker_param.all2AllDataDes.sendCountMatrix = currentMatrix;
     }
 
-    HCCL_VM_INFO("[Trans2CheckerParam] opIter={}, rankId={}", detailTab.opIter, detailTab.rankId);
+    HCCL_VM_INFO("opIter={}, rankId={}", detailTab.opIter, detailTab.rankId);
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -125,7 +125,7 @@ void StorageManager::MergeAll2AllVSendCountMatrix()
     m_checker_param.all2AllDataDes.count = matrixSize;
     m_all2AllvSendMatrices.clear();
 
-    HCCL_VM_INFO("[MergeAll2AllVSendCountMatrix] Merged {} ranks into {}x{} matrix", numRanks, rankSize, rankSize);
+    HCCL_VM_INFO("Merged {} ranks into {}x{} matrix", numRanks, rankSize, rankSize);
 }
 
 HcclResult StorageManager::LoadHcclVmSynthesisData(uint32_t rankId, sim::OpMemInfoTab memInfo, std::vector<sim::CcuChannelTab>& channels)
@@ -188,7 +188,7 @@ HcclResult StorageManager::LoadHcclVmInstrData(std::vector<sim::CcuInstrResTab>&
 {
     for (auto& instr : instrRes) {
         if (instr.instrCount == 0 || instr.instrCount > 32 * 1024) {
-            HCCL_VM_WARN("[LoadHcclVmInstrData] invalid instrCount={}, rankId={}, dieId={}",
+            HCCL_VM_WARN("invalid instrCount={}, rankId={}, dieId={}",
                 instr.instrCount, instr.rankId, static_cast<uint32_t>(instr.dieId));
             continue;
         }
@@ -207,7 +207,7 @@ HcclResult StorageManager::LoadHcclVmInstrData(std::vector<sim::CcuInstrResTab>&
 
         m_instrData.instr_data.push_back(std::move(instrInner));
 
-        HCCL_VM_INFO("[LoadHcclVmInstrData] rankId={}, dieId={}, count={}",
+        HCCL_VM_INFO("rankId={}, dieId={}, count={}",
             instr.rankId, static_cast<uint32_t>(instr.dieId), instr.instrCount);
     }
 
@@ -220,7 +220,7 @@ HcclResult StorageManager::LoadHcclVmTaskMetaData(std::vector<std::vector<sim::O
     for (const auto& rankTasks : allTasks) {
         totalTasks += rankTasks.size();
     }
-    HCCL_VM_INFO("[LoadHcclVmTaskMetaData] total tasks: {}, ranks: {}", totalTasks, allTasks.size());
+    HCCL_VM_INFO("total tasks: {}, ranks: {}", totalTasks, allTasks.size());
     HcclVmTaskMetaData taskMeataData;
     for (const auto& rankTasks : allTasks) {
         for (const auto &task : rankTasks) {
@@ -229,7 +229,7 @@ HcclResult StorageManager::LoadHcclVmTaskMetaData(std::vector<std::vector<sim::O
                 std::memcpy(&metaData, task.optaskMeta.data(), sizeof(HcclTaskMetaData));
                 taskMeataData.task_meta.push_back(metaData);
             } else {
-                HCCL_VM_WARN("[LoadHcclVmTaskMetaData] optaskMeta too small, taskSeq={} src:{:d}, dst:{:d}", task.taskSeq, task.optaskMeta.size(), sizeof(HcclTaskMetaData));
+                HCCL_VM_WARN("optaskMeta too small, taskSeq={} src:{:d}, dst:{:d}", task.taskSeq, task.optaskMeta.size(), sizeof(HcclTaskMetaData));
             }
         }
     }
@@ -269,21 +269,21 @@ uint64_t StorageManager::GetBlockSize(uint32_t rankId, BufferType bufferType) {
     // 1. 定位 Rank
     auto rankIt = m_mem_layout.find(rankId);
     if (rankIt == m_mem_layout.end()) {
-        HCCL_VM_INFO("[GetBlockSize] Cannot find rank id from memory layout");
+        HCCL_VM_INFO("Cannot find rank id from memory layout");
         return 0;
     }
 
     // 2. 定位 BufferType
     auto typeIt = rankIt->second.find(bufferType);
     if (typeIt == rankIt->second.end()) {
-        HCCL_VM_INFO("[GetBlockSize] Cannot find buffer type from memory layout");
+        HCCL_VM_INFO("Cannot find buffer type from memory layout");
         return 0;
     }
 
     // 3. 获取该类型下的最后一个块 (map 的 rbegin)
     const auto& addrMap = typeIt->second;
     if (addrMap.empty()) {
-        HCCL_VM_INFO("[GetBlockSize] Cannot find addr from memory layout");
+        HCCL_VM_INFO("Cannot find addr from memory layout");
         return 0;
     }
 
@@ -302,7 +302,7 @@ DataSlice StorageManager::GetDataSlice(uint32_t rankId, uint64_t addr, uint64_t 
     // 1. 定位该 Rank 的内存布局
     auto rankIter = m_mem_layout.find(rankId);
     if (rankIter == m_mem_layout.end()) {
-        HCCL_VM_ERROR("[GetDataSlice] Cannot find rank {} from memory layout.", rankId);
+        HCCL_VM_ERROR("Cannot find rank {} from memory layout.", rankId);
         return slice;
     }
 
@@ -332,23 +332,13 @@ DataSlice StorageManager::GetDataSlice(uint32_t rankId, uint64_t addr, uint64_t 
             }
         }
     }
-    HCCL_VM_ERROR("[GetDataSlice] Cannot find rank {}, addr {}, size {} from memory layout.", rankId, addr, size);
+    HCCL_VM_ERROR("Cannot find rank {}, addr {}, size {} from memory layout.", rankId, addr, size);
     return slice; // 未找到匹配的物理区间
 }
 
 HcclResult StorageManager::GetSlice(uint64_t addr, uint64_t len, DataSlice& dataSlice, uint32_t* rank)
 {
     dataSlice.SetSize(len);
-
-    // for (auto &rankMem : m_mem_layout) {
-    //     // 2. 遍历该 Rank 下的所有 Buffer 类型 (INPUT, OUTPUT, CCL...)
-    //     // typeEntry.first 是 BufferType, typeEntry.second 是 addrMap
-    //     for (auto const& typeEntry : rankMem.second) {
-    //         for (auto &xx: typeEntry.second) {
-    //             std::cout<<"[GetSlice] memlayout: rank"<<rankMem.first<<", "<<xx.first<<", size="<<xx.second.size<<std::endl;
-    //         }
-    //     }
-    // }
 
     for (auto &rankMem : m_mem_layout) {
         // 2. 遍历该 Rank 下的所有 Buffer 类型 (INPUT, OUTPUT, CCL...)
@@ -359,12 +349,10 @@ HcclResult StorageManager::GetSlice(uint64_t addr, uint64_t len, DataSlice& data
             // 3. 使用 upper_bound 在当前类型的地址图中快速查找
             // 找到第一个起始地址大于 addr 的块，那么目标块就是它的前一个
             auto it = addrMap.upper_bound(addr);
-            // std::cout<<"[FIND MEM] start "<<rankMem.first<<", "<<addr<<std::endl;
             if (it != addrMap.begin()) {
                 --it;
                 const MemBlock& block = it->second;
 
-                // std::cout<<"[FIND MEM] inner 1: "<<block.startAddr<<", "<<block.size<<", "<<block.startAddr + block.size<<std::endl;
                 // 4. 边界检查：确认物理地址 addr 是否落在该块 [start, start + size) 内
                 if (addr >= block.startAddr && addr < (block.startAddr + block.size)) {
                     // 校验区间完整性（可选）：确保整个 size 都在这个块内
@@ -373,7 +361,6 @@ HcclResult StorageManager::GetSlice(uint64_t addr, uint64_t len, DataSlice& data
                     dataSlice.SetBufferType(block.bufferType);
                     // 核心转换公式：逻辑基址 + (物理地址 - 物理块基址)
                     dataSlice.SetOffset(block.globalOffset + (addr - block.startAddr));
-                    // std::cout<<"[GetSlice] found ...."<<rankMem.first<<std::endl;
                     if (rank != nullptr) {
                         *rank = rankMem.first;
                     }
@@ -384,7 +371,7 @@ HcclResult StorageManager::GetSlice(uint64_t addr, uint64_t len, DataSlice& data
         }
     }
 
-    HCCL_VM_ERROR("[GetSlice] Cannot find addr...:addr= {}, len={}", addr, len);
+    HCCL_VM_ERROR("Cannot find addr...:addr= {}, len={}", addr, len);
     return HcclResult::HCCL_E_MEMORY;
 }
 
@@ -404,14 +391,14 @@ std::string StorageManager::FindRootPath()
             }
         } else {
             // 如果 realpath 失败（例如路径被删除或权限不足）
-            HCCL_VM_ERROR("[FindRootPath] Iteration {}: realpath failed for {}", i, current_search_path);
+            HCCL_VM_ERROR("Iteration {}: realpath failed for {}", i, current_search_path);
         }
 
         // 没找到，将探测路径向上推一级
         current_search_path += "/..";
     }
 
-    HCCL_VM_INFO("[FindRootPath] RootPath NOT found.");
+    HCCL_VM_INFO("RootPath NOT found.");
     return ""; 
 }
 

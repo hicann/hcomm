@@ -93,6 +93,7 @@ include_directories(
 
 function(config_hcclvm_install)
     install(DIRECTORY DESTINATION "data")
+    install(DIRECTORY DESTINATION "archive")
     install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/config/"
         DESTINATION "config")
     install(FILES
@@ -100,6 +101,7 @@ function(config_hcclvm_install)
         "${CMAKE_CURRENT_SOURCE_DIR}/asset/generate_cluster_topo.sh"
         "${CMAKE_CURRENT_SOURCE_DIR}/asset/generate_server_topo.sh"
         "${CMAKE_CURRENT_SOURCE_DIR}/asset/hccl_config.sh"
+        "${CMAKE_CURRENT_SOURCE_DIR}/asset/archive.sh"
         DESTINATION "script"
         PERMISSIONS
             OWNER_READ OWNER_WRITE OWNER_EXECUTE

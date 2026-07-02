@@ -1275,6 +1275,7 @@ void CcuKernel::Load(const CcuRep::Variable &var)
 {
     auto loadArgRep = std::make_shared<CcuRep::CcuRepLoadArg>(
         var, loadArgIndex_ % CCU_SQE_ARGS_LEN, static_cast<uint16_t>(loadArgIndex_));
+    GetLGProfilingInfo().loadRep2ArgIdxMap[loadArgRep] = loadArgIndex_;
     Append(loadArgRep);
     loadArgIndex_++;
 }

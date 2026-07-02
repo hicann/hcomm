@@ -352,4 +352,22 @@ private:
     uint64_t   size_;
 };
 
+/**
+ * @brief 获取当前编译目标架构字符串
+ *
+ * 返回值为编译期常量, 用于拼接 lib/<arch>/ 目录下的动态库路径.
+ * 与运行时 uname() 不同, 编译期宏不受 QEMU 用户态仿真影响:
+ *   - Host 侧 (hccl-vm):   本地 gcc 编译,  返回 "x86_64"
+ *   - Device 侧 (device):  交叉编译 aarch64, 返回 "aarch64"
+ *
+ * @return "x86_64" 或 "aarch64"
+ */
+inline std::string GetArchStr() {
+#if defined(__aarch64__)
+    return "aarch64";
+#else
+    return "x86_64";
+#endif
+}
+
 #endif

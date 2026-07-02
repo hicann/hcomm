@@ -55,6 +55,26 @@ enum class MemType : uint8_t {
     INVALID = UINT8_MAX,
 };
 
+inline const char *DescribeMemType(MemType memType)
+{
+    switch (memType) {
+        case MemType::INPUT:
+            return "INPUT";
+        case MemType::OUTPUT:
+            return "OUTPUT";
+        case MemType::CCL:
+            return "CCL";
+        case MemType::UB_AIV:
+            return "UB_AIV";
+        case MemType::FLAG_AIV:
+            return "FLAG_AIV";
+        case MemType::MS_CCU:
+            return "MS_CCU";
+        default:
+            return "invalid";
+    }
+}
+
 enum class BoundaryType : uint8_t {
     MAIN_GRAPH = 0,
     CCU_SUB_GRAPH,

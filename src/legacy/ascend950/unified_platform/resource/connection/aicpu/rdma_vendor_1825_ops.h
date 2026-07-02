@@ -12,7 +12,6 @@
 #define RDMA_VENDOR_1825_OPS_H
 
 #include "rdma_vendor_base_ops.h"
-#include "rdma_conn_lite_v2.h"
 namespace Hccl {
 
 // Necessary helper funcs

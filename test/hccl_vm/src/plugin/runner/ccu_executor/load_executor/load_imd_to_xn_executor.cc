@@ -39,7 +39,7 @@ void LoadImdToXnExecutor::Run()
 {
     auto &ccuResMgr = CcuResourceManager::GetInstance();
     ccuResMgr.UpdateXnValue(rankId_, dieId_, xnId_, immediate_);
-    HCCL_VM_DEBUG("[LoadImdToXnExecutor] Load immediate: locCcu[{}:{}], XnId=[{}], immediate=[{}]",
+    HCCL_VM_DEBUG("Load immediate: locCcu[{}:{}], XnId=[{}], immediate=[{}]",
         rankId_, dieId_, xnId_, immediate_);
 }
 

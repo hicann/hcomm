@@ -28,7 +28,7 @@ struct CcuPostNodeMetaV3 {
     RankId waitRankId{INVALID_RANK_ID};
     uint32_t dieId{INVALID_DIE_ID};
     uint16_t ckeId{INVALID_CCU_CKE};
-    uint16_t topicId{0};
+    uint16_t remainingCkeMask{0};
     bool isLocal{false};
 };
 
@@ -39,8 +39,8 @@ public:
     void Reset();
     HcclResult CheckAllPostMatch();
     void RegisterPostNode(TaskNode *node, const CcuPostNodeMetaV3 &meta);
-    uint32_t GetPostTopicId(const TaskNode *node) const;
-    void SetPostTopicId(TaskNode *node, uint32_t topicId);
+    uint32_t GetPostRemainingCkeMask(const TaskNode *node) const;
+    void SetPostRemainingCkeMask(TaskNode *node, uint32_t remainingCkeMask);
     const CcuPostNodeMetaV3 *GetPostNodeMeta(const TaskNode *node) const;
 
     HcclResult SetXn(uint32_t rankId, uint32_t dieId, uint16_t xnId, uint64_t xnValue);

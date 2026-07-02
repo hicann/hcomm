@@ -25,22 +25,23 @@
 #include "ccu_all_rank_param_recorder_v3.h"
 #include "sim_log.h"
 #include "storage_manager.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
 
 std::unique_ptr<InstructMapBase> g_instrMap;
 
-// 作用：读取 post 节点当前挂着的 topicId。
-u32 GetTopicId(TaskNode *post)
+// 作用：读取 post 节点当前还未被 wait 消费掉的 CKE mask。
+u32 GetPostRemainingCkeMask(TaskNode *post)
 {
-    return AllRankParamRecorder::Global()->GetPostTopicId(post);
+    return AllRankParamRecorder::Global()->GetPostRemainingCkeMask(post);
 }
 
-// 作用：更新 post 节点剩余未消费的 topicId。
-void SetTopicId(TaskNode *post, u32 topicId)
+// 作用：更新 post 节点当前还未被 wait 消费掉的 CKE mask。
+void SetPostRemainingCkeMask(TaskNode *post, u32 remainingCkeMask)
 {
-    AllRankParamRecorder::Global()->SetPostTopicId(post, topicId);
+    AllRankParamRecorder::Global()->SetPostRemainingCkeMask(post, remainingCkeMask);
 }
 
 // 作用：按 wait mask 生成本地/远端 wait 节点，并补齐 post 到 wait 的依赖边。
@@ -55,13 +56,13 @@ void GenWaitNode(CcuGraphStateV3 *curCcuTask, uint32_t queId, uint16_t waitCKEId
     TaskNode *localWaitNode = nullptr;
     TaskNode *remoteWaitNode = nullptr;
 
-    // 只有目标 CKE bit 全部就绪后才真正生成 wait 节点；此时会把待消费的 topic bit
+    // 只有目标 CKE bit 全部就绪后才真正生成 wait 节点；此时会把待消费的 CKE mask bit
     // 反查回它实际依赖的那些 post 节点。
     std::set<TaskNode *> &seenPosts = AllRankParamRecorder::Global()->seenPost[rankId][dieId][waitCKEId];
     std::vector<TaskNode *> localPosts;
     for (auto *post : seenPosts) {
-        u32 topicId = GetTopicId(post);
-        uint16_t curPostMask = topicId & waitCKEMask;
+        u32 remainingCkeMask = GetPostRemainingCkeMask(post);
+        uint16_t curPostMask = remainingCkeMask & waitCKEMask;
         if (curPostMask == 0) {
             continue;
         }
@@ -88,8 +89,8 @@ void GenWaitNode(CcuGraphStateV3 *curCcuTask, uint32_t queId, uint16_t waitCKEId
 
     for (auto it = seenPosts.begin(); it != seenPosts.end();) {
         auto *post = *it;
-        u32 topicId = GetTopicId(post);
-        uint16_t curPostMask = topicId & waitCKEMask;
+        u32 remainingCkeMask = GetPostRemainingCkeMask(post);
+        uint16_t curPostMask = remainingCkeMask & waitCKEMask;
         if (curPostMask == 0) {
             ++it;
             continue;
@@ -106,9 +107,9 @@ void GenWaitNode(CcuGraphStateV3 *curCcuTask, uint32_t queId, uint16_t waitCKEId
             }
             (void)CollectBilateralWaitInfo(curCcuTask, queId, remoteWaitNode);
         }
-        topicId = topicId & (~waitCKEMask);
-        SetTopicId(post, topicId);
-        if (topicId == 0) {
+        remainingCkeMask = remainingCkeMask & (~waitCKEMask);
+        SetPostRemainingCkeMask(post, remainingCkeMask);
+        if (remainingCkeMask == 0) {
             it = seenPosts.erase(it);
         } else {
             ++it;
@@ -120,16 +121,17 @@ void GenWaitNode(CcuGraphStateV3 *curCcuTask, uint32_t queId, uint16_t waitCKEId
 HcclResult ProcessWaitMask(RankId rankId, uint32_t dieId, CcuGraphStateV3 *curCcuTask, uint32_t queId,
     uint16_t waitCKEId, uint16_t waitCKEMask, bool &isContinue)
 {
-    HCCL_VM_DEBUG("[ProcessWaitMask] Enter...rank {:d}, die{:d}, que{:d}, waitCke{:d}, waitMask{:d}",
-        rankId, static_cast<uint32_t>(dieId), queId, waitCKEId, waitCKEMask);
+    HCCL_VM_DEBUG("Evaluate CCU wait condition, rankId={}, dieId={}, queueId={}, waitCkeId={}, "
+        "requiredMask=0x{:04x}", rankId, static_cast<uint32_t>(dieId), queId, waitCKEId, waitCKEMask);
     if (waitCKEMask != 0x0000) {
         uint16_t ckeValue = 0;
         CHK_RET(AllRankParamRecorder::Global()->GetCKE(rankId, dieId, waitCKEId, ckeValue));
         if ((ckeValue & waitCKEMask) != waitCKEMask) {
             // 当前 queue 在这里暂停，直到生产侧把所需的 wait bit 全部 post 完成。
             isContinue = false;
-            HCCL_VM_DEBUG("[ProcessWaitMask] Does not meet the condition, continue: ckeId: {:d}, "
-                "ckeValue: {:d}, mask: {:x}", waitCKEId, ckeValue, waitCKEMask);
+            HCCL_VM_DEBUG("Pause this CCU queue because the wait condition is not satisfied yet, "
+                "rankId={}, dieId={}, queueId={}, waitCkeId={}, currentCkeValue=0x{:04x}, requiredMask=0x{:04x}",
+                rankId, static_cast<uint32_t>(dieId), queId, waitCKEId, ckeValue, waitCKEMask);
             return HCCL_SUCCESS;
         }
         GenWaitNode(curCcuTask, queId, waitCKEId, waitCKEMask);
@@ -142,11 +144,17 @@ HcclResult TransformInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *curCcu
     bool &isContinue)
 {
     if (g_instrMap == nullptr) {
-        HCCL_ERROR("g_instrMap error");
+        HCCL_VM_ERROR("{} Failed to create the CCU instruction translator, rankId={}, queueId={}",
+            MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR).c_str(),
+            curCcuTask == nullptr ? std::string("null") : std::to_string(curCcuTask->GetRankId()), queId);
         return HCCL_E_INTERNAL;
     }
     if (!g_instrMap->IsSupported(instr->header.header)) {
-        HCCL_ERROR("ins type not supported %hu", instr->header.header);
+        HCCL_VM_ERROR("{} This CCU instruction type is not supported by CheckerV3 graph expansion, "
+            "rankId={}, queueId={}, instructionHeader=0x{:04x}",
+            MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(),
+            curCcuTask == nullptr ? std::string("null") : std::to_string(curCcuTask->GetRankId()), queId,
+            instr->header.header);
         return HCCL_E_INTERNAL;
     }
     return g_instrMap.get()->Transform(instr, curCcuTask, queId, isContinue, nullptr);
@@ -177,9 +185,19 @@ HcclResult TransformInstrQue(TaskNode *node, CcuGraphStateV3 *curCcuTask, uint32
     // 单个 queue 严格按指令顺序推进；跨 queue 的协同只通过生成出来的 wait/post 边表达。
     while (pos < endInstrId) {
         u32 prePos = pos;
-        HCCL_VM_DEBUG("Current process ccu graph: {}, instruction id={}, header={}",
-            curCcuTask->Describe(), pos, microCodeQue.instrVec[pos].header.header);
-        CHK_RET(TransformInstr(&microCodeQue.instrVec[pos], curCcuTask, queId, isContinue));
+        const uint32_t instrId = curCcuTask->startInstrIdInQue[queId] + pos;
+        HCCL_VM_DEBUG("Translating one CCU instruction, graph={}, instructionId={}, "
+            "instructionHeader=0x{:04x}",
+            curCcuTask->Describe(), instrId, microCodeQue.instrVec[pos].header.header);
+        HcclResult ret = TransformInstr(&microCodeQue.instrVec[pos], curCcuTask, queId, isContinue);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_VM_ERROR("{} Failed to translate one CCU instruction, rankId={}, queueId={}, "
+                "instructionId={}, instructionHeader=0x{:04x}, ret={}, graph={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_TRANSLATE_FAILED).c_str(), curCcuTask->GetRankId(), queId,
+                instrId, microCodeQue.instrVec[pos].header.header, static_cast<uint32_t>(ret),
+                curCcuTask->Describe().c_str());
+            return ret;
+        }
         if (!isContinue) {
             return HCCL_SUCCESS;
         }
@@ -192,7 +210,8 @@ HcclResult TransformInstrQue(TaskNode *node, CcuGraphStateV3 *curCcuTask, uint32
     curCcuTask->isGenGraphed = std::all_of(curCcuTask->instrQueStatus.begin(),
         curCcuTask->instrQueStatus.end(), [](bool b) { return b; });
 
-    HCCL_VM_DEBUG("[TransformInstrQue] end...");
+    HCCL_VM_DEBUG("Finished translating one CCU queue, rankId={}, queueId={}",
+        curCcuTask->GetRankId(), queId);
     return HCCL_SUCCESS;
 }
 
@@ -566,7 +585,8 @@ HcclResult BuildLoopParallelGroupV3(const std::vector<LoopInfoV3> &loopGroup,
     group.beforeNodes = GetLoopBeforeNodesV3(loopGroup.front().loopStart, originalQueueId, compressedBoundary);
     group.afterNodes = GetSameQueueChildrenV3(loopGroup.back().loopEnd, originalQueueId);
     if (group.beforeNodes.empty() || group.afterNodes.empty()) {
-        HCCL_ERROR("Loop parallel group boundary is invalid.");
+        HCCL_VM_ERROR("{} Failed to split one CCU loop-parallel group because its entry or exit "
+            "boundary could not be determined.", MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str());
         return HCCL_E_INTERNAL;
     }
 
@@ -1078,7 +1098,11 @@ HcclResult GenerateRawCcuGraphStateV3(TaskNode *node, CcuGraphStateV3 &state)
             ++unmatchedCnt;
         }
         if (unmatchedCnt > state.queueNum_) {
-            HCCL_ERROR("deadLocking occurs due to mismatch.");
+            HCCL_VM_ERROR("{} CCU raw graph generation is stuck inside one graph. All queues are "
+                "blocked and no instruction can advance, rankId={}, queueCount={}, nextInstructionByQueue={}, "
+                "blockedGraphSummary={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_DEADLOCK).c_str(), state.GetRankId(), state.queueNum_,
+                state.DescribeNextInstructionByQueue().c_str(), state.Describe().c_str());
             return HCCL_E_INTERNAL;
         }
     }
@@ -1111,18 +1135,16 @@ void PrintGeneratedCcuGraphsV3(const std::vector<std::unique_ptr<CcuGraphRuntime
             return lhs->ccuGraph->GetNodeId() < rhs->ccuGraph->GetNodeId();
         });
 
-    HCCL_VM_INFO("=======================================================");
-    HCCL_VM_INFO("[PrintCcuGraphV3] All generated CCU graphs before queue parallelization, graphCount={}",
+    HCCL_VM_INFO("Printing all generated CCU graphs before queue parallelization, graphCount={}",
         orderedRuntimes.size());
     for (const CcuGraphRuntimeV3 *runtime : orderedRuntimes) {
         if (runtime == nullptr || runtime->state == nullptr) {
             continue;
         }
-        HCCL_VM_INFO("[PrintCcuGraphV3] ccuGraphNodeId={}, rankId={}", runtime->ccuGraph->GetNodeId(),
+        HCCL_VM_INFO("CCU graph detail, ccuGraphNodeId={}, rankId={}", runtime->ccuGraph->GetNodeId(),
             runtime->ccuGraph->GetRankId());
         PrintCcuGraph(runtime->state->ccuHeadTaskNode);
     }
-    HCCL_VM_INFO("=======================================================");
 }
 
 // 作用：把已经展开完成的内部 CCU 子图重新接回主图中的占位节点位置。
@@ -1205,7 +1227,24 @@ HcclResult GenerateRawCcuGraphsV3(const CcuGraphsGenerateInputV3 &input,
     size_t generatedCount = 0;
     while (!candNode.empty()) {
         if (unmatchedCnt >= candNode.size()) {
-            HCCL_ERROR("deadLocking occurs due to mismatch.");
+            TaskNode *firstBlockedGraph = candNode.front();
+            const CcuGraphRuntimeV3 *blockedRuntime = nullptr;
+            auto runtimeIter = runtimeByNodeId.find(firstBlockedGraph == nullptr ?
+                INVALID_NODE_ID : firstBlockedGraph->GetNodeId());
+            if (runtimeIter != runtimeByNodeId.end()) {
+                blockedRuntime = runtimeIter->second;
+            }
+            HCCL_VM_ERROR("{} CCU multi-graph raw generation is stuck. Some CCU graphs are still "
+                "blocked by dependencies, but no graph can advance, blockedGraphCount={}, rankId={}, queueCount={}, "
+                "nextInstructionByQueue={}, firstBlockedGraph={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_DEADLOCK).c_str(), candNode.size(),
+                blockedRuntime == nullptr || blockedRuntime->state == nullptr ? std::string("null") :
+                    std::to_string(blockedRuntime->state->GetRankId()),
+                blockedRuntime == nullptr || blockedRuntime->state == nullptr ? 0U :
+                    blockedRuntime->state->queueNum_,
+                blockedRuntime == nullptr || blockedRuntime->state == nullptr ? "[]" :
+                    blockedRuntime->state->DescribeNextInstructionByQueue().c_str(),
+                firstBlockedGraph == nullptr ? "node=null" : firstBlockedGraph->Describe().c_str());
             return HCCL_E_INTERNAL;
         }
 
@@ -1273,8 +1312,19 @@ HcclResult GenerateRawCcuGraphsV3(const CcuGraphsGenerateInputV3 &input,
     }
 
     if (generatedCount != input.ccuGraphs.size()) {
-        HCCL_ERROR("CCU graph global expansion finished with unfinished graph, generated=%zu, total=%zu",
-            generatedCount, input.ccuGraphs.size());
+        const CcuGraphRuntimeV3 *firstUnfinishedRuntime = nullptr;
+        for (const auto &runtime : runtimes) {
+            if (runtime != nullptr && !runtime->generated) {
+                firstUnfinishedRuntime = runtime.get();
+                break;
+            }
+        }
+        HCCL_VM_ERROR("{} CCU raw graph generation ended before all CCU graphs were finished, "
+            "generatedGraphCount={}, totalGraphCount={}, firstUnfinishedGraph={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(),
+            generatedCount, input.ccuGraphs.size(), firstUnfinishedRuntime == nullptr ||
+            firstUnfinishedRuntime->ccuGraph == nullptr ? "node=null" :
+            firstUnfinishedRuntime->ccuGraph->Describe().c_str());
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;
@@ -1293,8 +1343,18 @@ HcclResult FinalizeGeneratedCcuGraphsV3(TaskGraphGeneratorV3 &graph,
         ++finalizedCount;
     }
     if (finalizedCount != runtimes.size()) {
-        HCCL_ERROR("CCU graph global finalization finished with unfinished graph, finalized=%zu, total=%zu",
-            finalizedCount, runtimes.size());
+        const CcuGraphRuntimeV3 *firstUnfinishedRuntime = nullptr;
+        for (const auto &runtime : runtimes) {
+            if (runtime != nullptr && !runtime->finalized) {
+                firstUnfinishedRuntime = runtime.get();
+                break;
+            }
+        }
+        HCCL_VM_ERROR("{} CCU graph finalization ended before all generated graphs were attached back "
+            "to the main graph, finalizedGraphCount={}, totalGraphCount={}, firstUnfinishedGraph={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), finalizedCount, runtimes.size(),
+            firstUnfinishedRuntime == nullptr || firstUnfinishedRuntime->ccuGraph == nullptr ? "node=null" :
+            firstUnfinishedRuntime->ccuGraph->Describe().c_str());
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;

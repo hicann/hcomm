@@ -30,7 +30,7 @@ void LoadSqeArgsToXnExecutor::Parser() {
         xnId_     = instr_.v1.loadSqeArgsToXn.xnId;
         sqeArgId_ = instr_.v1.loadSqeArgsToXn.sqeArgsId;
     } else {
-        HCCL_VM_ERROR("[LoadSqeArgsToXnExecutor] Unsupported CCU version: {}", RunnerCcuVersionToString(version_));
+        HCCL_VM_ERROR("Unsupported CCU version: {}", RunnerCcuVersionToString(version_));
     }
 }
 
@@ -39,7 +39,7 @@ void LoadSqeArgsToXnExecutor::Run() {
     auto &ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t sqeArgValue = ccuResMgr.GetSqeArgValue(rankId_, dieId_, sqeArgId_);
 
-    HCCL_VM_DEBUG("[LoadSqeArgsToXnExecutor] Load arg: locCcu[{}:{}], XnId=[{}], argId=[{}], value=[{}]",
+    HCCL_VM_DEBUG("Load arg: locCcu[{}:{}], XnId=[{}], argId=[{}], value=[{}]",
         rankId_, dieId_, xnId_, sqeArgId_, sqeArgValue);
     ccuResMgr.UpdateXnValue(rankId_, dieId_, xnId_, sqeArgValue);
 }

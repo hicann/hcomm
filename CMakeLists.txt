@@ -11,6 +11,7 @@ cmake_minimum_required(VERSION 3.16.0)
 option(BUILD_OPEN_PROJECT   "Build open hcomm project."     ON)
 option(ENABLE_BUILD_DEVICE  "Build hcomm device project."   OFF)
 option(ENABLE_BUILD_AARCH   "Build hcomm aarch project."    OFF)
+option(ENABLE_EXPERIMENTAL  "Build experimental components." OFF)
 
 # 默认只编译 host 侧
 if(NOT DEFINED PRODUCT_SIDE)
@@ -30,6 +31,7 @@ message(STATUS "PRODUCT_SIDE=${PRODUCT_SIDE}")
 message(STATUS "BUILD_OPEN_PROJECT=${BUILD_OPEN_PROJECT}")
 message(STATUS "ENABLE_BUILD_DEVICE=${ENABLE_BUILD_DEVICE}")
 message(STATUS "ENABLE_BUILD_AARCH=${ENABLE_BUILD_AARCH}")
+message(STATUS "ENABLE_EXPERIMENTAL=${ENABLE_EXPERIMENTAL}")
 
 set(HCOMM_DIR         "${CMAKE_CURRENT_SOURCE_DIR}")
 set(HCC_TOOLCHAIN_DIR "${ASCEND_CANN_PACKAGE_PATH}/toolkit/toolchain/hcc")
@@ -266,4 +268,8 @@ elseif(BUILD_OPEN_PROJECT)
         DESTINATION ${INSTALL_PKG_INCLUDE_DIR}/hcomm/ ${INSTALL_OPTIONAL}
         COMPONENT hcomm
     )
+
+    if(ENABLE_EXPERIMENTAL AND EXISTS "${HCOMM_DIR}/experimental/base_comm/nic_plugin/CMakeLists.txt")
+        add_subdirectory(experimental/base_comm/nic_plugin)
+    endif()
 endif()

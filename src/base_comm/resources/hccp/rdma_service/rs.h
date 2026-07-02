@@ -285,6 +285,7 @@ enum RsSocketStatus {
 RS_ATTRI_VISI_DEF int RsGetSockets(uint32_t role, struct SocketFdData conn[], uint32_t num);
 RS_ATTRI_VISI_DEF int RsGetSslEnable(uint32_t *sslEnable);
 RS_ATTRI_VISI_DEF int RsSocketSend(int fd, const void *data, uint64_t size);
+RS_ATTRI_VISI_DEF int RsHdcSocketSend(int fd, const void *data, uint64_t size);
 RS_ATTRI_VISI_DEF int RsPeerSocketSend(uint32_t sslEnable, int fd, const void *data, uint64_t size);
 RS_ATTRI_VISI_DEF int RsSocketRecv(int fd, void *data, uint64_t size);
 RS_ATTRI_VISI_DEF int RsPeerSocketRecv(uint32_t sslEnable, int fd, void *data, uint64_t size);

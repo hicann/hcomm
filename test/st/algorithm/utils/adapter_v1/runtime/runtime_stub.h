@@ -102,6 +102,7 @@ HcclResult hrtRaGetDeviceAllNicIP(std::vector<std::vector<hccl::HcclIpAddress>> 
 
 uint64_t MsprofSysCycleTime();
 using BinHandle = void *;
+typedef struct tagRtDevBinary rtDevBinary_t;
 HcclResult hrtMemAsyncCopy(void *dst, uint64_t destMax, const void *src, uint64_t count,
     HcclRtMemcpyKind kind, rtStream_t stream);
 

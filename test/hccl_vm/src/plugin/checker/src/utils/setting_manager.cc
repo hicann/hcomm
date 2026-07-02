@@ -33,7 +33,7 @@ HcclResult SettingManager::Refresh()
 {
     const std::string pluginRootDir = GetCurrentPath();
     if (pluginRootDir.empty()) {
-        HCCL_VM_ERROR("[SettingManager::Refresh] failed to get current path.");
+        HCCL_VM_ERROR("failed to get current path.");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -41,7 +41,7 @@ HcclResult SettingManager::Refresh()
     CheckerSettings newSettings;
 
     if (!FileExists(manifestPath)) {
-        HCCL_VM_WARN("[SettingManager::Refresh] manifest.json not found, use default settings.");
+        HCCL_VM_WARN("manifest.json not found, use default settings.");
         std::lock_guard<std::mutex> lock(m_mutex);
         m_settings = newSettings;
         m_pluginRootDir = pluginRootDir;
@@ -51,7 +51,7 @@ HcclResult SettingManager::Refresh()
 
     std::ifstream manifestStream(manifestPath.c_str());
     if (!manifestStream.is_open()) {
-        HCCL_VM_ERROR("[SettingManager::Refresh] failed to open manifest file: {}", manifestPath);
+        HCCL_VM_ERROR("failed to open manifest file: {}", manifestPath);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -64,7 +64,7 @@ HcclResult SettingManager::Refresh()
         newSettings.enableNewChecker = settings.value(SETTING_KEY_ENABLE_NEW_CHECKER, true);
         newSettings.enableOldChecker = settings.value(SETTING_KEY_ENABLE_OLD_CHECKER, true);
     } catch (const std::exception &ex) {
-        HCCL_VM_ERROR("[SettingManager::Refresh] parse manifest failed: {}", ex.what());
+        HCCL_VM_ERROR("parse manifest failed: {}", ex.what());
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -75,7 +75,7 @@ HcclResult SettingManager::Refresh()
         m_manifestPath = manifestPath;
     }
 
-    HCCL_VM_INFO("[SettingManager::Refresh] settings refreshed: insight_dump={}, memory_snapshot_dump={}, "
+    HCCL_VM_INFO("settings refreshed: insight_dump={}, memory_snapshot_dump={}, "
         "new_checker={}, old_checker={}", newSettings.enableInsightDump, newSettings.enableMemorySnapshotDump,
         newSettings.enableNewChecker, newSettings.enableOldChecker);
     return HcclResult::HCCL_SUCCESS;

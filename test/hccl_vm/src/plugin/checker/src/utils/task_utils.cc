@@ -352,7 +352,7 @@ std::shared_ptr<TaskStub> ConvertTask(const HcclSim::StorageManager& storage, Hc
             memcpy(ccuParam.args, hcclTask.taskData.ccu.args, sizeof(uint64_t) * ccuParam.argSize);
             missionParam.push_back(ccuParam);
             HCCL_VM_INFO("rank {}, dieId= {}", hcclTask.rankId, static_cast<uint32_t>(dieId));
-            HCCL_VM_INFO("[ConvertTask] Get sqe info: missionId= {:d}, startId= {:d}, cnt= {:d}, argSize= {:d}",
+            HCCL_VM_INFO("Get sqe info: missionId= {:d}, startId= {:d}, cnt= {:d}, argSize= {:d}",
                 missionId, ccuParam.instStartId, ccuParam.instCnt, ccuParam.argSize);
 
             if (g_missionTask.find(hcclTask.rankId) != g_missionTask.end()) {
@@ -378,7 +378,7 @@ std::shared_ptr<TaskStub> ConvertTask(const HcclSim::StorageManager& storage, Hc
                 }
                 hcomm::CcuRep::CcuInstrInfo ccuInstrInfo;
                 ccuInstrInfo.instrVec = ccuInstr.data;
-                HCCL_VM_INFO("[ConvertTask] Create new ccu graph base node, rank_id= {}, die_id= {} - {}",
+                HCCL_VM_INFO("Create new ccu graph base node, rank_id= {}, die_id= {} - {}",
                     ccuInstr.desc.rank_id, static_cast<uint32_t>(ccuInstr.desc.die_id), static_cast<uint32_t>(dieId));
                 auto taskPtr = std::make_shared<HcclSim::TaskStubCcuGraph>(ccuInstrInfo, missionParam, ccuInstr.desc.rank_id);
                 g_missionTask[hcclTask.rankId][dieId][missionId] = taskPtr;
@@ -410,7 +410,7 @@ void ConvertTaskQueue(AllRankTaskQueues& allRankTaskQueues)
             continue;
         }
         if (size > 10000 && i % outputInterval == 0) {
-            HCCL_VM_INFO("[ConvertTaskQueue] Processing at index: {:d} / {:d} ({:f}% complete)",
+            HCCL_VM_INFO("Processing at index: {:d} / {:d} ({:f}% complete)",
                 i, size, i * 100.0 / size);
         }
         uint32_t rankId = taskMetaVec[i].rankId;

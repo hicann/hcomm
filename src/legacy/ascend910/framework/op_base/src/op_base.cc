@@ -76,9 +76,13 @@ HcclResult CallMsprofReportHostApi(hccl::hcclComm* hcclComm, HcclCMDType cmdType
 
         u32 numBlocks = 0;
         hcclComm->GetNumBlocks(numBlocks);
-
-        uint64_t groupName = hrtMsprofGetHashId(hcclComm->GetIdentifier().c_str(), hcclComm->GetIdentifier().length());
-        HCCL_INFO("[%s] groupName[%llu], groupNameStr[%s]", __func__, groupName, hcclComm->GetIdentifier().c_str());
+        std::string identifierWithUdi = hcclComm->GetIdentifier(); // 若用户自定义了udi，groupname拼接udi
+        std::string udi = hcclComm->GetUdi();
+        if (!udi.empty() && udi != "Unspecified") {
+            identifierWithUdi = udi + identifierWithUdi;
+        }
+        uint64_t groupName = hrtMsprofGetHashId(identifierWithUdi.c_str(), identifierWithUdi.length());
+        HCCL_INFO("[%s] groupName[%llu], groupNameStr[%s]", __func__, groupName, identifierWithUdi.c_str());
         CHK_RET_AND_PRINT_IDE(ProfilingManagerPub::CallMsprofReportHostApi(cmdType, beginTime, count, dataType, algType,
             groupName, numBlocks), tag.c_str());
     }

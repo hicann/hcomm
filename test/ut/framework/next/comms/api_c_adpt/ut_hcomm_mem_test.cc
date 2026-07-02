@@ -28,7 +28,7 @@ TEST_F(TestHcommMem, Ut_TestHcommMemReg_When_InvalidHandle_Return_HCCL_E_NOT_FOU
     mem.type = COMM_MEM_TYPE_HOST;
     void* memHandle = nullptr;
 
-    EndpointHandle invalidHandle = reinterpret_cast<EndpointHandle>(0xFFFFFFFFFFFFFFFF);
+    EndpointHandle invalidHandle = reinterpret_cast<EndpointHandle>(0x0FFFFFFFFFFFFFFF);
     HcommResult ret = HcommMemReg(invalidHandle, "test_mem", &mem, &memHandle);
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
 

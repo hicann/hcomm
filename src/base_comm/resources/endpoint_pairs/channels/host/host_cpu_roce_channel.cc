@@ -169,7 +169,8 @@ HcclResult HostCpuRoceChannel::BuildSocket()
         port = DEFAULT_LISTENING_PORT;
         HCCL_INFO("[HostCpuRoceChannel::%s] channelDesc port is 0, use default port [%u]", __func__, port);
     }
-    std::string socketTag = "AUTOMATIC_SOCKET_TAG";
+    std::string socketTag = (channelDesc_.channelName != nullptr)
+        ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
     Hccl::SocketConfig socketConfig = (channelDesc_.role != HCOMM_SOCKET_ROLE_RESERVED)
         ? Hccl::SocketConfig(linkData, port, socketTag, channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER)
         : Hccl::SocketConfig(linkData, port, socketTag);
@@ -263,9 +264,6 @@ HcclResult HostCpuRoceChannel::ProcessStatus()
 {
     switch (channelStatus_) {
         case ChannelStatus::READY:
-            if (channelDesc_.socket == nullptr && socket_ != nullptr) {
-                SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
-            }
             return HCCL_SUCCESS;
         case ChannelStatus::SOCKET_TIMEOUT:
             HCCL_ERROR("[HostCpuRoceChannel::ProcessStatus] get socket timeout");
@@ -700,17 +698,6 @@ HcclResult HostCpuRoceChannel::PrepareNotifyWrResource(
     taskParam.taskPara.DMA.notifyValue = 1;
     taskParam.taskPara.DMA.linkType    = Hccl::DfxLinkType::ROCE;
     taskParam.taskPara.DMA.dmaOp       = Hccl::DmaOp::HCCL_DMA_WRITE;
-    Hccl::IpAddress locIpAddr{};
-    CHK_RET(CommAddrToIpAddress(localEp_.commAddr, locIpAddr));
-    std::string locAddrStr = locIpAddr.GetIpStr();
-    CHK_SAFETY_FUNC_RET(memcpy_s(taskParam.taskPara.DMA.locAddr, sizeof(taskParam.taskPara.DMA.locAddr),
-        locAddrStr.c_str(), locAddrStr.size()));
-    Hccl::IpAddress rmtIpAddr{};
-    CHK_RET(CommAddrToIpAddress(remoteEp_.commAddr, rmtIpAddr));
-    std::string rmtAddrStr = rmtIpAddr.GetIpStr();
-    CHK_SAFETY_FUNC_RET(memcpy_s(taskParam.taskPara.DMA.rmtAddr, sizeof(taskParam.taskPara.DMA.rmtAddr),
-        rmtAddrStr.c_str(), rmtAddrStr.size()));
-
     return HCCL_SUCCESS;
 }
 
@@ -918,17 +905,6 @@ HcclResult HostCpuRoceChannel::PrepareWriteWrResource(const void *dst, const voi
     taskParam.taskPara.DMA.notifyValue = 1;
     taskParam.taskPara.DMA.linkType = Hccl::DfxLinkType::ROCE;
     taskParam.taskPara.DMA.dmaOp    = Hccl::DmaOp::HCCL_DMA_WRITE;
-    Hccl::IpAddress locIpAddr{};
-    CHK_RET(CommAddrToIpAddress(localEp_.commAddr, locIpAddr));
-    std::string locAddrStr = locIpAddr.GetIpStr();
-    CHK_SAFETY_FUNC_RET(memcpy_s(taskParam.taskPara.DMA.locAddr, sizeof(taskParam.taskPara.DMA.locAddr),
-        locAddrStr.c_str(), locAddrStr.size()));
-    Hccl::IpAddress rmtIpAddr{};
-    CHK_RET(CommAddrToIpAddress(remoteEp_.commAddr, rmtIpAddr));
-    std::string rmtAddrStr = rmtIpAddr.GetIpStr();
-    CHK_SAFETY_FUNC_RET(memcpy_s(taskParam.taskPara.DMA.rmtAddr, sizeof(taskParam.taskPara.DMA.rmtAddr),
-        rmtAddrStr.c_str(), rmtAddrStr.size()));
-
     return HCCL_SUCCESS;
 }
 

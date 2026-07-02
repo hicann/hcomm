@@ -21,7 +21,7 @@ void InsertTaskToCollectionDev(HcclTaskMetaData *task)
 
     // 1. 入参合法性检查（避免空指针访问）
     if (task == nullptr) {
-        HCCL_VM_ERROR("[InsertTaskToCollection] 错误：输入任务指针 task 不能为空！");
+        HCCL_VM_ERROR("错误：输入任务指针 task 不能为空！");
         return;
     }
 
@@ -38,7 +38,7 @@ void InsertTaskToCollectionDev(HcclTaskMetaData *task)
     
     auto ret = sim::InsertOpTask(opTaskInfo, true);
     if (ret != 0) {
-        HCCL_VM_ERROR("[InsertTaskToCollection] 错误：插入任务到数据库失败 - {}", ret);
+        HCCL_VM_ERROR("错误：插入任务到数据库失败 - {}", ret);
         return;
     }
     return;

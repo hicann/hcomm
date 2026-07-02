@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "HCCP_STUB"
+
 #include <algorithm>
 #include <arpa/inet.h>
 #include <atomic>
@@ -38,6 +41,7 @@
 #include "db_sim_runner_common.h"
 #include "db_sim_runner_ops.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
@@ -49,7 +53,7 @@ int RaSocketGetVnicIpInfos(unsigned int phyId, enum IdType type, unsigned int id
 {
     sim::Device device{};
     if (GetDeviceByPhysicalId(phyId, device) != ACL_SUCCESS) {
-        HCCL_VM_ERROR("[HCCP] [{}] get device by phy id {} failed.", __func__, phyId);
+        HCCL_VM_ERROR("get device by phy id {} failed.", phyId);
         return -1;
     }
 
@@ -59,7 +63,7 @@ int RaSocketGetVnicIpInfos(unsigned int phyId, enum IdType type, unsigned int id
     });
 
     if (endPoints.empty()) {
-        HCCL_VM_ERROR("[HCCP] [{}] no endpoints found for device {:d}", __func__, deviceIdx);
+        HCCL_VM_ERROR("no endpoints found for device {:d}", deviceIdx);
         return -1;
     }
 
@@ -72,7 +76,7 @@ int RaSocketGetVnicIpInfos(unsigned int phyId, enum IdType type, unsigned int id
         }
         IpAddress addr(ipaddr, AF_INET6);
         infos[i].ip.addr6 = addr.GetBinaryAddress().addr6;
-        HCCL_VM_INFO("[HCCP] [{}] phyId:{:d} type:{:d} infos[{:d}]={}", __func__, phyId, (int)type, i, endPoints[i].ip_addr);
+        HCCL_VM_INFO("phyId:{:d} type:{:d} infos[{:d}]={}", phyId, (int)type, i, endPoints[i].ip_addr);
     }
     return 0;
 }
@@ -85,48 +89,48 @@ int RaGetInterfaceVersion(unsigned int phyId, unsigned int interfaceOpcode, unsi
 
 int RaGetTsqpDepth(void *rdevHandle, unsigned int *tempDepth, unsigned int *qpNum)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 int RaSetTsqpDepth(void *rdevHandle, unsigned int tempDepth, unsigned int *qpNum)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaRdevGetSupportLite(void *rdmaHandle, int *supportLite)
 {
     if (rdmaHandle == nullptr || supportLite == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaRdevGetSupportLite: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
     *supportLite = 1;
     uint64_t handleVal = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(rdmaHandle));
-    HCCL_VM_INFO("[HCCP] [{}] rdmaHandle:{:d} supportLite:1", __func__, handleVal);
+    HCCL_VM_INFO("rdmaHandle:{:d} supportLite:1", handleVal);
     return 0;
 }
 
 int RaSocketSetWhiteListStatus(unsigned int enable)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaSocketGetWhiteListStatus(unsigned int *enable)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaNormalQpCreate(void *rdevHandle, struct ibv_qp_init_attr *qpInitAttr, void **qpHandle, void **qp)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaNormalQpDestroy(void *qpHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     if (qpHandle == nullptr) {
         return HCCL_E_PTR;
     }
@@ -136,14 +140,14 @@ int RaNormalQpDestroy(void *qpHandle)
 int RaMrReg(void *qpHandle, struct MrInfoT *info)
 {
     if (qpHandle == nullptr || info == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaMrReg: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaMrReg: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
@@ -157,15 +161,15 @@ int RaMrReg(void *qpHandle, struct MrInfoT *info)
     info->lkey = mr.local_key;
     info->rkey = mr.remote_key;
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} reg MR id:{:d}, addr:{:x}, len:{:d}, lkey:{:x}, rkey:{:x}",
-                 __func__, qpId, mrId, mr.addr, mr.length, mr.local_key, mr.remote_key);
+    HCCL_VM_INFO("QP {:d} reg MR id:{:d}, addr:{:x}, len:{:d}, lkey:{:x}, rkey:{:x}",
+                 qpId, mrId, mr.addr, mr.length, mr.local_key, mr.remote_key);
     return 0;
 }
 
 int RaMrDereg(void *qpHandle, struct MrInfoT *info)
 {
     if (qpHandle == nullptr || info == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaMrDereg: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
@@ -173,13 +177,13 @@ int RaMrDereg(void *qpHandle, struct MrInfoT *info)
         [info](const sim::RaMR &mr) { return mr.local_key == info->lkey; });
     
     if (mrList.empty()) {
-        HCCL_VM_WARN("[HCCP] RaMrDereg: MR with lkey {:x} not found", info->lkey);
+        HCCL_VM_WARN("MR with lkey {:x} not found", info->lkey);
         return 0;
     }
 
     for (const auto &mr : mrList) {
         RunnerDB::Delete<sim::RaMR>(mr.id);
-        HCCL_VM_INFO("[HCCP] [{}] dereg MR id:{:d}, lkey:{:x}", __func__, mr.id, mr.local_key);
+        HCCL_VM_INFO("dereg MR id:{:d}, lkey:{:x}", mr.id, mr.local_key);
     }
 
     return 0;
@@ -188,7 +192,7 @@ int RaMrDereg(void *qpHandle, struct MrInfoT *info)
 int RaRegisterMr(const void *rdmaHandle, struct MrInfoT *info, void **mrHandle)
 {
     if (rdmaHandle == nullptr || info == nullptr || mrHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaRegisterMr: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
@@ -205,194 +209,194 @@ int RaRegisterMr(const void *rdmaHandle, struct MrInfoT *info, void **mrHandle)
     info->lkey = mr.local_key;
     info->rkey = mr.remote_key;
 
-    HCCL_VM_INFO("[HCCP] [{}] RaDev {:d} reg MR id:{:d}, addr:{:x}, len:{:d}",
-                 __func__, raDevId, mrId, mr.addr, mr.length);
+    HCCL_VM_INFO("RaDev {:d} reg MR id:{:d}, addr:{:x}, len:{:d}",
+                 raDevId, mrId, mr.addr, mr.length);
     return 0;
 }
 
 int RaRemapMr(const void *rdmaHandle, struct MemRemapInfo info[], unsigned int num)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaDeregisterMr(const void *rdmaHandle, void *mrHandle)
 {
     if (rdmaHandle == nullptr || mrHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaDeregisterMr: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t mrId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(mrHandle));
     auto mrOpt = RunnerDB::GetById<sim::RaMR>(mrId);
     if (!mrOpt.has_value()) {
-        HCCL_VM_WARN("[HCCP] RaDeregisterMr: MR {:d} not found", mrId);
+        HCCL_VM_WARN("MR {:d} not found", mrId);
         return 0;
     }
 
     RunnerDB::Delete<sim::RaMR>(mrId);
-    HCCL_VM_INFO("[HCCP] [{}] dereg MR id:{:d}", __func__, mrId);
+    HCCL_VM_INFO("dereg MR id:{:d}", mrId);
     return 0;
 }
 
 int RaSendWr(void *qpHandle, struct SendWr *wr, struct SendWrRsp *opRsp)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaSendWr: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaSendWr: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
     if (qpOpt->state != 3) {
-        HCCL_VM_ERROR("[HCCP] RaSendWr: QP {:d} not in RTS state, current state:{:d}", qpId, qpOpt->state);
+        HCCL_VM_ERROR("QP {:d} not in RTS state, current state:{:d}", qpId, qpOpt->state);
         return -1;
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} send op:{:d}, bufNum:{:d}, dstAddr:{:x}",
-                 __func__, qpId, wr->op, wr->bufNum, wr->dstAddr);
+    HCCL_VM_INFO("QP {:d} send op:{:d}, bufNum:{:d}, dstAddr:{:x}",
+                 qpId, wr->op, wr->bufNum, wr->dstAddr);
     return 0;
 }
 
 int RaSetQpAttrQos(void *qpHandle, struct QosAttr *attr)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaSetQpAttrTimeout(void *qpHandle, unsigned int *timeout)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaSetQpAttrRetryCnt(void *qpHandle, unsigned int *retryCnt)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaGetCqeErrInfo(unsigned int phyId, struct CqeErrInfo *info)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaCreateSrq(const void *rdmaHandle, struct SrqAttr *attr)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaDestroySrq(const void *rdmaHandle, struct SrqAttr *attr)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaCreateEventHandle(int *eventHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaCtlEventHandle(int eventHandle, const void *fdHandle, int opcode, enum RaEpollEvent event)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaWaitEventHandle(int eventHandle, struct SocketEventInfoT *eventInfos, int timeout, unsigned int maxevents,
                       unsigned int *eventsNum)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaDestroyEventHandle(int *eventHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaCreateCompChannel(const void *rdmaHandle, void **compChannel)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     *compChannel = reinterpret_cast<void *>(static_cast<uintptr_t>(0xabcdU));
     return ((rdmaHandle == nullptr) || (compChannel == nullptr)) ? -1 : 0;
 }
 
 int RaDestroyCompChannel(const void *rdmaHandle, void *compChannel)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return ((rdmaHandle == nullptr) || (compChannel == nullptr)) ? -1 : 0;
 }
 
 int RaLoopbackQpCreate(void *rdevHandle, struct LoopbackQpPair *qpPair, void **qpHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaQpConnectAsync(void *qpHandle, const void *fdHandle)
 {
     if (qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaQpConnectAsync: qpHandle is null");
+        HCCL_VM_ERROR("qpHandle is null");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaQpConnectAsync: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
     RunnerDB::Update<sim::RaQP>(qpId, [](sim::RaQP &qp) { qp.state = 3; });
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} connected, state -> RTS", __func__, qpId);
+    HCCL_VM_INFO("QP {:d} connected, state -> RTS", qpId);
     return 0;
 }
 
 int RaSendWrV2(void *qpHandle, struct SendWrV2 *wr, struct SendWrRsp *opRsp)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaSendWrV2: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaSendWrV2: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
     if (qpOpt->state != 3) {
-        HCCL_VM_ERROR("[HCCP] RaSendWrV2: QP {:d} not in RTS state", qpId);
+        HCCL_VM_ERROR("QP {:d} not in RTS state", qpId);
         return -1;
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} send V2", __func__, qpId);
+    HCCL_VM_INFO("QP {:d} send V2", qpId);
     return 0;
 }
 
 int RaPollCq(void *qpHandle, bool isSendCq, unsigned int numEntries, void *wc)
 {
     if (qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaPollCq: qpHandle is null");
+        HCCL_VM_ERROR("qpHandle is null");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaPollCq: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
@@ -400,7 +404,7 @@ int RaPollCq(void *qpHandle, bool isSendCq, unsigned int numEntries, void *wc)
     
     auto cqOpt = RunnerDB::GetById<sim::RaCQ>(cqId);
     if (!cqOpt.has_value()) {
-        HCCL_VM_WARN("[HCCP] RaPollCq: CQ {:d} not found for QP {:d}", cqId, qpId);
+        HCCL_VM_WARN("CQ {:d} not found for QP {:d}", cqId, qpId);
         return 0;
     }
 
@@ -416,27 +420,27 @@ int RaPollCq(void *qpHandle, bool isSendCq, unsigned int numEntries, void *wc)
         polled++;
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} CQ {:d} polled {:d} entries (isSendCq:{:d})",
-                 __func__, qpId, cqId, polled, isSendCq);
+    HCCL_VM_INFO("QP {:d} CQ {:d} polled {:d} entries (isSendCq:{:d})",
+                 qpId, cqId, polled, isSendCq);
     return polled;
 }
 
 int RaRecvWrlist(void *qpHandle, struct RecvWrlistData *wr, unsigned int recvNum, unsigned int *completeNum)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaRecvWrlist: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaRecvWrlist: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
     if (qpOpt->state != 3) {
-        HCCL_VM_ERROR("[HCCP] RaRecvWrlist: QP {:d} not in RTS state", qpId);
+        HCCL_VM_ERROR("QP {:d} not in RTS state", qpId);
         return -1;
     }
 
@@ -444,21 +448,21 @@ int RaRecvWrlist(void *qpHandle, struct RecvWrlistData *wr, unsigned int recvNum
         *completeNum = recvNum;
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} post {:d} recv WRs", __func__, qpId, recvNum);
+    HCCL_VM_INFO("QP {:d} post {:d} recv WRs", qpId, recvNum);
     return 0;
 }
 
 int RaGetQpContext(void *qpHandle, void **qp, void **sendCq, void **recvCq)
 {
     if (qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaGetQpContext: qpHandle is null");
+        HCCL_VM_ERROR("qpHandle is null");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaGetQpContext: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
@@ -472,15 +476,15 @@ int RaGetQpContext(void *qpHandle, void **qp, void **sendCq, void **recvCq)
         *recvCq = reinterpret_cast<void *>(static_cast<uintptr_t>(qpOpt->recv_cq_handle));
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} sendCq:{:d} recvCq:{:d}",
-                 __func__, qpId, qpOpt->send_cq_handle, qpOpt->recv_cq_handle);
+    HCCL_VM_INFO("QP {:d} sendCq:{:d} recvCq:{:d}",
+                 qpId, qpOpt->send_cq_handle, qpOpt->recv_cq_handle);
     return 0;
 }
 
 int RaQpBatchModify(void *rdmaHandle, void *qpHandle[], unsigned int num, int expectStatus)
 {
     if (qpHandle == nullptr || num == 0) {
-        HCCL_VM_ERROR("[HCCP] RaQpBatchModify: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
@@ -492,7 +496,7 @@ int RaQpBatchModify(void *rdmaHandle, void *qpHandle[], unsigned int num, int ex
         uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle[i]));
         auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
         if (!qpOpt.has_value()) {
-            HCCL_VM_WARN("[HCCP] RaQpBatchModify: QP {:d} not found", qpId);
+            HCCL_VM_WARN("QP {:d} not found", qpId);
             continue;
         }
 
@@ -500,26 +504,26 @@ int RaQpBatchModify(void *rdmaHandle, void *qpHandle[], unsigned int num, int ex
         modified++;
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] batch modify {:d} QPs to state {:d}", __func__, modified, expectStatus);
+    HCCL_VM_INFO("batch modify {:d} QPs to state {:d}", modified, expectStatus);
     return 0;
 }
 
 int RaRdevGetCqeErrInfoList(void *rdmaHandle, struct CqeErrInfo *infoList, unsigned int *num)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaRdevGetHandle(unsigned int phyId, void **rdmaHandle)
 {
     if (rdmaHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaRdevGetHandle: rdmaHandle is null");
+        HCCL_VM_ERROR("rdmaHandle is null");
         return -1;
     }
 
     sim::Device device{};
     if (GetDeviceByPhysicalId(phyId, device) != ACL_SUCCESS) {
-        HCCL_VM_ERROR("[HCCP] RaRdevGetHandle: get device by phy id {} failed.", phyId);
+        HCCL_VM_ERROR("get device by phy id {} failed.", phyId);
         return -1;
     }
 
@@ -528,48 +532,48 @@ int RaRdevGetHandle(unsigned int phyId, void **rdmaHandle)
     
     if (raDevRes.second) {
         *rdmaHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(raDevRes.first.id));
-        HCCL_VM_INFO("[HCCP] [{}] found RaDevice id:{:d} for phyId:{:d}", __func__, raDevRes.first.id, phyId);
+        HCCL_VM_INFO("found RaDevice id:{:d} for phyId:{:d}", raDevRes.first.id, phyId);
         return 0;
     }
 
-    HCCL_VM_ERROR("[HCCP] RaRdevGetHandle: no RaDevice found for phyId:{:d}", phyId);
+    HCCL_VM_ERROR("no RaDevice found for phyId:{:d}", phyId);
     return -1;
 }
 
 int RaSaveSnapshot(struct RaInfo *info, enum SaveSnapshotAction action)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaRestoreSnapshot(struct RaInfo *info)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 int RaRdevInitWithBackup(struct RdevInitInfo *initInfo, struct rdev *rdevInfo, struct rdev *backupRdevInfo,
                          void **rdmaHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaGetQpStatus(void *qpHandle, int *status)
 {
     if (qpHandle == nullptr || status == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaGetQpStatus: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaGetQpStatus: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
     *status = qpOpt->state;
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} status:{:d}", __func__, qpId, *status);
+    HCCL_VM_INFO("QP {:d} status:{:d}", qpId, *status);
     return 0;
 }
 
@@ -577,19 +581,19 @@ int RaSendWrlist(void *qpHandle, struct SendWrlistData wr[], struct SendWrRsp op
                  unsigned int *completeNum)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaSendWrlist: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaSendWrlist: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
     if (qpOpt->state != 3) {
-        HCCL_VM_ERROR("[HCCP] RaSendWrlist: QP {:d} not in RTS state", qpId);
+        HCCL_VM_ERROR("QP {:d} not in RTS state", qpId);
         return -1;
     }
 
@@ -599,7 +603,7 @@ int RaSendWrlist(void *qpHandle, struct SendWrlistData wr[], struct SendWrRsp op
         *completeNum = completed;
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} send {:d} WRs, completed:{:d}", __func__, qpId, sendNum, completed);
+    HCCL_VM_INFO("QP {:d} send {:d} WRs, completed:{:d}", qpId, sendNum, completed);
     return 0;
 }
 
@@ -607,19 +611,19 @@ int RaSendWrlistExt(void *qpHandle, struct SendWrlistDataExt wr[], struct SendWr
                     unsigned int *completeNum)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaSendWrlistExt: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaSendWrlistExt: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
     if (qpOpt->state != 3) {
-        HCCL_VM_ERROR("[HCCP] RaSendWrlistExt: QP {:d} not in RTS state", qpId);
+        HCCL_VM_ERROR("QP {:d} not in RTS state", qpId);
         return -1;
     }
 
@@ -629,7 +633,7 @@ int RaSendWrlistExt(void *qpHandle, struct SendWrlistDataExt wr[], struct SendWr
         *completeNum = completed;
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} send {:d} WRs (Ext), completed:{:d}", __func__, qpId, sendNum, completed);
+    HCCL_VM_INFO("QP {:d} send {:d} WRs (Ext), completed:{:d}", qpId, sendNum, completed);
     return 0;
 }
 
@@ -637,19 +641,19 @@ int RaSendNormalWrlist(void *qpHandle, struct WrInfo wr[], struct SendWrRsp opRs
                        unsigned int *completeNum)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaSendNormalWrlist: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaSendNormalWrlist: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
     if (qpOpt->state != 3) {
-        HCCL_VM_ERROR("[HCCP] RaSendNormalWrlist: QP {:d} not in RTS state", qpId);
+        HCCL_VM_ERROR("QP {:d} not in RTS state", qpId);
         return -1;
     }
 
@@ -659,43 +663,43 @@ int RaSendNormalWrlist(void *qpHandle, struct WrInfo wr[], struct SendWrRsp opRs
         *completeNum = completed;
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} send {:d} normal WRs, completed:{:d}", __func__, qpId, sendNum, completed);
+    HCCL_VM_INFO("QP {:d} send {:d} normal WRs, completed:{:d}", qpId, sendNum, completed);
     return 0;
 }
 
 int RaGetNotifyBaseAddr(void *rdevHandle, unsigned long long *va, unsigned long long *size)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaGetNotifyMrInfo(void *rdevHandle, struct MrInfoT *info)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaInit(struct RaInitConfig *config)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaDeinit(struct RaInitConfig *config)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaGetTlsEnable(struct RaInfo *info, bool *tlsEnable)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
@@ -703,12 +707,12 @@ int RaRdevInitV2(struct RdevInitInfo initInfo, struct rdev rdevInfo, void **rdma
 {
     sim::Runner runner;
     if (!sim::GetCurrRunnerTls(0, runner)) {
-        return 0;
+        return -1;
     }
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);
     if (!currCtx.has_value()) {
-        HCCL_VM_ERROR("[{}] can not get CurrContext: {:d}", __func__, runner.current_ctx_id);
-        return 0;
+        HCCL_VM_ERROR("can not get CurrContext: {:d}", runner.current_ctx_id);
+        return -1;
     }
 
     sim::RaDevice dev{};
@@ -716,13 +720,13 @@ int RaRdevInitV2(struct RdevInitInfo initInfo, struct rdev rdevInfo, void **rdma
     auto id = RunnerDB::Add<sim::RaDevice>(dev);
 
     *rdmaHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
-    HCCL_VM_INFO("[HCCP]add radev id {:d}", id);
+    HCCL_VM_INFO("add radev id {:d}", id);
     return 0;
 }
 
 int RaRdevInit(int mode, unsigned int notifyType, struct rdev rdevInfo, void **rdmaHandle)
 {
-    HCCL_VM_INFO("[HCCP]stub");
+    HCCL_VM_INFO("stub");
     struct RdevInitInfo initInfo;
     RaRdevInitV2(initInfo, rdevInfo, rdmaHandle);
     return 0;
@@ -732,7 +736,7 @@ int RaRdevDeinit(void *rdmaHandle, unsigned int notifyType)
 {
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(rdmaHandle));
     RunnerDB::Delete<sim::RaDevice>(id);
-    HCCL_VM_INFO("[HCCP] [{}] delete id {:d}", __func__, id);
+    HCCL_VM_INFO("delete id {:d}", id);
     return 0;
 }
 
@@ -745,7 +749,7 @@ int RaCqCreate(void *rdevHandle, struct CqAttr *attr)
 
     *(attr->qpContext) = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
 
-    HCCL_VM_INFO("[HCCP] [{}] stub RaDev {:d} add RaCQ id:{:d}", __func__, raDevId, id);
+    HCCL_VM_INFO("stub RaDev {:d} add RaCQ id:{:d}", raDevId, id);
     return 0;
 }
 
@@ -755,14 +759,14 @@ int RaCqDestroy(void *rdevHandle, struct CqAttr *attr)
     uint64_t cqId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(attr->qpContext));
     RunnerDB::Delete<sim::RaCQ>(cqId);
 
-    HCCL_VM_INFO("[HCCP] [{}] stub RaDev {:d} delete RaCQ id:{:d}", __func__, raDevId, cqId);
+    HCCL_VM_INFO("stub RaDev {:d} delete RaCQ id:{:d}", raDevId, cqId);
     return 0;
 }
 
 int RaQpCreate(void *rdevHandle, int flag, int qpMode, void **qpHandle)
 {
     if (rdevHandle == nullptr || qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaQpCreate: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
@@ -770,7 +774,7 @@ int RaQpCreate(void *rdevHandle, int flag, int qpMode, void **qpHandle)
     
     auto raDevOpt = RunnerDB::GetById<sim::RaDevice>(raDevId);
     if (!raDevOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaQpCreate: RaDevice {:d} not found", raDevId);
+        HCCL_VM_ERROR("RaDevice {:d} not found", raDevId);
         return -1;
     }
 
@@ -790,7 +794,7 @@ int RaQpCreate(void *rdevHandle, int flag, int qpMode, void **qpHandle)
     auto id = RunnerDB::Add<sim::RaQP>(qp);
     *qpHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
 
-    HCCL_VM_INFO("[HCCP]RaDev {:d} create QP id:{:d}, qp_num:{:d}, type:{:d}",
+    HCCL_VM_INFO("RaDev {:d} create QP id:{:d}, qp_num:{:d}, type:{:d}",
                  raDevId, id, qp.qp_num, qp.type);
     return 0;
 }
@@ -798,7 +802,7 @@ int RaQpCreate(void *rdevHandle, int flag, int qpMode, void **qpHandle)
 int RaQpCreateWithAttrs(void *rdevHandle, struct QpExtAttrs *extAttrs, void **qpHandle)
 {
     if (rdevHandle == nullptr || qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaQpCreateWithAttrs: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
@@ -806,7 +810,7 @@ int RaQpCreateWithAttrs(void *rdevHandle, struct QpExtAttrs *extAttrs, void **qp
     
     auto raDevOpt = RunnerDB::GetById<sim::RaDevice>(raDevId);
     if (!raDevOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaQpCreateWithAttrs: RaDevice {:d} not found", raDevId);
+        HCCL_VM_ERROR("RaDevice {:d} not found", raDevId);
         return -1;
     }
 
@@ -831,22 +835,21 @@ int RaQpCreateWithAttrs(void *rdevHandle, struct QpExtAttrs *extAttrs, void **qp
     auto id = RunnerDB::Add<sim::RaQP>(qp);
     *qpHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
 
-    HCCL_VM_INFO("[HCCP]RaDev {:d} create QP id:{:d}, qp_num:{:d}, qpMode:{:d}",
+    HCCL_VM_INFO("RaDev {:d} create QP id:{:d}, qp_num:{:d}, qpMode:{:d}",
                  raDevId, id, qp.qp_num, qp.type);
     return 0;
 }
 
 int RaAiQpCreate(void *rdevHandle, struct QpExtAttrs *attrs, struct AiQpInfo *info, void **qpHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     int ret = RaQpCreate(rdevHandle, 0, 0, qpHandle);
     return ret;
 }
 
 int RaTypicalQpCreate(void *rdevHandle, int flag, int qpMode, struct TypicalQp *qpInfo, void **qpHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
-
+    HCCL_VM_INFO("stub");
     int ret = RaQpCreate(rdevHandle, 0, 0, qpHandle);
     return ret;
 }
@@ -858,13 +861,13 @@ int RaCtxInit(struct CtxInitCfg *cfg, struct CtxInitAttr *attr, void **ctxHandle
     auto ipAddr = IpAddress(simEid).GetIpStr().substr(2);
 
     if (ipAddr == "0.0.0.0") {
-         HCCL_VM_ERROR("can not support addr 0");
-        return 0;
+        HCCL_VM_ERROR("can not support addr 0");
+        return -1;
     }
 
     sim::EndPoint endPoint{};
     if (GetEndPointByIpAddr(ipAddr, endPoint) != 0) {
-        HCCL_VM_ERROR("[HCCP] cannot find endpoint addr:{}", ipAddr);
+        HCCL_VM_ERROR("cannot find endpoint addr:{}", ipAddr);
         return -1;
     }
 
@@ -879,7 +882,7 @@ int RaCtxInit(struct CtxInitCfg *cfg, struct CtxInitAttr *attr, void **ctxHandle
     tp.ctx_handle = ctxId;
     RunnerDB::Add<sim::RaTp>(tp);
 
-    HCCL_VM_INFO("[HCCP]add ctx id {:d}, addr {}", ctxId, ipAddr);
+    HCCL_VM_INFO("add ctx id {:d}, addr {}", ctxId, ipAddr);
 
     *ctxHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(ctxId));
     return 0;
@@ -890,7 +893,7 @@ int RaCtxDeinit(void *ctxHandle)
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle));
     // RunnerDB::Delete<sim::RaDevice>(id);
     // RunnerDB::Delete<sim::RaContext>(id);
-    HCCL_VM_INFO("[HCCP] soft delete ctx id {:d}, for checker use after", id);
+    HCCL_VM_INFO("soft delete ctx id {:d}, for checker use after", id);
     return 0;
 }
 
@@ -923,14 +926,14 @@ int RaGetDevBaseAttr(void *ctxHandle, struct DevBaseAttr *attr)
 int RaQpDestroy(void *qpHandle)
 {
     if (qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaQpDestroy: qpHandle is null");
+        HCCL_VM_ERROR("qpHandle is null");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_WARN("[HCCP] RaQpDestroy: QP {:d} not found", qpId);
+        HCCL_VM_WARN("QP {:d} not found", qpId);
         return 0;
     }
 
@@ -939,7 +942,7 @@ int RaQpDestroy(void *qpHandle)
     });
     for (const auto &mr : mrList) {
         RunnerDB::Delete<sim::RaMR>(mr.id);
-        HCCL_VM_INFO("[HCCP]cleanup MR {:d} for QP {:d}", mr.id, qpId);
+        HCCL_VM_INFO("cleanup MR {:d} for QP {:d}", mr.id, qpId);
     }
 
     auto cqeList = RunnerDB::GetByPred<sim::RaCQE>([qpOpt](const sim::RaCQE &cqe) {
@@ -951,14 +954,14 @@ int RaQpDestroy(void *qpHandle)
 
     // RunnerDB::Delete<sim::RaQP>(qpId);
 
-    HCCL_VM_INFO("[HCCP]destroy QP {:d}, qp_num:{:d}",qpId, qpOpt->qp_num);
+    HCCL_VM_INFO("destroy QP {:d}, qp_num:{:d}",qpId, qpOpt->qp_num);
     return 0;
 }
 
 int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInfo *info, void **qpHandle)
 {
     if (ctxHandle == nullptr || attr == nullptr || info == nullptr || qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpCreate: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
@@ -968,8 +971,8 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
     if (aicpuMode) {
         void *shmptr = sim::MemoryManager::GetInstance().AcquireMemByName("HcclAicpuData");
         if (shmptr == nullptr) {
-            HCCL_VM_ERROR("[{}] acquire shm failed.", __func__);
-            return 0;
+            HCCL_VM_ERROR("acquire shm failed.");
+            return -1;
         }
 
         sim::MemoryManager::GetInstance().LockMemByName("HcclAicpuData");
@@ -982,15 +985,15 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
             void *wqeBuf = nullptr;
             aclrtMalloc(&wqeBuf, attr->ub.extMode.sq.buffSize, aclrtMemMallocPolicy::ACL_MEM_MALLOC_NORMAL_ONLY);
             if (wqeBuf == nullptr) {
-                HCCL_VM_ERROR("[{}] malloc wqeBuf failed.", __func__);
-                return 0;
+                HCCL_VM_ERROR("malloc wqeBuf failed.");
+                return -1;
             }
 
             wqeAddr = reinterpret_cast<uint64_t>(wqeBuf);
         }
 
         aicpuData->common.jettyId2WqeBufMap[jettyId] = wqeAddr;
-        HCCL_VM_INFO("[RaCtxQpCreateAsync] jettyId[{}], wqeAddr[{}].", jettyId, wqeAddr);
+        HCCL_VM_INFO("jettyId[{}], wqeAddr[{}].", jettyId, wqeAddr);
     }
 
     uint64_t ctxId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle));
@@ -1030,7 +1033,7 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
         info->ub.id = aicpuMode ? jettyId : attr->ub.jettyId;
     }
 
-    HCCL_VM_INFO("[HCCP][UB] Ctx:{:d} create QP id:{:d}, scqHandle:{:d}, rcqHandle:{:d}, JettyId:{:d}, mode:{:d}",
+    HCCL_VM_INFO("Ctx:{:d} create QP id:{:d}, scqHandle:{:d}, rcqHandle:{:d}, JettyId:{:d}, mode:{:d}",
                 ctxId, id, jty.send_cq_handle, jty.recv_cq_handle, jty.jetty_id, jty.mode);
     return 0;
 }
@@ -1040,20 +1043,20 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
     uint64_t remoteQpId = *(uint64_t*)(qpInfo->in.key.value);
     auto remoteQpOpt = RunnerDB::GetById<sim::RaJetty>(remoteQpId);
     if (!remoteQpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpImport: remote QP {:d} not found", remoteQpId);
+        HCCL_VM_ERROR("remote QP {:d} not found", remoteQpId);
         return -1;
     }
 
     auto rmtRaCtxOpt = RunnerDB::GetById<sim::RaContext>(remoteQpOpt->ctx_handle);
     if (!rmtRaCtxOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpImport: remote RaContext {:d} not found", remoteQpOpt->ctx_handle);
+        HCCL_VM_ERROR("remote RaContext {:d} not found", remoteQpOpt->ctx_handle);
         return -1;
     }
 
     uint64_t localRaCtxId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle));
     auto localRaCtxOpt = RunnerDB::GetById<sim::RaContext>(localRaCtxId);
     if (!localRaCtxOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpImport: local RaContext {:d} not found", localRaCtxId);
+        HCCL_VM_ERROR("local RaContext {:d} not found", localRaCtxId);
         return -1;
     }
     uint64_t localEndpointId = localRaCtxOpt->endpoint_id;
@@ -1082,27 +1085,27 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
     jettyMapInfo.protocol = 0;
     auto ret = sim::InsertJettyMap(jettyMapInfo);
     if (ret != 0) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpImport: insert jetty map failed");
+        HCCL_VM_ERROR("insert jetty map failed");
         return -1;
     }
 #endif
 
     *remQpHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(remoteQpId));
-    HCCL_VM_INFO("[HCCP][UB] import remote QpId:{:d}, pair l:{:d}, r:{:d}, tp_type:{:d}", remoteQpId, localEndpointId, remoteEndpointId, qpInfo->in.ub.tpType);
+    HCCL_VM_INFO("import remote QpId:{:d}, pair l:{:d}, r:{:d}, tp_type:{:d}", remoteQpId, localEndpointId, remoteEndpointId, qpInfo->in.ub.tpType);
     return 0;
 }
 
 int RaCtxQpImportAsync(void *ctxHandle, struct QpImportInfoT *info, void **remQpHandle, void **reqHandle)
 {
     if (ctxHandle == nullptr || info == nullptr || remQpHandle == nullptr || reqHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpImportAsync: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     auto ret = RaCtxQpImport(ctxHandle, info, remQpHandle);
     *reqHandle = reinterpret_cast<void *>(0x12345678);
 
-    HCCL_VM_INFO("[HCCP][UB] ctx {:d} import QP {:d}", 
+    HCCL_VM_INFO("ctx {:d} import QP {:d}", 
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle)),
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(*remQpHandle)));
     return ret;
@@ -1111,7 +1114,7 @@ int RaCtxQpImportAsync(void *ctxHandle, struct QpImportInfoT *info, void **remQp
 int RaCtxQpBind(void *qpHandle, void *remQpHandle)
 {
     if (qpHandle == nullptr || remQpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpBind: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
@@ -1120,13 +1123,13 @@ int RaCtxQpBind(void *qpHandle, void *remQpHandle)
 
     auto localQpOpt = RunnerDB::GetById<sim::RaJetty>(localQpId);
     if (!localQpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpBind: local QP {:d} not found", localQpId);
+        HCCL_VM_ERROR("local QP {:d} not found", localQpId);
         return -1;
     }
 
     auto remoteQpOpt = RunnerDB::GetById<sim::RaJetty>(remoteQpId);
     if (!remoteQpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpBind: remote QP {:d} not found", remoteQpId);
+        HCCL_VM_ERROR("remote QP {:d} not found", remoteQpId);
         return -1;
     }
 
@@ -1135,7 +1138,7 @@ int RaCtxQpBind(void *qpHandle, void *remQpHandle)
         jty.state = 3;
     });
 
-    HCCL_VM_INFO("[HCCP]bind local QP {:d} remote QP {:d}", localQpId, remoteQpId);
+    HCCL_VM_INFO("bind local QP {:d} remote QP {:d}", localQpId, remoteQpId);
     return 0;
 }
 
@@ -1145,31 +1148,31 @@ int RaCtxQpUnimport(void *ctxHandle, void *remQpHandle)
     uint64_t remoteQpId     = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(remQpHandle));
     auto remoteQpOpt = RunnerDB::GetById<sim::RaJetty>(remoteQpId);
     if (!remoteQpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP]remote QP {:d} not found", remoteQpId);
+        HCCL_VM_ERROR("remote QP {:d} not found", remoteQpId);
         return -1;
     }
 
     auto rmtRaCtxOpt = RunnerDB::GetById<sim::RaContext>(remoteQpOpt->ctx_handle);
     if (!rmtRaCtxOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP]remote RaContext {:d} not found", remoteQpOpt->ctx_handle);
+        HCCL_VM_ERROR("remote RaContext {:d} not found", remoteQpOpt->ctx_handle);
         return -1;
     }
 
-    HCCL_VM_INFO("[HCCP]unimport rmtQp {:d}  pair l:{:d}, r:{:d}", remoteQpId, localRaDevId, rmtRaCtxOpt->id);
+    HCCL_VM_INFO("unimport rmtQp {:d}  pair l:{:d}, r:{:d}", remoteQpId, localRaDevId, rmtRaCtxOpt->id);
     return 0;
 }
 
 int RaTypicalQpModify(void *qpHandle, struct TypicalQp *localQpInfo, struct TypicalQp *remoteQpInfo)
 {
     if (qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaTypicalQpModify: qpHandle is null");
+        HCCL_VM_ERROR("qpHandle is null");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaTypicalQpModify: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
@@ -1179,11 +1182,11 @@ int RaTypicalQpModify(void *qpHandle, struct TypicalQp *localQpInfo, struct Typi
             qp.peer_qpn = remoteQpInfo->qpn;
             qp.perr_lid = remoteQpInfo->psn;
         });
-        HCCL_VM_INFO("[HCCP] [{}] QP {:d} modify to RTS, peer_qpn:{:d}, psn:{:d}", 
-                     __func__, qpId, remoteQpInfo->qpn, remoteQpInfo->psn);
+        HCCL_VM_INFO("QP {:d} modify to RTS, peer_qpn:{:d}, psn:{:d}", 
+                 qpId, remoteQpInfo->qpn, remoteQpInfo->psn);
     } else {
         RunnerDB::Update<sim::RaQP>(qpId, [](sim::RaQP &qp) { qp.state = 3; });
-        HCCL_VM_INFO("[HCCP] [{}] QP {:d} modify to RTS", __func__, qpId);
+        HCCL_VM_INFO("QP {:d} modify to RTS", qpId);
     }
 
     return 0;
@@ -1192,50 +1195,50 @@ int RaTypicalQpModify(void *qpHandle, struct TypicalQp *localQpInfo, struct Typi
 int RaTypicalSendWr(void *qpHandle, struct SendWr *wr, struct SendWrRsp *opRsp)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaTypicalSendWr: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaTypicalSendWr: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
     if (qpOpt->state != 3) {
-        HCCL_VM_ERROR("[HCCP] RaTypicalSendWr: QP {:d} not in RTS state", qpId);
+        HCCL_VM_ERROR("QP {:d} not in RTS state", qpId);
         return -1;
     }
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} typical send op:{:d}, bufNum:{:d}",
-                 __func__, qpId, wr->op, wr->bufNum);
+    HCCL_VM_INFO("QP {:d} typical send op:{:d}, bufNum:{:d}",
+                 qpId, wr->op, wr->bufNum);
     return 0;
 }
 
 int RaRdevGetPortStatus(void *rdmaHandle, enum PortStatus *status)
 {
     if (rdmaHandle == nullptr || status == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaRdevGetPortStatus: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     *status = PORT_STATUS_ACTIVE;
-    HCCL_VM_INFO("[HCCP] [{}] rdmaHandle:{:d} port status:UP", __func__,  static_cast<uint64_t>(reinterpret_cast<uintptr_t>(rdmaHandle)));
+    HCCL_VM_INFO("rdmaHandle:{:d} port status:UP",  static_cast<uint64_t>(reinterpret_cast<uintptr_t>(rdmaHandle)));
     return 0;
 }
 
 int RaGetQpAttr(void *qpHandle, struct QpAttr *attr)
 {
     if (qpHandle == nullptr || attr == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaGetQpAttr: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     uint64_t qpId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto qpOpt = RunnerDB::GetById<sim::RaQP>(qpId);
     if (!qpOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaGetQpAttr: QP {:d} not found", qpId);
+        HCCL_VM_ERROR("QP {:d} not found", qpId);
         return -1;
     }
 
@@ -1245,24 +1248,24 @@ int RaGetQpAttr(void *qpHandle, struct QpAttr *attr)
     attr->gidIdx = 0;
     memset(attr->gid, 0, sizeof(attr->gid));
 
-    HCCL_VM_INFO("[HCCP] [{}] QP {:d} qpn:{:d}", __func__, qpId, attr->qpn);
+    HCCL_VM_INFO("QP {:d} qpn:{:d}", qpId, attr->qpn);
     return 0;
 }
 
 int RaSocketWhiteListAdd(void *socketHandle, struct SocketWlistInfoT whiteList[], unsigned int num)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaSocketWhiteListDel(void *socketHandle, struct SocketWlistInfoT whiteList[], unsigned int num)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 int RaSocketAcceptCreditAdd(struct SocketListenInfoT conn[], unsigned int num, unsigned int creditLimit)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
@@ -1280,7 +1283,7 @@ int RaGetIfnum(struct RaGetIfattr *config, unsigned int *num)
     });
   
     *num = endPoints.size();
-    HCCL_VM_INFO("[HCCP]stub Get num:{:d}", *num);
+    HCCL_VM_INFO("stub Get num:{:d}", *num);
     return 0;
 }
 
@@ -1309,21 +1312,21 @@ int RaGetIfaddrs(struct RaGetIfattr *config, struct InterfaceInfo interfaceInfos
         IpAddress addr(ipaddr, AF_INET6);
         interfaceInfos[i].ifaddr.ip.addr6 = addr.GetBinaryAddress().addr6;
 
-        HCCL_VM_INFO("[HCCP] get Ip addr is ipaddr[{:d}]={}", i, endPoints.at(i).ip_addr);
+        HCCL_VM_INFO("get Ip addr is ipaddr[{:d}]={}", i, endPoints.at(i).ip_addr);
     }
     return 0;
 }
 
 int RaTlvInit(struct TlvInitInfo *initInfo, unsigned int *bufferSize, void **tlvHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     *tlvHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(0x123456U));
     return 0;
 }
 
 int RaTlvDeinit(void *tlvHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
@@ -1463,7 +1466,7 @@ int GetCcuMemInfo(struct TlvMsg *sendMsg, struct TlvMsg *recvMsg)
 
 int RaTlvRequest(void *tlvHandle, unsigned int moduleType, struct TlvMsg *sendMsg, struct TlvMsg *recvMsg)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     switch (sendMsg->type) {
         case TlvCcuMsgType::MSG_TYPE_CCU_INIT:
             HCCL_VM_WARN("not support CCU_INIT");
@@ -1482,50 +1485,50 @@ int RaTlvRequest(void *tlvHandle, unsigned int moduleType, struct TlvMsg *sendMs
 
 int RaPingInit(struct PingInitAttr *initAttr, struct PingInitInfo *initInfo, void **pingHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaPingDeinit(void *pingHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaPingTargetAdd(void *pingHandle, struct PingTargetInfo target[], uint32_t num)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaPingTaskStart(void *pingHandle, struct PingTaskAttr *attr)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaPingGetResults(void *pingHandle, struct PingTargetResult target[], uint32_t *num)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaPingTargetDel(void *pingHandle, struct PingTargetCommInfo target[], uint32_t num)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaPingTaskStop(void *pingHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaCtxTokenIdAlloc(void *ctxHandle, struct HccpTokenId *info, void **tokenIdHandle)
 {
     if (ctxHandle == nullptr || info == nullptr || tokenIdHandle == nullptr) {
-            HCCL_VM_ERROR("[HCCP] RaCtxTokenIdAlloc: invalid params");
+            HCCL_VM_ERROR("invalid params");
             return -1;
     }
     sim::RaTokenId tokenId{};
@@ -1539,19 +1542,19 @@ int RaCtxTokenIdAlloc(void *ctxHandle, struct HccpTokenId *info, void **tokenIdH
 
 int RaGetSecRandom(struct RaInfo *info, uint32_t *value)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaCtxLmemUnregister(void *ctxHandle, void *lmemHandle)
 {
     if (ctxHandle == nullptr || lmemHandle == nullptr){
-        HCCL_VM_ERROR("[HCCP] RaCtxLmemUnregister: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(lmemHandle));
-    // RunnerDB::Delete<sim::RaLmem>(id);
-    HCCL_VM_INFO("[HCCP] soft delete lmem id {:d}, for checker use after", id);
+    RunnerDB::Delete<sim::RaLmem>(id);
+    HCCL_VM_INFO("delete lmem id {:d}, for checker use after", id);
 
     return 0;
 }
@@ -1559,25 +1562,25 @@ int RaCtxLmemUnregister(void *ctxHandle, void *lmemHandle)
  int RaCtxRmemUnimport(void *ctxHandle, void *rmemHandle)
 {
     if (ctxHandle == nullptr || rmemHandle == nullptr){
-        HCCL_VM_ERROR("[HCCP] RaCtxRmemUnimport: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(rmemHandle));
-    // RunnerDB::Delete<sim::RaRmem>(id);
-    HCCL_VM_INFO("[HCCP] soft delete rmem id {:d}, for checker use after", id);
+    RunnerDB::Delete<sim::RaRmem>(id);
+    HCCL_VM_INFO("delete rmem id {:d}, for checker use after", id);
     return 0;
 }
 
 int RaCtxQpUnimportAsync(void *remQpHandle, void **reqHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     *reqHandle = reinterpret_cast<void *>(0x12345678);
     return 0;
 }
 
 int RaCtxLmemUnregisterAsync(void *ctxHandle, void *lmemHandle, void **reqHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub", __func__);
+    HCCL_VM_INFO("stub");
     *reqHandle = reinterpret_cast<void *>(0x12345678);
     return 0;
 }
@@ -1585,24 +1588,24 @@ int RaCtxLmemUnregisterAsync(void *ctxHandle, void *lmemHandle, void **reqHandle
 int RaCtxQpDestroyAsync(void *qpHandle, void **reqHandle)
 {
     if (qpHandle == nullptr || reqHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpDestroyAsync: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     int ret = RaCtxQpDestroy(qpHandle);
     *reqHandle = reinterpret_cast<void *>(0x12345678);
 
-    HCCL_VM_INFO("[HCCP] [{}] destroy QP {:d}, reqHandle:{:x}", __func__,
+    HCCL_VM_INFO("destroy QP {:d}, reqHandle:{:x}",
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle)), static_cast<uint64_t>(reinterpret_cast<uintptr_t>(*reqHandle)));
     return ret;
 }
 
 int RaCtxQpDestroyBatchAsync(void *ctxHandle, void *qpHandle[], unsigned int *num, void **reqHandle)
 {
-    HCCL_VM_INFO("[HCCP]stub num {:d}", *num);
+    HCCL_VM_INFO("stub num {:d}", *num);
     int ret = 0;
     for (uint32_t i = 0; i < *num; i++) {
-        ret != RaCtxQpDestroyAsync(qpHandle[i], reqHandle);
+        ret |= RaCtxQpDestroyAsync(qpHandle[i], reqHandle);
     }
     return ret;
 }
@@ -1612,14 +1615,14 @@ int RaCtxRmemImport(void *ctxHandle, struct MrImportInfoT *rmemInfo, void **rmem
     uint64_t remoteMemId = *(uint64_t*)(rmemInfo->in.key.value);
     auto remoteMemOpt = RunnerDB::GetById<sim::RaLmem>(remoteMemId);
     if (!remoteMemOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaCtxRmemImport: remote Mem {:d} not found", remoteMemId);
+        HCCL_VM_ERROR("remote Mem {:d} not found", remoteMemId);
         return -1;
     }
     *rmemHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(remoteMemId));
 
     auto rmtRaCtxOpt = RunnerDB::GetById<sim::RaContext>(remoteMemOpt->ctx_handle);
     if (!rmtRaCtxOpt.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaCtxRmemImport: remote RaContext {:d} not found", remoteMemOpt->ctx_handle);
+        HCCL_VM_ERROR("remote RaContext {:d} not found", remoteMemOpt->ctx_handle);
         return -1;
     }
 
@@ -1640,7 +1643,7 @@ int RaCtxChanCreate(void *ctxHandle, struct ChanInfoT *chanInfo, void **chanHand
     auto id = RunnerDB::Add<sim::RaChan>(ch);
     *(chanHandle) = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
 
-    HCCL_VM_INFO("[HCCP] [{}] stub RaChan {:d} add RaChan id:{:d}", __func__, raCtxId, id);
+    HCCL_VM_INFO("stub RaChan {:d} add RaChan id:{:d}", raCtxId, id);
     return 0;
 }
 
@@ -1648,40 +1651,40 @@ int RaCtxChanDestroy(void *ctxHandle, void *chanHandle)
 {
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle));
     // RunnerDB::Delete<sim::RaChan>(id);
-    HCCL_VM_INFO("[HCCP] soft delete chan id {:d}, for checker use after", id);
+    HCCL_VM_INFO("soft delete chan id {:d}, for checker use after", id);
     return 0;
 }
 
 int RaCtxQpDestroy(void *qpHandle)
 {
     if (qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpDestroy: qpHandle is null");
+        HCCL_VM_ERROR("qpHandle is null");
         return -1;
     }
 
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     // RunnerDB::Delete<sim::RaJetty>(id);
-    HCCL_VM_INFO("[HCCP] soft delete jetty id {:d}, for checker use after", id);
+    HCCL_VM_INFO("soft delete jetty id {:d}, for checker use after", id);
     return 0;
 }
 
 int RaCtxTokenIdFree(void *ctxHandle, void *tokenIdHandle)
 {
     if (ctxHandle == nullptr || tokenIdHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaCtxTokenIdFree: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(tokenIdHandle));
     // RunnerDB::Delete<sim::RaTokenId>(id);
-    HCCL_VM_INFO("[HCCP] soft delete token id {:d}, for checker use after", id);
+    HCCL_VM_INFO("soft delete token id {:d}, for checker use after", id);
     return 0;
 }
 
 int RaCtxLmemRegister(void *ctxHandle, struct MrRegInfoT *lmemInfo, void **lmemHandle)
 {
-    // HCCL_VM_INFO("[HCCP] [{}] stub empty", __func__);
+    // HCCL_VM_INFO("stub empty");
     if (ctxHandle == nullptr || lmemInfo == nullptr || lmemHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaCtxLmemRegister: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
     sim::RaLmem memInfo{};
@@ -1691,7 +1694,7 @@ int RaCtxLmemRegister(void *ctxHandle, struct MrRegInfoT *lmemInfo, void **lmemH
     uint64_t token = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(lmemInfo->in.ub.tokenIdHandle));
     auto tokenInfo = RunnerDB::GetById<sim::RaTokenId>(token);
     if (!tokenInfo.has_value()) {
-        HCCL_VM_ERROR("[HCCP] RaCtxLmemRegister: tokenHandle {:d} not found", token);
+        HCCL_VM_ERROR("tokenHandle {:d} not found", token);
         return -1;
     }
     memInfo.token_id = tokenInfo->token_id;
@@ -1709,7 +1712,7 @@ int RaCtxLmemRegister(void *ctxHandle, struct MrRegInfoT *lmemInfo, void **lmemH
 int RaCtxLmemRegisterAsync(void *ctxHandle, struct MrRegInfoT *lmemInfo,
     void **lmemHandle, void **reqHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub empty", __func__);
+    HCCL_VM_INFO("stub empty");
     return -1;
 }
 
@@ -1725,7 +1728,7 @@ int RaGetTpInfoListAsync(void *ctxHandle, struct GetTpCfg *cfg, struct HccpTpInf
 int RaGetEidByIpAsync(void *ctxHandle, struct IpInfo ip[], union HccpEid eid[],
     unsigned int *num, void **reqHandle)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub not support", __func__);
+    HCCL_VM_INFO("stub not support");
     return -1;
 }
 
@@ -1739,21 +1742,21 @@ int RaGetTpAttrAsync(void *ctxHandle, uint64_t tpHandle, uint32_t *attrBitmap,
 
 int RaCtxQpQueryBatch(void *qpHandle[], struct JettyAttr attr[], unsigned int *num)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub not support", __func__);
+    HCCL_VM_INFO("stub not support");
     return -1;
 }
 
 int RaCtxQpUnbind(void *qpHandle)
 {
     if (qpHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpUnbind: qpHandle is null");
+        HCCL_VM_ERROR("qpHandle is null");
         return -1;
     }
 
     uint64_t jtyId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
     auto jtyOpt = RunnerDB::GetById<sim::RaJetty>(jtyId);
     if (!jtyOpt.has_value()) {
-        HCCL_VM_WARN("[HCCP] RaCtxQpUnbind: QP {:d} not found", jtyId);
+        HCCL_VM_WARN("QP {:d} not found", jtyId);
         return 0;
     }
 
@@ -1762,42 +1765,45 @@ int RaCtxQpUnbind(void *qpHandle)
         jty.state = 0;
     });
 
-    HCCL_VM_INFO("[HCCP] [{}] unbind QP {:d}, reset to RESET state", __func__, jtyId);
+    HCCL_VM_INFO("unbind QP {:d}, reset to RESET state", jtyId);
     return 0;
 }
 
 int RaBatchSendWr(
     void *qpHandle, struct SendWrData wrList[], struct SendWrResp opResp[], unsigned int num, unsigned int *completeNum)
 {
-    HCCL_VM_INFO("[HCCP] [{}] stub not support", __func__);
+    HCCL_VM_INFO("stub not support");
     return -1;
 }
 
 int RaCtxCqCreate(void *ctxHandle, struct CqInfoT *info, void **cqHandle)
 {
+    HCCL_VM_INFO("stub");
     *cqHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(0xabcdU));
     return 0;
 }
 
 int RaCtxCqDestroy(void *ctxHandle, void *cqHandle)
 {
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int RaCtxUpdateCi(void *qpHandle, uint16_t ci)
 {
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
 int ra_get_async_req_result(void *req_handle, int *req_result)
 {
     if (req_handle == nullptr || req_result == nullptr) {
-        HCCL_VM_ERROR("[HCCP] ra_get_async_req_result: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     *req_result = 1;
-    HCCL_VM_INFO("[HCCP] [{}] req_handle:{:x} result:completed", __func__, static_cast<uint64_t>(reinterpret_cast<uintptr_t>(req_handle)));
+    HCCL_VM_INFO("req_handle:{:x} result:completed", static_cast<uint64_t>(reinterpret_cast<uintptr_t>(req_handle)));
     return 0;
 }
 
@@ -1864,18 +1870,18 @@ int RaCtxQpCreateAsync(
     void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInfo *info, void **qpHandle, void **reqHandle)
 {
     if (ctxHandle == nullptr || attr == nullptr || qpHandle == nullptr || reqHandle == nullptr) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpCreateAsync: invalid params");
+        HCCL_VM_ERROR("invalid params");
         return -1;
     }
 
     int ret = RaCtxQpCreate(ctxHandle, attr, info, qpHandle);
     if (ret != 0) {
-        HCCL_VM_ERROR("[HCCP] RaCtxQpCreateAsync: RaCtxQpCreate failed");
+        HCCL_VM_ERROR("RaCtxQpCreate failed");
         return ret;
     }
 
     *reqHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(0x12345678ULL));
-    HCCL_VM_INFO("[HCCP][UB] ctx {:d} async create QP {:d}, reqHandle:{:x}, jettyId:{:d}, jettyyMode:{:d}", 
+    HCCL_VM_INFO("ctx {:d} async create QP {:d}, reqHandle:{:x}, jettyId:{:d}, jettyyMode:{:d}", 
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle)),
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(*qpHandle)),
                 static_cast<uint64_t>(reinterpret_cast<uintptr_t>(*reqHandle)),
@@ -1893,13 +1899,13 @@ int RaSetTpAttrAsync(void *ctxHandle, uint64_t tpHandle, uint32_t attrBitmap,
 
 int RaCtxGetAuxInfo(void *ctxHandle, struct HccpAuxInfoIn *in, struct HccpAuxInfoOut *out)
 {
-    HCCL_VM_ERROR("[RaCtxGetAuxInfo] Not support yet");
+    HCCL_VM_ERROR("Not support yet");
     return -1;
 }
 
 int RaCtxGetCrErrInfoList(void *ctxHandle, struct CrErrInfo *infoList, unsigned int *num)
 {
-    HCCL_VM_ERROR("[RaCtxGetCrErrInfoList] Not support yet");
+    HCCL_VM_ERROR("Not support yet");
     return -1;
 }
 
@@ -1915,6 +1921,7 @@ TraStatus AtraceSubmit(TraHandle handle, const void *buffer, uint32_t bufSize)
 
 rtError_t rtPointerGetAttributes(rtPointerAttributes_t *attributes, const void *ptr)
 {
+    HCCL_VM_INFO("stub");
     return 0;
 }
 
@@ -1922,6 +1929,7 @@ rtError_t rtStreamGetCqid(const rtStream_t stm, uint32_t *cqId, uint32_t *logicC
 {
     static uint32_t i = 0U;
     *logicCqId = i++;
+    HCCL_VM_INFO("stub");
     return 0;
 }
 

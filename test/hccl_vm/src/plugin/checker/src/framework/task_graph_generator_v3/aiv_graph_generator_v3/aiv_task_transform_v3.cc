@@ -25,6 +25,7 @@
 
 #include "aiv_snapshot_json_loader_v3.h"
 #include "sim_log.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
@@ -353,8 +354,9 @@ HcclResult ValidateSnapshot(const AivLaunchContext &ctx)
     }
     const CheckerParam param = ctx.storage->GetCheckerParam();
     if (ctx.snapshot.rankSize != 0 && param.rankSize != 0 && ctx.snapshot.rankSize != param.rankSize) {
-        HCCL_VM_ERROR("[AivTaskTransformV3] AIV snapshot rankSize mismatch, rank={}, launch={}, "
-            "snapshotRankSize={}, checkerRankSize={}, file={}", ctx.placeholder->GetRankId(),
+        HCCL_VM_ERROR("{} The AIV snapshot was captured for a different rank count than the current "
+            "checker input, rankId={}, launchId={}, snapshotRankCount={}, currentRankCount={}, snapshotFile={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_SNAPSHOT_MISMATCH), ctx.placeholder->GetRankId(),
             ctx.placeholder->GetLaunchIdx(), ctx.snapshot.rankSize, param.rankSize, ctx.snapshot.filePath);
         return HCCL_E_PARA;
     }
@@ -375,9 +377,10 @@ HcclResult UpdateAivBufferSize(uint64_t snapshotSize, const char *fieldName, con
         return HCCL_SUCCESS;
     }
 
-    HCCL_VM_ERROR("[AivTaskTransformV3] AIV {} mismatch, rank={}, launch={}, expected={}, actual={}, file={}",
-        fieldName, ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(), bufferSize, snapshotSize,
-        ctx.snapshot.filePath);
+    HCCL_VM_ERROR("{} AIV buffer size is inconsistent across snapshots, field={}, rankId={}, "
+        "launchId={}, expectedSize={}, actualSize={}, expectedSource=firstNonZeroSnapshot, snapshotFile={}",
+        MakeErrorCodeText(ErrorCode::GRAPH_SNAPSHOT_MISMATCH), fieldName, ctx.placeholder->GetRankId(),
+        ctx.placeholder->GetLaunchIdx(), bufferSize, snapshotSize, ctx.snapshot.filePath);
     return HCCL_E_PARA;
 }
 
@@ -385,9 +388,11 @@ HcclResult AppendRuntimeTask(AivLaunchContext &ctx, const AivRuntimeTaskV3 &task
 {
     std::unique_ptr<TaskNode> node = TranslateAivRuntimeTask(task, ctx.placeholder->GetLaunchIdx());
     if (node == nullptr) {
-        HCCL_VM_ERROR("[AivTaskTransformV3] Translate AIV task failed, rank={}, launch={}, taskId={}, taskType={}, "
-            "file={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(), task.taskId,
-            static_cast<uint32_t>(task.taskType), ctx.snapshot.filePath);
+        HCCL_VM_ERROR("{} One AIV runtime task type is not supported, "
+            "rankId={}, launchId={}, taskId={}, taskType={}, snapshotFile={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED), ctx.placeholder->GetRankId(),
+            ctx.placeholder->GetLaunchIdx(), task.taskId, static_cast<uint32_t>(task.taskType),
+            ctx.snapshot.filePath);
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -507,8 +512,21 @@ HcclResult AddSetWaitFlagEdges(AivLaunchContext &ctx)
     while (!readyQueue.empty()) {
         if (unmatchedCnt >= readyQueue.size()) {
             TaskNode *node = ctx.graph->GetNode(readyQueue.front());
-            HCCL_VM_ERROR("[AivTaskTransformV3] SetFlag/WaitFlag matching deadlock, firstUnmatched={}, file={}",
-                node == nullptr ? "null" : node->Describe(), ctx.snapshot.filePath);
+            size_t seenMatchingSetFlagCount = 0;
+            if (node != nullptr && node->GetType() == TaskType::AIV_WAIT_FLAG) {
+                const auto *waitFlag = dynamic_cast<const TaskAivWaitFlag *>(node);
+                if (waitFlag != nullptr) {
+                    const SetWaitKey key = MakeSetWaitKey(waitFlag->GetEvent());
+                    const auto iter = seenSetFlags.find(key);
+                    seenMatchingSetFlagCount = (iter == seenSetFlags.end()) ? 0U : iter->second.size();
+                }
+            }
+            HCCL_VM_ERROR("{} AIV SetFlag/WaitFlag matching is stuck. Some WaitFlag tasks are still "
+                "blocked, but no matching SetFlag has become available, firstBlockedWaitFlagNode={}, "
+                "blockedWaitFlagNodeCount={}, availableSetFlagCountForThisWait={}, snapshotFile={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_DEADLOCK), node == nullptr ? "node=null" : node->Describe(),
+                readyQueue.size(),
+                seenMatchingSetFlagCount, ctx.snapshot.filePath);
             return HCCL_E_INTERNAL;
         }
 
@@ -584,8 +602,11 @@ HcclResult AddSetWaitFlagEdges(AivLaunchContext &ctx)
     for (const auto &entry : seenSetFlags) {
         if (!entry.second.empty()) {
             TaskNode *node = ctx.graph->GetNode(entry.second.front());
-            HCCL_VM_WARN("[AivTaskTransformV3] Unconsumed SetFlag, node={}, file={}",
-                node == nullptr ? "null" : node->Describe(), ctx.snapshot.filePath);
+            HCCL_VM_WARN("{} Found SetFlag tasks that were never consumed by any WaitFlag task, "
+                "firstUnconsumedSetFlagNode={}, unconsumedSetFlagCount={}, snapshotFile={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_UNMATCHED), node == nullptr ? "node=null" : node->Describe(),
+                entry.second.size(),
+                ctx.snapshot.filePath);
         }
     }
     return HCCL_SUCCESS;
@@ -1535,8 +1556,9 @@ HcclResult MergeCpGM2GMLoops(AivLaunchContext &ctx)
     for (const auto &block : ctx.snapshot.blocks) {
         std::vector<NodeId> topo;
         if (!CollectCpGmBlockTopo(ctx, block.blockIdx, topo)) {
-            HCCL_VM_WARN("[AivTaskTransformV3][CpGM2GMMerge] Skip block due to topo failure, rank={}, launch={}, "
-                "block={}, file={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(), block.blockIdx,
+            HCCL_VM_WARN("Skip CpGM-to-GM merge for one block because the block DAG order could not "
+                "be determined, rankId={}, launchId={}, blockId={}, snapshotFile={}",
+                ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(), block.blockIdx,
                 ctx.snapshot.filePath);
             continue;
         }
@@ -1570,10 +1592,11 @@ HcclResult MergeCpGM2GMLoops(AivLaunchContext &ctx)
         }
     }
     ctx.dagNodeCountAfterCpGmMerge = CountReachableActiveInternalNodes(ctx);
-    HCCL_VM_INFO("[AivTaskTransformV3][CpGM2GMMerge] rank={}, launch={}, taskJsonTotalTaskCount={}, "
-        "dagNodeCountBeforeMerge={}, dagNodeCountAfterMerge={}, cpGmLoopMergeCount={}, "
-        "cpGmMergedIterationCount={}, cpGmMergedOriginalNodeCount={}, cpGmGeneratedNodeCount={}, "
-        "cpGmInactiveNodeCount={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
+    HCCL_VM_INFO("Finished CpGM-to-GM merge analysis, rankId={}, launchId={}, "
+        "taskJsonTotalTaskCount={}, dagNodeCountBeforeMerge={}, dagNodeCountAfterMerge={}, "
+        "cpGmLoopMergeCount={}, cpGmMergedIterationCount={}, cpGmMergedOriginalNodeCount={}, "
+        "cpGmGeneratedNodeCount={}, cpGmInactiveNodeCount={}", ctx.placeholder->GetRankId(),
+        ctx.placeholder->GetLaunchIdx(),
         ctx.taskJsonTotalTaskCount, ctx.dagNodeCountBeforeCpGmMerge, ctx.dagNodeCountAfterCpGmMerge,
         ctx.cpGmLoopMergeCount, ctx.cpGmMergedIterationCount, ctx.cpGmMergedOriginalNodeCount,
         ctx.cpGmGeneratedNodeCount, ctx.cpGmInactiveNodeCount);
@@ -1710,23 +1733,26 @@ HcclResult MergePipeBarrierGroups(AivLaunchContext &ctx)
             TaskNode *member = ctx.graph->GetNode(memberNodeId);
             const auto *barrier = dynamic_cast<const TaskAivPipeBarrier *>(member);
             if (barrier == nullptr) {
-                HCCL_VM_ERROR("[AivTaskTransformV3] Invalid PipeBarrier member node, rank={}, launch={}, "
-                    "nodeId={}, file={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-                    memberNodeId, ctx.snapshot.filePath);
+                HCCL_VM_ERROR("{} One PipeBarrier group member is not a valid PipeBarrier node, "
+                    "rankId={}, launchId={}, nodeId={}, snapshotFile={}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID), ctx.placeholder->GetRankId(),
+                    ctx.placeholder->GetLaunchIdx(), memberNodeId, ctx.snapshot.filePath);
                 return HCCL_E_INTERNAL;
             }
             const AivBarrierInfo &memberInfo = barrier->GetInfo();
             if (memberInfo.taskLoc.blockId != group.blockId) {
-                HCCL_VM_ERROR("[AivTaskTransformV3] PipeBarrier group crosses block, rank={}, launch={}, "
-                    "groupBlock={}, memberBlock={}, memberTaskId={}, file={}", ctx.placeholder->GetRankId(),
+                HCCL_VM_ERROR("{} One PipeBarrier group mixes tasks from different blocks, rankId={}, "
+                    "launchId={}, expectedBlockId={}, actualBlockId={}, memberTaskId={}, snapshotFile={}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID), ctx.placeholder->GetRankId(),
                     ctx.placeholder->GetLaunchIdx(), group.blockId, memberInfo.taskLoc.blockId,
                     memberInfo.taskLoc.taskId, ctx.snapshot.filePath);
                 return HCCL_E_INTERNAL;
             }
             if (!memberPipes.insert(memberInfo.taskLoc.pipe).second) {
-                HCCL_VM_ERROR("[AivTaskTransformV3] Duplicate PipeBarrier member pipe, rank={}, launch={}, "
-                    "block={}, pipe={}, file={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-                    group.blockId, memberInfo.taskLoc.pipe, ctx.snapshot.filePath);
+                HCCL_VM_ERROR("{} One PipeBarrier group contains two tasks from the same pipe, "
+                    "rankId={}, launchId={}, blockId={}, duplicatedPipeId={}, snapshotFile={}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID), ctx.placeholder->GetRankId(),
+                    ctx.placeholder->GetLaunchIdx(), group.blockId, memberInfo.taskLoc.pipe, ctx.snapshot.filePath);
                 return HCCL_E_INTERNAL;
             }
         }
@@ -1735,9 +1761,30 @@ HcclResult MergePipeBarrierGroups(AivLaunchContext &ctx)
                 if (memberPipes.count(pipe) != 0) {
                     continue;
                 }
-                HCCL_VM_ERROR("[AivTaskTransformV3] Missing PIPE_ALL PipeBarrier member, rank={}, launch={}, "
-                    "block={}, pipe={}, file={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-                    group.blockId, pipe, ctx.snapshot.filePath);
+                std::ostringstream existingPipeIds;
+                existingPipeIds << "[";
+                for (size_t i = 0; i < group.memberPipes.size(); ++i) {
+                    if (i != 0) {
+                        existingPipeIds << ",";
+                    }
+                    existingPipeIds << group.memberPipes[i];
+                }
+                existingPipeIds << "]";
+                std::ostringstream memberTaskIds;
+                memberTaskIds << "[";
+                for (size_t i = 0; i < group.memberTaskIds.size(); ++i) {
+                    if (i != 0) {
+                        memberTaskIds << ",";
+                    }
+                    memberTaskIds << group.memberTaskIds[i];
+                }
+                memberTaskIds << "]";
+                HCCL_VM_ERROR("{} One PIPE_ALL PipeBarrier is incomplete because one pipe is missing, "
+                    "rankId={}, launchId={}, blockId={}, missingPipeId={}, existingPipeIds={}, memberTaskIds={}, "
+                    "snapshotFile={}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_MEMBER_MISSING), ctx.placeholder->GetRankId(),
+                    ctx.placeholder->GetLaunchIdx(), group.blockId, pipe, existingPipeIds.str(), memberTaskIds.str(),
+                    ctx.snapshot.filePath);
                 return HCCL_E_INTERNAL;
             }
         }
@@ -1781,9 +1828,12 @@ HcclResult MergeSyncAllGroups(AivLaunchContext &ctx)
             continue;
         }
         if (expectedMemberCount != 0 && group.memberNodeIds.size() != expectedMemberCount) {
-            HCCL_VM_ERROR("[AivTaskTransformV3] SyncAll member count mismatch, rank={}, launch={}, syncRound={}, "
-                "actual={}, expected={}, file={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-                group.syncRound, group.memberNodeIds.size(), expectedMemberCount, ctx.snapshot.filePath);
+            HCCL_VM_ERROR("{} One SyncAll group is incomplete because it does not contain one member "
+                "for every expected block/pipe pair, rankId={}, launchId={}, syncRound={}, actualCount={}, "
+                "expectedCount={}, snapshotFile={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_MEMBER_MISSING),
+                ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(), group.syncRound,
+                group.memberNodeIds.size(), expectedMemberCount, ctx.snapshot.filePath);
             return HCCL_E_INTERNAL;
         }
         std::set<std::pair<uint32_t, uint32_t>> members;
@@ -1791,16 +1841,19 @@ HcclResult MergeSyncAllGroups(AivLaunchContext &ctx)
             TaskNode *member = ctx.graph->GetNode(memberNodeId);
             const auto *syncAll = dynamic_cast<const TaskAivSyncAll *>(member);
             if (syncAll == nullptr) {
-                HCCL_VM_ERROR("[AivTaskTransformV3] Invalid SyncAll member node, rank={}, launch={}, syncRound={}, "
-                    "nodeId={}, file={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-                    group.syncRound, memberNodeId, ctx.snapshot.filePath);
+                HCCL_VM_ERROR("{} One SyncAll group member is not a valid SyncAll node, rankId={}, "
+                    "launchId={}, syncRound={}, nodeId={}, snapshotFile={}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID), ctx.placeholder->GetRankId(),
+                    ctx.placeholder->GetLaunchIdx(), group.syncRound, memberNodeId, ctx.snapshot.filePath);
                 return HCCL_E_INTERNAL;
             }
             const TaskPosition &taskLoc = syncAll->GetInfo().taskLoc;
             if (!members.insert({taskLoc.blockId, taskLoc.pipe}).second) {
-                HCCL_VM_ERROR("[AivTaskTransformV3] Duplicate SyncAll member, rank={}, launch={}, syncRound={}, "
-                    "block={}, pipe={}, file={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-                    group.syncRound, taskLoc.blockId, taskLoc.pipe, ctx.snapshot.filePath);
+                HCCL_VM_ERROR("{} One SyncAll group contains duplicate members for the same "
+                    "block/pipe pair, rankId={}, launchId={}, syncRound={}, blockId={}, pipeId={}, snapshotFile={}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID), ctx.placeholder->GetRankId(),
+                    ctx.placeholder->GetLaunchIdx(), group.syncRound, taskLoc.blockId, taskLoc.pipe,
+                    ctx.snapshot.filePath);
                 return HCCL_E_INTERNAL;
             }
         }
@@ -1809,9 +1862,12 @@ HcclResult MergeSyncAllGroups(AivLaunchContext &ctx)
                 if (members.count({block.blockIdx, pipe}) != 0) {
                     continue;
                 }
-                HCCL_VM_ERROR("[AivTaskTransformV3] Missing SyncAll member, rank={}, launch={}, syncRound={}, "
-                    "block={}, pipe={}, file={}", ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-                    group.syncRound, block.blockIdx, pipe, ctx.snapshot.filePath);
+                HCCL_VM_ERROR("{} One SyncAll group is incomplete because a block/pipe member is "
+                    "missing, rankId={}, launchId={}, syncRound={}, missingBlockId={}, missingPipeId={}, "
+                    "snapshotFile={}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_MEMBER_MISSING),
+                    ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(), group.syncRound,
+                    block.blockIdx, pipe, ctx.snapshot.filePath);
                 return HCCL_E_INTERNAL;
             }
         }
@@ -1955,7 +2011,8 @@ HcclResult ExpandOneAivGraph(TaskGraphGeneratorV3 *graph, StorageManager *storag
     HcclResult ret = loader.LoadByRankAndLaunch(aivGraph->GetRankId(), aivGraph->GetLaunchIdx(), ctx.snapshot,
         errorMessage);
     if (ret != HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[AivTaskTransformV3] Load AIV snapshot failed, rank={}, launch={}, ret={}, err={}",
+        HCCL_VM_ERROR("{} Failed to load the AIV runtime snapshot file, rankId={}, launchId={}, "
+            "ret={}, loaderMessage={}", MakeErrorCodeText(ErrorCode::GRAPH_RESOURCE_NOT_FOUND),
             aivGraph->GetRankId(), aivGraph->GetLaunchIdx(), static_cast<uint32_t>(ret), errorMessage);
         return ret;
     }
@@ -2079,7 +2136,8 @@ HcclResult EnqueueChildrenForFlagMatch(const TaskGraphGeneratorV3 *graph, NodeId
     return HCCL_SUCCESS;
 }
 
-HcclResult MatchSendRecvFlagEdges(TaskGraphGeneratorV3 *graph, size_t &matchedEdgeCount)
+HcclResult MatchSendRecvFlagEdges(TaskGraphGeneratorV3 *graph, const std::string &snapshotFile,
+    size_t &matchedEdgeCount)
 {
     matchedEdgeCount = 0;
     if (graph == nullptr || graph->GetMainStartNode() == nullptr) {
@@ -2104,8 +2162,33 @@ HcclResult MatchSendRecvFlagEdges(TaskGraphGeneratorV3 *graph, size_t &matchedEd
     while (!readyQueue.empty()) {
         if (unmatchedCnt >= readyQueue.size()) {
             const TaskNode *node = graph->GetNode(readyQueue.front());
-            HCCL_VM_ERROR("[AivTaskTransformV3] Send/RecvFlag matching deadlock, firstUnmatched={}",
-                node == nullptr ? "null" : node->Describe());
+            std::string flagCellStateText = "{}";
+            if (node != nullptr && node->GetType() == TaskType::AIV_RECV_FLAG) {
+                const auto *recvFlag = dynamic_cast<const TaskAivRecvFlag *>(node);
+                if (recvFlag != nullptr) {
+                    const auto stateIter = flagStates.find(MakeFlagCellKey(recvFlag->GetFlag()));
+                    if (stateIter != flagStates.end()) {
+                        std::ostringstream os;
+                        os << "{currentValue=" << stateIter->second.currentValue
+                           << ", producerCount=" << stateIter->second.producerNodes.size()
+                           << ", producerNodeIds=[";
+                        for (size_t i = 0; i < stateIter->second.producerNodes.size(); ++i) {
+                            if (i != 0) {
+                                os << ",";
+                            }
+                            os << stateIter->second.producerNodes[i];
+                        }
+                        os << "]}";
+                        flagCellStateText = os.str();
+                    }
+                }
+            }
+            HCCL_VM_ERROR("{} AIV SendFlag/RecvFlag matching is stuck. Some RecvFlag tasks are still "
+                "blocked, but no matching SendFlag value has become available, firstBlockedRecvFlagNode={}, "
+                "blockedRecvFlagNodeCount={}, currentFlagCellState={}, snapshotFile={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_DEADLOCK), node == nullptr ? "node=null" : node->Describe(),
+                readyQueue.size(),
+                flagCellStateText, snapshotFile);
             return HCCL_E_INTERNAL;
         }
 
@@ -2134,8 +2217,8 @@ HcclResult MatchSendRecvFlagEdges(TaskGraphGeneratorV3 *graph, size_t &matchedEd
             }
             FlagCellState &state = flagStates[MakeFlagCellKey(sendFlag->GetFlag())];
             if (state.currentValue == sendFlag->GetFlag().value && !state.producerNodes.empty()) {
-                HCCL_VM_WARN("[AivTaskTransformV3] Repeated SendFlag value on same flag cell, node={}",
-                    node->Describe());
+                HCCL_VM_WARN("The same flag cell received the same SendFlag value again before any "
+                    "new RecvFlag consumed it, node={}", node == nullptr ? "node=null" : node->Describe());
             }
             state.currentValue = sendFlag->GetFlag().value;
             state.producerNodes.clear();
@@ -2188,7 +2271,9 @@ HcclResult ExpandAivGraphsV3(const AivGraphsGenerateInputV3 &input, AivGraphGene
         }
     }
 
-    HcclResult ret = MatchSendRecvFlagEdges(input.graph, output.sendRecvEdgeCount);
+    const std::string snapshotFileHint =
+        input.aivGraphs.empty() ? "aiv_snapshot_unavailable" : "multiple_aiv_snapshots";
+    HcclResult ret = MatchSendRecvFlagEdges(input.graph, snapshotFileHint, output.sendRecvEdgeCount);
     output.expandNs = ElapsedNs(start, AivExpandClock::now());
     return ret;
 }

@@ -45,7 +45,7 @@ HcclResult FileHeaderRead(FILE *fp, FileHeader &header, uint32_t magic)
         return HcclResult::HCCL_E_INTERNAL;
     }
     if (header.magic != magic) {
-        HCCL_VM_ERROR("[FileHeaderRead] Unmatched magic number:{:#x}≠{:#x}", header.magic, magic);
+        HCCL_VM_ERROR("Unmatched magic number:{:#x}≠{:#x}", header.magic, magic);
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
 
@@ -56,13 +56,13 @@ HcclResult HcclVmSynDataRead(FILE *fp, HcclVmSynData &synData, uint32_t magic)
 {
     auto ret = FileHeaderRead(fp, synData.header, magic);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmSynDataRead] Read file header failed. ");
+        HCCL_VM_ERROR("Read file header failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     ret = ModelInfoRead(fp, synData.model_info);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmSynDataRead] Read file model info failed. ");
+        HCCL_VM_ERROR("Read file model info failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -71,7 +71,7 @@ HcclResult HcclVmSynDataRead(FILE *fp, HcclVmSynData &synData, uint32_t magic)
 
     ret = MemLayoutRead(fp, synData.memory_info);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmSynDataRead] Read file memory layout info failed. ");
+        HCCL_VM_ERROR("Read file memory layout info failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -82,13 +82,13 @@ HcclResult HcclVmSynDataWrite(FILE *fp, const HcclVmSynData &synData)
 {
     auto ret = FileHeaderWrite(fp, synData.header);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmSynDataWrite] Write file header failed. ");
+        HCCL_VM_ERROR("Write file header failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     ret = ModelInfoWrite(fp, synData.model_info);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmSynDataWrite] Write file model info failed. ");
+        HCCL_VM_ERROR("Write file model info failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -97,7 +97,7 @@ HcclResult HcclVmSynDataWrite(FILE *fp, const HcclVmSynData &synData)
 
     ret = MemLayoutWrite(fp, synData.memory_info);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmSynDataWrite] Write file memory layout info failed. ");
+        HCCL_VM_ERROR("Write file memory layout info failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -108,7 +108,7 @@ HcclResult HcclVmInstrDataRead(FILE *fp, HcclVmInstrData &instrData, uint32_t ma
 {
     auto ret = FileHeaderRead(fp, instrData.header, magic);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmInstrDataRead] Read file header failed. ");
+        HCCL_VM_ERROR("Read file header failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -116,7 +116,7 @@ HcclResult HcclVmInstrDataRead(FILE *fp, HcclVmInstrData &instrData, uint32_t ma
     for (uint32_t i = 0; i < instrData.header.count; i++) {
         ret = MicrocodeInstrRead(fp, instrData.instr_data[i]);
         if (ret != HcclResult::HCCL_SUCCESS) {
-            HCCL_VM_ERROR("[HcclVmInstrDataRead] Read file microcode instruction info failed. times= {}", i);
+            HCCL_VM_ERROR("Read file microcode instruction info failed. times= {}", i);
             return HcclResult::HCCL_E_INTERNAL;
         }
     }
@@ -128,14 +128,14 @@ HcclResult HcclVmInstrDataWrite(FILE *fp, const HcclVmInstrData &instrData)
 {
     auto ret = FileHeaderWrite(fp, instrData.header);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmInstrDataWrite] Write file header failed. ");
+        HCCL_VM_ERROR("Write file header failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     for (uint32_t i = 0; i < instrData.header.count; i++) {
         ret = MicrocodeInstrWrite(fp, instrData.instr_data[i]);
         if (ret != HcclResult::HCCL_SUCCESS) {
-            HCCL_VM_ERROR("[HcclVmInstrDataWrite] Write file microcode instruction info failed. times= {}", i);
+            HCCL_VM_ERROR("Write file microcode instruction info failed. times= {}", i);
             return HcclResult::HCCL_E_INTERNAL;
         }
     }
@@ -268,19 +268,19 @@ HcclResult ModelInfoWrite(FILE *fp, const ModelInfoInner &modelInfo)
 {
     auto ret = ModelInfoCommWrite(fp, modelInfo.comm);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[ModelInfoWrite] Write model info comm data failed. ");
+        HCCL_VM_ERROR("Write model info comm data failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     ret = VDataDesTagWrite(fp, modelInfo.vDataDes);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[ModelInfoWrite] Write model info vdatades data failed. ");
+        HCCL_VM_ERROR("Write model info vdatades data failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     ret = All2AllDataDesTagWrite(fp, modelInfo.all2AllDataDes);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[ModelInfoWrite] Write model info all2allDataDes data failed. ");
+        HCCL_VM_ERROR("Write model info all2allDataDes data failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -291,19 +291,19 @@ HcclResult ModelInfoRead(FILE *fp, ModelInfoInner &modelInfo)
 {
     auto ret = ModelInfoCommRead(fp, modelInfo.comm);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[ModelInfoRead] Read model info comm data failed ");
+        HCCL_VM_ERROR("Read model info comm data failed ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     ret = VDataDesTagRead(fp, modelInfo.vDataDes);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[ModelInfoRead] Read model info vdatades data failed.  ");
+        HCCL_VM_ERROR("Read model info vdatades data failed.  ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     ret = All2AllDataDesTagRead(fp, modelInfo.all2AllDataDes);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[ModelInfoRead] Read model info all2allDataDes data failed.");
+        HCCL_VM_ERROR("Read model info all2allDataDes data failed.");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -441,7 +441,7 @@ HcclResult HcclVmTaskMetaDataWrite(FILE *fp, const HcclVmTaskMetaData &taskMeta)
 {
     auto ret = FileHeaderWrite(fp, taskMeta.header);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[TaskMetaDataWrite] Read file header failed. ");
+        HCCL_VM_ERROR("Read file header failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -456,7 +456,7 @@ HcclResult HcclVmTaskMetaDataRead(FILE *fp, HcclVmTaskMetaData &taskMeta, uint32
 {
     auto ret = FileHeaderRead(fp, taskMeta.header, magic);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmTaskMetaDataRead] Read file header failed. ");
+        HCCL_VM_ERROR("Read file header failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -472,7 +472,7 @@ HcclResult HcclVmFlagDataWrite(FILE *fp, const HcclVmFlagData &flagData)
 {
     auto ret = FileHeaderWrite(fp, flagData.header);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[HcclVmFlagDataWrite] Read file header failed. ");
+        HCCL_VM_ERROR("Read file header failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -487,7 +487,7 @@ HcclResult HcclVmFlagDataRead(FILE *fp, HcclVmFlagData &flagData, uint32_t magic
 {
     auto ret = FileHeaderRead(fp, flagData.header, magic);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        std::cout << "[FlagDataRead] Read file header failed. " << std::endl;
+        HCCL_VM_ERROR("Read file header failed. ");
         return HcclResult::HCCL_E_INTERNAL;
     }
 

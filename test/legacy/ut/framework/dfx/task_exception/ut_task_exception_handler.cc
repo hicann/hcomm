@@ -60,11 +60,11 @@ protected:
         std::cout << "A Test case in TaskExceptionHandlerTest TearDown" << std::endl;
     }
 
-    shared_ptr<TaskInfo> InitTaskInfo(u32 streamId = 0, u32 taskId = 0, u32 remoteRank = 0)
+    unique_ptr<TaskInfo> InitTaskInfo(u32 streamId = 0, u32 taskId = 0, u32 remoteRank = 0)
     {
         TaskParam taskParam{};
         shared_ptr<DfxOpInfo> dfxOpInfo = make_shared<DfxOpInfo>();
-        return make_shared<TaskInfo>(streamId, taskId, remoteRank, taskParam, dfxOpInfo);
+        return make_unique<TaskInfo>(streamId, taskId, remoteRank, taskParam, dfxOpInfo);
     }
 };
 
@@ -97,7 +97,7 @@ TEST_F(TaskExceptionHandlerTest, TestRegisterAndUnRegister)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_default)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::DEFAULT;
@@ -110,7 +110,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_default)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_mission)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::MISSION;
@@ -126,7 +126,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_mission)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_loop)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::LOOP;
@@ -144,7 +144,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_loop)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_loop_group)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::LOOP_GROUP;
@@ -161,7 +161,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_loop_group)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_loc_post_sem)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::WAIT_SIGNAL;
     ccuErrorInfo.repType = CcuRepType::LOC_POST_SEM;
@@ -176,7 +176,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_loc_post_sem)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_loc_wait_sem)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::WAIT_SIGNAL;
     ccuErrorInfo.repType = CcuRepType::LOC_WAIT_SEM;
@@ -191,7 +191,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_loc_wait_sem)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_rem_post_sem)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     MOCKER(TaskExceptionHandler::GetRankIdByChannelId).stubs().with(eq(static_cast<uint16_t>(1)), mockcpp::any()).will(returnValue(100));
 
     CcuErrorInfo ccuErrorInfo{};
@@ -208,7 +208,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_rem_post_sem)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_rem_wait_sem)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     MOCKER(TaskExceptionHandler::GetRankIdByChannelId).stubs().with(eq(static_cast<uint16_t>(1)), mockcpp::any()).will(returnValue(100));
 
     CcuErrorInfo ccuErrorInfo{};
@@ -226,7 +226,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_rem_wait_sem)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_rem_post_var)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     MOCKER(TaskExceptionHandler::GetRankIdByChannelId).stubs().with(eq(static_cast<uint16_t>(1)), mockcpp::any()).will(returnValue(100));
 
     CcuErrorInfo ccuErrorInfo{};
@@ -245,7 +245,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_rem_post_var)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_rem_wait_group)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     MOCKER(TaskExceptionHandler::GetRankIdByChannelId).stubs().with(mockcpp::any(), mockcpp::any())
         .will(returnValue(100)).then(returnValue(200)).then(returnValue(300)).then(returnValue(400));
 
@@ -270,7 +270,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_rem_wait_group)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_post_shared_var)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::WAIT_SIGNAL;
@@ -287,7 +287,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_post_shared_var
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_post_shared_sem)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::WAIT_SIGNAL;
@@ -302,7 +302,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_post_shared_sem
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_read)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     MOCKER(TaskExceptionHandler::GetRankIdByChannelId).stubs().with(eq(static_cast<uint16_t>(1)), mockcpp::any()).will(returnValue(100));
 
     CcuErrorInfo ccuErrorInfo{};
@@ -323,7 +323,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_read)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_write)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     MOCKER(TaskExceptionHandler::GetRankIdByChannelId).stubs().with(eq(static_cast<uint16_t>(1)), mockcpp::any()).will(returnValue(100));
 
     CcuErrorInfo ccuErrorInfo{};
@@ -344,7 +344,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_write)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_local_cpy)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::TRANS_MEM;
@@ -363,7 +363,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_local_cpy)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_local_reduce)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::TRANS_MEM;
@@ -384,7 +384,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_local_reduce)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_read)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     MOCKER(TaskExceptionHandler::GetRankIdByChannelId).stubs().with(eq(static_cast<uint16_t>(1)), mockcpp::any()).will(returnValue(100));
 
     CcuErrorInfo ccuErrorInfo{};
@@ -404,7 +404,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_read)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_write)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     MOCKER(TaskExceptionHandler::GetRankIdByChannelId).stubs().with(eq(static_cast<uint16_t>(1)), mockcpp::any()).will(returnValue(100));
 
     CcuErrorInfo ccuErrorInfo{};
@@ -424,7 +424,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_write)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_loc_read)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::BUF_TRANS_MEM;
@@ -442,7 +442,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_loc_read)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_loc_write)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::BUF_TRANS_MEM;
@@ -460,7 +460,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_loc_write)
 
 TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_reduce)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     CcuErrorInfo ccuErrorInfo{};
     ccuErrorInfo.type = CcuErrorType::BUF_REDUCE;
@@ -486,7 +486,7 @@ TEST_F(TaskExceptionHandlerTest, test_ccu_error_msg_when_type_is_buf_reduce)
 
 TEST_F(TaskExceptionHandlerTest, test_get_rank_id_by_channel_id)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     taskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
     EXPECT_EQ(TaskExceptionHandler::GetRankIdByChannelId(1, *taskInfo), INVALID_RANKID);    // task type error
@@ -515,7 +515,7 @@ TEST_F(TaskExceptionHandlerTest, test_get_rank_id_by_channel_id)
 
 TEST_F(TaskExceptionHandlerTest, ut_get_ccu_collservice_before_init_Expect_Throw_NullptrException)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     taskInfo->taskParam_.taskType = TaskParamType::TASK_CCU;
     taskInfo->dfxOpInfo_ = make_shared<DfxOpInfo>();
     CommunicatorImpl communicator{};
@@ -525,7 +525,7 @@ TEST_F(TaskExceptionHandlerTest, ut_get_ccu_collservice_before_init_Expect_Throw
 
 TEST_F(TaskExceptionHandlerTest, test_get_group_rank_info)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     EXPECT_EQ(TaskExceptionHandler::GetGroupRankInfo(*taskInfo), "");    // communicator is nullptr
 
@@ -561,23 +561,23 @@ TEST_F(TaskExceptionHandlerTest, test_process_when_task_more_than_50)
     // 加入一些 Task 数据
     // 在异常 Task 前加入60个 Task
     for (uint32_t i = 0; i < 50; ++i) {
-        shared_ptr<TaskInfo> preTaskInfo = InitTaskInfo(0, i); // streamId 0, taskId 0-59
+        auto preTaskInfo = InitTaskInfo(0, i); // streamId 0, taskId 0-59
         preTaskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
         preTaskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
         preTaskInfo->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
-        mirrorTaskManager.AddTaskInfo(preTaskInfo);
+        mirrorTaskManager.AddTaskInfo(std::move(preTaskInfo));
     }
     // 加入当前异常 Task
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo(0, 60); // streamId 0, taskId 60
+    auto taskInfo = InitTaskInfo(0, 60); // streamId 0, taskId 60
     taskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
     taskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
     taskInfo->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
-    mirrorTaskManager.AddTaskInfo(taskInfo);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
     // 在异常 Task 后加入10个 Task
     for (uint32_t i = 0; i < 10; ++i) {
-        shared_ptr<TaskInfo> postTaskInfo = InitTaskInfo(0, i + 61); // streamId 0, taskId 61-70
+        auto postTaskInfo = InitTaskInfo(0, i + 61); // streamId 0, taskId 61-70
         postTaskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
-        mirrorTaskManager.AddTaskInfo(postTaskInfo);
+        mirrorTaskManager.AddTaskInfo(std::move(postTaskInfo));
     }
 
     // 调用 TaskExceptionHandler::Process() 打印异常DFX信息
@@ -611,61 +611,61 @@ TEST_F(TaskExceptionHandlerTest, test_process_when_task_less_than_50)
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     // 加入一些 Task 数据
     // 在异常 Task 前加入一些 Task
-    shared_ptr<TaskInfo> taskInfo0 = InitTaskInfo(0, 0);
+    auto taskInfo0 = InitTaskInfo(0, 0);
     taskInfo0->taskParam_.taskType = TaskParamType::TASK_SDMA;
-    mirrorTaskManager.AddTaskInfo(taskInfo0);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo0));
     // TASK_SDMA
-    shared_ptr<TaskInfo> taskInfo1 = InitTaskInfo(0, 1);
+    auto taskInfo1 = InitTaskInfo(0, 1);
     taskInfo1->taskParam_.taskType = TaskParamType::TASK_SDMA;
-    mirrorTaskManager.AddTaskInfo(taskInfo1);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo1));
     // TASK_RDMA
-    shared_ptr<TaskInfo> taskInfo2 = InitTaskInfo(0, 2);
+    auto taskInfo2 = InitTaskInfo(0, 2);
     taskInfo2->taskParam_.taskType = TaskParamType::TASK_RDMA;
     taskInfo2->taskParam_.taskPara.DMA.notifyID = 0xaaaabbbbcccc;
-    mirrorTaskManager.AddTaskInfo(taskInfo2);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo2));
     // TASK_SEND_PAYLOAD
-    shared_ptr<TaskInfo> taskInfo3 = InitTaskInfo(0, 3);
+    auto taskInfo3 = InitTaskInfo(0, 3);
     taskInfo3->taskParam_.taskType = TaskParamType::TASK_SEND_PAYLOAD;
-    mirrorTaskManager.AddTaskInfo(taskInfo3);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo3));
     // TASK_REDUCE_INLINE
-    shared_ptr<TaskInfo> taskInfo4 = InitTaskInfo(0, 4);
+    auto taskInfo4 = InitTaskInfo(0, 4);
     taskInfo4->taskParam_.taskType = TaskParamType::TASK_REDUCE_INLINE;
-    mirrorTaskManager.AddTaskInfo(taskInfo4);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo4));
     // TASK_REDUCE_TBE
-    shared_ptr<TaskInfo> taskInfo5 = InitTaskInfo(0, 5);
+    auto taskInfo5 = InitTaskInfo(0, 5);
     taskInfo5->taskParam_.taskType = TaskParamType::TASK_REDUCE_TBE;
-    mirrorTaskManager.AddTaskInfo(taskInfo5);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo5));
     // TASK_NOTIFY_RECORD
-    shared_ptr<TaskInfo> taskInfo6 = InitTaskInfo(0, 6);
+    auto taskInfo6 = InitTaskInfo(0, 6);
     taskInfo6->taskParam_.taskType = TaskParamType::TASK_NOTIFY_RECORD;
     taskInfo6->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
-    mirrorTaskManager.AddTaskInfo(taskInfo6);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo6));
     // TASK_NOTIFY_WAIT
-    shared_ptr<TaskInfo> taskInfo7 = InitTaskInfo(0, 7);
+    auto taskInfo7 = InitTaskInfo(0, 7);
     taskInfo7->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
     taskInfo7->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
-    mirrorTaskManager.AddTaskInfo(taskInfo7);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo7));
     // TASK_SEND_NOTIFY
-    shared_ptr<TaskInfo> taskInfo8 = InitTaskInfo(0, 8);
+    auto taskInfo8 = InitTaskInfo(0, 8);
     taskInfo8->taskParam_.taskType = TaskParamType::TASK_SEND_NOTIFY;
     taskInfo8->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
-    mirrorTaskManager.AddTaskInfo(taskInfo8);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo8));
     // TASK_WRITE_WITH_NOTIFY
-    shared_ptr<TaskInfo> taskInfo9 = InitTaskInfo(0, 9);
+    auto taskInfo9 = InitTaskInfo(0, 9);
     taskInfo9->taskParam_.taskType = TaskParamType::TASK_WRITE_WITH_NOTIFY;
     taskInfo9->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
-    mirrorTaskManager.AddTaskInfo(taskInfo9);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo9));
     // TASK_WRITE_REDUCE_WITH_NOTIFY
-    shared_ptr<TaskInfo> taskInfo10 = InitTaskInfo(0, 10);
+    auto taskInfo10 = InitTaskInfo(0, 10);
     taskInfo10->taskParam_.taskType = TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY;
     taskInfo10->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
-    mirrorTaskManager.AddTaskInfo(taskInfo10);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo10));
     // 加入当前异常 Task
-    shared_ptr<TaskInfo> curTaskInfo = InitTaskInfo(0, 11); // streamId 0, taskId 11
+    auto curTaskInfo = InitTaskInfo(0, 11); // streamId 0, taskId 11
     curTaskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
     curTaskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
     curTaskInfo->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
-    mirrorTaskManager.AddTaskInfo(curTaskInfo);
+    mirrorTaskManager.AddTaskInfo(std::move(curTaskInfo));
 
     MOCKER(TaskExceptionHandler::PrintAicpuErrorMessage).stubs();
     // 调用 TaskExceptionHandler::Process() 打印异常DFX信息
@@ -733,10 +733,10 @@ TEST_F(TaskExceptionHandlerTest, test_process_ccu)
     dfxOpInfo->comm_ = &communicator;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     // 加入当前异常 Task
-    shared_ptr<TaskInfo> curTaskInfo = InitTaskInfo(0, 0); // streamId 0, taskId 0
+    auto curTaskInfo = InitTaskInfo(0, 0); // streamId 0, taskId 0
     curTaskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
     curTaskInfo->taskParam_.taskType = TaskParamType::TASK_CCU;
-    mirrorTaskManager.AddTaskInfo(curTaskInfo);
+    mirrorTaskManager.AddTaskInfo(std::move(curTaskInfo));
 
     MOCKER(GetCcuErrorMsg).stubs().will(invoke(MockGetCcuErrorMsg));
 
@@ -765,7 +765,7 @@ TEST_F(TaskExceptionHandlerTest, test_process_ccu)
 
 TEST_F(TaskExceptionHandlerTest, test_GetMC2AlgTaskParam)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     taskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
     EXPECT_EQ(TaskExceptionHandler::GetMC2AlgTaskParam(*taskInfo).size(), 0);    // failed
@@ -796,18 +796,18 @@ TEST_F(TaskExceptionHandlerTest, test_GetMC2AlgTaskParam)
 
 TEST_F(TaskExceptionHandlerTest, test_process_mc2)
 {
-    shared_ptr<TaskInfo> taskInfo1 = InitTaskInfo();    // for MC2 Server
+    auto taskInfo1 = InitTaskInfo();    // for MC2 Server
     taskInfo1->taskParam_.taskType = TaskParamType::TASK_CCU;
     taskInfo1->taskParam_.taskPara.Ccu.dieId = 0;
     taskInfo1->taskParam_.taskPara.Ccu.missionId = 1;
     taskInfo1->taskParam_.taskPara.Ccu.instrId = 2;
-    MC2GlobalMirrorTasks::GetInstance().AddTaskInfo(10, taskInfo1);
-    shared_ptr<TaskInfo> taskInfo2 = InitTaskInfo();    // for Algo
+    MC2GlobalMirrorTasks::GetInstance().AddTaskInfo(10, std::shared_ptr<TaskInfo>(std::move(taskInfo1)));
+    auto taskInfo2 = InitTaskInfo();    // for Algo
     taskInfo2->taskParam_.taskType = TaskParamType::TASK_CCU;
     taskInfo2->taskParam_.taskPara.Ccu.dieId = 0;
     taskInfo2->taskParam_.taskPara.Ccu.missionId = 2;
     taskInfo2->taskParam_.taskPara.Ccu.instrId = 5;
-    MC2GlobalMirrorTasks::GetInstance().AddTaskInfo(10, taskInfo2);
+    MC2GlobalMirrorTasks::GetInstance().AddTaskInfo(10, std::shared_ptr<TaskInfo>(std::move(taskInfo2)));
 
     rtExceptionInfo_t exceptionInfo{};
     exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
@@ -838,7 +838,7 @@ TEST_F(TaskExceptionHandlerTest, test_process_mc2)
 TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_Normal_Expect_PrintInfo)
 {
     // 初始化AIV任务信息
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     taskInfo->taskParam_.taskType = TaskParamType::TASK_AIV;
     taskInfo->taskParam_.taskPara.Aiv.cmdType = HcclCMDType::HCCL_CMD_ALLGATHER;
     taskInfo->taskParam_.taskPara.Aiv.tag = 2;
@@ -855,11 +855,6 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_Normal_Expect_Print
     taskInfo->taskParam_.taskPara.Aiv.flagMem = flagMemData;
     taskInfo->taskParam_.taskPara.Aiv.flagMemSize = flagMemSize;
 
-    // 打桩GlobalMirrorTasks
-    GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
-    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 1);
-    mirrorTaskManager.AddTaskInfo(taskInfo);
-
     // 打桩ACL函数
     void* mockFlagBuff = malloc(flagMemSize);
     MOCKER(aclrtMallocHost).stubs().will(returnValue(ACL_SUCCESS));
@@ -875,9 +870,14 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_Normal_Expect_Print
     exceptionInfo.streamid = 0;
     exceptionInfo.taskid = 0;
 
-    // 调用ProcessAivException
+    // 调用ProcessAivException（必须在AddTaskInfo之前，因为AddTaskInfo会move走taskInfo）
     TaskExceptionHandler handler(0);
     handler.ProcessAivException(&exceptionInfo, *taskInfo);
+
+    // 打桩GlobalMirrorTasks
+    GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
+    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 1);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
 
     // 清理
     globalMirrorTasks.DestroyQueue(0, 0);
@@ -889,15 +889,10 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_Normal_Expect_Print
 TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_MallocFailure_Expect_ReturnEarly)
 {
     // 初始化AIV任务信息
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     taskInfo->taskParam_.taskType = TaskParamType::TASK_AIV;
     taskInfo->taskParam_.taskPara.Aiv.cmdType = HcclCMDType::HCCL_CMD_ALLGATHER;
     taskInfo->taskParam_.taskPara.Aiv.flagMemSize = 1024;
-
-    // 打桩GlobalMirrorTasks
-    GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
-    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 1);
-    mirrorTaskManager.AddTaskInfo(taskInfo);
 
     // 打桩aclrtMallocHost失败
     MOCKER(aclrtMallocHost).stubs().will(returnValue(ACL_ERROR_BAD_ALLOC));
@@ -908,9 +903,14 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_MallocFailure_Expec
     exceptionInfo.streamid = 0;
     exceptionInfo.taskid = 0;
 
-    // 调用ProcessAivException
+    // 调用ProcessAivException（必须在AddTaskInfo之前，因为AddTaskInfo会move走taskInfo）
     TaskExceptionHandler handler(0);
     handler.ProcessAivException(&exceptionInfo, *taskInfo);
+
+    // 打桩GlobalMirrorTasks
+    GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
+    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 1);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
 
     // 清理
     globalMirrorTasks.DestroyQueue(0, 0);
@@ -919,15 +919,10 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_MallocFailure_Expec
 TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_MemcpyFailure_Expect_ReturnEarly)
 {
     // 初始化AIV任务信息
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
     taskInfo->taskParam_.taskType = TaskParamType::TASK_AIV;
     taskInfo->taskParam_.taskPara.Aiv.cmdType = HcclCMDType::HCCL_CMD_ALLGATHER;
     taskInfo->taskParam_.taskPara.Aiv.flagMemSize = 1024;
-
-    // 打桩GlobalMirrorTasks
-    GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
-    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 1);
-    mirrorTaskManager.AddTaskInfo(taskInfo);
 
     // 打桩aclrtMallocHost成功，但aclrtMemcpy失败
     MOCKER(aclrtMallocHost).stubs().will(returnValue(ACL_SUCCESS));
@@ -940,9 +935,14 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_MemcpyFailure_Expec
     exceptionInfo.streamid = 0;
     exceptionInfo.taskid = 0;
 
-    // 调用ProcessAivException
+    // 调用ProcessAivException（必须在AddTaskInfo之前，因为AddTaskInfo会move走taskInfo）
     TaskExceptionHandler handler(0);
     handler.ProcessAivException(&exceptionInfo, *taskInfo);
+
+    // 打桩GlobalMirrorTasks
+    GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
+    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 1);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
 
     // 清理
     globalMirrorTasks.DestroyQueue(0, 0);

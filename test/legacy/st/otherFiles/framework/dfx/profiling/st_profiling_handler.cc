@@ -151,7 +151,7 @@ TEST_F(ProfilingHandlerTest, ReportHcclTaskDetails_test)
     CommunicatorImpl* comm  =new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     handler.ReportHcclTaskDetails(*taskInfo,cachedReq);
     delete comm;
 }
@@ -183,7 +183,7 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData_test){
     CommunicatorImpl* comm  =new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     HCCLReportData hcclReportData;
     handler.GetHCCLReportData(*taskInfo,hcclReportData);
     delete comm;
@@ -208,7 +208,7 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData1_test){
     CommunicatorImpl* comm  =new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     HCCLReportData hcclReportData;
     handler.GetHCCLReportData(*taskInfo,hcclReportData);
     delete comm;
@@ -233,7 +233,7 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData2_test){
     CommunicatorImpl* comm  =new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     HCCLReportData hcclReportData;
     handler.GetHCCLReportData(*taskInfo,hcclReportData);
     delete comm;
@@ -279,7 +279,7 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData3_test){
     CommunicatorImpl* comm  =new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     HCCLReportData hcclReportData;
     handler.GetHCCLReportData(*taskInfo,hcclReportData);
     delete comm;
@@ -327,7 +327,7 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData4_test){
     CommunicatorImpl* comm  =new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     CcuProfilingInfo info;
     handler.GetCcuGroupInfo(*taskInfo, info);
     delete comm;

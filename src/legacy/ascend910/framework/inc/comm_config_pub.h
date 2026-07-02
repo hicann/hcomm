@@ -107,7 +107,6 @@ public:
     u64 GetConfigSymmetricMemoryStride() const;
     HcclResult SetConfigTrafficClass(u32 trafficClass);
     HcclResult SetConfigServiceLevel(u32 serviceLevel);
-    const std::string& GetConfigGroupName() const;  // 获取通信域名称
     HcclResult SetConfigHcclQos(u32 hcclQos);
 
 private:
@@ -129,11 +128,10 @@ private:
     HcclResult SplitRetryEnable(const std::string &retryConfig, std::vector<std::string> &retryEnables);
     HcclResult SetConfigRetryEnable(const std::vector<std::string> &retryEnables);
     HcclResult SetConfigBufferName(const CommConfigHandle& config);    // 设置通信Buffer名称
-    HcclResult UpdateConfigCommName(std::string suffix);  // 更新通信域名称
 
     u64 bufferSize_;        // CCL buffer大小配置，单位B
     u8 deterministic_;      // 确定性计算配置：0-关闭，1-开启确定性（不支持规约保序），2-开启确定性&规约保序，其他数字暂时保留
-    std::string commName_;  // udi + groupName, udi为空时与groupname一致
+    std::string commName_;
     std::string udi_;       // user define information，用于在报错日志中定位错误通信域
     bool aivMode_;
     bool aicpuUnfold_;
@@ -153,7 +151,6 @@ private:
     std::string bufferName_;    // CCL buffer名称
     u32 hcclQos_;
     u64 symmetricMemoryStride_; // 对称内存预留VA大小，单位GB
-    std::string groupName_; // 通信域名称
 };
 }
 #endif /* HCCL_COMM_CONFIG_PUB_H */

@@ -53,6 +53,7 @@ uint32_t HcclKernelEntrance(void *args)
 
     auto *kernelParam = reinterpret_cast<HcclKernelParamLite *>(args);
     AicpuUtils::GetInstance().CreateSingleInstance(args);
+    CHK_RET(AicpuUtils::GetInstance().Init());
     NsRecoveryHandlerFunc::GetInstance();
     CHK_RET(DlHalFunctionV2::GetInstance().DlHalFunctionInit());
 

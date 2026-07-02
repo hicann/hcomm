@@ -107,22 +107,22 @@ public:
         dataDir_ = root_ + "/data";
         EnsureDir(dataDir_);
 
-        const char *oldEnv = std::getenv("HCCL_VM_INSTALL_DIR");
+        const char *oldEnv = std::getenv("HCCL_VM_INSTALL_ROOT");
         if (oldEnv != nullptr) {
             hadOldEnv_ = true;
             oldEnv_ = oldEnv;
         }
-        if (setenv("HCCL_VM_INSTALL_DIR", root_.c_str(), 1) != 0) {
-            throw std::runtime_error("failed to set HCCL_VM_INSTALL_DIR");
+        if (setenv("HCCL_VM_INSTALL_ROOT", root_.c_str(), 1) != 0) {
+            throw std::runtime_error("failed to set HCCL_VM_INSTALL_ROOT");
         }
     }
 
     ~TempAivInstallDir()
     {
         if (hadOldEnv_) {
-            setenv("HCCL_VM_INSTALL_DIR", oldEnv_.c_str(), 1);
+            setenv("HCCL_VM_INSTALL_ROOT", oldEnv_.c_str(), 1);
         } else {
-            unsetenv("HCCL_VM_INSTALL_DIR");
+            unsetenv("HCCL_VM_INSTALL_ROOT");
         }
         if (!root_.empty()) {
             RemoveTree(root_);

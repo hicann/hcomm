@@ -517,6 +517,7 @@ private:
     u8 debugMode_ = 0;        // debug开关
     AlgType algType_;         // 算法类型
     std::string identifier_;  // 通信域名称
+    std::string udi_;         // 用户自定义信息
     u64 cclbufferSize_ = 0;
     u32 localUserRank_ = 0;
     HcclExternalEnable externalEnable_;

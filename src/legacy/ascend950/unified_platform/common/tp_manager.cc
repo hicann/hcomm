@@ -11,6 +11,7 @@
 #include "tp_manager.h"
 
 #include <algorithm>
+#include <arpa/inet.h>
 #include <string>
 
 #include "exception_util.h"
@@ -26,6 +27,7 @@
 #include "dev_type.h"
 #include "orion_adapter_rts.h"
 #include "rdma_handle_manager.h"
+#include "securec.h"
 
 namespace Hccl {
 
@@ -34,6 +36,8 @@ constexpr uint32_t kTpAttrSlAvailableBit = 17U;
 constexpr uint32_t kTpAttrBitmapSl = (1U << 10U);
 constexpr uint32_t kTpAttrBitmapDscp = (1U << 8U);
 constexpr uint32_t kTpAttrDscpConfigModeBit = 18U;
+/// UBOE SetTpAttr 网络属性位图：bit2~8（0x1FC，sip/dip/smac/dmac/vlan + dscp，不含 sl）；HCCP 自动 urma_get_smac/get_dmac
+constexpr uint32_t kTpAttrBitmapUboeNetWithDscp = 0x1FCU;
 
 namespace {
 
@@ -232,17 +236,46 @@ static RdmaHandle ResolveUbRdmaHandle(const bool isSync, const uint32_t devPhyId
     return RdmaHandleManager::GetInstance().GetByIp(devPhyId, locAddr);
 }
 
-static HcclResult CommitUboeDscpToTpAttr(const bool isSync, RdmaHandle ctxHandle, uint64_t tpHandle, uint8_t dscp)
+static HcclResult Ipv4ToIpArray(const char *ipv4Str, uint8_t ipArr[16U])
 {
-    if (tpHandle == 0U) {
+    if (ipv4Str == nullptr || ipArr == nullptr) {
+        return HcclResult::HCCL_E_PARA;
+    }
+    struct in_addr addr {};
+    if (inet_pton(AF_INET, ipv4Str, &addr) != 1) {
+        return HcclResult::HCCL_E_PARA;
+    }
+    if (memset_s(ipArr, 16U, 0, 16U) != EOK) {
         return HcclResult::HCCL_E_INTERNAL;
     }
-    if (!ctxHandle) {
+    const uint32_t ipNet = addr.s_addr;
+    ipArr[12] = static_cast<uint8_t>(ipNet & 0xFFU);
+    ipArr[13] = static_cast<uint8_t>((ipNet >> 8U) & 0xFFU);
+    ipArr[14] = static_cast<uint8_t>((ipNet >> 16U) & 0xFFU);
+    ipArr[15] = static_cast<uint8_t>((ipNet >> 24U) & 0xFFU);
+    return HcclResult::HCCL_SUCCESS;
+}
+
+static HcclResult CommitUboeNetAttrsToTpAttr(const bool isSync, RdmaHandle ctxHandle, uint64_t tpHandle,
+    const TpAttr &tpAttr, const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, bool setDscp, uint8_t dscp)
+{
+    if (tpHandle == 0U || !ctxHandle) {
         return HcclResult::HCCL_E_INTERNAL;
     }
-    struct TpAttr tpDscpAttr {};
-    tpDscpAttr.dscp = static_cast<uint8_t>(dscp & 0x3FU);
-    return SetTpAttrByPath(isSync, ctxHandle, tpHandle, kTpAttrBitmapDscp, tpDscpAttr, "CommitUboeDscpToTpAttr");
+    struct TpAttr netAttr = tpAttr;
+    const std::string localIp = locIpv4Addr.GetIpStr();
+    const std::string rmtIp = rmtIpv4Addr.GetIpStr();
+    CHK_RET(Ipv4ToIpArray(localIp.c_str(), netAttr.sip));
+    CHK_RET(Ipv4ToIpArray(rmtIp.c_str(), netAttr.dip));
+    if (setDscp) {
+        netAttr.dscp = static_cast<uint8_t>(dscp & 0x3FU);
+    }
+    HCCL_INFO("[TpManager][CommitUboeNetAttrsToTpAttr] tpHandle[%llu] localIpv4[%s] rmtIpv4[%s] setDscp[%d] "
+              "dscp[%u] attrBitmap[0x%x].",
+        tpHandle, localIp.c_str(), rmtIp.c_str(), static_cast<int>(setDscp),
+        static_cast<unsigned>(netAttr.dscp & 0x3FU), kTpAttrBitmapUboeNetWithDscp);
+    return SetTpAttrByPath(isSync, ctxHandle, tpHandle, kTpAttrBitmapUboeNetWithDscp, netAttr,
+        "CommitUboeNetAttrsToTpAttr");
 }
 
 static HcclResult CommitTpAttrsAfterSlMapping(const uint32_t devLogicId, const uint32_t devPhyId, const bool isSync,
@@ -267,18 +300,26 @@ static HcclResult CommitTpAttrsAfterSlMapping(const uint32_t devLogicId, const u
     if (param.tpProtocol == TpProtocol::TP || param.tpProtocol == TpProtocol::UBOE) {
         CHK_RET(CommitMappedSlToTpAttr(isSync, ctxHandle, tpHandle, mappedSl));
     }
-    if (param.tpProtocol == TpProtocol::UBOE && tpAttr.dscpConfigMode == 0) {
-        const uint8_t dscpBefore = static_cast<uint8_t>(tpAttr.dscp & 0x3FU);
-        const uint8_t requestQos = static_cast<uint8_t>(param.qos & 0xFFU);
-        const uint8_t dscpLookupQos = ResolveUboeDscpLookupQos(param, nTp, slMask);
-        uint8_t dscp = 33U;
-        (void)TpQosGetDscpByQosFromHccnCfg(devPhyId, dscpLookupQos, dscp);
-        CHK_RET(CommitUboeDscpToTpAttr(isSync, ctxHandle, tpHandle, dscp));
-        HCCL_INFO("[TpManager][%s] UBOE dscp updated: tpHandle[%llu] requestQos[%u] dscpLookupQos[%u] dscpBefore[%u] "
-                  "dscpAfter[%u].",
-            __func__, tpHandle, static_cast<unsigned>(requestQos), static_cast<unsigned>(dscpLookupQos),
-            static_cast<unsigned>(dscpBefore), static_cast<unsigned>(dscp));
+    if (param.tpProtocol != TpProtocol::UBOE) {
+        return HcclResult::HCCL_SUCCESS;
     }
+    if (tpAttr.dscpConfigMode == 1) {
+        CHK_RET(CommitUboeNetAttrsToTpAttr(isSync, ctxHandle, tpHandle, tpAttr, param.locIpv4Addr,
+            param.rmtIpv4Addr, false, 0U));
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    const uint8_t dscpBefore = static_cast<uint8_t>(tpAttr.dscp & 0x3FU);
+    const uint8_t requestQos = static_cast<uint8_t>(param.qos & 0xFFU);
+    const uint8_t dscpLookupQos = ResolveUboeDscpLookupQos(param, nTp, slMask);
+    uint8_t dscp = 33U;
+    (void)TpQosGetDscpByQosFromHccnCfg(devPhyId, dscpLookupQos, dscp);
+    CHK_RET(CommitUboeNetAttrsToTpAttr(isSync, ctxHandle, tpHandle, tpAttr, param.locIpv4Addr,
+        param.rmtIpv4Addr, true, dscp));
+    HCCL_INFO("[TpManager][%s] UBOE net attrs updated: tpHandle[%llu] requestQos[%u] dscpLookupQos[%u] "
+              "dscpBefore[%u] dscpAfter[%u].",
+        __func__, tpHandle, static_cast<unsigned>(requestQos), static_cast<unsigned>(dscpLookupQos),
+        static_cast<unsigned>(dscpBefore), static_cast<unsigned>(dscp));
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -385,13 +426,26 @@ HcclResult TpManager::AdvanceDeviceWaitListPhase(const RaUbGetTpInfoParam &param
     return FinishGetTpInfoFromReq(std::move(completedReqCtx), param, tpInfo, false);
 }
 
+// GetTpInfo 完成后写入缓存。useCnt 仅在 FindAndGetTpInfo 命中时 +1，此处不做引用计数。
+// 并发首次 GetTpInfo 时，先完成者写入缓存；后完成者若 tpHandle 不同则跳过写入，直接使用本地结果。
 HcclResult TpManager::StoreTpInfoResult(const RaUbGetTpInfoParam &param, TpInfo &tpInfo)
 {
     const QosKey qosKey = QosMapKey(param.qos);
     std::lock_guard<std::mutex> lock(GetInfoCtxMutex(param.tpProtocol));
     auto &infoMap = GetInfoCtxMap(param.tpProtocol);
     auto &qosMap = infoMap[param.locAddr][param.rmtAddr];
-    qosMap[qosKey] = TpInfoCtx{tpInfo, 1U};
+    const auto qIt = qosMap.find(qosKey);
+
+    if (qIt == qosMap.end()) {
+        qosMap[qosKey] = TpInfoCtx{tpInfo, 1U};
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    // 缓存已存在：不再覆盖（避免并发后写覆盖先写的 tpHandle）；tpInfo 保持 GetTpInfo 本地结果。
+    if (qIt->second.tpInfo.tpHandle != tpInfo.tpHandle) {
+        HCCL_WARNING("[TpManager][%s] skip cache store, cached tpHandle[%llu] != local tpHandle[%llu] param[%s].",
+            __func__, qIt->second.tpInfo.tpHandle, tpInfo.tpHandle, param.Describe().c_str());
+    }
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -602,10 +656,9 @@ HcclResult TpManager::ReleaseTpInfo(const RaUbGetTpInfoParam &param, const TpInf
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
+    // 未入缓存的并发 GetTpInfo 结果：与缓存 tpHandle 不一致，无需操作缓存。
     if (tpInfo.tpHandle != qit->second.tpInfo.tpHandle) {
-        HCCL_ERROR("[TpManager][%s] failed, tp info[%llu] is not expected[%llu].",
-            __func__, tpInfo.tpHandle, qit->second.tpInfo.tpHandle);
-        return HcclResult::HCCL_E_PARA;
+        return HcclResult::HCCL_SUCCESS;
     }
 
     if (qit->second.useCnt > 1) {
@@ -731,6 +784,7 @@ HcclResult TpManager::FindAndGetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &
     if (qit == rit->second.end()) {
         return HcclResult::HCCL_E_NOT_FOUND;
     }
+    // 复用缓存：useCnt 仅在此处（命中）递增，与 StoreTpInfoResult 写入路径分离。
     qit->second.useCnt += 1;
     tpInfo = qit->second.tpInfo;
     return HcclResult::HCCL_SUCCESS;

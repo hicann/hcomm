@@ -211,7 +211,8 @@ HcclResult AicpuTsUrmaChannel::BuildSocket()
         Hccl::LinkData linkData = BuildDefaultLinkData();
         CHK_RET(EndpointDescPairToLinkData(localEp_, remoteEp_, linkData));
         HCCL_INFO("[AicpuTsUrmaChannel][%s] built linkData: %s", __func__, linkData.Describe().c_str());
-        std::string socketTag = "AUTOMATIC_SOCKET_TAG";
+        std::string socketTag = (channelDesc_.channelName != nullptr)
+            ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
         bool noRankId = true;
         Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, socketTag, noRankId);
         CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket_));
@@ -224,7 +225,8 @@ HcclResult AicpuTsUrmaChannel::BuildSocket()
         Hccl::LinkData linkData = BuildDefaultLinkData();
         CHK_RET(EndpointDescPairToLinkData(localEp_, remoteEp_, linkData));
         HCCL_INFO("[AicpuTsUrmaChannel][%s] built linkData: %s", __func__, linkData.Describe().c_str());
-        std::string socketTag = "AUTOMATIC_SOCKET_TAG";
+        std::string socketTag = (channelDesc_.channelName != nullptr)
+            ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
         bool isServer = (channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER);
         Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, port, socketTag, isServer);
         CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket_));
@@ -284,10 +286,6 @@ ChannelStatus AicpuTsUrmaChannel::GetStatus()
             HCCL_CONFIG_DEBUG(hccl::HCCL_RES, "%s", channelInfo.c_str());
         }
         isFirstPrintChannelInfo_ = false;
-    }
-    
-    if (out == ChannelStatus::READY && channelDesc_.socket == nullptr && socket_ != nullptr) {
-        SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
     }
     return out;
 }

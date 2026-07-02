@@ -46,14 +46,14 @@ private:
     {
         TaskParam taskParam{};
         std::shared_ptr<DfxOpInfo> dfxOpInfo = std::make_shared<DfxOpInfo>();
-        std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(streamId, taskId, 0, taskParam, dfxOpInfo);
+        auto taskInfo = std::make_unique<TaskInfo>(streamId, taskId, 0, taskParam, dfxOpInfo);
         globalMirrorTasks.CreateQueue(devId, streamId, type);
-        globalMirrorTasks.GetQueue(devId, streamId)->Append(taskInfo);
+        globalMirrorTasks.GetQueue(devId, streamId)->Append(std::move(taskInfo));
     }
 
     void CheckFindTaskInfoSuccess(u32 devId, u32 streamId, u32 taskId, QueueType type, GlobalMirrorTasks &globalMirrorTasks)
     {
-        std::shared_ptr<TaskInfo> curTask = nullptr;
+        TaskInfo* curTask = nullptr;
         CreateTaskAndAddTask(devId, streamId, taskId, type, globalMirrorTasks);
 
         HcclResult ret = globalMirrorTasks.FindTaskInfo(devId, streamId, taskId, curTask);
@@ -64,7 +64,7 @@ private:
 
     void CheckFindTaskInfoTaskIdNotFound(u32 devId, u32 streamId, u32 taskId, QueueType type, GlobalMirrorTasks &globalMirrorTasks)
     {
-        std::shared_ptr<TaskInfo> curTask = nullptr;
+        TaskInfo* curTask = nullptr;
         CreateTaskAndAddTask(devId, streamId, taskId, type, globalMirrorTasks);
 
         u32 fakeTaskId = taskId + 1;
@@ -169,9 +169,9 @@ TEST_F(GlobalMirrorTasksTest, GlobalMirrorTasks_GetAllTaskInfo)
             auto streamId = iter->first;
             auto &taskInfoQueue = iter->second;
             // 枚举所有任务信息
-            for (auto taskInfoIter = taskInfoQueue->Begin(); (*taskInfoIter) != *taskInfoQueue->End();
+            for (auto taskInfoIter = taskInfoQueue->Begin(); *taskInfoIter != *taskInfoQueue->End();
                  (*taskInfoIter)++) {
-                std::cout << (*(*taskInfoIter))->Describe().c_str() << std::endl;
+                std::cout << (**taskInfoIter)->Describe().c_str() << std::endl;
             }
         }
     }
@@ -203,7 +203,7 @@ TEST_F(GlobalMirrorTasksTest, GlobalMirrorTasks_GetBeginEmpty)
 TEST_F(GlobalMirrorTasksTest, GlobalMirrorTasks_FindTaskInfo_devId_out_of_range)
 {
     GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
-    std::shared_ptr<TaskInfo> curTask = nullptr;
+    TaskInfo* curTask = nullptr;
 
     HcclResult ret = globalMirrorTasks.FindTaskInfo(60, 0, 0, curTask);
     EXPECT_EQ(ret, HCCL_E_PARA);
@@ -212,7 +212,7 @@ TEST_F(GlobalMirrorTasksTest, GlobalMirrorTasks_FindTaskInfo_devId_out_of_range)
 TEST_F(GlobalMirrorTasksTest, GlobalMirrorTasks_FindTaskInfo_streamId_not_found)
 {
     GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
-    std::shared_ptr<TaskInfo> curTask = nullptr;
+    TaskInfo* curTask = nullptr;
 
     globalMirrorTasks.CreateQueue(0, 0, QueueType::Circular_Queue);
 

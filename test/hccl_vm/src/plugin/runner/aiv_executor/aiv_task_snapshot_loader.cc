@@ -9,6 +9,7 @@
  */
 
 #include "aiv_task_snapshot_loader.h"
+#include "sim_common_api.h"
 
 #include <cstdint>
 #include <cstdlib>
@@ -33,13 +34,7 @@ static void SetCommonError(std::string *errorMessage, const std::string &message
 
 static bool ResolveAivSnapshotDirectory(fs::path &snapshotDir, std::string *errorMessage)
 {
-    const char *installDirEnv = std::getenv("HCCL_VM_INSTALL_DIR");
-    if (installDirEnv == nullptr || installDirEnv[0] == '\0') {
-        SetCommonError(errorMessage, "HCCL_VM_INSTALL_DIR is not set");
-        return false;
-    }
-
-    snapshotDir = fs::path(installDirEnv) / "data";
+    snapshotDir = fs::path(InstallPath::ResolveToInstallRoot("data"));
     std::error_code ec;
     if (!fs::exists(snapshotDir, ec) || ec || !fs::is_directory(snapshotDir, ec)) {
         SetCommonError(errorMessage, "AIV data directory does not exist: " + snapshotDir.string());

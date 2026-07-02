@@ -42,7 +42,7 @@
 #include "notify_pool.h"
 #include "i_hccl_one_sided_service.h"
 #include "hccl_one_sided_service.h"
-#include "hccl_one_sided_services.h"
+#include <hccl/hccl_one_sided_services.h>
 #include "hccl_one_sided_conn.h"
 #include "rma_buffer_mgr.h"
 #include "local_rdma_rma_buffer.h"
@@ -455,7 +455,7 @@ TEST_F(OneSidedSt, ut_one_sided_service_mem_regDereg_enable_disable_roce)
     MOCKER_CPP(&RemoteRdmaRmaBuffer::Deserialize)
     .stubs()
     .will(returnValue(HCCL_SUCCESS));
-    HcclMem remoteMem;
+    CommMem remoteMem{};
     ret = HcclEnableMemAccess(comm, &remoteMemDesc, &remoteMem);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -701,7 +701,7 @@ TEST_F(OneSidedSt, ut_one_sided_service_mem_regDereg_enable_disable_ipc)
         .stubs()
         .will(returnValue(HCCL_SUCCESS));
     service->localMemDescs_[1].push_back(localMemDesc);
-    HcclMem remoteMem;
+    CommMem remoteMem{};
     ret = HcclEnableMemAccess(comm, &remoteMemDesc, &remoteMem);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -950,7 +950,7 @@ TEST_F(OneSidedSt, ut_one_sided_service_mem_regDereg_enable_disable_a3_rdma)
     MOCKER_CPP(&RemoteIpcRmaBuffer::Open)
         .stubs()
         .will(returnValue(HCCL_SUCCESS));
-    HcclMem remoteMem;
+    CommMem remoteMem{};
     ret = HcclEnableMemAccess(comm, &remoteMemDesc, &remoteMem);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -2398,11 +2398,11 @@ TEST_F(OneSidedSt, ut_one_sided_service_mem_RemapRegistedMemory_roce_01)
     void* comm[2];
     char* rank_table_file = "./llt/ace/comop/hccl/stub/workspace/ut_opbase_test.json";
 
-    HcclMem memInfoArray[2];
+    CommMem memInfoArray[2];
     int test = 3;
     for (int j = 0; j < 2; j++) {
         memInfoArray[j].size = 2;
-        memInfoArray[j].type = HcclMemType::HCCL_MEM_TYPE_DEVICE;
+        memInfoArray[j].type = COMM_MEM_TYPE_DEVICE;
     }
 
     NetDevContext devContext;
@@ -2515,12 +2515,12 @@ TEST_F(OneSidedSt, ut_one_sided_service_mem_RemapRegistedMemory_roce_02)
     void* comm[2];
     char* rank_table_file = "./llt/ace/comop/hccl/stub/workspace/ut_opbase_test.json";
 
-    HcclMem memInfoArray[2];
+    CommMem memInfoArray[2];
     int test = 3;
     for (int j = 0; j < 2; j++) {
         memInfoArray[j].addr = &test;
         memInfoArray[j].size = 2;
-        memInfoArray[j].type = HcclMemType::HCCL_MEM_TYPE_DEVICE;
+        memInfoArray[j].type = COMM_MEM_TYPE_DEVICE;
     }
 
     NetDevContext devContext;
@@ -3377,7 +3377,7 @@ TEST_F(OneSidedSt, ut_one_sided_globally_bind_mem)
     // 注册全局内存
     GlobalMemRegMgr mgr;
     auto buffer1 = std::vector<int8_t>(10);
-    HcclMem mem1{HCCL_MEM_TYPE_DEVICE, buffer1.data(), buffer1.size()};
+    CommMem mem1{COMM_MEM_TYPE_DEVICE, buffer1.data(), buffer1.size()};
     void* memHandle1 = nullptr;
 
     // 异常入参
@@ -3388,7 +3388,7 @@ TEST_F(OneSidedSt, ut_one_sided_globally_bind_mem)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     auto buffer2 = std::vector<int8_t>(10);
-    HcclMem mem2{HCCL_MEM_TYPE_DEVICE, buffer2.data(), buffer2.size()};
+    CommMem mem2{COMM_MEM_TYPE_DEVICE, buffer2.data(), buffer2.size()};
     void* memHandle2 = nullptr;
     ret = HcclRegisterGlobalMem(&mem2, &memHandle2);
     EXPECT_EQ(ret, HCCL_SUCCESS);

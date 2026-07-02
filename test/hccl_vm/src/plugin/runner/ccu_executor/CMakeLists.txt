@@ -42,3 +42,6 @@ target_link_libraries(ccu_executor PRIVATE
     log
     rt
 )
+
+# 日志染色: 模块 tag
+target_compile_definitions(ccu_executor PRIVATE HCCL_VM_MODULE="RUNNER")

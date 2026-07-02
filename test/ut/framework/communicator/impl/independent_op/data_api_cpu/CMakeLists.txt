@@ -17,6 +17,7 @@ set(src_to_test_list
     ut_cpu_HcommFenceOnThread.cc
     ut_cpu_HcommChannelFenceOnThread.cc
     ut_cpu_HcommDpuChannelRegisterDfx.cc
+    ut_cpu_HcommPluginChannelOps.cc
     ${HCCL_CODE_ROOT}/src/base_comm/primitives/api_c_adpt/cpu_primitives_c_adpt.cc
 )
 
@@ -32,6 +33,7 @@ target_compile_definitions(hcomm_utest_api_data_cpu PRIVATE
     google=ascend_private
     -DOPEN_HCCL_TEST
     OPEN_BUILD_PROJECT
+    ENABLE_EXPERIMENTAL
 )
 
 target_compile_options(hcomm_utest_api_data_cpu PRIVATE

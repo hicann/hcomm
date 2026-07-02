@@ -15,6 +15,7 @@ set(src_to_test_list
     recovery/operator_retry/ut_opretry_base.cc
     recovery/operator_retry/ut_opretry_link_manage.cc
     heartbeat/ut_error_cqe.cc
+    heartbeat/ut_heartbeat_lost_report.cc
     detect/ut_detect_connect_anomalies.cc
 )
 

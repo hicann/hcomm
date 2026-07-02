@@ -27,11 +27,23 @@ constexpr int KERNEL_ERROR_CODE   = 1;
 constexpr int ALLTOALLV_DATA_INDEX_2 = 2; // sdispls在sendRecvInfos数组中的偏移
 constexpr int ALLTOALLV_DATA_INDEX_3 = 3; // rdispls在sendRecvInfos数组中的偏移
 
+HcclResult CommunicatorImplLite::InitProfilingReporterLite()
+{
+    CHK_RET(Hccl::ProfilingHandlerLite::GetInstance().Init());
+    CHK_RET(profilingReporterLite->Init());
+    return HCCL_SUCCESS;
+}
+
 int CommunicatorImplLite::LoadWithOpBasedMode(HcclKernelParamLite *kernelParam)
 {
     try {
         // 设定devType，初始化能力，算法及其他模块通过Get获取能力
         DevCapability::GetInstance().Init(kernelParam->comm.devType);
+        HcclResult ret = InitProfilingReporterLite();
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR("InitProfilingReporterLite failed, ret[%d]", ret);
+            return KERNEL_ERROR_CODE;
+        }
         UnfoldOp(kernelParam);
     } catch (HcclException &e) {
         HCCL_ERROR("Hccl exception %s was caught.", e.what());

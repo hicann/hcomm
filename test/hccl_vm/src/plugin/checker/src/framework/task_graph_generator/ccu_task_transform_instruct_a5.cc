@@ -386,7 +386,7 @@ HcclResult TransformTransLocMemToRmtMemInstr(const CcuRep::CcuInstr *instr, Task
     CHK_RET(StorageManager::GetInstance().GetSlice(rmtAddr, len, dstSlice, &rId));
 
     RankId rmtRankId = g_allRankChannelInfo[rankId][dieId][channelId].dstRank;
-    HCCL_VM_DEBUG("[TransformTransLocMemToRmtMemInstr] curRank= {}, dstRank= {}", rankId, rmtRankId);
+    HCCL_VM_DEBUG("curRank= {}, dstRank= {}", rankId, rmtRankId);
     // 说明transportId写错了
     if (rId != rmtRankId) {
         HCCL_ERROR("remoteRankId calculated by rmtAddr and channelId %u is not equal,"
@@ -523,12 +523,12 @@ HcclResult TransformSyncCKEInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph
         uint16_t ckeValue = 0;
         uint16_t localCkeValue = 0;
         CHK_RET(AllRankParamRecorder::Global()->GetCKE(rankId, dieId, locCKEId, localCkeValue));
-        HCCL_VM_DEBUG("[TransformSyncCKEInstr] Get loc rank: {:d}, die: {:d} CKE: {:d}, value: {:d}, mask: {:x}", rankId, static_cast<uint32_t>(dieId), locCKEId, localCkeValue, locCKEMask);
+        HCCL_VM_DEBUG("Get loc rank: {:d}, die: {:d} CKE: {:d}, value: {:d}, mask: {:x}", rankId, static_cast<uint32_t>(dieId), locCKEId, localCkeValue, locCKEMask);
         localCkeValue = localCkeValue & locCKEMask;
         CHK_RET(AllRankParamRecorder::Global()->GetCKE(rmtRankId, rmtDieId, rmtCKEId, ckeValue));
-        HCCL_VM_DEBUG("[TransformSyncCKEInstr] Get rmt rank: {:d}, die: {:d} CKE: {:d}, value: {:d}, mask: {:x}", rmtRankId, static_cast<uint32_t>(rmtDieId), rmtCKEId, ckeValue, locCKEMask);
+        HCCL_VM_DEBUG("Get rmt rank: {:d}, die: {:d} CKE: {:d}, value: {:d}, mask: {:x}", rmtRankId, static_cast<uint32_t>(rmtDieId), rmtCKEId, ckeValue, locCKEMask);
         CHK_RET(AllRankParamRecorder::Global()->SetCKE(rmtRankId, rmtDieId, rmtCKEId, ckeValue | localCkeValue));
-        HCCL_VM_DEBUG("[TransformSyncCKEInstr] Set rank: {:d}, die: {:d} CKE: {:d}, value: {:d}, mask: {:x}", rmtRankId, static_cast<uint32_t>(rmtDieId), rmtCKEId, localCkeValue, locCKEMask);
+        HCCL_VM_DEBUG("Set rank: {:d}, die: {:d} CKE: {:d}, value: {:d}, mask: {:x}", rmtRankId, static_cast<uint32_t>(rmtDieId), rmtCKEId, localCkeValue, locCKEMask);
     }
 
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask, true));
@@ -1084,7 +1084,7 @@ HcclResult TransformTransRmtMemToLocMemInstr(const CcuRep::CcuInstr *instr, Task
     CHK_RET(StorageManager::GetInstance().GetSlice(localAddr, len, dstSlice));
 
     RankId rmtRankId = g_allRankChannelInfo[rankId][dieId][channelId].dstRank;
-    HCCL_VM_DEBUG("[TransformTransRmtMemToLocMemInstr] curRank= {}, dstRank= {}", rankId, rmtRankId);
+    HCCL_VM_DEBUG("curRank= {}, dstRank= {}", rankId, rmtRankId);
     // 说明transportId写错了
     if (rId != rmtRankId) {
         HCCL_ERROR("remoteRankId calculated by rmtAddr and channelId %u is not equal,"
@@ -1150,7 +1150,7 @@ HcclResult TransformLoopGroupInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGra
     hcomm::CcuRep::CcuInstrInfo &microCodeQue = curCcuTask->instrInfo[queId];
     auto loopGroupIdx = curCcuTask->loopGroupIdx++;
     uint64_t loopCnt = loopGroupParam.loopGroupXn.loopInsCnt;
-    HCCL_VM_DEBUG("[LoopGroup]loop cnt= {}, loop offset= {}, expand cnt= {}",
+    HCCL_VM_DEBUG("loop cnt= {}, loop offset= {}, expand cnt= {}",
         loopCnt, static_cast<uint64_t>(loopGroupParam.loopGroupXn.expandOffset), static_cast<uint64_t>(loopGroupParam.loopGroupXn.expandCnt));
 
     for (u32 curLoopIdx = 0; curLoopIdx < loopCnt; curLoopIdx++) {
@@ -1662,15 +1662,15 @@ HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCc
     xm.value = value;
     loopGroupParam->loopXms.push_back(xm);
 
-    HCCL_VM_DEBUG("[ProcessLoopIns] debug...{}, {}", loopGroupIdx, curCcuTask->loopGroupInfo_.size());
+    HCCL_VM_DEBUG("debug...{}, {}", loopGroupIdx, curCcuTask->loopGroupInfo_.size());
     auto loopIdx = curCcuTask->loopIdx[loopGroupIdx]++;
     auto loopStart = AddLoopStartTask(queId, loopIdx, loopGroupIdx, curCcuTask); // loop前新增loopStart标记节点
 
-    HCCL_VM_DEBUG("[LOOP] loop cnt = {}", static_cast<uint64_t>(xm.loopCnt));
+    HCCL_VM_DEBUG("loop cnt = {}", static_cast<uint64_t>(xm.loopCnt));
     hcomm::CcuRep::CcuInstrInfo& microCodeQue = curCcuTask->instrInfo[queId];
     for (u32 curLoopCnt = 0; curLoopCnt < xm.loopCnt; curLoopCnt++) {
         loopGroupParam->curLoopCnt = curLoopCnt;
-        HCCL_VM_DEBUG("[LOOP] loop cnt = {}, cur loop= {}", static_cast<uint64_t>(xm.loopCnt), curLoopCnt);
+        HCCL_VM_DEBUG("loop cnt = {}, cur loop= {}", static_cast<uint64_t>(xm.loopCnt), curLoopCnt);
         for (uint16_t insId = startInstrId; insId <= endInstrId; insId++) {
             // 获取当前要处理的指令
             const CcuRep::CcuInstr* instr = &microCodeQue.instrVec[insId - curCcuTask->startInstrIdInQue[queId]];

@@ -34,6 +34,8 @@
 #include "framework/semantics_check/send_recv_semantics_checker.h"
 #include "sim_log.h"
 #include "utils/check_utils.h"
+#include "utils/dump/dump_json_utils.h"
+#include "utils/error_codes.h"
 #include "utils/storage_manager.h"
 
 namespace HcclSim {
@@ -45,6 +47,20 @@ enum class SliceOpV3 : uint8_t {
     OVERRIDE = 0,
     REDUCE,
 };
+
+std::string DescribeMemSliceForSemantic(const MemSlice &slice)
+{
+    std::ostringstream os;
+    os << "{rankId=";
+    if (slice.rankId == INVALID_RANK_ID) {
+        os << "invalid";
+    } else {
+        os << slice.rankId;
+    }
+    os << ", memoryType=" << DescribeMemType(slice.memType)
+       << ", offset=0x" << std::hex << slice.offset << ", length=0x" << slice.len << std::dec << "}";
+    return os.str();
+}
 
 struct SliceOpPairV3 {
     RankId srcRank{INVALID_RANK_ID};
@@ -60,15 +76,20 @@ struct SliceOpPairV3 {
     std::string Describe() const
     {
         std::ostringstream os;
-        os << "{srcRank=" << srcRank << ", dstRank=" << dstRank 
-           << ", srcMemType=" << (int)(src.memType) << ", dstMemType=" << (int)(dst.memType)
-           << ", srcOffset=0x" << std::hex << src.offset
-           << ", dstOffset=0x" << dst.offset << std::dec << ", len=" << src.len
-           << ", launch=" << position.launchIdx << ", block=" << position.blockId
-           << ", pipe=" << position.pipe << ", taskId=" << position.taskId
-           << ", index=" << index << ", op=" << static_cast<uint32_t>(op)
-           << ", useBatchIndex=" << useBatchIndex
-           << ", reduceType=" << static_cast<uint32_t>(reduceType) << "}";
+        os << "{operation=" << (op == SliceOpV3::REDUCE ? "reduce" : "overwrite")
+           << ", sourceMemorySlice=" << DescribeMemSliceForSemantic(src)
+           << ", targetMemorySlice=" << DescribeMemSliceForSemantic(dst)
+           << ", launchIdx=" << position.launchIdx
+           << ", blockId=" << position.blockId
+           << ", pipeId=" << position.pipe
+           << ", taskId=" << position.taskId;
+        if (useBatchIndex) {
+            os << ", batchGroup=" << index;
+        }
+        if (op == SliceOpV3::REDUCE) {
+            os << ", reduceType=" << DumpReduceOpToString(reduceType);
+        }
+        os << "}";
         return os.str();
     }
 };
@@ -269,7 +290,11 @@ HcclResult InitState(SemanticState &state)
 {
     state.param = StorageManager::GetInstance().GetCheckerParam();
     if (state.param.rankSize == 0) {
-        HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] rankSize is zero");
+        HCCL_VM_ERROR("{} Semantic check initialization failed because the rank count is 0, "
+            "collectiveType={}, dataType={}, elementCount={}, reduceType={}",
+            MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR), HcclCmdTypeToString(state.param.cmdType),
+            HcclDataTypeToString(state.param.dataType), state.param.dataCount,
+            DumpReduceOpToString(state.param.reduceType));
         return HCCL_E_PARA;
     }
     CalcDataSize(state.param.cmdType, state.param.dataCount, state.param.dataType, state.dataSize);
@@ -500,8 +525,9 @@ HcclResult CheckBufSemantics(const std::vector<const BufferSemantic *> &bufSeman
     }
     if (bufSemantics.empty()) {
         if (!ignoreError) {
-            HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Empty buffer semantics, start=0x{:x}, size=0x{:x}",
-                startAddr, size);
+            HCCL_VM_ERROR("{} No source/output information was found for the target memory range, "
+                "startAddr=0x{:x}, size=0x{:x}", MakeErrorCodeText(ErrorCode::SEMANTIC_BUFFER_EMPTY), startAddr,
+                size);
         }
         return HCCL_E_PARA;
     }
@@ -510,7 +536,8 @@ HcclResult CheckBufSemantics(const std::vector<const BufferSemantic *> &bufSeman
     const BufferSemantic *prev = bufSemantics.front();
     if (prev->startAddr > startAddr) {
         if (!ignoreError) {
-            HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Head gap, expect start=0x{:x}, actual start=0x{:x}",
+            HCCL_VM_ERROR("{} Output data does not start from the expected address; the beginning is "
+                "missing, expectedStart=0x{:x}, actualStart=0x{:x}", MakeErrorCodeText(ErrorCode::SEMANTIC_GAP),
                 startAddr, prev->startAddr);
         }
         return HCCL_E_PARA;
@@ -525,7 +552,8 @@ HcclResult CheckBufSemantics(const std::vector<const BufferSemantic *> &bufSeman
         const BufferSemantic *cur = bufSemantics[index];
         if (cur->startAddr != prev->startAddr + prev->size) {
             if (!ignoreError) {
-                HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Middle gap, prev end=0x{:x}, cur start=0x{:x}",
+                HCCL_VM_ERROR("{} Output data is broken in the middle; one piece ends at 0x{:x} "
+                    "but the next starts at 0x{:x}", MakeErrorCodeText(ErrorCode::SEMANTIC_GAP),
                     prev->startAddr + prev->size, cur->startAddr);
             }
             return HCCL_E_PARA;
@@ -540,8 +568,9 @@ HcclResult CheckBufSemantics(const std::vector<const BufferSemantic *> &bufSeman
 
     if (totalSize != size) {
         if (!ignoreError) {
-            HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Tail gap, expect end=0x{:x}, actual end=0x{:x}",
-                startAddr + size, startAddr + totalSize);
+            HCCL_VM_ERROR("{} Output data ends too early; the tail is missing, expectedEnd=0x{:x}, "
+                "actualEnd=0x{:x}", MakeErrorCodeText(ErrorCode::SEMANTIC_GAP), startAddr + size,
+                startAddr + totalSize);
         }
         return HCCL_E_PARA;
     }
@@ -594,14 +623,18 @@ HcclResult AddReduceSourcesToDstSegments(const SliceOpPairV3 &pair, const Buffer
         }
         if (dstSemantic->srcBufs.size() == 1) {
             if (dstSemantic->isReduce) {
-                HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Invalid dst reduce semantic, pair={}", pair.Describe());
+                HCCL_VM_ERROR("{} Target output range is already marked as a reduce result before "
+                    "enough source data is merged, dataMapping={}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_REDUCE_ERROR), pair.Describe());
                 return HCCL_E_PARA;
             }
             dstSemantic->isReduce = true;
             dstSemantic->reduceType = pair.reduceType;
         }
         if (srcSemantic.srcBufs.size() > 1 && dstSemantic->reduceType != srcSemantic.reduceType) {
-            HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Reduce type mismatch, pair={}", pair.Describe());
+            HCCL_VM_ERROR("{} Reduce result type is inconsistent while merging one source data "
+                "range, dataMapping={}", MakeErrorCodeText(ErrorCode::SEMANTIC_REDUCE_ERROR),
+                pair.Describe());
             return HCCL_E_PARA;
         }
 
@@ -610,12 +643,10 @@ HcclResult AddReduceSourcesToDstSegments(const SliceOpPairV3 &pair, const Buffer
             const size_t before = dstSemantic->srcBufs.size();
             dstSemantic->srcBufs.insert(srcBuf);
             if (before == dstSemantic->srcBufs.size()) {
-
-                
-
-                HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Duplicate reduce source, pair={}, srcOffset=0x{:x}, "
-                    "dstSegmentStart=0x{:x}, dstSegmentEnd=0x{:x}",
-                    pair.Describe(), srcOffset, dstSemantic->startAddr, GetSegmentEndAddr(*dstSemantic));
+                HCCL_VM_ERROR("{} The same source data is added twice to one output range during "
+                    "reduce, dataMapping={}, sourceOffsetInThisRange=0x{:x}, outputRange=[0x{:x},0x{:x})",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_REDUCE_ERROR), pair.Describe(), srcOffset,
+                    dstSemantic->startAddr, GetSegmentEndAddr(*dstSemantic));
                 return HCCL_E_PARA;
             }
         }
@@ -648,17 +679,19 @@ HcclResult ApplyReduceSemantic(const SliceOpPairV3 &pair, SemanticState &state, 
     }
     HcclResult ret = CheckBufSemantics(affectedViews, dstStartAddr, dstEndAddr - dstStartAddr, false);
     if (ret != HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Destination reduce semantic incomplete, pair={}, dstRange=[0x{:x},0x{:x}), "
-            "dstSegmentCnt={}",
-            pair.Describe(), dstStartAddr, dstEndAddr, affectedDstSemantics.size());
+        HCCL_VM_ERROR("{} Target output range is only partially filled before reduce continues, "
+            "dataMapping={}, outputRange=[0x{:x},0x{:x}), pieceCount={}",
+            MakeErrorCodeText(ErrorCode::SEMANTIC_REDUCE_ERROR), pair.Describe(), dstStartAddr, dstEndAddr,
+            affectedDstSemantics.size());
         return ret;
     }
 
     ret = AddReduceSourcesToDstSegments(pair, srcSemantic, affectedDstSemantics, srcStartAddr);
     if (ret != HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Add reduce sources to dst segments failed, pair={}, "
-            "srcRange=[0x{:x},0x{:x}), dstRange=[0x{:x},0x{:x}), ret={}",
-            pair.Describe(), srcStartAddr, srcEndAddr, dstStartAddr, dstEndAddr, static_cast<int32_t>(ret));
+        HCCL_VM_ERROR("{} Failed to merge one source data range into the target output range during "
+            "reduce, dataMapping={}, srcRange=[0x{:x},0x{:x}), dstRange=[0x{:x},0x{:x}), ret={}",
+            MakeErrorCodeText(ErrorCode::SEMANTIC_REDUCE_ERROR), pair.Describe(), srcStartAddr, srcEndAddr,
+            dstStartAddr, dstEndAddr, static_cast<int32_t>(ret));
         return ret;
     }
 
@@ -693,11 +726,13 @@ HcclResult LoadSliceOpPairSrcSemantics(const SliceOpPairV3 &pair, const Semantic
         return HCCL_SUCCESS;
     }
     if (!IsValidMemorySlice(pair.src) || !IsValidMemorySlice(pair.dst)) {
-        HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Invalid memory slice, pair={}", pair.Describe());
+        HCCL_VM_ERROR("{} One source-to-target mapping uses an invalid memory slice, "
+            "dataMapping={}", MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), pair.Describe());
         return HCCL_E_PARA;
     }
     if (!IsSupportedSemanticMemType(pair.src.memType) || !IsSupportedSemanticMemType(pair.dst.memType)) {
-        HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Unsupported memory type, pair={}", pair.Describe());
+        HCCL_VM_ERROR("{} This data mapping uses a memory type that semantic check does not support, "
+            "dataMapping={}", MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), pair.Describe());
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -709,14 +744,14 @@ HcclResult LoadSliceOpPairSrcSemantics(const SliceOpPairV3 &pair, const Semantic
     HcclResult ret = CheckBufSemantics(srcViews, pair.src.offset, pair.src.len, true);
     if (ret != HCCL_SUCCESS) {
         if (pair.op == SliceOpV3::REDUCE) {
-            HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Incomplete reduce source semantics, pair={}",
-                pair.Describe());
+            HCCL_VM_ERROR("{} Source data needed by this reduce is missing, dataMapping={}",
+                MakeErrorCodeText(ErrorCode::SEMANTIC_REDUCE_ERROR), pair.Describe());
             return ret;
         }
         // 老语义实现对 override 的不完整源语义是放行但告警；
         // 这里保持同样语义，至少把“并非完整 memcpy 语义”的风险显式打出来。
-        HCCL_VM_WARN("[TaskGraphSemanticCheckV3] Incomplete override source semantics, pair={}",
-            pair.Describe());
+        HCCL_VM_WARN("{} Source data needed by this overwrite is missing, dataMapping={}",
+            MakeErrorCodeText(ErrorCode::SEMANTIC_REDUCE_ERROR), pair.Describe());
     }
 
     srcSemantics.reserve(srcViews.size());
@@ -741,7 +776,6 @@ HcclResult ApplyPreparedSliceOpPair(const PreparedSliceOpPairV3 &prepared, Seman
     }
     HcclResult ret = ApplySrcSemanticsToDst(prepared.pair, state, srcViews);
     if (ret != HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Apply src semantics failed, pair={}", prepared.pair.Describe());
         return ret;
     }
     return HCCL_SUCCESS;
@@ -844,8 +878,6 @@ HcclResult SimulateTask(const TaskNode *node, SemanticState &state)
         prepared.pair = pair;
         HcclResult ret = LoadSliceOpPairSrcSemantics(pair, state, prepared.srcSemantics);
         if (ret != HCCL_SUCCESS) {
-            HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Load slice op pair src semantics failed, node={}, pair={}",
-                node->Describe(), pair.Describe());
             return ret;
         }
         preparedPairs.push_back(std::move(prepared));
@@ -853,8 +885,6 @@ HcclResult SimulateTask(const TaskNode *node, SemanticState &state)
     for (const auto &prepared : preparedPairs) {
         HcclResult ret = ApplyPreparedSliceOpPair(prepared, state);
         if (ret != HCCL_SUCCESS) {
-            HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Process slice op pair failed, node={}, pair={}",
-                node->Describe(), prepared.pair.Describe());
             return ret;
         }
     }
@@ -914,8 +944,12 @@ HcclResult CheckFinalOutput(const SemanticState &state)
         case HCCL_CMD_BATCH_SEND_RECV:
             return TaskCheckBatchSendRecvSemantics(allRankMemSemantics, state.dataSize);
         default:
-            HCCL_VM_WARN("[TaskGraphSemanticCheckV3] Unsupported op type for final semantic check, op={}",
-                static_cast<uint32_t>(state.param.cmdType));
+            HCCL_VM_WARN("{} Final output validation does not support this collective type yet, "
+                "collectiveType={}, rankCount={}, dataType={}, elementCount={}, reduceType={}",
+                MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR),
+                HcclCmdTypeToString(state.param.cmdType), state.param.rankSize,
+                HcclDataTypeToString(state.param.dataType), state.param.dataCount,
+                DumpReduceOpToString(state.param.reduceType));
             return HCCL_E_NOT_SUPPORT;
     }
 }
@@ -944,7 +978,8 @@ void FillStats(const SemanticState &state, size_t handledNodeCount, SemanticChec
 HcclResult CheckSemantics(const TaskNode *start, SemanticCheckStats *stats)
 {
     if (start == nullptr) {
-        HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Null start node");
+        HCCL_VM_ERROR("{} Semantic check cannot start because the main start node is missing, "
+            "mainStartNode=null", MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR));
         return HCCL_E_PTR;
     }
 
@@ -993,12 +1028,12 @@ HcclResult CheckSemantics(const TaskNode *start, SemanticCheckStats *stats)
         ++handled;
         ret = SimulateTask(node, state);
         if (ret != HCCL_SUCCESS) {
-            HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Semantic simulate failed, node={}", node->Describe());
             return ret;
         }
         for (const TaskNode *child : node->GetChildren()) {
             if (child == nullptr) {
-                HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Invalid null child, parent={}", node->Describe());
+                HCCL_VM_ERROR("{} Graph structure is broken because one child node is null, parent={}",
+                    MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR), node->Describe());
                 return HCCL_E_PTR;
             }
             auto iter = pendingParents.find(child->GetNodeId());
@@ -1013,14 +1048,26 @@ HcclResult CheckSemantics(const TaskNode *start, SemanticCheckStats *stats)
     }
 
     if (handled != nodes.size()) {
-        HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Graph has unresolved dependencies, handled={}, total={}",
-            handled, nodes.size());
+        const TaskNode *firstRemainingNode = nullptr;
+        for (const auto &entry : pendingParents) {
+            if (entry.second != 0) {
+                auto nodeIter = nodes.find(entry.first);
+                if (nodeIter != nodes.end()) {
+                    firstRemainingNode = nodeIter->second;
+                    break;
+                }
+            }
+        }
+        HCCL_VM_ERROR("{} Output simulation stopped because some tasks still have unresolved "
+            "dependencies, handledNodeCount={}, totalNodeCount={}, firstRemainingNode={}",
+            MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR), handled, nodes.size(),
+            firstRemainingNode == nullptr ? std::string("node=null") : firstRemainingNode->Describe());
         return HCCL_E_INTERNAL;
     }
 
     ret = CheckFinalOutput(state);
     if (ret != HCCL_SUCCESS && ret != HCCL_E_NOT_SUPPORT) {
-        HCCL_VM_ERROR("[TaskGraphSemanticCheckV3] Final semantic check failed, ret={}",
+        HCCL_VM_ERROR("Final semantic check failed, ret={}",
             static_cast<uint32_t>(ret));
         return ret;
     }

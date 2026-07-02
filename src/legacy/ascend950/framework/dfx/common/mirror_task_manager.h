@@ -10,7 +10,6 @@
 #ifndef MIRROR_TASK_MANAGER_H
 #define MIRROR_TASK_MANAGER_H
 
-#include <map>
 #include <unordered_map>
 #include <memory>
 #include <functional>
@@ -21,23 +20,30 @@
 
 namespace Hccl {
 
-using TaskInfoQueue = Queue<std::shared_ptr<TaskInfo>>;
+using TaskInfoQueue = Queue<std::unique_ptr<TaskInfo>>;
+
+struct MirrorStreamQueueEntry {
+    TaskInfoQueue *queue = nullptr;
+    QueueType queueType = QueueType::Vector_Queue;
+    u32 taskNum = 0;
+};
 
 class MirrorTaskManager {
 public:
     MirrorTaskManager(u32 devId, GlobalMirrorTasks *globalMirrorTasks, bool devUsed);
 
     void RegFullyCallBack(std::function<void()> callBack);
-    void RegFullyCallBack(std::function<void(const std::string&, u32)> callBack);
-    void AddTaskInfo(std::shared_ptr<TaskInfo> taskInfo);
+    void AddTaskInfo(std::unique_ptr<TaskInfo> &&taskInfo);
+    HcclResult AddTaskInfo(u32 streamId, u32 taskId, u32 remoteRankId,
+                           const TaskParam &taskParam, std::shared_ptr<DfxOpInfo> dfxOpInfo, bool isMaster);
     void SetCurrDfxOpInfo(std::shared_ptr<DfxOpInfo> dfxOpInfo);
 
     std::shared_ptr<DfxOpInfo> GetCurrDfxOpInfo() const;
     TaskInfoQueue             *GetQueue(u32 streamId) const;
 
 public:
-    std::unordered_map<u32, TaskInfoQueue *>::iterator Begin();
-    std::unordered_map<u32, TaskInfoQueue *>::iterator End();
+    std::unordered_map<u32, MirrorStreamQueueEntry>::iterator Begin();
+    std::unordered_map<u32, MirrorStreamQueueEntry>::iterator End();
     std::mutex &GetTaskMutex() { return profMutex; }
     ~MirrorTaskManager();
 
@@ -47,11 +53,9 @@ private:
     bool                           devUsed_{false};
     bool                           isStaticGraphMode_{false};
     OpMode                         opMode_;
-    std::unordered_map<u32, TaskInfoQueue *> queueMap_;
-    std::unordered_map<u32, u32> queueTaskNum;
+    std::unordered_map<u32, MirrorStreamQueueEntry> streamQueues_;
     std::shared_ptr<DfxOpInfo>     currDfxOpInfo_;
     std::function<void()>          fullyCallBack_;
-    std::function<void(const std::string&, u32)>          fullyNewCallBack_;
     std::mutex                      profMutex;
 private:
     bool      IsStaticGraphMode(const CollOperator &collOperator) const;

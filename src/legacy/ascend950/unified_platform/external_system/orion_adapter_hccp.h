@@ -611,6 +611,9 @@ using RaUbGetTpInfoParam = struct RaUbGetTpInfoParamDef {
     bool loopFirstTpLowestSl{false};
     /// 与 Next `GetTpInfoParam::ccuLoopbackGetTpInfo` 对齐：标识 CCU 设备环回 GetTpInfo（便于日志/后续分支）
     bool ccuLoopbackGetTpInfo{false};
+    /// UBOE SetTpAttr sip/dip 用 IPv4 地址（GetTpInfo 写回 SL/DSCP 后再设置）
+    IpAddress locIpv4Addr{};
+    IpAddress rmtIpv4Addr{};
 
     explicit RaUbGetTpInfoParamDef() = default;
     RaUbGetTpInfoParamDef(const IpAddress &locAddr, const IpAddress &rmtAddr, TpProtocol tpProtocol)

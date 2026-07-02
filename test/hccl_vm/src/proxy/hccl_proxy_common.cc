@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "PROXY_STUB"
+
 #include <cstdint>
 #include <iostream>
 #include <map>
@@ -15,6 +18,7 @@
 #include "hccl_types.h"
 #include "sim_log.h"
 #include "db_sim_runner_db.h"
+
 
 namespace sim {
 const std::map<HcclDataType, u32> DATA_TYPE_SIZE_MAP = {
@@ -41,7 +45,7 @@ int GetDataTypeSize(HcclDataType dataType, uint32_t &size)
 {
     auto iter = DATA_TYPE_SIZE_MAP.find(dataType);
     if (iter == DATA_TYPE_SIZE_MAP.end()) {
-        HCCL_VM_ERROR("[GetDataTypeSize] not support data type: {}", static_cast<uint32_t>(dataType));
+        HCCL_VM_ERROR("not support data type: {}", static_cast<uint32_t>(dataType));
         return 1;
     }
     size = iter->second;
@@ -57,7 +61,7 @@ bool IsDeviceAddress(void *addr)
                     (devPtr < (virMem.start_ptr + virMem.size)) &&
                     (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)); });
     if (!virMemRes.second) {
-        HCCL_VM_INFO("can not find this buff offset ptr:{:p} in VirtualMemBlock.", addr);
+        HCCL_VM_INFO("this buff offset ptr not found:{:p} in VirtualMemBlock.", addr);
         return false;
     }
 

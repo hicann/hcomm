@@ -45,7 +45,7 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> InitFileSink(const LogConf
         static std::atomic<uint32_t> g_log_file_index{0};
         if (filePath.size() < config.fileSuffix.size() ||
             filePath.substr(filePath.size() - config.fileSuffix.size()) != config.fileSuffix) {
-            std::cout << "[ERROR] Log file name error!" << std::endl;
+            HCCL_VM_ERROR("Log file name error!");
             return;
         }
         std::ostringstream oss;
@@ -54,7 +54,7 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> InitFileSink(const LogConf
             << config.fileSuffix;
         const std::string newPath = oss.str();
         if (spdlog::details::os::rename(filePath, newPath) != 0) {
-            std::cout << "[ERROR] Fail to rename rotating log file: " << filePath << " -> " << newPath << " current pid " << getpid() << " errno: " << errno << std::endl;
+            HCCL_VM_ERROR("Fail to rename rotating log file: {} -> {} current pid {} errno: {}", filePath, newPath, getpid(), errno);
             return;
         }
     };
@@ -155,7 +155,7 @@ void InitLogger(const LogConfig& config)
 
         std::atexit([] (){ DeInitLogger(); });
     } catch (...) {
-        std::cout << "[ERROR] Logger init failed" << std::endl;
+        HCCL_VM_ERROR("Logger init failed");
     }
 }
 

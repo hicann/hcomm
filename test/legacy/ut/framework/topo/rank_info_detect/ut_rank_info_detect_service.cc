@@ -433,3 +433,14 @@ TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Sudden_Fail)
     auto res1 = rankInfoDetectService_->connSockets_.size();
     EXPECT_EQ(1, res1);
 }
+
+// 所有rank全部连接失败，都应出现在失败列表中
+TEST_F(RankInfoDetectServiceTest, Ut_FailedConnectionAgentIdString_When_NoConnections_Expect_AllFailed)
+{
+    rankInfoDetectService_->connSockets_.clear();
+    rankInfoDetectService_->failedAgentIdList_.clear();
+
+    rankInfoDetectService_->FailedConnectionAgentIdString(3);
+
+    EXPECT_EQ("0,1,2", rankInfoDetectService_->failedAgentIdList_);
+}

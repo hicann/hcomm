@@ -16,8 +16,6 @@
 
 namespace Hccl {
 
-constexpr u32 INVALID_VALUE_RANKID = 0xFFFFFFFF; // rank id非法值
-
 class DfxOpInfo {
 public:
     CollOperator op_;
@@ -42,8 +40,13 @@ public:
     std::string Describe() const
     {
         return StringFormat(
-                "DfxOpInfo: [collOperator:[%s], tag:[%s], algType:[%s], commIndex:[%u], commId[%s], beginTime:[%llu], endTime:[%llu], opIndex[%u], headOpCounterAddr[%llx], tailOpCounterAddr[%llx]",
- 	            CollOpToString(op_).c_str(), tag_.c_str(), algType_.c_str(), commIndex_, commId_.c_str(), beginTime_, endTime_, opIndex_, headOpCounterAddr_, tailOpCounterAddr_);
+                "DfxOpInfo: [collOperator:[%s], tag:[%s], algType:[%s], commIndex:[%u], commId[%s], "
+                "beginTime:[%llu], endTime:[%llu], opIndex[%u], headOpCounterAddr[%llx], "
+                "tailOpCounterAddr[%llx], groupName[%s], rankSize[%u], myRank[%d], dataType[%s]]",
+                CollOpToString(op_).c_str(), tag_.c_str(), algType_.c_str(), commIndex_,
+                commId_.c_str(), beginTime_, endTime_, opIndex_, headOpCounterAddr_,
+                tailOpCounterAddr_, groupName_.c_str(), rankSize_, op_.myRank,
+                DataTypeToSerialString(static_cast<uint32_t>(op_.dataType)).c_str());
     }
 };
 
@@ -55,10 +58,12 @@ public:
     TaskParam                  taskParam_;
     std::shared_ptr<DfxOpInfo> dfxOpInfo_;
     bool                       isMaster_;
+    u64                        channelHandle_{INVALID_U64};
+    std::function<u32(u64)> getRemoteRankByHandle_{nullptr};
 
 public:
-    TaskInfo(u32 streamId, u32 taskId, u32 remoteRank, TaskParam taskParam,
-              std::shared_ptr<DfxOpInfo> dfxOpInfo = nullptr, bool isMaster = false);
+    TaskInfo(u32 streamId, u32 taskId, u32 remoteRank, const TaskParam& taskParam,
+              const std::shared_ptr<DfxOpInfo>& dfxOpInfo = nullptr, bool isMaster = false);
 
     std::string Describe() const;
 
@@ -70,11 +75,13 @@ public:
 
     std::string GetIndopDataInfo() const;
     std::string GetIndopBaseInfo() const;
+    u32 GetRemoteRankId() const;
 
 private:
     std::string GetParaDMA() const;
     std::string GetParaReduce() const;
     std::string GetParaNotify() const;
+    std::string GetParaAiv() const;
     std::string GetRemoteRankInfo(bool needConcise = false) const;
     std::string GetTaskConciseName() const;
     std::string GetNotifyInfo() const;

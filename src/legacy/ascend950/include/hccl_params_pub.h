@@ -59,7 +59,6 @@ public:
     bool     staticAddr{false};
     bool     staticShape{false};
     DataType outputDataType{DataType::INVALID};
-    u32      debugCase;
     std::string opTag;
     bool    isMc2{false};
     std::string algConfig;
@@ -101,7 +100,7 @@ public:
     };
     // 使用初始化列表
     CollOpParams() : opType(), dataType(), reduceOp(), dstRank(), sendBuf(), recvBuf(),
-        count(), root(), staticAddr(), staticShape(), outputDataType(), debugCase() {
+        count(), root(), staticAddr(), staticShape(), outputDataType() {
     // 显式初始化 union 的默认成员
         dataDes = {0, DataType::INVALID, 0}; // 假设 dataDes 是默认使用的成员
     }

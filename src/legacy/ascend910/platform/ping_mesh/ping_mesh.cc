@@ -1391,16 +1391,13 @@ HcclResult PingMesh::HccnRpingGetPayload(u32 deviceId, void **payload, u32 *payl
     }
     // 从device拷贝内存
     HcclResult ret = HCCL_SUCCESS;
-    rtError_t aclRet = RT_ERROR_NONE;
     bool errorFlag = false;
     do {
-        aclRet = rtMemcpyEx(payload_, bufferInfo->bufferSize, reinterpret_cast<void *>(bufferInfo->bufferVa),
+        ret = hrtMemcpyEx(payload_, bufferInfo->bufferSize, reinterpret_cast<void *>(bufferInfo->bufferVa),
             bufferInfo->bufferSize, rtMemcpyKind_t::RT_MEMCPY_DEVICE_TO_HOST);
-        HCCL_INFO("[HccnRpingGetPayload] Call rtMemcpyEx, ret[%d], dstAddr[%p], destMax[%u], srcAddr[%p], count[%u], "
-            "rtKind[%d] mode[%d]", aclRet, payload_, bufferInfo->bufferSize, bufferInfo->bufferVa, bufferInfo->bufferSize, rtMemcpyKind_t::RT_MEMCPY_DEVICE_TO_HOST, mode);
-        CHK_PRT_BREAK(aclRet != RT_ERROR_NONE,
+        CHK_PRT_BREAK(ret != HCCL_SUCCESS,
             HCCL_ERROR("[HCCN][HccnRpingGetPayload]Get payload from device[%u] failed, bufferSize[%u], bufferVa[%llu].", deviceId,
-            bufferInfo->bufferSize, bufferInfo->bufferVa), (errorFlag = true, ret = HCCL_E_INTERNAL));
+            bufferInfo->bufferSize, bufferInfo->bufferVa), (errorFlag = true));
         // 重填payload头
         u32 payloadNum = bufferInfo->bufferSize / BYTE_PER_TARGET_DEFAULT;
         u8 *payloadTmp = payload_;

@@ -56,9 +56,9 @@ HcclResult ExpandCcuGraphsV3(const CcuGraphsGenerateInputV3 &input, CcuGraphGene
 
 HcclResult GetHcclDataTypeFromCCUDataType(uint16_t ccuDataType, uint16_t ccuReduceType, DataType& dataType);
 
-uint32_t GetTopicId(TaskNode* post);
+uint32_t GetPostRemainingCkeMask(TaskNode* post);
 
-void SetTopicId(TaskNode* post, u32 topicId);
+void SetPostRemainingCkeMask(TaskNode* post, u32 remainingCkeMask);
 
 HcclResult ProcessWaitMask(RankId rankId, uint32_t dieId, CcuGraphStateV3 *curCcuTask, uint32_t queId,
     uint16_t waitCKEId, uint16_t waitCKEMask, bool& isContinue);

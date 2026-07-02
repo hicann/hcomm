@@ -8,10 +8,12 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "CONFIG_STUB"
+
 #include <atomic>
 #include <cstdint>
 #include <iostream>
-#include <unistd.h>
 #include <unistd.h>
 #include <vector>
 
@@ -23,6 +25,7 @@
 #include "db_sim_runner_common.h"
 #include "db_sim_runner_ops.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
@@ -31,7 +34,7 @@ aclError aclrtSetSysParamOpt(aclSysParamOpt opt, int64_t value)
 {
     (void) opt;
     (void) value;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
@@ -39,7 +42,7 @@ aclError aclrtGetSysParamOpt(aclSysParamOpt opt, int64_t *value)
 {
     (void) opt;
     (void) value;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
@@ -48,7 +51,7 @@ aclError aclrtGetDeviceResLimit(int32_t deviceId, aclrtDevResLimitType type, uin
     (void) deviceId;
     (void) type;
     (void) value;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
@@ -57,14 +60,14 @@ aclError aclrtSetDeviceResLimit(int32_t deviceId, aclrtDevResLimitType type, uin
     (void) deviceId;
     (void) type;
     (void) value;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtResetDeviceResLimit(int32_t deviceId)
 {
     (void) deviceId;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
@@ -73,7 +76,7 @@ aclError aclrtGetStreamResLimit(aclrtStream stream, aclrtDevResLimitType type, u
     (void) stream;
     (void) type;
     (void) value;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
@@ -82,28 +85,28 @@ aclError aclrtSetStreamResLimit(aclrtStream stream, aclrtDevResLimitType type, u
     (void) stream;
     (void) type;
     (void) value;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtResetStreamResLimit(aclrtStream stream)
 {
     (void) stream;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtUseStreamResInCurrentThread(aclrtStream stream)
 {
     (void) stream;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtUnuseStreamResInCurrentThread(aclrtStream stream)
 {
     (void) stream;
-    HCCL_VM_WARN("[aclstub] not support");
+    HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 

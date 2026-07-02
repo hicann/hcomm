@@ -12,6 +12,8 @@
 #include "env_config/env_config.h"
 #include "channel_process.h"
 #include "log.h"
+#include "comm_engine_utils.h"
+
 
 namespace hccl 
 {
@@ -26,8 +28,8 @@ void NsRecoveryProcessor::SetKfcControlTransfer(std::shared_ptr<HDCommunicate> k
 void NsRecoveryProcessor::AddNsRecoveryData(const CommEngine& engine, const ChannelHandle *const channelHandles, 
     const ChannelHandle *const hostChannelHandleList, uint32_t channelNum, const std::string &commTag)
 {
-    HCCL_INFO("[NsRecovery][AddData] AddNsRecoveryData for engine[%d], channelNum[%u], commTag[%s]", 
-        static_cast<int>(engine), channelNum, commTag.c_str());
+    HCCL_INFO("[NsRecovery][AddData] AddNsRecoveryData for engine[%s], channelNum[%u], commTag[%s]", 
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, commTag.c_str());
     std::vector<ChannelHandle> deviceList;
     std::vector<ChannelHandle> hostList;
     for (uint32_t index = 0; index < channelNum; ++index) {

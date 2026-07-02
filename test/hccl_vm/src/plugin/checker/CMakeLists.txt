@@ -99,3 +99,6 @@ install(FILES "manifest.json"
         GROUP_READ GROUP_EXECUTE
         WORLD_READ WORLD_EXECUTE
 )
+
+# 日志染色: 模块 tag
+target_compile_definitions(checker PRIVATE HCCL_VM_MODULE="CHECKER")

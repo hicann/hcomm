@@ -28,6 +28,7 @@ target_compile_definitions(ccl_kernel_plf_a PRIVATE ${CCL_KERNEL_PLF_COMPILE_DEF
 # 编译选项
 set(CCL_KERNEL_PLF_COMPILE_OPTIONS
     -Werror
+    -Wno-deprecated-declarations
     -Wall
     -fno-common
     -fno-strict-aliasing

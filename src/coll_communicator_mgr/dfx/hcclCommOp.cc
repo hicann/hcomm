@@ -9,31 +9,24 @@
  */
 
 #include "hcclCommOp.h"
+#include "profiling_handler.h"
+
 namespace hccl {
 
 std::shared_ptr<Hccl::DfxOpInfo> ConvertToDfxOpInfo(const HcclDfxOpInfo& dfxOpInfo) {
     auto dfxOpInfoOnce = std::make_shared<Hccl::DfxOpInfo>();
-    Hccl::CollOperator collOp{};
-    collOp.opMode = static_cast<Hccl::OpMode::Value>(dfxOpInfo.opMode); 
-    if (Hccl::OP_TYPE_MAP.find(static_cast<HcclCMDType>(dfxOpInfo.opType)) == Hccl::OP_TYPE_MAP.end()) {
-        HCCL_WARNING("%s dfxOpInfo.opType[%u] is not supported.", __func__, dfxOpInfo.opType);
-    } else {
-        collOp.opType = Hccl::OP_TYPE_MAP.at(static_cast<HcclCMDType>(dfxOpInfo.opType));
-    }
-    collOp.reduceOp = Hccl::HcclReduceOpToReduceOp(static_cast<HcclReduceOp>(dfxOpInfo.reduceOp));
-    collOp.dataType = Hccl::HcclDataTypeToDataType(static_cast<HcclDataType>(dfxOpInfo.dataType));
-    collOp.dataCount = dfxOpInfo.dataCount;
-    collOp.root = dfxOpInfo.root;
-    collOp.staticAddr = false;
-    collOp.staticShape = false;
-    collOp.inputMem = std::make_shared<Hccl::Buffer>(dfxOpInfo.inputMemAddr, dfxOpInfo.inputMemSize);
-    collOp.outputMem = std::make_shared<Hccl::Buffer>(dfxOpInfo.outputMemAddr, dfxOpInfo.outputMemSize);
-    collOp.scratchMem = std::make_shared<Hccl::Buffer>(0, 0);
+    dfxOpInfoOnce->op_.opMode = static_cast<Hccl::OpMode::Value>(dfxOpInfo.opMode);
+    dfxOpInfoOnce->op_.oldOpType = dfxOpInfo.opType; // 存A3的类型
+    dfxOpInfoOnce->op_.oldReduceOp = dfxOpInfo.reduceOp; // 存A3的类型
+    dfxOpInfoOnce->op_.oldDataType = dfxOpInfo.dataType; // 存A3的类型
 
-    dfxOpInfoOnce->op_= std::move(collOp);
+    dfxOpInfoOnce->op_.dataCount = dfxOpInfo.dataCount;
+    dfxOpInfoOnce->op_.root = dfxOpInfo.root;
+
+    dfxOpInfoOnce->op_.newInputMem =  dfxOpInfo.inputMemAddr;
+    dfxOpInfoOnce->op_.newOutputMem = dfxOpInfo.outputMemAddr;
+
     dfxOpInfoOnce->algTag_ = dfxOpInfo.algTag;
-    dfxOpInfoOnce->algType_ = Hccl::AlgType{Hccl::AlgType::MESH}.Describe();
-    dfxOpInfoOnce->tag_ = Hccl::OpTypeToString(collOp.opType);
     dfxOpInfoOnce->beginTime_ = dfxOpInfo.beginTime;
     dfxOpInfoOnce->cpuWaitAicpuNotifyId_ = dfxOpInfo.cpuWaitAicpuNotifyId;
 

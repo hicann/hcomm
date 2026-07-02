@@ -50,11 +50,11 @@ protected:
         std::cout << "A Test case in TaskExceptionHandlerLiteTest TearDown" << std::endl;
     }
 
-    shared_ptr<TaskInfo> InitTaskInfo(u32 streamId = 0, u32 taskId = 0, u32 remoteRank = 0)
+    unique_ptr<TaskInfo> InitTaskInfo(u32 streamId = 0, u32 taskId = 0, u32 remoteRank = 0)
     {
         TaskParam taskParam{};
         shared_ptr<DfxOpInfo> dfxOpInfo = make_shared<DfxOpInfo>();
-        return make_shared<TaskInfo>(streamId, taskId, remoteRank, taskParam, dfxOpInfo);
+        return make_unique<TaskInfo>(streamId, taskId, remoteRank, taskParam, dfxOpInfo);
     }
 };
 
@@ -73,7 +73,7 @@ TEST_F(TaskExceptionHandlerLiteTest, Register_ShouldRegisterCallback_WhenCalled)
 
 TEST_F(TaskExceptionHandlerLiteTest, test_get_group_rank_info)
 {
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo();
+    auto taskInfo = InitTaskInfo();
 
     EXPECT_NO_THROW(TaskExceptionHandlerLite::GetGroupRankInfo(*taskInfo));    // communicator is nullptr
 
@@ -108,18 +108,18 @@ TEST_F(TaskExceptionHandlerLiteTest, test_process_when_task_more_than_50)
     // 加入一些 Task 数据
     // 在异常 Task 前加入60个 Task
     for (uint32_t i = 0; i < 50; ++i) {
-        shared_ptr<TaskInfo> preTaskInfo = InitTaskInfo(0, i); // streamId 0, taskId 0-59
+        auto preTaskInfo = InitTaskInfo(0, i); // streamId 0, taskId 0-59
         preTaskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
         preTaskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
         preTaskInfo->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
         mirrorTaskManager.AddTaskInfo(preTaskInfo);
     }
     // 加入当前异常 Task
-    shared_ptr<TaskInfo> taskInfo = InitTaskInfo(0, 60); // streamId 0, taskId 60
+    auto taskInfo = InitTaskInfo(0, 60); // streamId 0, taskId 60
     taskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
     taskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
     taskInfo->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
-    mirrorTaskManager.AddTaskInfo(taskInfo);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
 
     // 调用 TaskExceptionHandler::Process() 打印异常DFX信息
     rtLogicCqReport_t exceptionInfo{};

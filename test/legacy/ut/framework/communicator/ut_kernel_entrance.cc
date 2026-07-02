@@ -14,6 +14,7 @@
 #include "kernel_entrance.h"
 #include "communicator_impl_lite.h"
 #include "dlhal_function_v2.h"
+#include "aicpu_utils.h"
 
 using namespace Hccl;
 
@@ -25,6 +26,7 @@ TEST(KernelEntranceTest, test_hccl_kernel_entrance_with_nullptr)
 
 TEST(KernelEntranceTest, test_hccl_kernel_entrance_with_valid_param)
 {
+    MOCKER_CPP(&AicpuUtils::Init).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&DlHalFunctionV2::DlHalFunctionInit).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
     HcclKernelParamLite param;
 

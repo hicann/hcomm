@@ -22,11 +22,11 @@
 #include "sim_log.h"
 #include "storage_manager.h"
 #include "type_conversion.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
 namespace {
-
 const char *RoleName(CcuNodeRoleV3 role)
 {
     switch (role) {
@@ -107,7 +107,7 @@ void PrintCcuSingleQueueV3(TaskNode *head)
     std::set<TaskNode *> visitedNodes;
     std::set<TaskNode *> printedNodes;
 
-    HCCL_VM_INFO("[PrintCcuGraphV3] streamId={}, queueId={}, head[{:p}] {}", static_cast<uint32_t>(streamId),
+    HCCL_VM_INFO("streamId={}, queueId={}, head[{:p}] {}", static_cast<uint32_t>(streamId),
         static_cast<uint32_t>(queueId), static_cast<void *>(head), head->Describe());
     printedNodes.insert(head);
     // Show one queue at a time so cross-queue record/wait edges do not disturb the queue-local order.
@@ -131,7 +131,7 @@ void PrintCcuSingleQueueV3(TaskNode *head)
         }
 
         if (parentsAllPrinted) {
-            HCCL_VM_INFO("[PrintCcuGraphV3] [{:p}] {}", static_cast<void *>(curNode), curNode->Describe());
+            HCCL_VM_INFO("[{:p}] {}", static_cast<void *>(curNode), curNode->Describe());
             printedNodes.insert(curNode);
         } else {
             candNodes.push_back(curNode);
@@ -246,7 +246,8 @@ HcclResult FindInstrForQueue(StorageManager &storage, RankId rankId, uint32_t di
         instrInfo.instrCount = static_cast<uint16_t>(instr.data.size());
         return HCCL_SUCCESS;
     }
-    HCCL_VM_ERROR("[CcuGraphStateV3] Missing ccu instruction data, rank={}, die={}", rankId, dieId);
+    HCCL_VM_ERROR("{} Missing CCU instruction data for this rank/die, rankId={}, dieId={}",
+        MakeErrorCodeText(ErrorCode::GRAPH_RESOURCE_NOT_FOUND), rankId, dieId);
     return HCCL_E_INTERNAL;
 }
 
@@ -300,17 +301,19 @@ HcclResult CcuGraphStateV3::CreateHeadNode()
 }
 
 HcclResult CcuGraphStateV3::AppendGeneratedNode(std::unique_ptr<TaskNode> node, RankId nodeRankId, uint32_t queId,
-    CcuNodeRoleV3 role, TaskNode *&outNode, RankId peerRank, uint16_t topicId, uint32_t dieId, uint16_t ckeId,
+    CcuNodeRoleV3 role, TaskNode *&outNode, RankId peerRank, uint16_t remainingCkeMask, uint32_t dieId,
+    uint16_t ckeId,
     bool invalidPost)
 {
     TaskPosition position = MakeCcuPosition(nodeRankId, queId);
     position.streamId = ccuGraph.GetPosition().streamId;
-    return AppendGeneratedNode(std::move(node), position, role, outNode, peerRank, topicId,
+    return AppendGeneratedNode(std::move(node), position, role, outNode, peerRank, remainingCkeMask,
         dieId, ckeId, invalidPost);
 }
 
 HcclResult CcuGraphStateV3::AppendGeneratedNode(std::unique_ptr<TaskNode> node, const TaskPosition &position,
-    CcuNodeRoleV3 role, TaskNode *&outNode, RankId peerRank, uint16_t topicId, uint32_t dieId, uint16_t ckeId,
+    CcuNodeRoleV3 role, TaskNode *&outNode, RankId peerRank, uint16_t remainingCkeMask, uint32_t dieId,
+    uint16_t ckeId,
     bool invalidPost)
 {
     if (node == nullptr) {
@@ -344,7 +347,7 @@ HcclResult CcuGraphStateV3::AppendGeneratedNode(std::unique_ptr<TaskNode> node, 
     CcuNodeMetaV3 meta;
     meta.role = role;
     meta.peerRank = peerRank;
-    meta.topicId = topicId;
+    meta.remainingCkeMask = remainingCkeMask;
     meta.dieId = dieId;
     meta.ckeId = ckeId;
     meta.invalidPost = invalidPost;
@@ -382,17 +385,17 @@ RankId CcuGraphStateV3::GetNodePeerRank(const TaskNode *node) const
     return (meta == nullptr) ? INVALID_RANK_ID : meta->peerRank;
 }
 
-uint16_t CcuGraphStateV3::GetNodeTopicId(const TaskNode *node) const
+uint16_t CcuGraphStateV3::GetNodeRemainingCkeMask(const TaskNode *node) const
 {
     const CcuNodeMetaV3 *meta = GetNodeMeta(node);
-    return (meta == nullptr) ? 0 : meta->topicId;
+    return (meta == nullptr) ? 0 : meta->remainingCkeMask;
 }
 
-void CcuGraphStateV3::SetNodeTopicId(TaskNode *node, uint16_t topicId)
+void CcuGraphStateV3::SetNodeRemainingCkeMask(TaskNode *node, uint16_t remainingCkeMask)
 {
     auto iter = nodeMetas_.find(node);
     if (iter != nodeMetas_.end()) {
-        iter->second.topicId = topicId;
+        iter->second.remainingCkeMask = remainingCkeMask;
     }
 }
 
@@ -407,8 +410,27 @@ void CcuGraphStateV3::SetNodePeerRank(TaskNode *node, RankId peerRank)
 std::string CcuGraphStateV3::Describe() const
 {
     std::ostringstream os;
-    os << "[CcuGraphStateV3] rank=" << rankId << ", queueNum=" << queueNum_
-       << ", ccuNode=" << ccuGraph.GetNodeId();
+    os << "{rankId=" << rankId << ", queueCount=" << queueNum_
+       << ", ccuGraphNodeId=" << ccuGraph.GetNodeId() << "}";
+    return os.str();
+}
+
+std::string CcuGraphStateV3::DescribeNextInstructionByQueue() const
+{
+    std::ostringstream os;
+    os << "[";
+    for (size_t queId = 0; queId < microCodePosInQue.size(); ++queId) {
+        if (queId != 0) {
+            os << ", ";
+        }
+        os << "{queueId=" << queId
+           << ", nextInstructionOffset=" << microCodePosInQue[queId];
+        if (queId < startInstrIdInQue.size()) {
+            os << ", nextInstructionId=" << (startInstrIdInQue[queId] + microCodePosInQue[queId]);
+        }
+        os << "}";
+    }
+    os << "]";
     return os.str();
 }
 
@@ -449,6 +471,7 @@ void PrintCcuGraph(TaskNode *dummyStart)
         return;
     }
 
+    HCCL_VM_INFO("=======================================================");
     std::set<QueueId> printedQueues;
     for (TaskNode *child : dummyStart->GetChildren()) {
         if (child == nullptr) {
@@ -459,12 +482,14 @@ void PrintCcuGraph(TaskNode *dummyStart)
             continue;
         }
 
-        HCCL_VM_INFO("=======================================================");
-        HCCL_VM_INFO("[PrintCcuGraphV3] rankId={}, streamId={}, queueId={}", child->GetPosition().rankId,
+        HCCL_VM_INFO("-------------------------------------------------------");
+        HCCL_VM_INFO("rankId={}, streamId={}, queueId={}",
+            child->GetPosition().rankId,
             static_cast<uint32_t>(child->GetPosition().streamId), static_cast<uint32_t>(queueId));
         PrintCcuSingleQueueV3(child);
     }
     HCCL_VM_INFO("-------------------------------------------------------");
+    HCCL_VM_INFO("=======================================================");
 }
 
 HcclResult CollectBilateralWaitInfo(CcuGraphStateV3 *curCcuTask, uint32_t queId, TaskNode *node)
@@ -581,8 +606,9 @@ HcclResult GetPeerRankByTaskNode(CcuGraphStateV3 *curCcuTask, TaskNode *currNode
     }
     const CcuNodeRoleV3 role = curCcuTask->GetNodeRole(currNode);
     if (!IsRemoteAsyncRole(role)) {
-        HCCL_ERROR("[GetPeerRankByTaskNode] Get peer rank by task node failed, task node role [%u] is not support.",
-            static_cast<uint32_t>(role));
+        HCCL_VM_ERROR("{} Failed to get peer rank from this task node because the node role does not "
+            "represent a remote async operation, nodeRole={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(role));
         return HCCL_E_INTERNAL;
     }
     peerRank = curCcuTask->GetNodePeerRank(currNode);
@@ -830,7 +856,7 @@ void AddPost(uint32_t rankId, uint32_t rmtRankId, uint32_t queId, CcuGraphStateV
     meta.waitRankId = rmtRankId;
     meta.dieId = rmtDieId;
     meta.ckeId = rmtCKEId;
-    meta.topicId = setRmtCKEMask;
+    meta.remainingCkeMask = setRmtCKEMask;
     meta.isLocal = false;
     AllRankParamRecorder::Global()->RegisterPostNode(node, meta);
 }
@@ -878,7 +904,7 @@ void AddLocalPost(uint32_t rankId, uint32_t queId, uint32_t dieId, CcuGraphState
     meta.waitRankId = rankId;
     meta.dieId = dieId;
     meta.ckeId = setCKEId;
-    meta.topicId = setCKEMask;
+    meta.remainingCkeMask = setCKEMask;
     meta.isLocal = true;
     AllRankParamRecorder::Global()->RegisterPostNode(node, meta);
 }

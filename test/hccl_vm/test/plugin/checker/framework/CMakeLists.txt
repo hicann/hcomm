@@ -68,6 +68,7 @@ set_target_properties(test_allgather_v_semantics_checker PROPERTIES
 add_executable(test_allreduce_semantics_checker semantics_check/allreduce_semantics_checker_test.cc main.cc)
 target_sources(test_allreduce_semantics_checker PRIVATE
     ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/semantics_check/allreduce_semantics_checker.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/utils/dump/dump_json_utils.cc
     ${CHECKER_LOG_SRC}
 )
 set_target_properties(test_allreduce_semantics_checker PROPERTIES
@@ -86,6 +87,7 @@ set_target_properties(test_broadcast_semantics_checker PROPERTIES
 add_executable(test_reduce_semantics_checker semantics_check/reduce_semantics_checker_test.cc main.cc)
 target_sources(test_reduce_semantics_checker PRIVATE
     ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/semantics_check/reduce_semantics_checker.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/utils/dump/dump_json_utils.cc
     ${CHECKER_LOG_SRC}
 )
 set_target_properties(test_reduce_semantics_checker PROPERTIES
@@ -122,6 +124,7 @@ set_target_properties(test_all2all_semantics_checker PROPERTIES
 add_executable(test_reduce_scatter_semantics_checker semantics_check/reduce_scatter_semantics_checker_test.cc main.cc)
 target_sources(test_reduce_scatter_semantics_checker PRIVATE
     ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/semantics_check/reduce_scatter_semantics_checker.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/utils/dump/dump_json_utils.cc
     ${CHECKER_LOG_SRC}
 )
 set_target_properties(test_reduce_scatter_semantics_checker PROPERTIES
@@ -131,6 +134,7 @@ set_target_properties(test_reduce_scatter_semantics_checker PROPERTIES
 add_executable(test_reduce_scatter_v_semantics_checker semantics_check/reduce_scatter_v_semantics_checker_test.cc main.cc)
 target_sources(test_reduce_scatter_v_semantics_checker PRIVATE
     ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/semantics_check/reduce_scatter_v_semantics_checker.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/utils/dump/dump_json_utils.cc
     ${CHECKER_LOG_SRC}
 )
 set_target_properties(test_reduce_scatter_v_semantics_checker PROPERTIES

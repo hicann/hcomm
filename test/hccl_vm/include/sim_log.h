@@ -22,45 +22,51 @@
 
 extern spdlog::logger* g_logger;
 
+#ifdef HCCL_VM_MODULE
+#define HCCL_VM_TAG "[HCCL-VM-" HCCL_VM_MODULE "]"
+#else
+#define HCCL_VM_TAG "[HCCL-VM]"
+#endif
+
 #define HCCL_VM_TRACE(...)                                  \
     do {                                                    \
         if (g_logger != nullptr) {                          \
-            SPDLOG_LOGGER_TRACE(g_logger, __VA_ARGS__);     \
+            SPDLOG_LOGGER_TRACE(g_logger, HCCL_VM_TAG __VA_ARGS__);     \
         }                                                   \
     } while(0)
 
 #define HCCL_VM_DEBUG(...)                                  \
     do {                                                    \
         if (g_logger != nullptr) {                          \
-            SPDLOG_LOGGER_DEBUG(g_logger, __VA_ARGS__);     \
+            SPDLOG_LOGGER_DEBUG(g_logger, HCCL_VM_TAG __VA_ARGS__);     \
         }                                                   \
     } while(0)
 
 #define HCCL_VM_INFO(...)                                   \
     do {                                                    \
         if (g_logger != nullptr) {                          \
-            SPDLOG_LOGGER_INFO(g_logger, __VA_ARGS__);      \
+            SPDLOG_LOGGER_INFO(g_logger, HCCL_VM_TAG __VA_ARGS__);      \
         }                                                   \
     } while(0)
 
 #define HCCL_VM_WARN(...)                                   \
     do {                                                    \
         if (g_logger != nullptr) {                          \
-            SPDLOG_LOGGER_WARN(g_logger, __VA_ARGS__);      \
+            SPDLOG_LOGGER_WARN(g_logger, HCCL_VM_TAG __VA_ARGS__);      \
         }                                                   \
     } while(0)
 
 #define HCCL_VM_ERROR(...)                                  \
     do {                                                    \
         if (g_logger != nullptr) {                          \
-            SPDLOG_LOGGER_ERROR(g_logger, __VA_ARGS__);     \
+            SPDLOG_LOGGER_ERROR(g_logger, HCCL_VM_TAG __VA_ARGS__);     \
         }                                                   \
     } while(0)
 
 #define HCCL_VM_CRITICAL(...)                               \
     do {                                                    \
         if (g_logger != nullptr) {                          \
-            SPDLOG_LOGGER_CRITICAL(g_logger, __VA_ARGS__);  \
+            SPDLOG_LOGGER_CRITICAL(g_logger, HCCL_VM_TAG __VA_ARGS__);  \
         }                                                   \
     } while(0)
 

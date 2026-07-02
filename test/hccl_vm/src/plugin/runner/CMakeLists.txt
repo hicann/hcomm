@@ -89,3 +89,6 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../manifest.json"
         GROUP_READ GROUP_EXECUTE
         WORLD_READ WORLD_EXECUTE
 )
+
+# 日志染色: 模块 tag
+target_compile_definitions(runner PRIVATE HCCL_VM_MODULE="RUNNER")

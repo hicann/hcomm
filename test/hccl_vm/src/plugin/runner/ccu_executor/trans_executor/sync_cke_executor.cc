@@ -47,7 +47,7 @@ void SyncCkeExecutor::Process(CcuResourceManager &ccuResMgr) {
     uint16_t newRmtCke = rmtCke | (locCKE & locCKEMask_);
     ccuResMgr.UpdateCkeValue(rmtCcu.first, rmtCcu.second, rmtCKEId_, newRmtCke);
 
-    HCCL_VM_DEBUG("[SyncCkeExecutor][Process] locCcu[{}:{}], channelId=[{}], "
+    HCCL_VM_DEBUG("locCcu[{}:{}], channelId=[{}], "
            "rmtDevice[{}:{}], locCKE=[{}:{:04x}], "
            "value=[{}], rmtCKE=[{}:{:04x}], value=[{} --> {}].",
            rankId_, dieId_, channelId_, rmtCcu.first, rmtCcu.second, locCKEId_,

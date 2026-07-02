@@ -15,7 +15,7 @@
 #include <hccl/base.h>
 #include "hccl_socket_manager.h"
 #include "hccl_network_pub.h"
-#include "hccl_one_sided_services.h"
+#include <hccl/hccl_one_sided_services.h>
 #include "notify_pool.h"
 #include "transport_mem.h"
 #include "exception_handler.h"

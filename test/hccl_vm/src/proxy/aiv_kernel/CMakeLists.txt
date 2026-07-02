@@ -6,6 +6,19 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
+add_compile_options(
+        -fno-common
+        -fno-strict-aliasing
+        -pipe
+        -O0
+        -g
+)
+# 日志染色: aiv_kernel 整片统一 [AIV]
+add_compile_definitions(
+        HCCL_VM_MODULE="AIV"
+        _GLIBCXX_USE_CXX11_ABI=0
+)
+
 if(NOT DEFINED HCCL_CODE_ROOT)
     if(NOT DEFINED ENV{HCCL_CODE_HOME})
         message(FATAL_ERROR "Error: BUILD_AIV is ON, but HCCL_CODE_HOME environment variable is not set. Please set it to the HCCL source path.")
@@ -41,6 +54,8 @@ add_library(hccl_aiv_kernel SHARED
         $<TARGET_OBJECTS:hccl_aiv_reduce_op>
         $<TARGET_OBJECTS:hccl_aiv_reduce_scatter_op>
         $<TARGET_OBJECTS:hccl_aiv_scatter_op>
+
+        ${HCCL_VM_SRC}/utils/sim_common_api.cc
 )
 
 target_link_libraries(hccl_aiv_kernel PRIVATE log)

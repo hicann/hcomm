@@ -16,7 +16,6 @@
 
 constexpr s32 INVALID_INT = 0xFFFFFFFF;
 constexpr u32 INVALID_VALUE_RANKSIZE = 0xFFFFFFFF; // rank size非法值
-constexpr u32 INVALID_VALUE_RANKID = 0xFFFFFFFF; // rank id非法值
 
 constexpr u32 MAX_MODULE_DEVICE_NUM = 65;
 

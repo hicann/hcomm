@@ -18,6 +18,7 @@
 #include "executor_tracer.h"
 #include "profiling_manager_device.h"
 #include "utils/aicpu_hdc_utils.h"
+#include "comm_engine_utils.h"
 #include "utils/hccl_aicpu_utils.h"
 #include "framework/aicpu_hdc.h"
 #include "common/aicpu_sqe_context.h"
@@ -111,6 +112,7 @@ HcclResult HcclCommAicpu::Init(const HcclOpResParam *commParam, bool isCustom)
     CHK_PTR_NULL(commParam);
     identifier_ = commParam->hcomId;
     isCustom_ = isCustom;
+    udi_ = commParam->udi;
     HCCL_RUN_INFO("[HcclCommAicpu][Init]Entry-Init group[%s], rankSize[%u], isCustom[%d].",
         identifier_.c_str(), commParam->rankSize, isCustom_);
     CHK_RET(aicpuShareData_.Init(commParam->aicpuCustomParamAddr, commParam->aicpuCustomParamSize));
@@ -172,8 +174,13 @@ HcclResult HcclCommAicpu::InitUtraceInfo(const HcclOpResParam *commParam)
 
 HcclResult HcclCommAicpu::InitProfResource()
 {
-    groupHashId_ = dfx::ProfilingManager::GetProfHashId(identifier_.c_str(), identifier_.length());
-    HCCL_RUN_INFO("[Init][ProfResource]group[%s], groupHashId_[%llu].", identifier_.c_str(), groupHashId_);
+    std::string identifierWithUdi = identifier_; // 若用户自定义了udi，groupname拼接udi
+    if (!udi_.empty() && udi_ != "Unspecified") {
+        identifierWithUdi = udi_ + identifierWithUdi;
+    }
+
+    groupHashId_ = dfx::ProfilingManager::GetProfHashId(identifierWithUdi.c_str(), identifierWithUdi.length());
+    HCCL_RUN_INFO("[Init][ProfResource]group[%s], groupHashId_[%llu].", identifierWithUdi.c_str(), groupHashId_);
 
     dfx::ProfCommInfo profInfo{ groupHashId_, topoInfo_.userRankSize, topoInfo_.userRank };
     CHK_RET(dfx::ProfilingManager::AddProfInfoByStreamId(mainStream_.id(), identifier_, profInfo));
@@ -5389,8 +5396,13 @@ HcclResult HcclCommAicpu::InitThreads(ThreadMgrAicpuParam *param)
 }
 
 HcclResult HcclCommAicpu::InitProfthreadResource(u32 threadNum) {
-    groupHashId_ = dfx::ProfilingManager::GetProfHashId(identifier_.c_str(), identifier_.length());
-    HCCL_INFO("[%s], group[%s], groupHash[%llu], threadNum[%u] ", __func__, identifier_.c_str(), groupHashId_, threadNum);
+    std::string identifierWithUdi = identifier_; // 若用户自定义了udi，groupname拼接udi
+    if (!udi_.empty() && udi_ != "Unspecified") {
+        identifierWithUdi = udi_ + identifierWithUdi;
+    }
+
+    groupHashId_ = dfx::ProfilingManager::GetProfHashId(identifierWithUdi.c_str(), identifierWithUdi.length());
+    HCCL_INFO("[%s], group[%s], groupHash[%llu], threadNum[%u] ", __func__, identifierWithUdi.c_str(), groupHashId_, threadNum);
     dfx::ProfCommInfo profInfo{ groupHashId_, topoInfo_.userRankSize, topoInfo_.userRank };
     // 添加检查确保 threadNum 不超过线程总数
     if (threadNum > threads_.size()) {
@@ -5412,7 +5424,7 @@ HcclResult HcclCommAicpu::AllocChannelResource(HcclIndOpChannelRemoteResV3 *comm
     CHK_PTR_NULL(commParam);
     if (commParam->engine != COMM_ENGINE_AICPU &&
         commParam->engine != COMM_ENGINE_AICPU_TS) {
-        HCCL_ERROR("[HcclCommAicpu][%s] engine type[%d] is not supported", __func__, commParam->engine);
+        HCCL_ERROR("[HcclCommAicpu][%s] engine type[%s] is not supported", __func__, GetEnumToString(GetCommEngineStatusStrMap(), commParam->engine).c_str());
         return HCCL_E_PARA;
     }
 

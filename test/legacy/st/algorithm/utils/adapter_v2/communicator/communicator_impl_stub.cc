@@ -255,7 +255,6 @@ void CommunicatorImpl::CovertToCurrentCollOperator(std::string &opTag, CollOpPar
     currentCollOperator->reduceOp  = opParams.reduceOp;
     currentCollOperator->root      = opParams.root;
     currentCollOperator->outputDataType = opParams.outputDataType;
-    currentCollOperator->debugCase = opParams.debugCase;
     currentCollOperator->sendRecvRemoteRank = opParams.dstRank;
     if (opParams.opType == OpType::ALLTOALL || opParams.opType == OpType::ALLTOALLV || opParams.opType == OpType::ALLTOALLVC) {
         ConvertCollOperatorA2A(opParams);

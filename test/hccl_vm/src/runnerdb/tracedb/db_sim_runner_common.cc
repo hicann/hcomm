@@ -371,7 +371,7 @@ std::set<uint64_t> GetUsedServerNum()
         }
         return usedServerIds;
     } catch (const std::exception &e) {
-        HCCL_VM_ERROR("[GetUsedServerNum] exception: {}", e.what());
+        HCCL_VM_ERROR("exception: {}", e.what());
         return {};
     }
 }
@@ -385,13 +385,13 @@ bool GetRankIdByMPI(uint32_t &rankId, uint64_t &serverId)
         auto usedServerIds = GetUsedServerNum();
         if (usedServerIds.size() == 1) {
             if (*usedServerIds.begin() != 1) {
-                HCCL_VM_ERROR("[HVM] env OMPI_COMM_WORLD_RANK or PMI_RANK are not found, serverId is not 1.");
+                HCCL_VM_ERROR("env OMPI_COMM_WORLD_RANK or PMI_RANK are not found, serverId is not 1.");
                 return false;
             }
             serverId = 1;
             return true;
         }
-        HCCL_VM_ERROR("[HVM] env OMPI_COMM_WORLD_RANK or PMI_RANK are not found, usedServerIds size is not 1.");
+        HCCL_VM_ERROR("env OMPI_COMM_WORLD_RANK or PMI_RANK are not found, usedServerIds size is not 1.");
         return false;
     } else if (ompiRankStr != nullptr) {
         rankId = static_cast<uint32_t>(atoi(ompiRankStr));

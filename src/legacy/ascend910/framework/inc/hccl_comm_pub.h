@@ -270,6 +270,7 @@ public:
 
     std::string GetIdentifier();
     std::string GetCCLbufferName();
+    std::string GetUdi();
     HcclResult CreateBarrierMemory();
     HcclResult ReleaseSubComms() const;
     HcclResult GetAlltoAllStagedWorkSpaceMemSize(u64 *sendCounts, u64 *sdispls,
@@ -448,6 +449,7 @@ private:
     bool isFirstBarrier_;
     const std::string identifier_;
     const std::string cclBuffName_;
+    std::string udi_;
     bool isHeterogComm_;
     bool isGroupMode_{false};
     bool isResetDevice_;

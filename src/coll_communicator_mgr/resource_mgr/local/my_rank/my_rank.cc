@@ -22,6 +22,7 @@
 #include "ccu_log.h"
 #include "dlprof_function.h"
 #include "config_log.h"
+#include "comm_engine_utils.h"
 
 using namespace hcomm;
 
@@ -77,26 +78,6 @@ inline std::string GetCommProtocolEnumStr(CommProtocol protocol)
     auto iter = HCOM_COMM_PROTOCOL_STR_MAP.find(protocol);
     if (iter == HCOM_COMM_PROTOCOL_STR_MAP.end()) {
         return "CommProtocol(" + std::to_string(protocol) + ")";
-    } else {
-        return iter->second;
-    }
-}
-
-const std::unordered_map<CommEngine, std::string> HCOM_COMM_ENGINE_STR_MAP = {
-    {COMM_ENGINE_RESERVED, "RESERVED"},
-    {COMM_ENGINE_CPU, "CPU"},
-    {COMM_ENGINE_CPU_TS, "CPU_TS"},
-    {COMM_ENGINE_AICPU, "AICPU"},
-    {COMM_ENGINE_AICPU_TS, "AICPU_TS"},
-    {COMM_ENGINE_AIV, "AIV"},
-    {COMM_ENGINE_CCU, "CCU"}
-};
-
-inline std::string GetCommEngineEnumStr(CommEngine engine)
-{
-    auto iter = HCOM_COMM_ENGINE_STR_MAP.find(engine);
-    if (iter == HCOM_COMM_ENGINE_STR_MAP.end()) {
-        return "CommEngine(" + std::to_string(engine) + ")";
     } else {
         return iter->second;
     }
@@ -493,8 +474,8 @@ HcclResult MyRank::BatchCreateChannels(CommEngine engine, const HcclChannelDesc*
         const EndpointDesc &remoteEndpointDesc = channelDescs[i].remoteEndpoint;
         uint32_t remoteRank = channelDescs[i].remoteRank;
 
-        HCCL_INFO("[%s][%u/%u] remoteRank[%u] localProtocol[%d] remoteProtocol[%d] engine[%d]",
-            __func__, i + 1, channelNum, remoteRank, localEndpointDesc.protocol, remoteEndpointDesc.protocol, engine
+        HCCL_INFO("[%s][%u/%u] remoteRank[%u] localProtocol[%d] remoteProtocol[%d] engine[%s]",
+            __func__, i + 1, channelNum, remoteRank, localEndpointDesc.protocol, remoteEndpointDesc.protocol, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str()
         );
 
         EndpointHandle epHandle = nullptr;
@@ -572,8 +553,8 @@ HcclResult MyRank::BatchCreateChannels(CommEngine engine, const HcclChannelDesc*
         }
         if (ret == HCCL_E_UNAVAIL) {
             // 申请channel因资源不足失败，清理已申请的channel
-            HCCL_RUN_WARNING("[%s] create channel failed, channelIndex[%u], remoteRank[%u], engine[%d], reuseIdx[%u], need clean new channels",
-                __func__, i + 1, remoteRank, engine, reuseIdx);
+            HCCL_RUN_WARNING("[%s] create channel failed, channelIndex[%u], remoteRank[%u], engine[%s], reuseIdx[%u], need clean new channels",
+                __func__, i + 1, remoteRank, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx);
             isAllSuccess = false;
             break;
         }
@@ -583,8 +564,8 @@ HcclResult MyRank::BatchCreateChannels(CommEngine engine, const HcclChannelDesc*
         }
 
         CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[%s] failed to create channel, channelIndex[%u], remoteRank[%u], engine[%d], reuseIndex[%u]",
-                __func__, i + 1, remoteRank, engine, reuseIdx),
+            HCCL_ERROR("[%s] failed to create channel, channelIndex[%u], remoteRank[%u], engine[%s], reuseIndex[%u]",
+                __func__, i + 1, remoteRank, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx),
             ret);
         if (idx != UNREUSE_CHANNEL_IDX) {
             reuseIdx++;
@@ -596,7 +577,7 @@ HcclResult MyRank::BatchCreateChannels(CommEngine engine, const HcclChannelDesc*
 
     // 如果申请失败，清理endpoint pair中记录的channel handle
     if (!isAllSuccess) {
-        HCCL_RUN_WARNING("[%s] create channel failed, destroy new channels num[%u], engine[%d]", __func__, newChannels_.size(), engine);
+        HCCL_RUN_WARNING("[%s] create channel failed, destroy new channels num[%u], engine[%s]", __func__, newChannels_.size(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         CHK_RET(DestroyNewChannels(engine, channelDescs));
         return HCCL_E_UNAVAIL;
     }
@@ -712,7 +693,7 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
     CHK_PTR_NULL(channelHandles);
     CHK_PRT_RET(channelNum == 0, HCCL_ERROR("[%s] invalid param: channelNum is zero", __func__), HCCL_E_PARA);
 
-    HCCL_INFO("[CreateChannels][Enter] engine[%d] commTag[%s] channelNum[%u] rankId[%u]", engine, commTag.c_str(), channelNum, rankId_);
+    HCCL_INFO("[CreateChannels][Enter] engine[%s] commTag[%s] channelNum[%u] rankId[%u]", GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), commTag.c_str(), channelNum, rankId_);
 
     // 参数检查
     CHK_RET(CheckChannelParam(engine, channelDescs, channelNum));
@@ -741,7 +722,12 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
     }
 
     // 借用hcommDescs.socket，完成一致性校验必要的数据交换
-    CHK_RET(exchangeInfoMgr_.BatchExchangeAndCheckConsistency(channelDescs, hcommDescs, channelNum, collCommConfigConsistency_, commTag));
+    DevType devType;
+    CHK_RET(hrtGetDeviceType(devType));
+    if (devType != DevType::DEV_TYPE_910B) {
+        CHK_RET(exchangeInfoMgr_.BatchExchangeAndCheckConsistency(channelDescs, hcommDescs, channelNum,
+            collCommConfigConsistency_, commTag));
+    }
     // 添加初始化时进行填表
     for (u32 i = 0; i < channelNum; ++i) {
         u32 remoteRank = channelDescs[i].remoteRank;
@@ -754,13 +740,13 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
                 std::to_string(reinterpret_cast<uint64_t>(hostChannelHandleList[i])).c_str(), commTag.c_str(),
                 MyRankUtils::GetCommProtocolEnumStr(channelDescs[i].localEndpoint.protocol).c_str(), rankId_,
                 channelDescs[i].localEndpoint.loc.device.devPhyId, remoteRank,
-                channelDescs[i].remoteEndpoint.loc.device.devPhyId, MyRankUtils::GetCommEngineEnumStr(engine).c_str());
+                channelDescs[i].remoteEndpoint.loc.device.devPhyId, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         } else {
             HCCL_CONFIG_DEBUG(HCCL_RES, "create channel info:channel handle[%s] comm tag[%s] protocol[%s]"
                 " local rank[%u] remote rank[%u] engine[%s]",
                 std::to_string(reinterpret_cast<uint64_t>(hostChannelHandleList[i])).c_str(), commTag.c_str(),
                 MyRankUtils::GetCommProtocolEnumStr(channelDescs[i].localEndpoint.protocol).c_str(), rankId_,
-                remoteRank, MyRankUtils::GetCommEngineEnumStr(engine).c_str());
+                remoteRank, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         }
     }
 
@@ -789,7 +775,7 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
         return HCCL_SUCCESS;
     }
 
-    HCCL_ERROR("[MyRank][%s] unsupported comm engine[%d].", __func__, engine);
+    HCCL_ERROR("[MyRank][%s] unsupported comm engine[%s].", __func__, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
     return HCCL_E_NOT_SUPPORT;
 }
 

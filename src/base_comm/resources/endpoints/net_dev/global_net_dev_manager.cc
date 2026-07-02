@@ -376,10 +376,10 @@ HcclResult GlobalNetDevMgr::WaitClientSocketLinkEstablished(const std::shared_pt
 }
 
 void GlobalNetDevMgr::MakeSocketTag(hccl::HcclIpAddress tagServerIp, uint32_t tagServerPort,
-    hccl::HcclIpAddress tagClientIp, std::string &socketTag, u64 id)
+    hccl::HcclIpAddress tagClientIp, std::string &socketTag)
 {
     socketTag = tagServerIp.GetReadableIP() + std::string(":") + std::to_string(tagServerPort) +
-        std::string(":") + tagClientIp.GetReadableIP() + std::string(":") + std::to_string(id);
+        std::string(":") + tagClientIp.GetReadableIP();
 }
 
 HcclResult GlobalNetDevMgr::ConnectToServer(uint32_t localPort,

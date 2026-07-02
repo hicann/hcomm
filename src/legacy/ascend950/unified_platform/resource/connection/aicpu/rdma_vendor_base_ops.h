@@ -13,10 +13,35 @@
 #define RDMA_BASE_VENDOR_OPS_H
 
 #include <chrono>
-#include "rma_conn_lite.h"
-#include "rdma_conn_lite_v2.h"
+#include "rma_buf_slice_lite.h"      // RmaBufSliceLite
+#include "rmt_rma_buf_slice_lite.h"  // RmtRmaBufSliceLite
+#include "data_type.h"               // DataType
+#include "reduce_op.h"               // ReduceOp
 
 namespace Hccl {
+
+struct RdmaSqContextLite {
+    uint32_t qpn;
+    uint64_t sqVa;
+    uint32_t wqeSize;
+    uint32_t depth;
+    uint64_t headAddr;
+    uint64_t tailAddr;
+    uint64_t dbVa;
+    int8_t dbMode;
+    uint8_t sl;
+};
+
+struct RdmaCqContextLite {
+    uint32_t cqn;
+    uint64_t cqVa;
+    uint32_t cqeSize;
+    uint32_t cqDepth;
+    uint64_t headAddr;
+    uint64_t tailAddr;
+    uint64_t dbVa;
+    int8_t dbMode;
+};
 
 class RdmaBaseOps {
 public:
@@ -70,28 +95,6 @@ public:
         CHK_RET(UpdateSqPI());
 
         return HCCL_SUCCESS;
-    }
-
-    HcclResult WriteReduce(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, DataType dataType, ReduceOp reduceOp)
-    {
-        (void)loc;
-        (void)rmt;
-        (void)dataType;
-        (void)reduceOp;
-        HCCL_ERROR("[RdmaBaseOps::%s] This Backend Not support WriteReduce Now.", __func__);
-        return HCCL_E_NOT_SUPPORT;
-    }
-
-    HcclResult WriteReduceWithNotify(
-        const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, DataType dataType, ReduceOp reduceOp, const uint32_t remoteNotifyId)
-    {
-        (void)loc;
-        (void)rmt;
-        (void)dataType;
-        (void)reduceOp;
-        (void)remoteNotifyId;
-        HCCL_ERROR("[RdmaBaseOps::%s] This Backend Not support WriteReduceWithNotify Now.", __func__);
-        return HCCL_E_NOT_SUPPORT;
     }
 
     // 准备Doorbell(厂商实现)

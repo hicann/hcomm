@@ -188,7 +188,7 @@ protected:
         collOpParams.staticAddr = true;
         collOpParams.staticShape = true;
         collOpParams.outputDataType = DataType::INT8;
-        collOpParams.debugCase = 1;
+        
         collOpParams.dstRank = 0;
         return collOpParams;
     }
@@ -232,7 +232,6 @@ TEST_F(InterpreterTest, Ut_Submit_When_input_Expect_NO_THROW)
     comm.currentCollOperator->opMode = OpMode::OPBASE;
     comm.currentCollOperator->opMode = OpMode::OPBASE;
     comm.currentCollOperator->opType = OpType::DEBUGCASE;
-    comm.currentCollOperator->debugCase = 0;
     comm.currentCollOperator->inputMem = DevBuffer::Create(0x100, 10);
     comm.currentCollOperator->outputMem = DevBuffer::Create(0x100, 10);
     comm.InitStreamManager();

@@ -56,3 +56,6 @@ target_link_libraries(aiv_executor
         log
         rt
 )
+
+# 日志染色: 模块 tag
+target_compile_definitions(aiv_executor PRIVATE HCCL_VM_MODULE="RUNNER")

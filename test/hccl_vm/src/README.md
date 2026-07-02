@@ -2,11 +2,11 @@
 
 [toc]
 
-## 核心功能介绍
+## 1 核心功能介绍
 
-### 1.启动模拟环境
+### 1.1启动模拟环境
 
-#### 查看当前所有表名称
+#### 1.1.1 查看当前所有表名称
 
 ```bash
 (hvm)$> hccl-vm table show all
@@ -19,7 +19,7 @@ Device
 (hvm)$>
 ```
 
-#### 查看指定表内容
+#### 1.1.2 查看指定表内容
 
 ```bash
 (hvm)$> hccl-vm table show Device
@@ -32,7 +32,7 @@ Device
 (hvm)$>
 ```
 
-#### 更新指定表指定行指定内容(目前只支持devicesoc_version修改)
+#### 1.1.3 更新指定表指定行指定内容(目前只支持devicesoc_version修改)
 
 ```bash
 (hvm)$> hccl-vm table show Device

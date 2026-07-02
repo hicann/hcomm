@@ -142,6 +142,9 @@ namespace hccl
             HCCL_ERROR("new ZeroCopyAclGraph failed!");
         }
         commConfig_ = CommConfig();
+        if (commConfig_.GetConfigUdi() != "Unspecified") {
+            udi_ = commConfig_.GetConfigUdi();
+        }
         dpuManager_.reset(new (std::nothrow) DpuManager());
         if (dpuManager_ == nullptr) {
             HCCL_ERROR("new DpuManager failed!");
@@ -173,6 +176,9 @@ namespace hccl
             HCCL_ERROR("new ZeroCopyAclGraph failed!");
         }
         commConfig_ = commConfig;
+        if (commConfig_.GetConfigUdi() != "Unspecified") {
+            udi_ = commConfig_.GetConfigUdi();
+        }
         dpuManager_.reset(new (std::nothrow) DpuManager());
         if (dpuManager_ == nullptr) {
             HCCL_ERROR("new DpuManager failed!");
@@ -822,10 +828,6 @@ namespace hccl
         commPortConfig_ = params.commPortConfig;
         cclBuffName_ = params.cclBuffName;
         isShareComm_ = !cclBuffName_.empty();
-        commName_ = identifier_;
-        if (!commConfig_.GetConfigUdi().empty()) {    // 如果配置了udi，更新commName_
-            commName_ = commConfig_.GetConfigGroupName();
-        }
 
         HCCL_DEBUG(
             " userRank_: %u realUserRank_: %u userRankSize_: %u deviceLogicId_: %u deviceType_: %u commWorkMode_: %u.",
@@ -2656,8 +2658,10 @@ namespace hccl
     HcclResult HcclCommunicator::AllGather(const std::string &tag, void *inputPtr, void *outputPtr, u64 inputCount,
                                            HcclDataType dataType, HcclRtStream stream, HcomCollOpInfo *opInfo)
     {
+        bool isCapture = StreamIsCapture(stream);
+
         bool aicpuUnfoldMode = false;
-        if (EnableAicpuUnfold() && (userRankSize_ != 1)) {
+        if (EnableAicpuUnfold(isCapture) && (userRankSize_ != 1)) {
             aicpuUnfoldMode = true;
         }
 
@@ -2666,8 +2670,6 @@ namespace hccl
                        HCCL_ERROR_CODE(HCCL_E_UNAVAIL));
             return HCCL_E_UNAVAIL;
         }
-
-        bool isCapture = StreamIsCapture(stream);
 
         Stream streamObj(stream);
         CHK_RET(callbackTask_->CallbackRegStream(stream));
@@ -2835,12 +2837,12 @@ namespace hccl
             return HCCL_E_UNAVAIL;
         }
 
+        bool isCapture = StreamIsCapture(stream);
+
         bool aicpuUnfoldMode = false;
-        if (EnableAicpuUnfold() && (userRankSize_ != 1)) {
+        if (EnableAicpuUnfold(isCapture) && (userRankSize_ != 1)) {
             aicpuUnfoldMode = true;
         }
-
-        bool isCapture = StreamIsCapture(stream);
 
         Stream streamObj(stream);
         CHK_RET(callbackTask_->CallbackRegStream(stream));
@@ -3193,7 +3195,7 @@ namespace hccl
         opParam.All2AllDataDes.rdispls = const_cast<void *>(rdispls);
         opParam.stream = streamObj;
         opParam.opType = HcclCMDType::HCCL_CMD_ALLTOALLV;
-        opParam.aicpuUnfoldMode = EnableAicpuUnfold();
+        opParam.aicpuUnfoldMode = EnableAicpuUnfold(isCapture);
         opParam.aicpuCacheEnable = GetExternalInputAicpuCacheEnable();
         opParam.isCapture = isCapture;
 
@@ -3254,7 +3256,7 @@ namespace hccl
         opParam.All2AllDataDes.rdispls = const_cast<void *>(rdispls);
         opParam.stream = streamObj;
         opParam.opType = HcclCMDType::HCCL_CMD_ALLTOALLV;
-        opParam.aicpuUnfoldMode = EnableAicpuUnfold();
+        opParam.aicpuUnfoldMode = EnableAicpuUnfold(isCapture);
         opParam.aicpuCacheEnable = GetExternalInputAicpuCacheEnable();
         opParam.isCapture = isCapture;
 
@@ -3313,7 +3315,7 @@ namespace hccl
         opParam.All2AllDataDes.sendCountMatrix = const_cast<void *>(sendCountMatrix);
         opParam.stream = streamObj;
         opParam.opType = HcclCMDType::HCCL_CMD_ALLTOALLVC;
-        opParam.aicpuUnfoldMode = EnableAicpuUnfold();
+        opParam.aicpuUnfoldMode = EnableAicpuUnfold(isCapture);
         opParam.aicpuCacheEnable = GetExternalInputAicpuCacheEnable();
         opParam.isCapture = isCapture;
 
@@ -3370,7 +3372,7 @@ namespace hccl
         opParam.All2AllDataDes.sendCountMatrix = const_cast<void *>(sendCountMatrix);
         opParam.stream = streamObj;
         opParam.opType = HcclCMDType::HCCL_CMD_ALLTOALLVC;
-        opParam.aicpuUnfoldMode = EnableAicpuUnfold();
+        opParam.aicpuUnfoldMode = EnableAicpuUnfold(isCapture);
         opParam.aicpuCacheEnable = GetExternalInputAicpuCacheEnable();
         opParam.isCapture = isCapture;
 
@@ -3425,7 +3427,7 @@ namespace hccl
         opParam.aicpuUnfoldMode = false;
         opParam.aicpuCacheEnable = 0;
         opParam.isCapture = isCapture;
-        if (EnableAicpuUnfold()) {
+        if (EnableAicpuUnfold(isCapture)) {
             opParam.aicpuUnfoldMode = true;
             opParam.aicpuCacheEnable = GetExternalInputAicpuCacheEnable();
         }
@@ -6209,6 +6211,8 @@ namespace hccl
 
         CHK_SAFETY_FUNC_RET(
             memcpy_s(opResPara_.hcomId, sizeof(opResPara_.hcomId), identifier_.c_str(), identifier_.length() + 1));
+        CHK_SAFETY_FUNC_RET(
+            memcpy_s(opResPara_.udi, sizeof(opResPara_.udi), udi_.c_str(), udi_.length() + 1));
 
         opResPara_.config.deterministic = GetDeterministicConfig();
         opResPara_.config.highPerfEnable = 0;
@@ -6327,7 +6331,8 @@ namespace hccl
 
     HcclResult HcclCommunicator::GetReportHcclMC2Info(const Stream &kfcStream, const std::vector<Stream> &aicpuStreams)
     {
-        hcclMc2Info_.groupName = hrtMsprofGetHashId(identifier_.c_str(), identifier_.length());
+        std::string identifierWithUdi = udi_ + identifier_; // 若用户自定义了udi，groupname拼接udi
+        hcclMc2Info_.groupName = hrtMsprofGetHashId(identifierWithUdi.c_str(), identifierWithUdi.length());
         hcclMc2Info_.rankSize = userRankSize_;
         hcclMc2Info_.rankId = userRank_;
         hcclMc2Info_.usrRankId = realUserRank_;
@@ -6335,7 +6340,7 @@ namespace hccl
         hcclMc2Info_.reserve = 0;
         const uint32_t ONCE_REPORT_STREAM_NUM_MAX = 8;
         for (uint32_t streamIndex = 0, reportId = 0; streamIndex < aicpuStreams.size(); streamIndex++) {
-            HCCL_INFO("streamIndex:%u, reportId:%u, streamId:%d", streamIndex, reportId, aicpuStreams[streamIndex].id());
+            HCCL_INFO("streamIndex:%u, reportId:%u, streamId:%d, ", streamIndex, reportId, aicpuStreams[streamIndex].id());
             hcclMc2Info_.commStreamIds[reportId++] = aicpuStreams[streamIndex].id();
             if (reportId == ONCE_REPORT_STREAM_NUM_MAX) {
                 hcclMc2Info_.commStreamSize = reportId;
@@ -9368,9 +9373,15 @@ namespace hccl
         return symmetricMemory_->FindSymmetricWindow(ptr, size, winHandle, reinterpret_cast<u64*>(offset));
     }
 
-    bool HcclCommunicator::EnableAicpuUnfold()
+    bool HcclCommunicator::EnableAicpuUnfold(bool isCapture)
     {
         if (deviceType_ != DevType::DEV_TYPE_910_93 && deviceType_ != DevType::DEV_TYPE_910B) {
+            return false;
+        }
+        // 910B在acl graph场景(isCapture)不启用aicpu展开
+        if (deviceType_ == DevType::DEV_TYPE_910B && isCapture) {
+            HCCL_INFO("[%s] deviceType[%d] isCapture[1], aicpuUnfoldConfig[%u] 910B does not support aicpuUnfold in acl graph mode",
+                __func__, deviceType_, GetAicpuUnfoldConfig());
             return false;
         }
         HCCL_INFO("[%s] aicpuUnfoldConfig[%u]", __func__, GetAicpuUnfoldConfig());

@@ -244,7 +244,7 @@ TEST_F(CollServiceDefaultImplTest, col_service_default_impl_load_with_op_based_m
     collOpParams.staticAddr = true;
     collOpParams.staticShape = true;
     collOpParams.outputDataType = DataType::INT8;
-    collOpParams.debugCase = 1;
+    
     collOpParams.dstRank = 0;
     std::string name = "test";
     comm.cclBuffer = DevBuffer::Create(0x1, 200);
@@ -336,7 +336,7 @@ TEST_F(CollServiceDefaultImplTest, coll_service_default_impl_orchestrate_with_in
     collOpParams.staticAddr = true;
     collOpParams.staticShape = true;
     collOpParams.outputDataType = DataType::INT8;
-    collOpParams.debugCase = 1;
+    
     collOpParams.dstRank = 0;
     std::string name = "test";
     comm.CovertToCurrentCollOperator(name, collOpParams, OpMode::OPBASE);
@@ -605,7 +605,7 @@ TEST_F(CollServiceDefaultImplTest, test_load_with_op_based_mode)
     collOpParams.staticAddr = true;
     collOpParams.staticShape = true;
     collOpParams.outputDataType = DataType::INT8;
-    collOpParams.debugCase = 1;
+    
     collOpParams.dstRank = 0;
     std::string name = "test";
     comm.cclBuffer = DevBuffer::Create(0x100, 10);
@@ -705,7 +705,7 @@ TEST_F(CollServiceDefaultImplTest, test_load_with_offload_mode)
     collOpParams.staticAddr = true;
     collOpParams.staticShape = true;
     collOpParams.outputDataType = DataType::INT8;
-    collOpParams.debugCase = 1;
+    
     collOpParams.dstRank = 0;
     std::string name = "test";
     comm.cclBuffer = DevBuffer::Create(0x100, 10);
@@ -778,7 +778,7 @@ TEST_F(CollServiceDefaultImplTest, col_service_default_impl_update_ub_ci_if_need
     collOpParams.staticAddr = true;
     collOpParams.staticShape = true;
     collOpParams.outputDataType = DataType::INT8;
-    collOpParams.debugCase = 1;
+    
     collOpParams.dstRank = 0;
     std::string name = "test";
     comm.cclBuffer = DevBuffer::Create(0x100, 200);
@@ -899,7 +899,7 @@ TEST_F(CollServiceDefaultImplTest, test_load_with_offload_mode_with_task)
     collOpParams.staticAddr = true;
     collOpParams.staticShape = true;
     collOpParams.outputDataType = DataType::INT8;
-    collOpParams.debugCase = 1;
+    
     collOpParams.dstRank = 0;
     std::string name = "test";
     comm.cclBuffer = DevBuffer::Create(0x100, 10);

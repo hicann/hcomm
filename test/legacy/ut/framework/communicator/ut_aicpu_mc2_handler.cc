@@ -49,6 +49,7 @@ protected:
         kernelParam->comm.devType = DevType::DEV_TYPE_950;
         kernelParam->op.algOperator.opMode = OpMode::OPBASE;
 
+        MOCKER_CPP(&AicpuUtils::Init).stubs().will(returnValue(HCCL_SUCCESS));
         MOCKER_CPP(&RtsqBase::QuerySqBaseAddr).stubs().with(mockcpp::any()).will(returnValue(reinterpret_cast<u64>(&mockSq)));
         MOCKER_CPP(&RtsqBase::QuerySqDepth).stubs().with(mockcpp::any()).will(returnValue(static_cast<u32>(AC_SQE_MAX_CNT)));
         MOCKER_CPP(&RtsqBase::QuerySqStatusByType).stubs().with(mockcpp::any()).will(returnValue(static_cast<u32>(1)));
@@ -101,7 +102,7 @@ TEST_F(AicpuMc2HandlerTest, Ut_HcclGetCommHandleByCtx_When_CommIsUsed_Expect_Ret
 TEST_F(AicpuMc2HandlerTest, Ut_HcclGetCommHandleByCtx_When_CommIsFree_Expect_ReturnSuccess) {
     auto* ctx = reinterpret_cast<void*>(kernelParam);
     void* comm = reinterpret_cast<void*>(communicatorImplLite);
-    MOCKER_CPP(&CommunicatorImplLite::CheckNeedUpdateRes).stubs().will(returnValue(false));
+    MOCKER_CPP(&CommunicatorImplLite::UpdateRes).stubs();
     MOCKER_CPP(&CommunicatorImplLiteMgr::Get).stubs().with().will(returnValue(communicatorImplLite));
     MOCKER_CPP(&CommunicatorImplLite::SetDfxOpInfo).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImplLite::UpdateHDCommnicate).stubs().will(ignoreReturnValue());

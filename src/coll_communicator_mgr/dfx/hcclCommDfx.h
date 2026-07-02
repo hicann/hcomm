@@ -17,6 +17,7 @@
 #include "read_write_lock.h"
 #include "hccl_common.h"
 #include <unordered_map>
+#include <mutex>
 #include "buffer.h"
 #include "common.h"
 #include "hcclCommOp.h"
@@ -25,35 +26,27 @@ namespace hccl {
 
 class HcclCommDfx {
 public:
-    // 构造函数（接收CommunicatorImpl中已经存在的MirrorTaskManager指针）
     HcclCommDfx();
 
-    // 析构函数
     ~HcclCommDfx();
 
-    // 初始化DFX系统
     HcclResult Init(u32 deviceId, const std::string& comTag, u32 myRankId);
 
-    // 注册回调函数
     HcclResult AddTaskInfoCallback(u32 streamId, u32 taskId, const Hccl::TaskParam &taskParam, u64 handle);
     HcclResult AddDpuTaskInfoCallback(const Hccl::TaskParam &taskParam, u64 handle);
 
-    // 获取MirrorTaskManager
     Hccl::MirrorTaskManager* GetMirrorTaskManager() const;
 
-    // Profiling相关接口（直接暴露，不通过GetProfilingImpl）
+    HcclResult SetCurrDfxOpInfo(std::shared_ptr<Hccl::DfxOpInfo> dfxOpInfo);
+
     HcclResult ReportAllTasks(bool cachedReq);
     HcclResult ReportOp(u64 beginTime, bool cachedReq, bool opbased);
-    // CCU上报
     HcclResult ReporCcuTaskInfo(u64 beginTime, u64 endTime, bool cachedReq, bool opbased);
     void ReportMc2CommInfo(const Mc2CommInfo& mc2CommInfo);
     HcclResult UpdateProfStat();
 
-    // 将remoteRankId添加到channelRemoteRankId_表中
     static void AddChannelRemoteRankId(const std::string& commTag, u64 handle, u32 remoteRankId);
-    // 在channelRemoteRankId_表中对remoteRankId进行查找
     static HcclResult GetChannelRemoteRankId(const std::string& commTag, u64 handle, u32& remoteRankId);
-    // 根据streamId获取taskId，每次调用后taskId自增1，大于65535时回环到0
     static u32 GetTaskId(u32 streamId);
     std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetCallback() {
         return setAddTaskCallback_;
@@ -74,8 +67,9 @@ private:
     std::unique_ptr<HcclCommProfiling> profiling_;
     static std::unordered_map<std::string,std::unordered_map<u64, u32> > channelRemoteRankId_;
     static std::unordered_map<u32, u32> streamIdToTaskId_;
-    static ReadWriteLockBase baseLock_; // 基类锁成员
-    static ReadWriteLock rwLock_; // 读写锁
+    static ReadWriteLockBase baseLock_;
+    static ReadWriteLock rwLock_;
+    static std::mutex taskIdMutex_;
     std::string commTag_;
     u32 deviceId_{0};
     u32 myRankId_{0};
@@ -83,7 +77,9 @@ private:
     u32 aicpuTaskId_{INVALID_UINT};
     u32 aicpuStreamId_{INVALID_UINT};
     std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> setAddTaskCallback_;
-    std::function<HcclResult(const Hccl::TaskParam&, u64)> setAddDpuTaskCallback_; //dputask无法从外部获取taskid和streamid
+    std::function<HcclResult(const Hccl::TaskParam&, u64)> setAddDpuTaskCallback_;
+    bool initializedFlag_{false};
+    void AddTaskInfoCallbackLog(const Hccl::TaskParam &taskParam, const std::unordered_map<u64, u32> &handleMap) const;
 };
 
 } // namespace hccl

@@ -23,13 +23,13 @@ void ResetCommand::Setup(CLI::App& app) {
 }
 
 void ResetCommand::Execute() {
-    HCCL_VM_INFO("[HVM] Resetting: Clearing database tables...");
+    HCCL_VM_INFO("Resetting: Clearing database tables...");
     auto ret = ClearDbTables();
     if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-        HCCL_VM_ERROR("[HVM] Failed to clear database tables.");
+        HCCL_VM_ERROR("Failed to clear database tables.");
         return;
     }
-    HCCL_VM_INFO("[HVM] Database tables cleared successfully.");
+    HCCL_VM_INFO("Database tables cleared successfully.");
 }
 
 static inline CommandAutoRegister<ResetCommand> g_reset_cmd_reg{};

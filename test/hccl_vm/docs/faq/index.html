@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HCCL-VM FAQ 查询系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        .container {
+            max-width: 1200px; margin: 0 auto;
+            background: #fff; border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(90deg, #2c3e50, #3498db);
+            color: white; padding: 30px; text-align: center;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .search-panel { background: #f8f9fa; padding: 25px; border-bottom: 1px solid #dee2e6; }
+        .search-row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .search-group { flex: 1; min-width: 180px; }
+        .search-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #2c3e50; }
+        .search-group select, .search-group input {
+            width: 100%; padding: 10px 15px; border: 2px solid #e0e0e0;
+            border-radius: 8px; font-size: 14px; transition: all 0.3s;
+        }
+        .search-group select:focus, .search-group input:focus {
+            border-color: #3498db; outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .btn-row { display: flex; gap: 10px; justify-content: center; }
+        .btn { padding: 12px 30px; border: none; border-radius: 8px;
+               font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; transform: translateY(-2px); }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .stats-bar { background: #ecf0f1; padding: 15px 25px;
+                     display: flex; justify-content: space-between; align-items: center;
+                     font-size: 13px; color: #7f8c8d; }
+        .results-container { padding: 25px; min-height: 400px; }
+        .no-results { text-align: center; padding: 60px; color: #95a5a6; }
+        .no-results h3 { font-size: 20px; margin-bottom: 10px; }
+        .faq-item { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;
+                    margin-bottom: 20px; overflow: hidden; transition: all 0.3s; }
+        .faq-item:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: #3498db; }
+        .faq-header { background: linear-gradient(90deg, #f8f9fa, #e9ecef); padding: 15px 20px;
+                      cursor: pointer; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .faq-header:hover { background: linear-gradient(90deg, #ecf0f1, #d5dbdb); }
+        .faq-id { font-weight: 700; color: #3498db; font-size: 14px; }
+        .faq-title { flex: 1; margin-left: 15px; font-weight: 600; color: #2c3e50; min-width: 200px; }
+        .faq-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tag { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .tag-module { background: #e8f5e9; color: #2e7d32; }
+        .tag-submodule { background: #e3f2fd; color: #1565c0; }
+        .tag-code { background: #fff3e0; color: #e65100; }
+        .faq-content { padding: 20px; display: none; }
+        .faq-content.active { display: block; }
+        .faq-section { margin-bottom: 15px; }
+        .faq-section h4 { font-size: 14px; color: #34495e; margin-bottom: 8px; font-weight: 600; }
+        .faq-section p, .faq-section ul { font-size: 13px; color: #555; line-height: 1.6; }
+        .faq-section ul { padding-left: 20px; }
+        .faq-section li { margin-bottom: 5px; }
+        .code-block { background: #2d3436; color: #dfe6e9; padding: 15px; border-radius: 6px;
+                      font-family: "Consolas", "Monaco", monospace; font-size: 13px;
+                      overflow-x: auto; white-space: pre-wrap; }
+        .diagram-container { background: #f8f9fa; padding: 15px; border-radius: 6px;
+                             margin-top: 10px; text-align: center; }
+        .diagram-container img { max-width: 100%; border-radius: 6px; }
+        .expand-icon { font-size: 18px; color: #95a5a6; transition: transform 0.3s; }
+        .expand-icon.rotated { transform: rotate(180deg); }
+        .highlight { background: #fff176; padding: 2px 4px; border-radius: 3px; }
+        .module-group-header {
+            background: linear-gradient(90deg, #2c3e50, #3498db); color: white;
+            padding: 14px 20px; font-size: 17px; font-weight: 700;
+            margin: 25px 0 12px 0; border-radius: 8px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .module-group-header:first-child { margin-top: 0; }
+        .module-count {
+            background: rgba(255,255,255,0.25); padding: 2px 10px;
+            border-radius: 10px; font-size: 12px; font-weight: 500;
+        }
+        .submodule-group-header {
+            background: #f0f4f8; border-left: 4px solid #3498db;
+            padding: 10px 16px; margin: 16px 0 8px 8px; border-radius: 0 6px 6px 0;
+            cursor: pointer; display: flex; align-items: center;
+            gap: 8px; transition: background 0.2s; user-select: none;
+        }
+        .submodule-group-header:hover { background: #e2e8f0; }
+        .submodule-group-header .sub-title { font-size: 15px; font-weight: 600; color: #2c3e50; }
+        .submodule-group-header .sub-count {
+            background: #3498db; color: white; padding: 2px 8px;
+            border-radius: 10px; font-size: 11px; font-weight: 500;
+        }
+        .submodule-group-header .sub-toggle { color: #7f8c8d; font-size: 12px; margin-left: auto; }
+        .submodule-group.collapsed .faq-item { display: none; }
+        .submodule-group.collapsed .submodule-group-header { opacity: 0.65; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HCCL-VM 常见问题查询系统</h1>
+            <p>按模块、子模块、错误码、关键词快速定位问题 | 支持模糊匹配</p>
+        </div>
+        <div class="search-panel">
+            <div class="search-row">
+                <div class="search-group">
+                    <label>按模块筛选</label>
+                    <select id="moduleFilter" onchange="onModuleChange()"><option value="">全部模块</option></select>
+                </div>
+                <div class="search-group">
+                    <label>按子模块筛选</label>
+                    <select id="submoduleFilter"><option value="">全部子模块</option></select>
+                </div>
+                <div class="search-group">
+                    <label>按错误码筛选</label>
+                    <select id="errorCodeFilter"><option value="">全部错误码</option></select>
+                </div>
+            </div>
+            <div class="search-row">
+                <div class="search-group" style="flex: 2;">
+                    <label>关键词搜索</label>
+                    <input type="text" id="keywordInput"
+                           placeholder="输入关键词：函数名、日志内容、问题描述...">
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="searchFAQ()">🔍 搜索</button>
+                <button class="btn btn-secondary" onclick="clearFilters()">🔄 清空</button>
+            </div>
+        </div>
+        <div class="stats-bar">
+            <span id="statsInfo">共 <strong>0</strong> 条FAQ</span>
+            <span id="matchInfo"></span>
+        </div>
+        <div class="results-container" id="resultsContainer">
+            <div class="no-results">
+                <h3>请输入搜索条件</h3>
+                <p>选择模块、子模块或错误码，或输入关键词进行搜索</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const faqData = [
+  {
+    "id": "FAQ-E001",
+    "module": "HCCL-VM",
+    "submodule": "命令行",
+    "errorCodeGroup": "",
+    "title": "未配置通信域",
+    "errorCode": "`NA` (4)",
+    "errorFunctions": [
+      "`db_sim_runner_common.cc::GetDeviceByRankId()`"
+    ],
+    "keywords": [
+      "error",
+      "PID:173579",
+      "TID:173579"
+    ],
+    "logPatterns": [
+      "[error][PID:173579][TID:173579][db_sim_runner_common.cc][GetDeviceByRankId] cannot find rank by rank id 0\n[error][PID:173579][TID:173579][aclrt_device_stub.cc][aclrtSetDevice] [DEVICE_STUB]device not found by rankId:0\nacl interface return err ./common/src/hccl_test_common.cc:861, retcode: 100000.\nThis is an error in device_init."
+    ],
+    "symptom": "执行业务用例，报找不到rank id为0的设备。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-E002",
+    "module": "HCCL-VM",
+    "submodule": "命令行",
+    "errorCodeGroup": "",
+    "title": "RANK_TABLE_FILE 未设置",
+    "errorCode": "`HCCL_SIM_E_PARA` (1)",
+    "errorFunctions": [
+      "`hccl_comm_stub.cc::HcclCommInitRootInfo()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_PARA",
+      "RANK_TABLE_FILE"
+    ],
+    "logPatterns": [
+      "RANK_TABLE_FILE env not set, please check your config."
+    ],
+    "symptom": "通信域初始化时找不到 rank table 配置文件。",
+    "reasons": [
+      "环境变量未设置",
+      "文件路径错误"
+    ],
+    "steps": [],
+    "solution": [
+      "export RANK_TABLE_FILE=/path/to/rank_table.json"
+    ],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-E003",
+    "module": "HCCL-VM",
+    "submodule": "命令行",
+    "errorCodeGroup": "",
+    "title": "HCCL_VM_INSTALL_DIR 未设置",
+    "errorCode": "`HCCL_SIM_E_INTERNAL` (4)",
+    "errorFunctions": [
+      "`hccl_op_stub.cc::VirtualExecuteAivKernel()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_INTERNAL",
+      "virtual-aiv",
+      "HCCL_VM_INSTALL_DIR"
+    ],
+    "logPatterns": [
+      "[virtual-aiv] env HCCL_VM_INSTALL_DIR is not set, can not locate <path> for kernel <name>"
+    ],
+    "symptom": "AIV kernel 虚拟执行失败，找不到对应的 .so 文件。",
+    "reasons": [],
+    "steps": [],
+    "solution": [
+      "export HCCL_VM_INSTALL_DIR=/path/to/hccl_vm/install/dir"
+    ],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-E004",
+    "module": "HCCL-VM",
+    "submodule": "命令行",
+    "errorCodeGroup": "",
+    "title": "在子shell中重复执行start命令",
+    "errorCode": "`NA` (无错误码，仅WARNING)",
+    "errorFunctions": [
+      "`subcmd_start.cc::StartCommand::Execute()`"
+    ],
+    "keywords": [
+      "warning",
+      "PID:<PID>",
+      "TID:<TID>"
+    ],
+    "logPatterns": [
+      "[warning][PID:<PID>][TID:<TID>][subcmd_start.cc][Execute] hccl-vm has already started. Please do not start it again in a sub-bash."
+    ],
+    "symptom": "在hvm子shell环境中再次执行`hccl-vm start`命令，系统提示已启动并忽略本次操作。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-E005",
+    "module": "HCCL-VM",
+    "submodule": "命令行",
+    "errorCodeGroup": "",
+    "title": "fork子进程失败",
+    "errorCode": "`HCCL_SIM_HOST_ERROR_CMD` (无标准错误码)",
+    "errorFunctions": [
+      "`cmd_base_utils.cc::StartHvmCmd()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_HOST_ERROR_CMD"
+    ],
+    "logPatterns": [
+      "fork failed: Resource temporarily unavailable"
+    ],
+    "symptom": "执行`hccl-vm start`命令后，系统无法创建子shell进程，仿真环境启动失败。",
+    "reasons": [
+      "系统用户进程数已达上限（ulimit -u）",
+      "系统内存不足，无法为新进程分配资源",
+      "PID资源耗尽（/proc/sys/kernel/pid_max）"
+    ],
+    "steps": [
+      "ulimit -u\ncat /proc/sys/kernel/pid_max\nfree -m\nps -eLf | wc -l"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-E006",
+    "module": "HCCL-VM",
+    "submodule": "命令行",
+    "errorCodeGroup": "",
+    "title": "插件名称格式错误",
+    "errorCode": "`NA` (CLI参数校验)",
+    "errorFunctions": [
+      "`subcmd_plugin.cc::PluginCommand::Setup()`"
+    ],
+    "keywords": [
+      "HVM",
+      "ERROR",
+      "HVM"
+    ],
+    "logPatterns": [
+      "[HVM] [ERROR] Install plugin : Invalid format! Plugin name must start with '@' (e.g., @myplugin).\n[HVM] [ERROR] Uninstall plugin : Invalid format! Plugin name must start with '@' (e.g., @myplugin).\n[HVM] [ERROR] Run plugin : Invalid format! Plugin name must start with '@' (e.g., @myplugin)."
+    ],
+    "symptom": "执行`hccl-vm plugin install/run/uninstall`命令时，CLI参数校验失败，拒绝执行。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-E007",
+    "module": "HCCL-VM",
+    "submodule": "命令行",
+    "errorCodeGroup": "",
+    "title": "拓扑配置文件不存在",
+    "errorCode": "`NA` (CLI参数校验)",
+    "errorFunctions": [
+      "`cmd_base_utils.cc::FileInModelDir()`"
+    ],
+    "keywords": [
+      "HVM"
+    ],
+    "logPatterns": [
+      "[HVM] model File not found: <install_path>/config/topo_meta/<name>.yaml"
+    ],
+    "symptom": "执行`hccl-vm mock-comm <name>`命令时，指定的拓扑yaml配置文件不存在，CLI参数校验直接拒绝。通信域配置文件是用于描述算子执行通信域的规模（如通信域包含几个超节点，几个server，以及每个server内取哪几张卡，具体详见文件描述）。",
+    "reasons": [
+      "指定的拓扑名称拼写错误",
+      "对应的yaml文件未放置在`$HCCL_VM_INSTALL_DIR/config/topo_meta/`目录下",
+      "文件扩展名错误（应为`.yaml`）"
+    ],
+    "steps": [
+      "ls $HCCL_VM_INSTALL_DIR/config/topo_meta/"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-E008",
+    "module": "HCCL-VM",
+    "submodule": "命令行",
+    "errorCodeGroup": "",
+    "title": "YAML拓扑文件格式解析异常",
+    "errorCode": "`NA` (运行时解析错误)",
+    "errorFunctions": [
+      "`cmd_cluster_model_utils.cc::ParseYamlTopoImpl()`"
+    ],
+    "keywords": [
+      "error",
+      "PID:<PID>",
+      "TID:<TID>"
+    ],
+    "logPatterns": [
+      "[error][PID:<PID>][TID:<TID>][cmd_cluster_model_utils.cc][ParseYamlTopoImpl] Exception when parsing YAML: <detail>"
+    ],
+    "symptom": "执行`hccl-vm mock-comm <name>`命令时，YAML拓扑配置文件解析失败，通信域初始化中断。",
+    "reasons": [
+      "YAML文件存在语法错误（如缩进不正确、冒号后缺少空格、非法字符等）",
+      "YAML文件中包含不支持的字段类型或格式",
+      "YAML文件编码非UTF-8"
+    ],
+    "steps": [
+      "# 使用python验证yaml格式\npython3 -c \"import yaml; yaml.safe_load(open('$HCCL_VM_INSTALL_DIR/config/topo_meta/<name>.yaml'))\""
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-M001",
+    "module": "HCCL-VM",
+    "submodule": "内存管理",
+    "errorCodeGroup": "",
+    "title": "设备内存分配超限",
+    "errorCode": "`HCCL_SIM_E_MEMORY` (3)",
+    "errorFunctions": [
+      "`store_sim_device_memory_manager.cc::AllocPhyMem()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_MEMORY"
+    ],
+    "logPatterns": [
+      "dev:<N> alloc phy mem:<ADDR> size:<SIZE> exceeds pool ceiling:<CEILING>, reject"
+    ],
+    "symptom": "设备内存分配请求超出模拟的内存池上限。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "graph LR\n    A[内存分配请求] --> B{检查池上限}\n    B -->|未超限| C[分配成功]\n    B -->|超限| D[拒绝分配]\n    D --> E[报错:exceeds pool ceiling]",
+    "diagramType": "mermaid"
+  },
+  {
+    "id": "FAQ-M002",
+    "module": "HCCL-VM",
+    "submodule": "内存管理",
+    "errorCodeGroup": "",
+    "title": "共享内存创建失败",
+    "errorCode": "`HCCL_SIM_E_SYSCALL` (8)",
+    "errorFunctions": [
+      "`store_sim_shm_ops.cc::ShmCreate()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_SYSCALL",
+      "SHM_OPS",
+      "SHM_OPS",
+      "SHM_OPS"
+    ],
+    "logPatterns": [
+      "[SHM_OPS] create: shm_open failed, name: <name>\n[SHM_OPS] create: ftruncate failed, name: <name>\n[SHM_OPS] create: mmap failed, name: <name>"
+    ],
+    "symptom": "无法创建共享内存段。",
+    "reasons": [
+      "`/dev/shm` 空间不足",
+      "权限不足",
+      "同名共享内存已存在且冲突"
+    ],
+    "steps": [
+      "df -h /dev/shm\nls /dev/shm/ | grep hccl"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-M003",
+    "module": "HCCL-VM",
+    "submodule": "内存管理",
+    "errorCodeGroup": "",
+    "title": "通信内存分配失败",
+    "errorCode": "`HCCL_SIM_E_NOT_FOUND` (6)",
+    "errorFunctions": [
+      "`store_sim_comm_memory_manager.cc`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_NOT_FOUND",
+      "COMM_MEM",
+      "COMM_MEM",
+      "COMM_MEM"
+    ],
+    "logPatterns": [
+      "[COMM_MEM] alloc failed, name: <name>\n[COMM_MEM] acquire failed, name: <name>\n[COMM_MEM] write size too large, size: <N>, max: <MAX>"
+    ],
+    "symptom": "跨进程通信内存操作失败。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX001",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "AIV Kernel虚拟执行失败",
+    "errorCode": "`HCCL_SIM_E_INTERNAL` (4)",
+    "errorFunctions": [
+      "`hccl_op_stub.cc::VirtualExecuteAivKernel()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_INTERNAL",
+      "virtual-aiv",
+      "virtual-aiv",
+      "virtual-aiv",
+      "HCCL_VM_INSTALL_DIR"
+    ],
+    "logPatterns": [
+      "[virtual-aiv] env HCCL_VM_INSTALL_DIR is not set\n[virtual-aiv] missing aiv stub shared library, kernel=<name>\n[virtual-aiv] dlopen <so> failed, err = <error>\n[virtual-aiv] dlsym <symbol> from <so> failed, err = <error>"
+    ],
+    "symptom": "AIV kernel在虚拟环境中执行失败。",
+    "reasons": [],
+    "steps": [
+      "echo $HCCL_VM_INSTALL_DIR\nls -la $HCCL_VM_INSTALL_DIR/lib/aiv/\nnm -D $HCCL_VM_INSTALL_DIR/lib/aiv/<kernel>.so | grep <symbol>"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX002",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "算子数据库记录失败",
+    "errorCode": "`HCCL_SIM_E_INTERNAL` (4)",
+    "errorFunctions": [
+      "`hccl_op_stub.cc::RecordOpDbInfo()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_INTERNAL",
+      "RecordOpDbInfo",
+      "HcclAllReduce"
+    ],
+    "logPatterns": [
+      "[RecordOpDbInfo] insert op detail+mem failed\n[HcclAllReduce] record op db info failed"
+    ],
+    "symptom": "HCCL集合通信算子的参数无法写入仿真数据库。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX003",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "QP未找到或状态错误",
+    "errorCode": "`HCCL_SIM_E_NOT_FOUND` (6)",
+    "errorFunctions": [
+      "`hccp_stub.cc::RaSendWr()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_NOT_FOUND",
+      "HCCP",
+      "HCCP"
+    ],
+    "logPatterns": [
+      "[HCCP] RaSendWr: QP <N> not found\n[HCCP] RaSendWr: QP <N> not in RTS state, current state:<N>"
+    ],
+    "symptom": "RDMA QP操作失败——QP不存在或未达到RTS状态。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "stateDiagram-v2\n    [*] --> INIT\n    INIT --> RTR: RaQpConnect\n    RTR --> RTS: RaTypicalQpModify\n    RTS --> [*]: 可以发送数据\n    RTS --> ERROR: 状态异常\n    INIT --> ERROR: 未正确初始化",
+    "diagramType": "mermaid"
+  },
+  {
+    "id": "FAQ-PX004",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "EndPoint查找失败",
+    "errorCode": "`HCCL_SIM_E_NOT_FOUND` (6)",
+    "errorFunctions": [
+      "`hccp_stub.cc::RaCtxQpImport()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_NOT_FOUND",
+      "HCCP"
+    ],
+    "logPatterns": [
+      "[HCCP] cannot find endpoint addr:<IP>\nGet remote endpoint failed. ip:<IP>, eid:<EID>"
+    ],
+    "symptom": "网络端点查找失败。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX005",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "CCU微码加载失败",
+    "errorCode": "`HCCL_SIM_E_INTERNAL` (4)",
+    "errorFunctions": [
+      "`hccp_ccu_stub.cc::LoadMicrocodeInstruction()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_INTERNAL",
+      "LoadMicrocodeInstruction",
+      "LoadMicrocodeInstruction",
+      "LoadMicrocodeInstruction"
+    ],
+    "logPatterns": [
+      "[LoadMicrocodeInstruction] get device by logic id <N> failed.\n[LoadMicrocodeInstruction] get ccu from device by die id <N> failed.\n[LoadMicrocodeInstruction] insert instr failed"
+    ],
+    "symptom": "CCU微码指令加载到模拟器失败。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX006",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "无法获取当前Context",
+    "errorCode": "`HCCL_SIM_E_NOT_FOUND` (6)",
+    "errorFunctions": [
+      "`hccp_stub.cc::RaRdevInit()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_NOT_FOUND",
+      "error",
+      "PID:<PID>",
+      "TID:<TID>"
+    ],
+    "logPatterns": [
+      "[error][PID:<PID>][TID:<TID>][hccp_stub.cc][RaRdevInit] can not get CurrContext: <N>"
+    ],
+    "symptom": "在RDMA设备初始化时，无法通过当前Runner获取活跃的Context，导致RDMA设备创建失败。",
+    "reasons": [
+      "应用层未调用`aclrtSetDevice`/`aclrtCreateContext`初始化设备和上下文",
+      "Context已被提前销毁",
+      "Runner的TLS（线程局部存储）中current_ctx_id无效",
+      "应用层在调用`aclrtSetDevice`初始化设备上下文前，调用了其他runtime接口获取了上下文"
+    ],
+    "steps": [
+      "# 检查Context表\nhccl-vm table show Context\n# 检查Runner表中的current_ctx_id\nhccl-vm table show Runner"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX007",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "找不到AICPU二进制文件",
+    "errorCode": "`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`",
+    "errorFunctions": [
+      "`aclrt_kernel_stub.cc::aclrtDestroyBinary()`"
+    ],
+    "keywords": [
+      "error",
+      "PID:<PID>",
+      "TID:<TID>"
+    ],
+    "logPatterns": [
+      "[error][PID:<PID>][TID:<TID>][aclrt_kernel_stub.cc][aclrtDestroyBinary] can not find this binary"
+    ],
+    "symptom": "销毁AICPU二进制对象时，在全局kernel binary注册表中找不到对应的二进制句柄。",
+    "reasons": [
+      "该二进制文件未被正确加载（`aclrtLoadBinary`未执行或失败）",
+      "二进制句柄已被重复销毁（double-free）",
+      "二进制对象在多线程环境下被并发操作导致状态不一致"
+    ],
+    "steps": [
+      "# 检查是否存在重复的destroy调用\n# 确认aclrtLoadBinary的返回值"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX008",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "AICPU设备进程异常退出",
+    "errorCode": "`NA` (进程级错误)",
+    "errorFunctions": [
+      "`aclrt_kernel_stub.cc::WaitAicpuProcess()`"
+    ],
+    "keywords": [
+      "error",
+      "PID:<PID>",
+      "TID:<TID>"
+    ],
+    "logPatterns": [
+      "[error][PID:<PID>][TID:<TID>][aclrt_kernel_stub.cc][WaitAicpuProcess] device process[<PID>] exited with status <N>\n[error][PID:<PID>][TID:<TID>][aclrt_kernel_stub.cc][WaitAicpuProcess] device process[<PID>] killed by signal <N>"
+    ],
+    "symptom": "AICPU设备子进程异常退出或被信号杀死，导致主进程随后也退出（`exit(EXIT_FAILURE)`）。",
+    "reasons": [
+      "AICPU进程内部发生未捕获异常或段错误",
+      "系统资源不足（内存、文件描述符等）导致子进程被OOM killer杀死",
+      "AICPU二进制文件本身存在bug",
+      "子进程依赖的共享库缺失"
+    ],
+    "steps": [
+      "# 检查系统日志是否有OOM记录\ndmesg | grep -i \"oom\\|killed\"\n# 确认AICPU二进制文件是否完整\nls -la $HCCL_VM_INSTALL_DIR/bin/\n# 检查系统资源\nulimit -a\nfree -m"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX009",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "CCU加载微码时找不到任何rank",
+    "errorCode": "`HCCL_SIM_E_NOT_FOUND` (6)",
+    "errorFunctions": [
+      "`hccp_ccu_stub.cc::LoadMicrocodeInstruction()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_NOT_FOUND",
+      "error",
+      "PID:<PID>",
+      "TID:<TID>"
+    ],
+    "logPatterns": [
+      "[error][PID:<PID>][TID:<TID>][hccp_ccu_stub.cc][LoadMicrocodeInstruction] can not find any rank"
+    ],
+    "symptom": "CCU微码指令加载过程中，无法在当前设备对应的Rank表中找到任何rank记录。",
+    "reasons": [
+      "通信域未通过`mock-comm`命令初始化，Rank表为空",
+      "当前设备ID在通信域配置中不存在"
+    ],
+    "steps": [
+      "# 检查Rank表是否有数据\nhccl-vm table show Rank\n# 检查设备表\nhccl-vm table show Device"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX010",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "按rankId查找设备失败",
+    "errorCode": "`HCCL_E_NOT_FOUND`",
+    "errorFunctions": [
+      "`aclrt_device_stub.cc::hrtSetDevice()`"
+    ],
+    "keywords": [
+      "error",
+      "PID:<PID>",
+      "TID:<TID>"
+    ],
+    "logPatterns": [
+      "[error][PID:<PID>][TID:<TID>][aclrt_device_stub.cc][hrtSetDevice] device not found by rankId:<N>"
+    ],
+    "symptom": "调用`aclrtSetDevice`设置当前设备时，根据rankId查找对应的设备失败。",
+    "reasons": [
+      "rankId超出了通信域中实际存在的rank范围  —— 如通信域配置4个NPU，但实际mpirun起了6个NPU进程，导致rankid 4, 5都报找不到device。",
+      "通信域未初始化（未执行`mock-comm`命令） —— 【大概率】初始化通信域后，工具内部才会初始化Rank表",
+      "ranktable配置与实际使用的rank数量不匹配 —— 可能是`RANK_TABLE_FILE`配置了错误的文件路径"
+    ],
+    "steps": [
+      "# 检查rankId是否在有效范围内\nhccl-vm table show Rank"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-PX011",
+    "module": "HCCL-VM",
+    "submodule": "桩代理（proxy）",
+    "errorCodeGroup": "",
+    "title": "桩接口暂未实现",
+    "errorCode": "`HCCL_SIM_E_INTERNAL` (4) 或 `NA`",
+    "errorFunctions": [
+      "多个桩函数文件（`hccp_stub.cc`、`ascend_hal_stub.cc`、`aclrt_kernel_stub.cc`等）"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_INTERNAL",
+      "warning",
+      "PID:<PID>",
+      "TID:<TID>"
+    ],
+    "logPatterns": [
+      "[warning][PID:<PID>][TID:<TID>][ascend_hal_stub.cc][*] is empty\n[warning][PID:<PID>][TID:<TID>][hccp_stub.cc][*] is empty\n[error][PID:<PID>][TID:<TID>][hccp_stub.cc][RaCtxGetAuxInfo] Not support yet\n[error][PID:<PID>][TID:<TID>][hccp_stub.cc][RaCtxGetCrErrInfoList] Not support yet"
+    ],
+    "symptom": "应用层调用了仿真器尚未实现的底层驱动或运行时接口，日志中出现`is empty`或`Not support yet`告警/错误。此类桩函数直接返回默认值（通常为0或成功），不进行任何实际操作。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-N001",
+    "module": "HCCL-VM",
+    "submodule": "组网",
+    "errorCodeGroup": "",
+    "title": "Ranktable环境变量配置错误",
+    "errorCode": "`NA` (1)",
+    "errorFunctions": [
+      "`param_check_v2.cc::RanktableRealPath`"
+    ],
+    "keywords": [
+      "error",
+      "PID:172019",
+      "TID:172019",
+      "HCCL_LOG",
+      "HCCL_LOG"
+    ],
+    "logPatterns": [
+      "[error][PID:172019][TID:172019][log_stub.cc][DlogPrintStub] [HCCL_LOG][param_check_v2.cc:457][172019]RanktableRealPath: /home/teamserver/workspace/CheckerL2_2128/hccl_vm_install/ranktable.json is not a valid real path\n\n[info][PID:172021][TID:172021][log_stub.cc][DlogPrintStub] [HCCL_LOG][adapter_rts.cc:234] [172021][hrtGetDeviceRefresh]deviceLogicId[3]\n[error][PID:172020][TID:172020][log_stub.cc][DlogPrintStub] [HCCL_LOG][param_check_v2.cc:457][172020]RanktableRealPath: /home/teamserver/workspace/CheckerL2_2128/hccl_vm_install/ranktable.json is not a valid real path\n\n[info][PID:172018][TID:172018][log_stub.cc][DlogPrintStub] [HCCL_LOG][adapter_rts.cc:234] [172018][hrtGetDeviceRefresh]deviceLogicId[0]\n[error][PID:172019][TID:172019][log_stub.cc][DlogPrintStub] [HCCL_LOG][op_base_v2.cc:294][172019][HcclCommInitClusterInfoV2]call trace: hcclRet -> 1\n\n[error][PID:172019][TID:172019][log_stub.cc][DlogPrintStub] [HCCL_LOG][op_base.cc:811] [172019][operator()]call trace: hcclRet -> 1"
+    ],
+    "symptom": "运行用例，初始化通信域失败。",
+    "reasons": [],
+    "steps": [
+      "echo $RANK_TABLE_FILE"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-N002",
+    "module": "HCCL-VM",
+    "submodule": "组网",
+    "errorCodeGroup": "",
+    "title": "topo.json路径配置错误",
+    "errorCode": "`NA` (1)",
+    "errorFunctions": [
+      "`communicator_impl.cc::GetTopoFilePath`"
+    ],
+    "keywords": [
+      "error",
+      "PID:172635",
+      "TID:172635",
+      "HCCL_LOG"
+    ],
+    "logPatterns": [
+      "[error][PID:172635][TID:172635][log_stub.cc][DlogPrintStub] [HCCL_LOG][communicator_impl.cc:1339][172635][GetTopoFilePath] topo_file_path[/home/teamserver/workspace/CheckerL2_2128/hccl_vm_install/topo.json] is not a valid real path"
+    ],
+    "symptom": "运行用例，初始化通信域失败。",
+    "reasons": [],
+    "steps": [
+      "echo $TOPO_FILE_PATH"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-N003",
+    "module": "HCCL-VM",
+    "submodule": "组网",
+    "errorCodeGroup": "",
+    "title": "mock-comm命令报错",
+    "errorCode": "`NA` (6)",
+    "errorFunctions": [
+      "`db_sim_runner_ops.cc::GetServerKeyById`"
+    ],
+    "keywords": [
+      "error",
+      "PID:172799",
+      "TID:172875"
+    ],
+    "logPatterns": [
+      "(hvm)$> hccl-vm mock-comm 144\n[error][PID:172799][TID:172875][db_sim_runner_ops.cc][GetServerKeyById] can not find server by id: 0, 2\n[error][PID:172799][TID:172875][topo_ascend_cluster_parser.cc][InitDynamicModelData] cannot find device by physical id 0\n[error][PID:172799][TID:172875][cmd_base_utils.cc][InitHvmCommEnv] [HVM] InitHvmCommEnv failed\n[error][PID:172799][TID:172875][subcmd_mock_comm.cc][Execute] [HVM] Failed to initialize mock communication environment. Cleaning up environment."
+    ],
+    "symptom": "运行用例前，通过mock-comm命令配置通信域失败。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-N004",
+    "module": "HCCL-VM",
+    "submodule": "组网",
+    "errorCodeGroup": "",
+    "title": "EndPoint IP 查找失败",
+    "errorCode": "`HCCL_SIM_E_NOT_FOUND` (6)",
+    "errorFunctions": [
+      "`topo_ascend_cluster_parser.cc::AddLinkInfo()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_NOT_FOUND"
+    ],
+    "logPatterns": [
+      "cannot find endPoint by ip <IP_ADDR>"
+    ],
+    "symptom": "网络链路配置中引用的 IP 地址在拓扑中不存在。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-DB001",
+    "module": "HCCL-VM",
+    "submodule": "数据库",
+    "errorCodeGroup": "",
+    "title": "SQLite 数据库连接失败",
+    "errorCode": "`HCCL_SIM_E_OPEN_FILE_FAILURE` (10)",
+    "errorFunctions": [
+      "`db_hccl_db_sqlite.cc::Connect()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_OPEN_FILE_FAILURE",
+      "dbInit"
+    ],
+    "logPatterns": [
+      "[dbInit] Connect database failed\nConnect database:<path> failed"
+    ],
+    "symptom": "无法连接到 SQLite 数据库文件。",
+    "reasons": [
+      "数据库文件不存在",
+      "文件权限不足",
+      "文件被其他进程锁定"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-DB002",
+    "module": "HCCL-VM",
+    "submodule": "数据库",
+    "errorCodeGroup": "",
+    "title": "数据库备份文件未找到",
+    "errorCode": "`HCCL_SIM_E_OPEN_FILE_FAILURE` (10)",
+    "errorFunctions": [
+      "`sim_loader.cc::BackupDatabase()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_OPEN_FILE_FAILURE",
+      "Loader"
+    ],
+    "logPatterns": [
+      "[Loader] Backup database file not found: <dbPath>"
+    ],
+    "symptom": "Loader 无法找到仿真数据库文件。",
+    "reasons": [
+      "仿真数据文件路径配置错误",
+      "仿真数据尚未生成",
+      "文件权限不足"
+    ],
+    "steps": [
+      "ls -la <dbPath>"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-DB003",
+    "module": "HCCL-VM",
+    "submodule": "数据库",
+    "errorCodeGroup": "",
+    "title": "SQLite 查询失败",
+    "errorCode": "`HCCL_SIM_E_INTERNAL` (4)",
+    "errorFunctions": [
+      "`db_hccl_db_sqlite.cc`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_INTERNAL"
+    ],
+    "logPatterns": [
+      "Prepare failed: <error> sql:<SQL>\nStep failed: <error>, sql:<SQL>"
+    ],
+    "symptom": "SQL 查询执行失败。",
+    "reasons": [
+      "数据库表结构不匹配（版本不兼容）",
+      "数据库文件损坏",
+      "磁盘空间不足"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-C001",
+    "module": "插件",
+    "submodule": "checker",
+    "errorCodeGroup": "HCCL_SIM_E_INTERNAL",
+    "title": "内存切片溢出",
+    "errorCode": "",
+    "errorFunctions": [
+      "`task_graph_single_task_check_v3.cc::CheckMemorySlice()`"
+    ],
+    "keywords": [
+      "TaskGraphSingleTaskCheckV3",
+      "TaskGraphSingleTaskCheckV3"
+    ],
+    "logPatterns": [
+      "[TaskGraphSingleTaskCheckV3] Memory slice overflow while accumulating coverage, <detail>\n[TaskGraphSingleTaskCheckV3] Memory slice overflow, node=<node>, slice=<slice>"
+    ],
+    "symptom": "单个任务的内存切片覆盖范围超出了目标buffer的总大小。",
+    "reasons": [
+      "HCCL算法层计算的内存偏移量有误（HCCL业务问题）",
+      "仿真数据中内存布局信息与任务参数不匹配（工具数据问题）"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "graph LR\n    A[任务内存切片] --> B[目标Buffer]\n    A -.->|超出边界| C[溢出报错]\n    style C fill:#f96,stroke:#333",
+    "diagramType": "mermaid"
+  },
+  {
+    "id": "FAQ-C002",
+    "module": "插件",
+    "submodule": "checker",
+    "errorCodeGroup": "HCCL_SIM_E_INTERNAL",
+    "title": "缓冲区语义不完整",
+    "errorCode": "",
+    "errorFunctions": [
+      "`task_graph_semantic_check_v3.cc::CheckBufferContinuity()`"
+    ],
+    "keywords": [
+      "TaskGraphSemanticCheckV3",
+      "TaskGraphSemanticCheckV3",
+      "TaskGraphSemanticCheckV3"
+    ],
+    "logPatterns": [
+      "[TaskGraphSemanticCheckV3] Head gap, expect start=0x<ADDR>, actual start=0x<ADDR>\n[TaskGraphSemanticCheckV3] Middle gap, prev end=0x<ADDR>, cur start=0x<ADDR>\n[TaskGraphSemanticCheckV3] Tail gap, expect end=0x<ADDR>, actual end=0x<ADDR>"
+    ],
+    "symptom": "目标buffer的数据语义覆盖存在空洞。",
+    "reasons": [
+      "HCCL算法遗漏了部分数据区域",
+      "Checker未能正确追踪传输路径"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "graph TB\n    subgraph 目标Buffer\n    A[地址0x0] --> B[地址0x100]\n    B -.->|空洞| C[地址0x200]\n    C --> D[地址0x300]\n    end\n    style B fill:#ff9,stroke:#333\n    style C fill:#ff9,stroke:#333",
+    "diagramType": "mermaid"
+  },
+  {
+    "id": "FAQ-C003",
+    "module": "插件",
+    "submodule": "checker",
+    "errorCodeGroup": "HCCL_SIM_E_INTERNAL",
+    "title": "Reduce语义错误",
+    "errorCode": "",
+    "errorFunctions": [
+      "`task_graph_semantic_check_v3.cc::CheckReduceSemantics()`"
+    ],
+    "keywords": [
+      "TaskGraphSemanticCheckV3",
+      "TaskGraphSemanticCheckV3",
+      "TaskGraphSemanticCheckV3"
+    ],
+    "logPatterns": [
+      "[TaskGraphSemanticCheckV3] Reduce type mismatch, pair=<pair>\n[TaskGraphSemanticCheckV3] Duplicate reduce source, pair=<pair>, srcOffset=0x<ADDR>\n[TaskGraphSemanticCheckV3] Destination reduce semantic incomplete, pair=<pair>"
+    ],
+    "symptom": "Reduce操作的数据语义校验失败。",
+    "reasons": [
+      "Reduce操作的数据类型不匹配",
+      "存在重复的reduce源",
+      "目标buffer未被所有reduce源完全覆盖"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-C004",
+    "module": "插件",
+    "submodule": "checker",
+    "errorCodeGroup": "HCCL_SIM_E_PARA",
+    "title": "rankSize 为零",
+    "errorCode": "",
+    "errorFunctions": [
+      "`task_graph_semantic_check_v3.cc`"
+    ],
+    "keywords": [
+      "TaskGraphSemanticCheckV3"
+    ],
+    "logPatterns": [
+      "[TaskGraphSemanticCheckV3] rankSize is zero"
+    ],
+    "symptom": "语义检查时参与通信的rank数量为0。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-C005",
+    "module": "插件",
+    "submodule": "checker",
+    "errorCodeGroup": "HCCL_SIM_E_PARA",
+    "title": "Batch Trans 配对大小不匹配",
+    "errorCode": "",
+    "errorFunctions": [
+      "`task_graph_single_task_check_v3.cc::CheckBatchTrans()`"
+    ],
+    "keywords": [
+      "TaskGraphSingleTaskCheckV3",
+      "TaskGraphSingleTaskCheckV3"
+    ],
+    "logPatterns": [
+      "[TaskGraphSingleTaskCheckV3] Batch trans slice length mismatch, node=<node>, label=<label>, index=<N>\n[TaskGraphSingleTaskCheckV3] Batch trans pair size mismatch, node=<node>, label=<label>"
+    ],
+    "symptom": "批量传输操作中，切片长度或配对数量不匹配。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-C006",
+    "module": "插件",
+    "submodule": "checker",
+    "errorCodeGroup": "HCCL_SIM_E_NOT_SUPPORT",
+    "title": "不支持的内存类型",
+    "errorCode": "",
+    "errorFunctions": [
+      "`task_graph_single_task_check_v3.cc`"
+    ],
+    "keywords": [
+      "TaskGraphSingleTaskCheckV3",
+      "TaskGraphSingleTaskCheckV3"
+    ],
+    "logPatterns": [
+      "[TaskGraphSingleTaskCheckV3] Unsupported memory type, node=<node>, slice=<slice>\n[TaskGraphSingleTaskCheckV3] Invalid memory slice, node=<node>, slice=<slice>"
+    ],
+    "symptom": "内存切片的类型不在Checker支持的范围内。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-C007",
+    "module": "插件",
+    "submodule": "checker",
+    "errorCodeGroup": "HCCL_SIM_E_OPEN_FILE_FAILURE",
+    "title": "Dump文件写入失败",
+    "errorCode": "",
+    "errorFunctions": [
+      "`dump_manager.cc`",
+      "`dump_v3_manager.cc`"
+    ],
+    "keywords": [
+      "DumpManager::WriteMsgpackFile",
+      "DumpManager::WriteJsonFile",
+      "DumpV3Manager::WriteMsgpack"
+    ],
+    "logPatterns": [
+      "[DumpManager::WriteMsgpackFile] failed to open file: <path>\n[DumpManager::WriteJsonFile] json serialize failed: <error>, file: <path>\n[DumpV3Manager::WriteMsgpack] failed to open file: <path>"
+    ],
+    "symptom": "Checker的中间结果dump文件写入失败。",
+    "reasons": [
+      "磁盘空间不足",
+      "目录不存在或无写权限"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-C008",
+    "module": "插件",
+    "submodule": "checker",
+    "errorCodeGroup": "HCCL_SIM_E_OPEN_FILE_FAILURE",
+    "title": "二进制文件magic number不匹配",
+    "errorCode": "",
+    "errorFunctions": [
+      "`binary_data_operator.cc::FileHeaderRead()`"
+    ],
+    "keywords": [
+      "FileHeaderRead"
+    ],
+    "logPatterns": [
+      "[FileHeaderRead] Unmatched magic number:0x<N>≠0x<M>"
+    ],
+    "symptom": "读取仿真数据文件时，文件头中的magic number不匹配。",
+    "reasons": [
+      "数据文件版本与工具版本不兼容",
+      "文件损坏"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-R001",
+    "module": "插件",
+    "submodule": "runner",
+    "errorCodeGroup": "",
+    "title": "CCU版本不支持",
+    "errorCode": "`HCCL_SIM_E_NOT_SUPPORT` (5)",
+    "errorFunctions": [
+      "`ccu_resource_manager.cc::Init()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_NOT_SUPPORT",
+      "CcuResourceManager",
+      "Init"
+    ],
+    "logPatterns": [
+      "[CcuResourceManager][Init] ccu version <N> not supported\nInvalid ccu version:<version>"
+    ],
+    "symptom": "CCU执行器不支持当前设备的CCU版本。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "graph TD\n    A[加载CCU微码] --> B{版本检查}\n    B -->|CCU_V1| C[执行V1指令集]\n    B -->|CCU_V2| D[执行V2指令集]\n    B -->|其他版本| E[报错:版本不支持]",
+    "diagramType": "mermaid"
+  },
+  {
+    "id": "FAQ-R002",
+    "module": "插件",
+    "submodule": "runner",
+    "errorCodeGroup": "",
+    "title": "数据传输大小为0",
+    "errorCode": "`HCCL_SIM_E_PARA` (1)",
+    "errorFunctions": [
+      "`trans_loc_ms_to_loc_mem_executor.cc::Run()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_PARA",
+      "TransLocMSToLocMemExecutor"
+    ],
+    "logPatterns": [
+      "[TransLocMSToLocMemExecutor] The size of data transfer is 0."
+    ],
+    "symptom": "数据传输操作的数据量为0。",
+    "reasons": [
+      "源地址和目的地址相同",
+      "CCU指令参数计算错误"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-R003",
+    "module": "插件",
+    "submodule": "runner",
+    "errorCodeGroup": "",
+    "title": "AIV初始化失败",
+    "errorCode": "`HCCL_SIM_E_INTERNAL` (4)",
+    "errorFunctions": [
+      "`hccl_task_thread.cc`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_INTERNAL"
+    ],
+    "logPatterns": [
+      "Failed to init AivGraphExecutor, rankId=<N>, streamId=<N>, launchIndex=<N>\nAivGraphExecutor failed, rankId=<N>, streamId=<N>, launchIndex=<N>, ret=<N>"
+    ],
+    "symptom": "AIV图执行器初始化或执行失败。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-R004",
+    "module": "插件",
+    "submodule": "runner",
+    "errorCodeGroup": "",
+    "title": "CCU指令执行失败",
+    "errorCode": "`HCCL_SIM_E_INTERNAL` (4)",
+    "errorFunctions": [
+      "`ccu_simulator.cc::ExecuteInstr()`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_INTERNAL",
+      "CcuSimulator",
+      "ExecuteInstr",
+      "<rank>:<die>"
+    ],
+    "logPatterns": [
+      "[CcuSimulator][ExecuteInstr] locCcu[<rank>:<die>], Invalid curInstrId_[<N>], endInstrId[<M>]"
+    ],
+    "symptom": "CCU微码指令执行时，当前指令ID无效。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-R005",
+    "module": "插件",
+    "submodule": "runner",
+    "errorCodeGroup": "",
+    "title": "CCU资源地址越界",
+    "errorCode": "`HCCL_SIM_E_PARA` (1)",
+    "errorFunctions": [
+      "`ccu_resource_manager.cc`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_PARA",
+      "<N>",
+      "<N>",
+      "<N>"
+    ],
+    "logPatterns": [
+      "dieId is out of range, dieId=[<N>]\nmsAddr is out of range, msAddr=[<N>],addr=[<N>]"
+    ],
+    "symptom": "CCU资源访问时地址或ID越界。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-R006",
+    "module": "插件",
+    "submodule": "runner",
+    "errorCodeGroup": "",
+    "title": "内存搬运地址无效",
+    "errorCode": "`HCCL_SIM_E_MEMORY` (3)",
+    "errorFunctions": [
+      "`ccu_resource_manager.cc`"
+    ],
+    "keywords": [
+      "HCCL_SIM_E_MEMORY",
+      "TransMemToMem",
+      "TransMemToMem"
+    ],
+    "logPatterns": [
+      "[TransMemToMem] 无法获取srcBuf的设备地址(addr= 0x<ADDR>)！\n[TransMemToMem] 无法获取dstBuf的设备地址(addr= 0x<ADDR>)！"
+    ],
+    "symptom": "CCU执行内存搬运时，源或目标地址无法在设备内存表中找到。",
+    "reasons": [],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-I001",
+    "module": "插件",
+    "submodule": "insight",
+    "errorCodeGroup": "",
+    "title": "Insight前端页面打不开",
+    "errorCode": "",
+    "errorFunctions": [],
+    "keywords": [
+      "Insight",
+      "Insight"
+    ],
+    "logPatterns": [
+      "[Insight] Failed to start web server on port <N>\n[Insight] Address already in use"
+    ],
+    "symptom": "Insight可视化界面无法访问。",
+    "reasons": [
+      "端口被占用",
+      "网络配置问题",
+      "Python依赖未安装"
+    ],
+    "steps": [
+      "netstat -tlnp | grep <port>"
+    ],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-I002",
+    "module": "插件",
+    "submodule": "insight",
+    "errorCodeGroup": "",
+    "title": "Insight数据加载异常",
+    "errorCode": "",
+    "errorFunctions": [],
+    "keywords": [
+      "Insight",
+      "Insight"
+    ],
+    "logPatterns": [
+      "[Insight] Failed to load data from SQLite\n[Insight] JSON parse error: <error>"
+    ],
+    "symptom": "Insight面板中数据无法正常显示。",
+    "reasons": [
+      "数据库连接失败",
+      "数据文件损坏",
+      "JSON格式错误"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  },
+  {
+    "id": "FAQ-I003",
+    "module": "插件",
+    "submodule": "insight",
+    "errorCodeGroup": "",
+    "title": "DAG图渲染问题",
+    "errorCode": "",
+    "errorFunctions": [],
+    "keywords": [
+      "Insight",
+      "Insight"
+    ],
+    "logPatterns": [
+      "[Insight] DAG render failed: <error>\n[Insight] Node count exceeds limit: <N>"
+    ],
+    "symptom": "任务图无法正常渲染或显示不全。",
+    "reasons": [
+      "任务节点数量过多",
+      "图布局算法超时",
+      "浏览器内存不足"
+    ],
+    "steps": [],
+    "solution": [],
+    "diagram": "",
+    "diagramType": ""
+  }
+];
+        const modules = ["HCCL-VM", "插件"];
+        const submodules = {"HCCL-VM": ["内存管理", "命令行", "数据库", "桩代理（proxy）", "组网"], "插件": ["checker", "insight", "runner"]};
+        const errorCodes = ["HCCL_SIM_E_INTERNAL", "HCCL_SIM_E_MEMORY", "HCCL_SIM_E_NOT_FOUND", "HCCL_SIM_E_NOT_SUPPORT", "HCCL_SIM_E_OPEN_FILE_FAILURE", "HCCL_SIM_E_PARA", "HCCL_SIM_E_SYSCALL", "HCCL_SIM_HOST_ERROR_CMD"];
+        let currentKeyword = '';
+
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+
+        function initModuleFilter() {
+            const select = document.getElementById('moduleFilter');
+            modules.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m; option.textContent = m;
+                select.appendChild(option);
+            });
+        }
+
+        function initSubmoduleFilter(moduleName) {
+            const select = document.getElementById('submoduleFilter');
+            select.innerHTML = '<option value="">全部子模块</option>';
+            if (!moduleName || !submodules[moduleName]) return;
+            submodules[moduleName].forEach(sm => {
+                const option = document.createElement('option');
+                option.value = sm; option.textContent = sm;
+                select.appendChild(option);
+            });
+        }
+
+        function initErrorCodeFilter() {
+            const select = document.getElementById('errorCodeFilter');
+            errorCodes.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c; option.textContent = c;
+                select.appendChild(option);
+            });
+        }
+
+        function onModuleChange() {
+            const moduleName = document.getElementById('moduleFilter').value;
+            initSubmoduleFilter(moduleName);
+            document.getElementById('submoduleFilter').value = '';
+            searchFAQ();
+        }
+
+        function searchFAQ() {
+            const moduleFilter = document.getElementById('moduleFilter').value;
+            const submoduleFilter = document.getElementById('submoduleFilter').value;
+            const errorCodeFilter = document.getElementById('errorCodeFilter').value;
+            const keyword = document.getElementById('keywordInput').value.trim().toLowerCase();
+            currentKeyword = keyword;
+
+            let results = faqData.filter(item => {
+                if (moduleFilter && item.module !== moduleFilter) return false;
+                if (submoduleFilter && item.submodule !== submoduleFilter) return false;
+                if (errorCodeFilter) {
+                    if (item.errorCode && item.errorCode.includes(errorCodeFilter)) return true;
+                    if (item.errorCodeGroup && item.errorCodeGroup === errorCodeFilter) return true;
+                    return false;
+                }
+                if (keyword) {
+                    const searchFields = [
+                        item.title, item.errorCode, item.errorCodeGroup, ...item.errorFunctions,
+                        ...item.keywords, ...item.logPatterns, item.symptom,
+                        ...item.reasons, item.solution, item.id, item.module, item.submodule
+                    ].join(' ').toLowerCase();
+                    return searchFields.includes(keyword);
+                }
+                return true;
+            });
+            displayResults(results);
+        }
+
+        function displayResults(results) {
+            const container = document.getElementById('resultsContainer');
+            document.getElementById('statsInfo').innerHTML = `共 <strong>${faqData.length}</strong> 条FAQ`;
+            document.getElementById('matchInfo').innerHTML = results.length > 0 ?
+                `匹配到 <strong>${results.length}</strong> 条结果` : '';
+
+            if (results.length === 0) {
+                container.innerHTML = '<div class="no-results"><h3>未找到匹配结果</h3><p>请调整筛选条件</p></div>';
+                return;
+            }
+
+            // 按模块 → 子模块分组
+            const grouped = {};
+            results.forEach(item => {
+                const mod = item.module || '未知模块';
+                const sub = item.submodule || '其他';
+                if (!grouped[mod]) grouped[mod] = {};
+                if (!grouped[mod][sub]) grouped[mod][sub] = [];
+                grouped[mod][sub].push(item);
+            });
+
+            let html = '';
+            const moduleOrder = modules.filter(m => grouped[m]);
+            Object.keys(grouped).filter(m => !modules.includes(m)).forEach(m => moduleOrder.push(m));
+
+            moduleOrder.forEach(mod => {
+                const moduleCount = Object.values(grouped[mod]).reduce((sum, arr) => sum + arr.length, 0);
+                html += `<div class="module-group-header">
+                    <span>${mod}</span>
+                    <span class="module-count">${moduleCount} 条</span>
+                </div>`;
+
+                const submoduleOrder = (submodules[mod] || []).filter(sm => grouped[mod][sm]);
+                Object.keys(grouped[mod]).filter(sm => !(submodules[mod] || []).includes(sm)).forEach(sm => submoduleOrder.push(sm));
+
+                submoduleOrder.forEach(sub => {
+                    const items = grouped[mod][sub];
+                    const groupId = `group-${mod}-${sub}`.replace(/[\s（）()]/g, '_');
+                    html += `<div class="submodule-group" id="${groupId}">
+                        <div class="submodule-group-header" onclick="toggleSubmoduleGroup('${groupId}')">
+                            <span class="sub-title">${sub}</span>
+                            <span class="sub-count">${items.length} 条</span>
+                            <span class="sub-toggle">收起/展开</span>
+                        </div>`;
+
+                    items.forEach(item => {
+                        html += `<div class="faq-item">
+                            <div class="faq-header" onclick="toggleFAQ('${item.id}')">
+                                <span class="faq-id">${item.id}</span>
+                                <span class="faq-title">${highlightText(item.title)}</span>
+                                <div class="faq-tags">
+                                    ${item.errorCode ? `<span class="tag tag-code">${extractErrorCode(item.errorCode)}</span>` : (item.errorCodeGroup ? `<span class="tag tag-code">${item.errorCodeGroup}</span>` : '')}
+                                </div>
+                                <span class="expand-icon" id="icon-${item.id}">▼</span>
+                            </div>
+                            <div class="faq-content" id="content-${item.id}">${renderFAQContent(item)}</div>
+                        </div>`;
+                    });
+                    html += '</div>';
+                });
+            });
+            container.innerHTML = html;
+
+            setTimeout(() => {
+                document.querySelectorAll('.mermaid').forEach(el => mermaid.run({ nodes: [el] }));
+            }, 100);
+        }
+
+        function toggleSubmoduleGroup(groupId) {
+            const group = document.getElementById(groupId);
+            if (group) group.classList.toggle('collapsed');
+        }
+
+        function renderFAQContent(item) {
+            let html = '';
+            if (item.module) html += `<div class="faq-section"><h4>所属模块</h4><p><strong>${item.module}</strong>${item.submodule ? ' → ' + item.submodule : ''}</p></div>`;
+            if (item.errorCode) html += `<div class="faq-section"><h4>错误码</h4><p>${item.errorCode}</p></div>`;
+            if (item.errorFunctions && item.errorFunctions.length > 0)
+                html += `<div class="faq-section"><h4>错误函数</h4><ul>${item.errorFunctions.map(f => `<li>${f}</li>`).join('')}</ul></div>`;
+            if (item.logPatterns && item.logPatterns.length > 0)
+                html += `<div class="faq-section"><h4>关键日志</h4><div class="code-block">${highlightText(item.logPatterns[0])}</div></div>`;
+            if (item.symptom) html += `<div class="faq-section"><h4>问题现象</h4><p>${highlightText(item.symptom)}</p></div>`;
+            if (item.reasons && item.reasons.length > 0)
+                html += `<div class="faq-section"><h4>可能原因</h4><ul>${item.reasons.map(r => `<li>${highlightText(r)}</li>`).join('')}</ul></div>`;
+            if (item.steps) html += `<div class="faq-section"><h4>排查步骤</h4><div class="code-block">${item.steps}</div></div>`;
+            if (item.solution) html += `<div class="faq-section"><h4>解决方案</h4><div class="code-block">${item.solution}</div></div>`;
+            if (item.diagram)
+                html += `<div class="faq-section"><h4>图示说明</h4><div class="diagram-container">${item.diagramType === 'mermaid' ? `<pre class="mermaid">${item.diagram}</pre>` : `<img src="${item.diagram}" alt="示意图">`}</div></div>`;
+            return html;
+        }
+
+        function toggleFAQ(id) {
+            const content = document.getElementById('content-' + id);
+            const icon = document.getElementById('icon-' + id);
+            content.classList.toggle('active');
+            icon.classList.toggle('rotated');
+        }
+
+        function highlightText(text) {
+            if (!currentKeyword || !text) return text;
+            const regex = new RegExp(currentKeyword, 'gi');
+            return text.replace(regex, match => `<span class="highlight">${match}</span>`);
+        }
+
+        function extractErrorCode(codeStr) {
+            const match = codeStr.match(/HCCL_SIM_\w+/);
+            return match ? match[0] : codeStr;
+        }
+
+        function clearFilters() {
+            document.getElementById('moduleFilter').value = '';
+            document.getElementById('submoduleFilter').innerHTML = '<option value="">全部子模块</option>';
+            document.getElementById('errorCodeFilter').value = '';
+            document.getElementById('keywordInput').value = '';
+            currentKeyword = '';
+            displayResults(faqData);
+        }
+
+        window.onload = function() {
+            initModuleFilter(); initErrorCodeFilter(); displayResults(faqData);
+        };
+
+        document.getElementById('keywordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchFAQ();
+        });
+    </script>
+</body>
+</html>

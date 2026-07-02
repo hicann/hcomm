@@ -45,7 +45,7 @@ void CcuExecutorBase::SetCkeSignal(CcuResourceManager &ccuResMgr, uint16_t setCK
     uint16_t setCKE = ccuResMgr.GetCkeValue(rankId_, dieId_, setCKEId);
     uint16_t newSetCKE = (setCKE & (~setCKEMask)) | setCKEMask;
     ccuResMgr.UpdateCkeValue(rankId_, dieId_, setCKEId, newSetCKE);
-    HCCL_VM_DEBUG("[CcuExecutorBase][SetCkeSignal] success, locCcu[{}:{}], SetCKE[{}:{:04x}], value[{} --> {}]",
+    HCCL_VM_DEBUG("success, locCcu[{}:{}], SetCKE[{}:{:04x}], value[{} --> {}]",
         rankId_,
         dieId_,
         setCKEId,
@@ -59,7 +59,7 @@ void CcuExecutorBase::SetRmtCKESignal(CcuResourceManager &ccuResMgr, int rmtRank
     uint16_t rmtCKE = ccuResMgr.GetCkeValue(rmtRank, rmtDie, setRmtCKEId);
     uint16_t newRmtCKE = (rmtCKE & (~setRmtCKEMask)) | setRmtCKEMask;
     ccuResMgr.UpdateCkeValue(rmtRank, rmtDie, setRmtCKEId, newRmtCKE);
-    HCCL_VM_DEBUG("[CcuExecutorBase][SetRmtCKESignal] success, ccu[{}:{} --> {}:{}], SetRmtCKE[{}:{:04x}], value[{} --> {}]",
+    HCCL_VM_DEBUG("success, ccu[{}:{} --> {}:{}], SetRmtCKE[{}:{:04x}], value[{} --> {}]",
         rankId_,
         dieId_,
         rmtRank,
@@ -76,12 +76,12 @@ void CcuExecutorBase::ClearCkeSignal(CcuResourceManager &ccuResMgr, uint16_t cle
     if (ccuSimulator_->GetState() == CcuExecState::EXEC_LOOP_INSTR) {
         auto ckeOffset   = ccuSimulator_->GetLoopCKEOffset();
         clearCKEId += ckeOffset;
-        HCCL_VM_DEBUG("[CcuExecutorBase][ClearCkeSignal] locCcu[{}:{}], Get cke id offset = [{}]", rankId_, dieId_, ckeOffset);
+        HCCL_VM_DEBUG("locCcu[{}:{}], Get cke id offset = [{}]", rankId_, dieId_, ckeOffset);
     }
     uint16_t setCKE = ccuResMgr.GetCkeValue(rankId_, dieId_, clearCKEId);
     uint16_t newSetCKE = setCKE & (~clearMask);
     ccuResMgr.UpdateCkeValue(rankId_, dieId_, clearCKEId, newSetCKE);
-    HCCL_VM_DEBUG("[CcuExecutorBase][ClearCkeSignal] success, locCcu[{}:{}], ClearCKE[{}:{:04x}], value[{} --> {}]",
+    HCCL_VM_DEBUG("success, locCcu[{}:{}], ClearCKE[{}:{:04x}], value[{} --> {}]",
         rankId_,
         dieId_,
         clearCKEId,
@@ -93,7 +93,7 @@ void CcuExecutorBase::ClearCkeSignal(CcuResourceManager &ccuResMgr, uint16_t cle
 uint16_t CcuExecutorBase::UpdateXnId(uint16_t xnIdField) {
     if (ccuSimulator_->GetState() == CcuExecState::EXEC_LOOP_INSTR) {
         auto xnIdOffset   = ccuSimulator_->GetLoopXnIdOffset();
-        HCCL_VM_DEBUG("[CcuExecutorBase][UpdateXnId], locCcu[{}:{}], Get cke id offset = [{:x}]",  rankId_, dieId_, xnIdOffset);
+        HCCL_VM_DEBUG(", locCcu[{}:{}], Get cke id offset = [{:x}]",  rankId_, dieId_, xnIdOffset);
         return xnIdField + xnIdOffset;
     }
     return xnIdField;
@@ -102,7 +102,7 @@ uint16_t CcuExecutorBase::UpdateXnId(uint16_t xnIdField) {
 uint16_t CcuExecutorBase::UpdateCkeId(uint16_t ckeId) {
     if (ccuSimulator_->GetState() == CcuExecState::EXEC_LOOP_INSTR) {
         auto ckeOffset   = ccuSimulator_->GetLoopCKEOffset();
-        HCCL_VM_DEBUG("[CcuExecutorBase][UpdateCkeId], locCcu[{}:{}], Get cke id offset = [{:x}]",  rankId_, dieId_, ckeOffset);
+        HCCL_VM_DEBUG(", locCcu[{}:{}], Get cke id offset = [{:x}]",  rankId_, dieId_, ckeOffset);
         return ckeId + ckeOffset;
     }
     return ckeId;
@@ -111,7 +111,7 @@ uint16_t CcuExecutorBase::UpdateCkeId(uint16_t ckeId) {
 uint16_t CcuExecutorBase::UpdateMSId(uint16_t msId) {
     if (ccuSimulator_->GetState() == CcuExecState::EXEC_LOOP_INSTR) {
         auto ckeOffset   = ccuSimulator_->GetLoopMsOffset();
-        HCCL_VM_DEBUG("[CcuExecutorBase][UpdateMSId], locCcu[{}:{}], Get cke id offset = [{:x}]",  rankId_, dieId_, ckeOffset);
+        HCCL_VM_DEBUG(", locCcu[{}:{}], Get cke id offset = [{:x}]",  rankId_, dieId_, ckeOffset);
         return msId + ckeOffset;
     }
     return msId;
@@ -143,7 +143,7 @@ void CcuExecutorBase::WaitCkeProcess(uint16_t waitCKEId, uint16_t waitCKEMask, u
     if (ccuSimulator_->GetState() == CcuExecState::EXEC_LOOP_INSTR) {
         auto ckeOffset   = ccuSimulator_->GetLoopCKEOffset();
         newWaitCKEId += ckeOffset;
-        HCCL_VM_DEBUG("[CcuExecutorBase][WaitCkeProcess] instr[{}], locCcu[{}:{}], Get cke id offset = [{:x}]", instrName, rankId_, dieId_, ckeOffset);
+        HCCL_VM_DEBUG("instr[{}], locCcu[{}:{}], Get cke id offset = [{:x}]", instrName, rankId_, dieId_, ckeOffset);
     }
     auto waitCKE = ccuResMgr.GetCkeValue(rankId_, dieId_, newWaitCKEId);
     if (waitCKEMask != 0) {
@@ -153,7 +153,7 @@ void CcuExecutorBase::WaitCkeProcess(uint16_t waitCKEId, uint16_t waitCKEMask, u
         } else {
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - oldTime);
             if (duration.count() >= 1000) {
-                HCCL_VM_DEBUG("[CcuExecutorBase][WaitCkeProcess] instr[{}], ccuId=[{}:{}], waitCKE[{}:{:04x}], expect:[{:04x}], actual:[{:04x}], waitCKE:[{:04x}]",
+                HCCL_VM_DEBUG("instr[{}], ccuId=[{}:{}], waitCKE[{}:{:04x}], expect:[{:04x}], actual:[{:04x}], waitCKE:[{:04x}]",
                 instrName, rankId_, dieId_, newWaitCKEId, waitCKEMask, waitCKEMask, (waitCKE & waitCKEMask), waitCKE);
                 oldTime = currentTime;
             }

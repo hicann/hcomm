@@ -85,10 +85,10 @@ void RecordRunVirtualRuntimeTime(RunVirtualRuntimeTimeStats& stats, uint64_t cos
 void DumpRunVirtualRuntimeTimeStats(const RunVirtualRuntimeTimeStats& stats)
 {
     if (stats.runCount == 0) {
-        HCCL_VM_INFO("[Runner][StageTime] RunVirtualRuntime no execution, runCount=0");
+        HCCL_VM_INFO("RunVirtualRuntime no execution, runCount=0");
         return;
     }
-    HCCL_VM_INFO("[Runner][StageTime] RunVirtualRuntime summary, runCount={}, totalCostMs={}, lastCostMs={}, "
+    HCCL_VM_INFO("RunVirtualRuntime summary, runCount={}, totalCostMs={}, lastCostMs={}, "
         "maxCostMs={}", stats.runCount, stats.totalCostMs, stats.lastCostMs, stats.maxCostMs);
 }
 }
@@ -152,12 +152,12 @@ void ProcessCommand(const std::string& line) {
         std::string action = j.value("action", "");
 
         if (action == "stop") {
-            HCCL_VM_INFO("[Runner] Stop signal received. Initiating shutdown...");
+            HCCL_VM_INFO("Stop signal received. Initiating shutdown...");
             g_keep_running.store(false);
         }
         // 未来可扩展其他 action...
     } catch (const std::exception& e) {
-        HCCL_VM_ERROR("[Runner] Command processing failed: {}", e.what());
+        HCCL_VM_ERROR("Command processing failed: {}", e.what());
     }
 }
 
@@ -210,10 +210,10 @@ void RunVirtualRuntime(HcclSim::StorageManager& storage) {
 
     HcclSim::CheckerParam param = storage.GetCheckerParam();
     HcclCMDType cmdType = param.cmdType;
-    HCCL_VM_INFO("[RunVirtualRuntime] start check semantic ....: cmdType = {}, reduceOp = {}",
+    HCCL_VM_INFO("start check semantic ....: cmdType = {}, reduceOp = {}",
         static_cast<uint32_t>(cmdType), static_cast<uint32_t>(param.reduceType));
 
-    HCCL_VM_INFO("[Runner][OpInfo] syncIter = {}, op = {}, rankSize = {}, dataType = {}, dataCount = {}, "
+    HCCL_VM_INFO("syncIter = {}, op = {}, rankSize = {}, dataType = {}, dataCount = {}, "
                  "reduceType = {}, srcRank = {}, dstRank = {}, root = {}",
                  records[0].syncIter, HcclCmdTypeToString(cmdType), param.rankSize,
                  HcclDataTypeToString(param.dataType), param.dataCount,
@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
         }
         // EOF 或 stop 命令后，确保标志被设置
         g_keep_running.store(false);
-        HCCL_VM_INFO("[Runner] stdin reader thread exiting.");
+        HCCL_VM_INFO("stdin reader thread exiting.");
     }).detach();
 
     while (g_keep_running.load()) {
@@ -286,16 +286,16 @@ int main(int argc, char* argv[])
             continue;
         }
         if (targetRound == sim::kRunnerExitSignal) {
-            HCCL_VM_INFO("[Runner] Exit signal received from hccl-vm.");
+            HCCL_VM_INFO("Exit signal received from hccl-vm.");
             break;
         }
-        HCCL_VM_INFO("[Runner] Task received, targetRound={}", targetRound);
+        HCCL_VM_INFO("Task received, targetRound={}", targetRound);
         RunVirtualRuntime(storage);
         syncer.notifyProxyToContinue(targetRound);
-        HCCL_VM_INFO("[Runner] Round {} completed.", targetRound);
+        HCCL_VM_INFO("Round {} completed.", targetRound);
         FlushLog(); // 将本轮完整日志落盘
     }
 
-    HCCL_VM_INFO("[Runner] Exiting...");
+    HCCL_VM_INFO("Exiting...");
     return 0;
 }

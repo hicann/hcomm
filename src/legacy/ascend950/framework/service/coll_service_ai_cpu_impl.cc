@@ -700,10 +700,10 @@ void CollServiceAiCpuImpl::SaveDfxTaskInfo(const TaskParam &taskParam, const Ran
     u32 streamId;
     HrtGetTaskIdAndStreamID(taskId, streamId);
  
-    shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(streamId, taskId, remoteRankId, taskParam,
+    std::unique_ptr<TaskInfo> taskInfo = std::make_unique<TaskInfo>(streamId, taskId, remoteRankId, taskParam,
         comm->GetMirrorTaskManager().GetCurrDfxOpInfo(), isMaster);
  
-    comm->GetMirrorTaskManager().AddTaskInfo(taskInfo);
+    comm->GetMirrorTaskManager().AddTaskInfo(std::move(taskInfo));
 }
 
 void CollServiceAiCpuImpl::Resume()

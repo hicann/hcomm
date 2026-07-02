@@ -8,7 +8,7 @@ HCCL-VM是面向华为昇腾NPU卡的高性能集合通信的虚拟执行环境�
 
 ## 2. 前置依赖
 
-|          |               |
+|   依赖项   |     版本要求     |
 | -------- | ------------- |
 | 系统架构  | x86_64 Ubuntu22.04及以上 |
 | 规格约束  | Ascend950，其余参照[约束详情](#45-工具规格约束) |
@@ -18,15 +18,20 @@ HCCL-VM是面向华为昇腾NPU卡的高性能集合通信的虚拟执行环境�
 安装最新版本CANN Toolkit开发套件包和CANN ops算子包 [下载链接](https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/master/)
 
 ```bash
-./Ascend-cann-toolkit_9.1.0_linux-x86_64.run --install --install-path=/home/Ascend
-./Ascend-cann-950-ops_9.1.0_linux-x86_64.run --install --install-path=/home/Ascend
+# 确保安装包具有可执行权限
+chmod +x Ascend-cann-toolkit_9.1.0_linux-x86_64.run
+chmod +x Ascend-cann-950-ops_9.1.0_linux-x86_64.run
+# 安装命令
+./Ascend-cann-toolkit_9.1.0_linux-x86_64.run --install --install-path=/home/workspace/Ascend
+./Ascend-cann-950-ops_9.1.0_linux-x86_64.run --install --install-path=/home/workspace/Ascend
 ```
+
 
 ### 2.2 hccl_test编译
 
 hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测试工具](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910beta1/devaids/hccltool/HCCLpertest_16_0001.html)，HCCL-VM支持在虚拟环境中运行hccl_test用例。请先参照[hccl_test用例构建](#42-hccl-test用例构建)章节进行用例二进制程序的编译。
 
-备注：可选，未来支持Pytorch用例
+备注：可选，未来支持Pytorch用例。
 
 ---
 
@@ -49,26 +54,26 @@ sudo apt install build-essential cmake libsqlite3-dev rdma-core libibverbs-dev p
 
 # 4. 编译HCCL-VM工具，下载hcomm代码之后，工具源码所在路径：/home/workspace/hcomm/test/hccl_vm
 cd /home/workspace/hcomm/test/hccl_vm
-source /home/Ascend/cann/set_env.sh
+source /home/workspace/Ascend/cann/set_env.sh
 export HCCL_CODE_HOME=/home/workspace/hccl
 export HCOMM_CODE_HOME=/home/workspace/hcomm
-./build.sh --full
+bash ./build.sh --full
 ```
 
 ### 3.2 使用示例
 
 #### 3.2.1 环境配置
 
-请参照[hccl_rootinfo文件内容](#47-hccl_rootinfojson文件)，创建并配置hccl_rootinfo.json文件，
+请参照[hccl_rootinfo文件内容](#47-hccl_rootinfojson文件)，创建并配置hccl_rootinfo.json文件。
 
 #### 3.2.2 CCU模式
 
-1. 环境变量配置
+1. 环境变量配置。
 
 ```bash
 # 进入工具安装目录
 cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
-source /home/Ascend/cann/set_env.sh
+source /home/workspace/Ascend/cann/set_env.sh
 export LD_LIBRARY_PATH=$ASCEND_HOME_PATH/lib64:$ASCEND_HOME_PATH/devlib:$LD_LIBRARY_PATH
 export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
 export HCCL_OP_EXPANSION_MODE="CCU_SCHED"
@@ -78,11 +83,8 @@ export HCCL_OP_EXPANSION_MODE="CCU_SCHED"
 
 
 ```bash
-# 进入工具安装目录
-cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
-
 # 需要进入到新的bin文件目录下执行hccl-vm
-cd ./bin
+cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
 ./hccl-vm start ascend950_cluster_32_server_normal.yaml
@@ -101,27 +103,29 @@ cd ./bin
 (hvm)$> exit
 ```
 
-3. 验证hccl_test用例运行结果 [Runner结果查看](#491-runner插件结果) [Checker结果查看](#492-checker插件结果)
+3. 验证hccl_test用例运行结果
+[Runner结果查看](#491-runner插件结果) 
+[Checker结果查看](#492-checker插件结果)
 
 #### 3.2.3 AICPU模式
 
-AICPU展开模式需要将算法展开步骤放到设备侧执行，因此hccl-vm工具需要将HCCL的设备侧的符号编译并模拟执行。由于设备侧符号是ARM架构的，因此在X86环境上编译时需要借助交叉编译器，运行时需要借助QEMU实现AICPU模式的模拟运行
+AICPU展开模式需要将算法展开步骤放到设备侧执行，因此hccl-vm工具需要将HCCL的设备侧的符号编译并模拟执行。由于设备侧符号是ARM架构的，因此在X86环境上编译时需要借助交叉编译器，运行时需要借助QEMU实现AICPU模式的模拟运行。
 
-设备侧符号使用hccl和hcomm的源码编译，为了保证Host与Device通信协议正确，需要同时编译Host侧的安装包并进行替换安装
+设备侧符号使用hccl和hcomm的源码编译，为了保证Host与Device通信协议正确，需要同时编译Host侧的安装包并进行替换安装。
 
-1. HCCL设备侧符号编译、安装、拷贝等
+1. HCCL设备侧符号编译、安装、拷贝等。
 
 ```bash
 cd /home/workspace/hcomm/test/hccl_vm/
 bash ./build_pkg.sh
 ```
 
-2. 环境变量配置
+2. 环境变量配置。
 
 ```bash
 # 进入工具安装目录
 cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
-source /home/Ascend/cann/set_env.sh
+source /home/workspace/Ascend/cann/set_env.sh
 export LD_LIBRARY_PATH=$ASCEND_HOME_PATH/lib64:$ASCEND_HOME_PATH/devlib:$LD_LIBRARY_PATH
 export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
 export HCCL_OP_EXPANSION_MODE="AI_CPU"
@@ -130,11 +134,8 @@ export HCCL_OP_EXPANSION_MODE="AI_CPU"
 3. 执行
 
 ```bash
-# 进入工具安装目录
-cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
-
 # 需要进入到新的bin文件目录下执行hccl-vm
-cd ./bin
+cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
 ./hccl-vm start ascend950_cluster_32_server_normal.yaml
@@ -157,14 +158,14 @@ cd ./bin
 
 #### 3.2.4 AIV模式
 
-**当前仅支持Runner插件**
+**当前仅支持Runner插件**。
 
-1. 环境变量配置
+1. 环境变量配置。
 
 ```bash
 # 进入工具安装目录
 cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
-source /home/Ascend/cann/set_env.sh
+source /home/workspace/Ascend/cann/set_env.sh
 export LD_LIBRARY_PATH=$ASCEND_HOME_PATH/lib64:$ASCEND_HOME_PATH/devlib:$LD_LIBRARY_PATH
 export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
 export HCCL_OP_EXPANSION_MODE="AIV"
@@ -173,11 +174,8 @@ export HCCL_OP_EXPANSION_MODE="AIV"
 2. 执行
 
 ```bash
-# 进入工具安装目录
-cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
-
 # 需要进入到新的bin文件目录下执行hccl-vm
-cd ./bin
+cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
 ./hccl-vm start ascend950_cluster_32_server_normal.yaml
@@ -197,23 +195,23 @@ cd ./bin
 
 ### 3.3 Pytorch用例示例
 
-暂不支持
+暂不支持。
 
 ### 3.4 hccl代码修改验证示例
 
 若您修改了CANN的算子包代码，如新增了算法类型，为保证您的修改生效，需要按照如下步骤操作执行。build_pkg.sh脚本帮助用户执行编包、装包、拷贝Device侧依赖符号，执行前需设置环境变量:
 
 ```bash
-# 假设您的CANN安装目录为：/home/Ascend
-source /home/Ascend/cann/set_env.sh
+# 假设您的CANN安装目录为：/home/workspace/Ascend
+source /home/workspace/Ascend/cann/set_env.sh
 # 配置hccl代码仓路径
 export HCCL_CODE_HOME=/home/workspace/hccl
 # 配置hcomm代码仓路径
 export HCOMM_CODE_HOME=/home/workspace/hcomm
 ```
 
-1. 若您修改了CANN hccl仓代码，请执行bash build_pkg.sh --install hccl
-2. 若您修改了CANN hcomm仓代码，请执行bash build_pkg.sh --install hcomm
+1. 若您修改了CANN hccl仓代码，请执行bash build_pkg.sh --install hccl。
+2. 若您修改了CANN hcomm仓代码，请执行bash build_pkg.sh --install hcomm。
 3. 参考[使用示例](#32-使用示例)步骤，重新运行用例。
 
 ---
@@ -247,13 +245,13 @@ sudo apt install openmpi-bin libopenmpi-dev
 
 ```bash
 # 修改CANN安装目录权限
-chmod -R 755 /home/Ascend
+chmod -R 755 /home/workspace/Ascend
 
 # 进入hccl_test用例源码目录
-cd /home/Ascend/cann/tools/hccl_test
+cd /home/workspace/Ascend/cann/tools/hccl_test
 
 # 设置CANN环境变量
-source /home/Ascend/cann/set_env.sh
+source /home/workspace/Ascend/cann/set_env.sh
 
 # 临时修改Makefile脚本
 if ! grep -q '\-lmpi_cxx' Makefile; then
@@ -266,14 +264,14 @@ MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi make ASCEND_DIR=${ASCEND_HOME_PATH}
 
 #### 4.2.2 MPICH环境编译
 
-假设mpich的路径为: `/usr/lib/mpich`
+假设mpich的路径为: `/usr/lib/mpich`。
 
 ```bash
 # 进入hccl_test用例源码目录
-cd /home/Ascend/cann/tools/hccl_test
+cd /home/workspace/Ascend/cann/tools/hccl_test
 
 # 设置CANN环境变量
-source /home/Ascend/cann/set_env.sh
+source /home/workspace/Ascend/cann/set_env.sh
 
 # 配置环境变量
 export LD_LIBRARY_PATH=/usr/lib/mpich/lib/:${ASCEND_HOME_PATH}/lib64/:${ASCEND_HOME_PATH}/x86_64-linux/devlib:$LD_LIBRARY_PATH
@@ -418,7 +416,7 @@ topology:
 `topo.json` 和 `ranktable.json` 文件不需要手动创建，工具会根据以下信息自动生成：
 
 - **拓扑配置编号**：用户在启动时指定的编号（如 112、113 等）
-- **芯片类型**：根据运行环境自动识别的芯片类型
+- **芯片类型**：根据运行环境自动识别的芯片类型。
 
 虽然配置文件由工具自动生成，但了解其结构有助于理解拓扑配置。
 
@@ -482,11 +480,11 @@ topology:
 
 **字段说明**：
 
-- `server.device_count`：设备总数
-- `server.groups`：设备分组信息
-- `ports`：端口配置
+- `server.device_count`：设备总数。
+- `server.groups`：设备分组信息。
+- `ports`：端口配置。
   - `usage`：端口用途（`peer2peer` 表示设备间连接，`peer2net` 表示与外部连接）
-- `links`：链路配置
+- `links`：链路配置。
   - `link_type`：链路类型（`PEER2PEER` 或 `PEER2NET`）
   - `topo_type`：拓扑类型（`1DMESH`、`CLOS` 等）
 
@@ -512,11 +510,11 @@ topology:
 
 **字段说明**：
 
-- `server_count`：服务器数量
-- `device_count`：设备总数
-- `server_list`：服务器和设备列表
-  - `device_ip`：设备 IP 地址
-  - `port`：设备端口号
+- `server_count`：服务器数量。
+- `device_count`：设备总数。
+- `server_list`：服务器和设备列表。
+  - `device_ip`：设备 IP 地址。
+  - `port`：设备端口号。
 
 ### 4.4 hccl\_config.sh文件说明
 
@@ -560,7 +558,7 @@ cd "${HCCL_VM_INSTALL_DIR}/data" 2>/dev/null && {
 }
 
 # 设置CANN环境变量
-source /home/Ascend/cann/set_env.sh
+source /home/workspace/Ascend/cann/set_env.sh
 
 # 关闭hccl心跳功能
 export HCCL_DFS_CONFIG=cluster_heartbeat:off
@@ -677,7 +675,7 @@ Checker插件正处于新旧交替阶段，Checker V3为原Checker的重构版�
 ```json
 {
   "version": "2.0",
-  "topo_file_path": "/home/myuser/workspace/CheckerL2/hccl_vm_install/data/topo.json"
+  "topo_file_path": "/home/workspace/hcomm/test/hccl_vm/hccl_vm_install/data/topo.json"
 }
 ```
 
@@ -701,7 +699,7 @@ export PATH=/usr/lib/mpich/bin:$PATH
 OpenMPI环境，用户按照如下命令运行hccl_test用例：
 
 ```bash
-export HCCL_TEST_PATH=/home/myuser/workspace/Ascend/cann/tools/hccl_test
+export HCCL_TEST_PATH=/home/workspace/Ascend/cann/tools/hccl_test
 mpirun --allow-run-as-root --oversubscribe -np 2 ${HCCL_TEST_PATH}/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1
 ```
 
@@ -714,7 +712,7 @@ mpirun --allow-run-as-root --oversubscribe -np 2 ${HCCL_TEST_PATH}/bin/reduce_sc
 MPICH环境，用户按照如下命令运行hccl_test用例：
 
 ```bash
-export HCCL_TEST_PATH=/home/myuser/workspace/Ascend/cann/tools/hccl_test
+export HCCL_TEST_PATH=/home/workspace/Ascend/cann/tools/hccl_test
 mpirun -np 2 ${HCCL_TEST_PATH}/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1
 ```
 
@@ -760,7 +758,7 @@ data_size(Bytes): | aveg_time(us): | alg_bandwidth(GB/s): | check_result:
 
 ### 开源第三方软件依赖
 
-编译本项目时，依赖的第三方开源软件列表如下，离线编译场景可下载并重命名软件包后放置在本项目内的third_party目录下
+编译本项目时，依赖的第三方开源软件列表如下，离线编译场景可下载并重命名软件包后放置在本项目内的third_party目录下。
 
 | 开源软件       | 版本          |下载地址 |
 | ------------  | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -785,5 +783,5 @@ data_size(Bytes): | aveg_time(us): | alg_bandwidth(GB/s): | check_result:
 
 ---
 
-**文档版本**：v1.0
-**最后更新**：2026-06-26
+**文档版本**：v1.1。
+**最后更新**：2026-06-30。

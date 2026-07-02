@@ -40,7 +40,7 @@ protected:
         EXPECT_EQ(dfx_->Init(0, "test_comm", 0), HCCL_SUCCESS);
 
         dfxLite_ = std::make_unique<HcclCommDfxLite>();
-        EXPECT_EQ(dfxLite_->Init(0, "test_comm"), HCCL_SUCCESS);
+        EXPECT_EQ(dfxLite_->Init(0, "test_comm", 0), HCCL_SUCCESS);
     }
 
     virtual void TearDown()
@@ -199,11 +199,9 @@ TEST_F(HcclCommDfxTest, Ut_Add_Get_ChannelRemoteRankId)
     u32 remoteRankId = 3;
     dfxLite_->AddChannelRemoteRankId(channelHandle, remoteRankId);
 
-    u32 value = 0;
-    EXPECT_EQ(dfxLite_->GetChannelRemoteRankId(channelHandle, value), HCCL_SUCCESS);
-    EXPECT_EQ(value, remoteRankId);
+    EXPECT_EQ(dfxLite_->GetChannelRemoteRankId(channelHandle), remoteRankId);
 
-    EXPECT_NE(dfxLite_->GetChannelRemoteRankId(0x123, value), HCCL_SUCCESS);
+    EXPECT_EQ(dfxLite_->GetChannelRemoteRankId(0x123), INVALID_UINT);
 }
 
 // 测试 IsOpBase - OFFLOAD 模式返回 false

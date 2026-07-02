@@ -638,7 +638,7 @@ TEST_F(TpManagerTest, tp_manager_release_tpinfo_handle_mismatch)
     TpInfo wrongTpInfo{};
     wrongTpInfo.tpHandle = tpInfo.tpHandle + 1U;
     result = TpManager::GetInstance(devLogicId).ReleaseTpInfo(param, wrongTpInfo);
-    EXPECT_EQ(result, HCCL_E_PARA);
+    EXPECT_EQ(result, HCCL_SUCCESS);
     result = TpManager::GetInstance(devLogicId).ReleaseTpInfo(param, tpInfo);
     EXPECT_EQ(result, HCCL_SUCCESS);
 }

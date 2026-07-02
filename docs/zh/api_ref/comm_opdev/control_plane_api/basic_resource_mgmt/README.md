@@ -12,7 +12,6 @@
 - [HcommChannelDescInit](HcommChannelDescInit.md)  
 - [HcommChannelCreate](HcommChannelCreate.md)  
 - [HcommChannelGetStatus](HcommChannelGetStatus.md)  
-- [HcommChannelGetNotifyNum](HcommChannelGetNotifyNum.md)  
 - [HcommChannelDestroy](HcommChannelDestroy.md)  
 - [HcommThreadAlloc](HcommThreadAlloc.md)  
 - [HcommThreadFree](HcommThreadFree.md)  

@@ -59,7 +59,7 @@ struct CcuNodeMetaV3 {
     RankId peerRank{INVALID_RANK_ID};
     uint32_t dieId{INVALID_DIE_ID};
     uint16_t ckeId{INVALID_CCU_CKE};
-    uint16_t topicId{0};
+    uint16_t remainingCkeMask{0};
     bool invalidPost{false};
 };
 
@@ -98,20 +98,21 @@ public:
     HcclResult InitInstrInfo(StorageManager &storage);
     HcclResult CreateHeadNode();
     HcclResult AppendGeneratedNode(std::unique_ptr<TaskNode> node, RankId rankId, uint32_t queId,
-        CcuNodeRoleV3 role, TaskNode *&outNode, RankId peerRank = INVALID_RANK_ID, uint16_t topicId = 0,
+        CcuNodeRoleV3 role, TaskNode *&outNode, RankId peerRank = INVALID_RANK_ID, uint16_t remainingCkeMask = 0,
         uint32_t dieId = INVALID_DIE_ID, uint16_t ckeId = INVALID_CCU_CKE, bool invalidPost = false);
     HcclResult AppendGeneratedNode(std::unique_ptr<TaskNode> node, const TaskPosition &position,
-        CcuNodeRoleV3 role, TaskNode *&outNode, RankId peerRank = INVALID_RANK_ID, uint16_t topicId = 0,
+        CcuNodeRoleV3 role, TaskNode *&outNode, RankId peerRank = INVALID_RANK_ID, uint16_t remainingCkeMask = 0,
         uint32_t dieId = INVALID_DIE_ID, uint16_t ckeId = INVALID_CCU_CKE, bool invalidPost = false);
 
     void SetNodeMeta(TaskNode *node, const CcuNodeMetaV3 &meta);
     const CcuNodeMetaV3 *GetNodeMeta(const TaskNode *node) const;
     CcuNodeRoleV3 GetNodeRole(const TaskNode *node) const;
     RankId GetNodePeerRank(const TaskNode *node) const;
-    uint16_t GetNodeTopicId(const TaskNode *node) const;
-    void SetNodeTopicId(TaskNode *node, uint16_t topicId);
+    uint16_t GetNodeRemainingCkeMask(const TaskNode *node) const;
+    void SetNodeRemainingCkeMask(TaskNode *node, uint16_t remainingCkeMask);
     void SetNodePeerRank(TaskNode *node, RankId peerRank);
     std::string Describe() const;
+    std::string DescribeNextInstructionByQueue() const;
 
     void GetSqe(uint32_t queId, uint16_t sqeArgsId, uint64_t &argVal);
     void GetDieId(uint32_t queId, uint32_t &dieId) const;

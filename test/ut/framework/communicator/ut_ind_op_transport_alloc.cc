@@ -101,7 +101,7 @@ TEST_F(IndOpTransportAllocTest, Ut_IndOpTransportAlloc_When_AllocFailed_Expect_R
     hcclCommunicator->indptOpTransportManager_.reset(
         new (std::nothrow) TransportManager(
             cclBufferManager, socketManager, dispatcher, notifyPool,
-            rankInfoList, 0, "test_tag", "test_tag", 0, NICDeployment::NIC_DEPLOYMENT_DEVICE, false,
+            rankInfoList, 0, "test_tag", 0, NICDeployment::NIC_DEPLOYMENT_DEVICE, false,
             false, false, nicRanksPort, vnicRanksPort, false,
             devIpAddr, hostIp, localVnicIp, netDevCtxMap));
 

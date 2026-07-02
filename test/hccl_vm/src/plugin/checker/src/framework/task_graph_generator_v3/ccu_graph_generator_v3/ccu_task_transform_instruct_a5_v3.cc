@@ -19,6 +19,7 @@
 #include "sim_log.h"
 #include "ccu_loop_merge_v3.h"
 #include "ccu_task_transform_instruct_common_v3.h"
+#include "utils/error_codes.h"
 
 namespace {
 
@@ -56,6 +57,40 @@ constexpr uint16_t MAX_CODE = 0x1;
 constexpr uint16_t MIN_CODE = 0x2;
 
 constexpr uint64_t UB_MAX_SIZE = 256 * 1024 * 1024;
+
+#define CHK_GET_XN_V3(curCcuTask, queId, xnId, xnValue) \
+    do { \
+        uint32_t _checkerDieId = INVALID_DIE_ID; \
+        (curCcuTask)->GetDieId((queId), _checkerDieId); \
+        const uint32_t _checkerInstrId = (curCcuTask)->microCodePosInQue[(queId)] + \
+            (curCcuTask)->startInstrIdInQue[(queId)]; \
+        if (AllRankParamRecorder::Global()->GetXn((curCcuTask)->GetRankId(), _checkerDieId, (xnId), \
+            (xnValue)) != HCCL_SUCCESS) { \
+            HCCL_VM_ERROR("{} Failed to read XN register before it was initialized, rankId={}, " \
+                "dieId={}, instrId={}, xnId={}", \
+                MakeErrorCodeText(ErrorCode::GRAPH_REGISTER_UNINITIALIZED).c_str(), \
+                static_cast<uint32_t>((curCcuTask)->GetRankId()), _checkerDieId, _checkerInstrId, \
+                static_cast<uint16_t>(xnId)); \
+            return HCCL_E_PARA; \
+        } \
+    } while (0)
+
+#define CHK_GET_GSA_V3(curCcuTask, queId, gsaId, gsaValue) \
+    do { \
+        uint32_t _checkerDieId = INVALID_DIE_ID; \
+        (curCcuTask)->GetDieId((queId), _checkerDieId); \
+        const uint32_t _checkerInstrId = (curCcuTask)->microCodePosInQue[(queId)] + \
+            (curCcuTask)->startInstrIdInQue[(queId)]; \
+        if (AllRankParamRecorder::Global()->GetGSA((curCcuTask)->GetRankId(), _checkerDieId, (gsaId), \
+            (gsaValue)) != HCCL_SUCCESS) { \
+            HCCL_VM_ERROR("{} Failed to read GSA register before it was initialized, rankId={}, " \
+                "dieId={}, instrId={}, gsaId={}", \
+                MakeErrorCodeText(ErrorCode::GRAPH_REGISTER_UNINITIALIZED).c_str(), \
+                static_cast<uint32_t>((curCcuTask)->GetRankId()), _checkerDieId, _checkerInstrId, \
+                static_cast<uint16_t>(gsaId)); \
+            return HCCL_E_PARA; \
+        } \
+    } while (0)
 
 } // namespace
 
@@ -119,7 +154,8 @@ struct LoopGroupParam {
 HcclResult IsLoopGroupParamNull(LoopGroupParam* loopGroupParam)
 {
     if (loopGroupParam != nullptr) {
-        HCCL_ERROR("this ins do not support loop");
+        HCCL_VM_ERROR("{} This A5 instruction cannot be used inside a loop expansion.",
+            MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str());
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;
@@ -207,8 +243,8 @@ HcclResult TransformLoadGSAXnInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV
 
     uint64_t      argVal1= 0;
     uint64_t      argVal2= 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetGSA(rankId, dieId, gsAmId, argVal1));
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xnId, argVal2));
+    CHK_GET_GSA_V3(curCcuTask, queId, gsAmId, argVal1);
+    CHK_GET_XN_V3(curCcuTask, queId, xnId, argVal2);
     CHK_RET(AllRankParamRecorder::Global()->SetGSA(rankId, dieId, gsAdId, argVal1 + argVal2));
     HCCL_VM_DEBUG("Load GSA[{}]({}) + Xn[{}]({}) to GSA[{}]({})", gsAmId, argVal1, xnId, argVal2,
         gsAdId, argVal1 + argVal2);
@@ -229,8 +265,8 @@ HcclResult TransformLoadGSAGSAInstr(const CcuRep::CcuInstr *instr, CcuGraphState
 
     uint64_t argVal1 = 0;
     uint64_t argVal2 = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetGSA(rankId, dieId, gsAmId, argVal1));
-    CHK_RET(AllRankParamRecorder::Global()->GetGSA(rankId, dieId, gsAnId, argVal2));
+    CHK_GET_GSA_V3(curCcuTask, queId, gsAmId, argVal1);
+    CHK_GET_GSA_V3(curCcuTask, queId, gsAnId, argVal2);
     CHK_RET(AllRankParamRecorder::Global()->SetGSA(rankId, dieId, gsAdId, argVal1 + argVal2));
     HCCL_VM_DEBUG("Load GSA[{}]({}) + GSA[{}]({}) to GSA[{}]({})", gsAmId, argVal1, gsAnId, argVal2,
         gsAdId, argVal1 + argVal2);
@@ -251,8 +287,8 @@ HcclResult TransformLoadXXInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *
     uint32_t dieId;
     curCcuTask->GetDieId(queId, dieId);
 
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xmId, argVal1));
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xnId, argVal2));
+    CHK_GET_XN_V3(curCcuTask, queId, xmId, argVal1);
+    CHK_GET_XN_V3(curCcuTask, queId, xnId, argVal2);
     CHK_RET(AllRankParamRecorder::Global()->SetXn(rankId, dieId, xdId, argVal1 + argVal2));
     HCCL_VM_DEBUG("Load Xn[{}]({}) + Xn[{}]({}) to Xn[{}]({})", xmId, argVal1, xnId, argVal2,
         xdId, argVal1 + argVal2);
@@ -270,7 +306,9 @@ HcclResult TransformSetCKEInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *
     uint16_t waitCKEMask = instr->v1.setCKE.waitCKEMask;
     // 当前只支持clearType为1的场景
     if (clearType != 0x0001) {
-        HCCL_ERROR("do not support clearType[%hu]", clearType);
+        HCCL_VM_ERROR("{} CheckerV3 only supports clearType=1 for this instruction, "
+            "instruction=SetCKE, actualClearType={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(), clearType);
         return HCCL_E_INTERNAL;
     }
 
@@ -284,8 +322,8 @@ HcclResult TransformSetCKEInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *
     }
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask, true));
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Set CKE[{}:{:04x}], clearType[{}]", waitCKEId, waitCKEMask, setCKEId,
-                        setCKEMask, clearType);
+    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}], Set CKE[{}:0x{:04x}], clearType[{}]",
+        waitCKEId, waitCKEMask, setCKEId, setCKEMask, clearType);
     return HCCL_SUCCESS;
 }
 
@@ -297,7 +335,8 @@ uint16_t UpdateCKEId(uint16_t CKEId, LoopGroupParam* loopGroupParam)
         return CKEId;
     }
 
-    HCCL_VM_DEBUG("Update CKEId[{}], loopIdx[{}], ckOffset[{}]", CKEId, loopGroupParam->curLoopIdx, static_cast<int>(loopGroupParam->loopGroupXm.ckOffset));
+    HCCL_VM_DEBUG("Update CKEId[{}], loopIdx[{}], ckOffset[{}]",
+        CKEId, loopGroupParam->curLoopIdx, static_cast<int>(loopGroupParam->loopGroupXm.ckOffset));
     return UpdateId(CKEId, loopGroupParam->curLoopIdx, loopGroupParam->loopGroupXn.expandOffset, loopGroupParam->loopGroupXm.ckOffset, loopGroupParam->curExpandCnt);
 }
 
@@ -363,19 +402,34 @@ HcclResult TransformTransLocMemToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuG
     // 获取远端rankId与dieId
     // todo: 从共享内存获取channel映射表
     if (g_allRankChannelInfo[rankId][dieId].count(channelId) == 0) {
-        HCCL_ERROR("channel id[%hu] in rank[%u] is not found", channelId, rankId);
+        HCCL_VM_ERROR("{} Cannot find channel mapping for this instruction, instruction=TransLocMemToRmtMem, "
+            "localRankId={}, localDieId={}, channelId={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_RESOURCE_NOT_FOUND).c_str(), static_cast<uint32_t>(rankId), dieId,
+            channelId);
         return HCCL_E_INTERNAL;
     }
 
     uint64_t locAddr = 0x0;
     uint64_t rmtAddr = 0x0;
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, locGSAId, locAddr);
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, rmtGSAId, rmtAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, locGSAId, locAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, rmtGSAId, rmtAddr);
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
-    CHK_PRT_RET(len > UB_MAX_SIZE,
-        HCCL_ERROR("The size of data transfer is more than max transport size of UB."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMemToRmtMem, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
+    if (len > UB_MAX_SIZE) {
+        HCCL_VM_ERROR("{} Transfer size exceeds the UB upper limit, instruction=TransLocMemToRmtMem, "
+            "transferSize={}, ubLimit={}, rankId={}, dieId={}, queueId={}, instrId={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<unsigned long long>(len),
+            static_cast<unsigned long long>(UB_MAX_SIZE), static_cast<uint32_t>(rankId), dieId, queId, instrId);
+        return HCCL_E_INTERNAL;
+    }
     DataSlice srcSlice;
     DataSlice dstSlice;
     RankId rId;
@@ -385,11 +439,16 @@ HcclResult TransformTransLocMemToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_RET(StorageManager::GetInstance().GetSlice(rmtAddr, len, dstSlice, &rId));
 
     RankId rmtRankId = g_allRankChannelInfo[rankId][dieId][channelId].dstRank;
-    HCCL_VM_DEBUG("[TransformTransLocMemToRmtMemInstr] curRank= {}, dstRank= {}", rankId, rmtRankId);
+    HCCL_VM_DEBUG("Preparing local-memory to remote-memory transfer, localRankId={}, remoteRankId={}",
+        rankId, rmtRankId);
     // 说明transportId写错了
     if (rId != rmtRankId) {
-        HCCL_ERROR("remoteRankId calculated by rmtAddr and channelId %u is not equal,"
-            "remoteId is %d, but the addr is in rank %d", channelId, rmtRankId, rId);
+        HCCL_VM_ERROR("{} Remote address resolves to a different rank than the selected channel, "
+            "instruction=TransLocMemToRmtMem, rankId={}, dieId={}, queueId={}, instrId={}, channelId={}, "
+            "expectedRemoteRankId={}, actualRemoteRankId={}, remoteAddr={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_REMOTE_RANK_MISMATCH).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, channelId, static_cast<uint32_t>(rmtRankId), static_cast<uint32_t>(rId),
+            static_cast<unsigned long long>(rmtAddr));
         return HCCL_E_INTERNAL;
     }
     HcclReduceOp checkerReduceOp;
@@ -418,11 +477,12 @@ HcclResult TransformTransLocMemToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask));
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG(
-        "Wait CKE[{}:{:04x}], Trans LocMem[{}:{}] To RmtMem[{}:{}] With LengthXn[{}] Use Channel[{}], Set "
-        "CKE[{}:{:04x}], clearType[{}], lengthEn[{}], DataType[{}], ReduceType[{}] reduceEn[{}]",
+    HCCL_VM_DEBUG("Completed local-memory to remote-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcGsaId={}, srcOffsetXnId={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}, reduceEnabled={}, reduceDataType={}, "
+        "reduceOpCode={}",
         waitCKEId, waitCKEMask, locGSAId, locXnId, rmtGSAId, rmtXnId, lengthXnId, channelId, setCKEId, setCKEMask,
-        clearType, lengthEn, reduceDataType, reduceOpCode, reduceEn);
+        clearType, lengthEn, reduceEn, reduceDataType, reduceOpCode);
     return HCCL_SUCCESS;
 }
 
@@ -454,13 +514,25 @@ HcclResult TransformTransLocMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
 
     uint64_t srcAddr = 0x0;
     uint64_t dstAddr = 0x0;
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, srcGSAId, srcAddr);
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, dstGSAId, dstAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, srcGSAId, srcAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, dstGSAId, dstAddr);
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
-    CHK_PRT_RET(len > UB_MAX_SIZE,
-        HCCL_ERROR("The size of data transfer is more than max transport size of UB."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMemToLocMem, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
+    if (len > UB_MAX_SIZE) {
+        HCCL_VM_ERROR("{} Transfer size exceeds the UB upper limit, instruction=TransLocMemToLocMem, "
+            "transferSize={}, ubLimit={}, rankId={}, dieId={}, queueId={}, instrId={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<unsigned long long>(len),
+            static_cast<unsigned long long>(UB_MAX_SIZE), static_cast<uint32_t>(rankId), dieId, queId, instrId);
+        return HCCL_E_INTERNAL;
+    }
 
     DataSlice srcSlice;
     DataSlice dstSlice;
@@ -468,8 +540,8 @@ HcclResult TransformTransLocMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_RET(StorageManager::GetInstance().GetSlice(srcAddr, len, srcSlice));
     CHK_RET(StorageManager::GetInstance().GetSlice(dstAddr, len, dstSlice));
 
-    HCCL_VM_DEBUG("locmem2locmem: rankId={}, src={}, dst={}, size={}",
-        rankId, srcSlice.Describe(), dstSlice.Describe(), len);
+    HCCL_VM_DEBUG("Built local-memory to local-memory copy, rankId={}, srcSlice={}, dstSlice={}, "
+        "transferSize={}", rankId, srcSlice.Describe(), dstSlice.Describe(), len);
 
     AddLocalCopy(rankId, queId, curCcuTask, srcSlice, dstSlice);
 
@@ -477,9 +549,9 @@ HcclResult TransformTransLocMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG(
-        "Wait CKE[{}:{:04x}], Trans LocMem[{}:{}] To LocMem[{}:{}] With LengthXn[{}] Use Channel[{}], Set "
-        "CKE[{}:{:04x}], clearType[{}], lengthEn[{}]",
+    HCCL_VM_DEBUG("Completed local-memory to local-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcGsaId={}, srcOffsetXnId={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, srcGSAId, srcXnId, dstGSAId, dstXnId, lengthXnId, channelId, setCKEId, setCKEMask,
         clearType, lengthEn);
     return HCCL_SUCCESS;
@@ -510,7 +582,10 @@ HcclResult TransformSyncCKEInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 
 
     // 获取远端rankId与dieId
     if (g_allRankChannelInfo[rankId][dieId].count(channelId) == 0) {
-        HCCL_ERROR("channel id[%hu] in rank[%u] is not found", channelId, rankId);
+        HCCL_VM_ERROR("{} Cannot find channel mapping for this instruction, instruction=SyncCKE, "
+            "localRankId={}, localDieId={}, channelId={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_RESOURCE_NOT_FOUND).c_str(), static_cast<uint32_t>(rankId), dieId,
+            channelId);
         return HCCL_E_INTERNAL;
     }
 
@@ -524,22 +599,24 @@ HcclResult TransformSyncCKEInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 
         uint16_t ckeValue = 0;
         uint16_t localCkeValue = 0;
         CHK_RET(AllRankParamRecorder::Global()->GetCKE(rankId, dieId, locCKEId, localCkeValue));
-        HCCL_VM_DEBUG("[TransformSyncCKEInstr] Get loc rank: {:d}, die: {:d} CKE: {:d}, value: {:d}, mask: {:x}", rankId, static_cast<uint32_t>(dieId), locCKEId, localCkeValue, locCKEMask);
-        localCkeValue = localCkeValue & locCKEMask;
+        const uint16_t maskedLocalCkeValue = static_cast<uint16_t>(localCkeValue & locCKEMask);
+        HCCL_VM_DEBUG("CKE[{}]({}) & mask[0x{:04x}] -> {}",
+            locCKEId, localCkeValue, locCKEMask, maskedLocalCkeValue);
         CHK_RET(AllRankParamRecorder::Global()->GetCKE(rmtRankId, rmtDieId, rmtCKEId, ckeValue));
-        HCCL_VM_DEBUG("[TransformSyncCKEInstr] Get rmt rank: {:d}, die: {:d} CKE: {:d}, value: {:d}, mask: {:x}", rmtRankId, static_cast<uint32_t>(rmtDieId), rmtCKEId, ckeValue, locCKEMask);
-        CHK_RET(AllRankParamRecorder::Global()->SetCKE(rmtRankId, rmtDieId, rmtCKEId, ckeValue | localCkeValue));
-        HCCL_VM_DEBUG("[TransformSyncCKEInstr] Set rank: {:d}, die: {:d} CKE: {:d}, value: {:d}, mask: {:x}", rmtRankId, static_cast<uint32_t>(rmtDieId), rmtCKEId, localCkeValue, locCKEMask);
+        const uint16_t mergedCkeValue = static_cast<uint16_t>(ckeValue | maskedLocalCkeValue);
+        CHK_RET(AllRankParamRecorder::Global()->SetCKE(rmtRankId, rmtDieId, rmtCKEId, mergedCkeValue));
+        HCCL_VM_DEBUG("CKE[{}]({}) | {} -> CKE[{}]({})",
+            rmtCKEId, ckeValue, maskedLocalCkeValue, rmtCKEId, mergedCkeValue);
     }
 
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask, true));
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Sync LocCKE[{}:{:04x}] To rmtCKE[{}:{:04x}] Use Channel[{}], Set "
-                        "CKE[{}:{:04x}], clearType[{}]",
-                        waitCKEId, waitCKEMask, locCKEId, locCKEMask, rmtCKEId, locCKEMask, channelId, setCKEId,
-                        setCKEMask, clearType);
+    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}], Sync LocCKE[{}:{:04x}] To rmtCKE[{}:{:04x}] Use Channel[{}], Set "
+        "CKE[{}:0x{:04x}], clearType[{}]",
+        waitCKEId, waitCKEMask, locCKEId, locCKEMask, rmtCKEId, locCKEMask, channelId, setCKEId, setCKEMask,
+        clearType);
     return HCCL_SUCCESS;
 }
 
@@ -569,7 +646,10 @@ HcclResult TransformSyncXnInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *
 
     // 获取远端rankId与dieId
     if (g_allRankChannelInfo[rankId][dieId].count(channelId) == 0) {
-        HCCL_ERROR("channel id[%hu] in rank[%u] die[%u] is not found", channelId, rankId, static_cast<uint32_t>(dieId));
+        HCCL_VM_ERROR("{} Cannot find channel mapping for this instruction, instruction=SyncXn, "
+            "localRankId={}, localDieId={}, channelId={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_RESOURCE_NOT_FOUND).c_str(), static_cast<uint32_t>(rankId), dieId,
+            channelId);
         return HCCL_E_INTERNAL;
     }
 
@@ -577,7 +657,7 @@ HcclResult TransformSyncXnInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *
     uint32_t rmtDieId = g_allRankChannelInfo[rankId][dieId][channelId].remoteDieId;
 
     uint64_t localXnValue = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, locXnId, localXnValue));
+    CHK_GET_XN_V3(curCcuTask, queId, locXnId, localXnValue);
     CHK_RET(AllRankParamRecorder::Global()->SetXn(rmtRankId, rmtDieId, rmtXnId, localXnValue));
 
     if (setRmtCKEMask != 0x0000) {
@@ -593,10 +673,10 @@ HcclResult TransformSyncXnInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Sync locXnId[{}] To rmtXnId[{}] Use Channel[{}], Set rmtCKE[{}:{:04x}], Set "
-                        "CKE[{}:{:04x}], clearType[{}]",
-                        waitCKEId, waitCKEMask, locXnId, rmtXnId, channelId, setRmtCKEId, setRmtCKEMask, setCKEId,
-                        setCKEMask, clearType);
+    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}], Sync Xn[{}]({}) To rmtXn[{}] Use Channel[{}], Set rmtCKE[{}:0x{:04x}], "
+        "Set CKE[{}:0x{:04x}], clearType[{}]",
+        waitCKEId, waitCKEMask, locXnId, localXnValue, rmtXnId, channelId, setRmtCKEId, setRmtCKEMask,
+        setCKEId, setCKEMask, clearType);
     return HCCL_SUCCESS;
 }
 
@@ -613,15 +693,15 @@ HcclResult TransformJumpInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cu
     curCcuTask->GetDieId(queId, dieId);
 
     uint64_t conditionValue = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, conditionXnId, conditionValue));
+    CHK_GET_XN_V3(curCcuTask, queId, conditionXnId, conditionValue);
     if (conditionValue != expectData) {
         uint64_t nextInsIdx = 0;
-        CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, dstInstrXnId, nextInsIdx));
+        CHK_GET_XN_V3(curCcuTask, queId, dstInstrXnId, nextInsIdx);
         curCcuTask->microCodePosInQue[queId] = nextInsIdx - curCcuTask->startInstrIdInQue[queId];
     }
 
-    HCCL_VM_DEBUG("When conditionXn[{}][{}] not equal to expectData[{}], Jump To InstrIdXn[{}]", conditionXnId,
-        conditionValue, expectData, dstInstrXnId);
+    HCCL_VM_DEBUG("Jump if Xn[{}]({}) != immediate[{}], targetXn[{}]",
+        conditionXnId, conditionValue, expectData, dstInstrXnId);
     return HCCL_SUCCESS;
 }
 
@@ -650,11 +730,18 @@ HcclResult TransformTransLocMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
     }
 
     uint64_t locMemAddr = 0x0;
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, locGSAId, locMemAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, locGSAId, locMemAddr);
     locMemAddr = UpdateGSAValue(locMemAddr, loopGroupParam);
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMemToLocMS, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
 
     DataSlice srcSlice;
     DataSlice dstSlice;
@@ -668,10 +755,11 @@ HcclResult TransformTransLocMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Trans LocMem[{}:{}] To LocMS[{}:{}] With LengthXn[{}] Use Channel[{}], Set "
-               "CKE[{}:{:04x}], clearType[{}], lengthEn[{}]",
-               waitCKEId, waitCKEMask, locGSAId, locXnId, locMSId / 0x8000, locMSId % 0x8000, lengthXnId,
-               channelId, setCKEId, setCKEMask, clearType, lengthEn);
+    HCCL_VM_DEBUG("Completed local-memory to local-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcGsaId={}, srcOffsetXnId={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+        waitCKEId, waitCKEMask, locGSAId, locXnId, locMSId / 0x8000, locMSId % 0x8000, lengthXnId, channelId,
+        setCKEId, setCKEMask, clearType, lengthEn);
 
     return HCCL_SUCCESS;
 }
@@ -701,13 +789,20 @@ HcclResult TransformTransLocMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
     }
 
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToLocMem, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
     DataSlice srcSlice;
     CHK_RET(GenSliceFromMs(locMSId, len, srcSlice));
 
     uint64_t locMemAddr = 0x0;
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, locGSAId, locMemAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, locGSAId, locMemAddr);
     locMemAddr = UpdateGSAValue(locMemAddr, loopGroupParam);
     DataSlice dstSlice;
     CHK_RET(StorageManager::GetInstance().GetSlice(locMemAddr, len, dstSlice));
@@ -718,10 +813,11 @@ HcclResult TransformTransLocMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Trans LocMS[{}:{}] To LocMem[{}:{}] With LengthXn[{}] Use Channel[{}], Set "
-               "CKE[{}:{:04x}], clearType[{}], lengthEn[{}]",
-               waitCKEId, waitCKEMask, locMSId / 0x8000, locMSId % 0x8000, locGSAId, locXnId, lengthXnId,
-               channelId, setCKEId, setCKEMask, clearType, lengthEn);
+    HCCL_VM_DEBUG("Completed local-MS to local-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcMsPage={}, srcMsOffset={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+        waitCKEId, waitCKEMask, locMSId / 0x8000, locMSId % 0x8000, locGSAId, locXnId, lengthXnId, channelId,
+        setCKEId, setCKEMask, clearType, lengthEn);
 
     return HCCL_SUCCESS;
 }
@@ -750,12 +846,19 @@ HcclResult TransformTransLocMSToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGra
     }
 
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToLocMS, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
     DataSlice srcSlice;
     CHK_RET(GenSliceFromMs(srcMSId, len, srcSlice));
     DataSlice dstSlice;
-    CHK_RET(GenSliceFromMs(dstMSId, len, srcSlice));
+    CHK_RET(GenSliceFromMs(dstMSId, len, dstSlice));
 
     AddLocalCopy(rankId, queId, curCcuTask, srcSlice, dstSlice);
 
@@ -763,10 +866,11 @@ HcclResult TransformTransLocMSToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGra
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Trans LocMS[{}:{}] To LocMS[{}:{}] With LengthXn[{}] Use Channel[{}], "
-               "Set CKE[{}:{:04x}], clearType[{}], lengthEn[{}]",
-               waitCKEId, waitCKEMask, srcMSId / 0x8000, srcMSId % 0x8000, dstMSId / 0x8000, dstMSId % 0x8000,
-               lengthXnId, channelId, setCKEId, setCKEMask, clearType, lengthEn);
+    HCCL_VM_DEBUG("Completed local-MS to local-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcMsPage={}, srcMsOffset={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+        waitCKEId, waitCKEMask, srcMSId / 0x8000, srcMSId % 0x8000, dstMSId / 0x8000, dstMSId % 0x8000,
+        lengthXnId, channelId, setCKEId, setCKEMask, clearType, lengthEn);
 
     return HCCL_SUCCESS;
 }
@@ -796,13 +900,20 @@ HcclResult TransformTransLocMSToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuGr
     }
 
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToRmtMem, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
     DataSlice srcSlice;
     CHK_RET(GenSliceFromMs(locMSId, len, srcSlice));
 
     uint64_t rmtMemAddr = 0x0;
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, rmtGSAId, rmtMemAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, rmtGSAId, rmtMemAddr);
     rmtMemAddr = UpdateGSAValue(rmtMemAddr, loopGroupParam);
     DataSlice dstSlice;
     // todo: 后续插件通过读取vm的输出文件，重建memlayout的地址类型信息
@@ -815,10 +926,11 @@ HcclResult TransformTransLocMSToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Trans LocMS[{}:{}] To RmtMem[{}:{}] With LengthXn[{}] Use Channel[{}], Set "
-               "CKE[{}:{:04x}], clearType[{}], lengthEn[{}]",
-               waitCKEId, waitCKEMask, locMSId / 0x8000, locMSId % 0x8000, rmtGSAId, rmtXnId, lengthXnId,
-               channelId, setCKEId, setCKEMask, clearType, lengthEn);
+    HCCL_VM_DEBUG("Completed local-MS to remote-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcMsPage={}, srcMsOffset={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+        waitCKEId, waitCKEMask, locMSId / 0x8000, locMSId % 0x8000, rmtGSAId, rmtXnId, lengthXnId, channelId,
+        setCKEId, setCKEMask, clearType, lengthEn);
 
     return HCCL_SUCCESS;
 }
@@ -850,8 +962,15 @@ HcclResult TransformTransLocMSToRmtMSInstr(const CcuRep::CcuInstr *instr, CcuGra
     }
 
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToRmtMS, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
 
     DataSlice srcSlice;
     CHK_RET(GenSliceFromMs(locMSId, len, srcSlice));
@@ -876,10 +995,12 @@ HcclResult TransformTransLocMSToRmtMSInstr(const CcuRep::CcuInstr *instr, CcuGra
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Trans LocMS[{}:{}] To RmtMS[{}:{}] With LengthXn[{}] Use Channel[{}], Set "
-               "RmtCKE[{}:{:04x}], Set CKE[{}:{:04x}], clearType[{}], lengthEn[{}]",
-               waitCKEId, waitCKEMask, locMSId / 0x8000, locMSId % 0x8000, rmtMSId / 0x8000, rmtMSId % 0x8000,
-               lengthXnId, channelId, setRmtCKEId, setRmtCKEMask, setCKEId, setCKEMask, clearType, lengthEn);
+    HCCL_VM_DEBUG("Completed local-MS to remote-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcMsPage={}, srcMsOffset={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
+        "remoteSetCkeId={}, remoteSetMask=0x{:04x}, localSetCkeId={}, localSetMask=0x{:04x}, clearType={}, "
+        "lengthEnabled={}",
+        waitCKEId, waitCKEMask, locMSId / 0x8000, locMSId % 0x8000, rmtMSId / 0x8000, rmtMSId % 0x8000,
+        lengthXnId, channelId, setRmtCKEId, setRmtCKEMask, setCKEId, setCKEMask, clearType, lengthEn);
     return HCCL_SUCCESS;
 }
 
@@ -908,11 +1029,18 @@ HcclResult TransformTransRmtMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
     }
 
     uint64_t rmtAddr = 0x0;
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, rmtGSAId, rmtAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, rmtGSAId, rmtAddr);
     rmtAddr = UpdateGSAValue(rmtAddr, loopGroupParam);
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMemToLocMS, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
 
     DataSlice srcSlice;
     DataSlice dstSlice;
@@ -922,7 +1050,10 @@ HcclResult TransformTransRmtMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     // 获取远端rankId与dieId
     if (g_allRankChannelInfo[rankId][dieId].count(channelId) == 0) {
-        HCCL_ERROR("channel id[%hu] in rank[%u] is not found", channelId, rankId);
+        HCCL_VM_ERROR("{} Cannot find channel mapping for this instruction, instruction=TransRmtMemToLocMS, "
+            "localRankId={}, localDieId={}, channelId={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_RESOURCE_NOT_FOUND).c_str(), static_cast<uint32_t>(rankId), dieId,
+            channelId);
         return HCCL_E_INTERNAL;
     }
 
@@ -933,10 +1064,11 @@ HcclResult TransformTransRmtMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Trans RmtMem[{}:{}] To LocMS[{}:{}] With LengthXn[{}] Use Channel[{}], Set "
-               "CKE[{}:{:04x}], clearType[{}], lengthEn[{}]",
-               waitCKEId, waitCKEMask, rmtGSAId, rmtXnId, locMSId / 0x8000, locMSId % 0x8000, lengthXnId,
-               channelId, setCKEId, setCKEMask, clearType, lengthEn);
+    HCCL_VM_DEBUG("Completed remote-memory to local-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcGsaId={}, srcOffsetXnId={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+        waitCKEId, waitCKEMask, rmtGSAId, rmtXnId, locMSId / 0x8000, locMSId % 0x8000, lengthXnId, channelId,
+        setCKEId, setCKEMask, clearType, lengthEn);
     return HCCL_SUCCESS;
 }
 
@@ -965,14 +1097,21 @@ HcclResult TransformTransRmtMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
     }
 
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMSToLocMem, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
 
     DataSlice srcSlice;
     CHK_RET(GenSliceFromMs(rmtMSId, len, srcSlice));
 
     uint64_t localAddr = 0x0;
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, locGSAId, localAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, locGSAId, localAddr);
     localAddr = UpdateGSAValue(localAddr, loopGroupParam);
     DataSlice dstSlice;
     CHK_RET(StorageManager::GetInstance().GetSlice(localAddr, len, dstSlice));
@@ -984,10 +1123,11 @@ HcclResult TransformTransRmtMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Trans RmtMS[{}:{}] To LocMem[{}:{}] With LengthXn[{}] Use Channel[{}], Set "
-               "CKE[{}:{:04x}], clearType[{}], lengthEn[{}]",
-               waitCKEId, waitCKEMask, rmtMSId / 0x8000, rmtMSId % 0x8000, locGSAId, locXnId, lengthXnId,
-               channelId, setCKEId, setCKEMask, clearType, lengthEn);
+    HCCL_VM_DEBUG("Completed remote-MS to local-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcMsPage={}, srcMsOffset={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+        waitCKEId, waitCKEMask, rmtMSId / 0x8000, rmtMSId % 0x8000, locGSAId, locXnId, lengthXnId, channelId,
+        setCKEId, setCKEMask, clearType, lengthEn);
     return HCCL_SUCCESS;
 }
 
@@ -1015,8 +1155,15 @@ HcclResult TransformTransRmtMSToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGra
     }
 
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMSToLocMS, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
 
     DataSlice srcSlice;
     CHK_RET(GenSliceFromMs(rmtMSId, len, srcSlice));
@@ -1030,10 +1177,11 @@ HcclResult TransformTransRmtMSToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGra
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Trans RmtMS[{}:{}] To LocMS[{}:{}] With LengthXn[{}] Use Channel[{}], "
-               "Set CKE[{}:{:04x}], clearType[{}], lengthEn[{}]",
-               waitCKEId, waitCKEMask, rmtMSId / 0x8000, rmtMSId % 0x8000, locMSId / 0x8000, locMSId % 0x8000,
-               lengthXnId, channelId, setCKEId, setCKEMask, clearType, lengthEn);
+    HCCL_VM_DEBUG("Completed remote-MS to local-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcMsPage={}, srcMsOffset={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+        waitCKEId, waitCKEMask, rmtMSId / 0x8000, rmtMSId % 0x8000, locMSId / 0x8000, locMSId % 0x8000,
+        lengthXnId, channelId, setCKEId, setCKEMask, clearType, lengthEn);
     return HCCL_SUCCESS;
 }
 
@@ -1068,15 +1216,27 @@ HcclResult TransformTransRmtMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
     }
 
     uint64_t len = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthXnId, len);
-    CHK_PRT_RET(len == 0, HCCL_ERROR("The size of data transfer is 0."), HCCL_E_INTERNAL);
-    CHK_PRT_RET(len > UB_MAX_SIZE,
-        HCCL_ERROR("The size of data transfer is more than max transport size of UB."), HCCL_E_INTERNAL);
+    CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
+    const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
+    if (len == 0) {
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMemToLocMem, rankId={}, dieId={}, "
+            "queueId={}, instrId={}, transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, static_cast<unsigned long long>(len));
+        return HCCL_E_INTERNAL;
+    }
+    if (len > UB_MAX_SIZE) {
+        HCCL_VM_ERROR("{} Transfer size exceeds the UB upper limit, instruction=TransRmtMemToLocMem, "
+            "transferSize={}, ubLimit={}, rankId={}, dieId={}, queueId={}, instrId={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<unsigned long long>(len),
+            static_cast<unsigned long long>(UB_MAX_SIZE), static_cast<uint32_t>(rankId), dieId, queId, instrId);
+        return HCCL_E_INTERNAL;
+    }
 
     uint64_t localAddr = 0x0;
     uint64_t rmtAddr = 0x0;
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, locGSAId, localAddr);
-    AllRankParamRecorder::Global()->GetGSA(rankId, dieId, rmtGSAId, rmtAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, locGSAId, localAddr);
+    CHK_GET_GSA_V3(curCcuTask, queId, rmtGSAId, rmtAddr);
 
     DataSlice srcSlice;
     RankId rId;
@@ -1085,11 +1245,16 @@ HcclResult TransformTransRmtMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_RET(StorageManager::GetInstance().GetSlice(localAddr, len, dstSlice));
 
     RankId rmtRankId = g_allRankChannelInfo[rankId][dieId][channelId].dstRank;
-    HCCL_VM_DEBUG("[TransformTransRmtMemToLocMemInstr] curRank= {}, dstRank= {}", rankId, rmtRankId);
+    HCCL_VM_DEBUG("Preparing remote-memory to local-memory transfer, localRankId={}, remoteRankId={}",
+        rankId, rmtRankId);
     // 说明transportId写错了
     if (rId != rmtRankId) {
-        HCCL_ERROR("remoteRankId calculated by rmtAddr and channelId %u is not equal,"
-            "remoteId is %d, but the addr is in rank %d", channelId, rmtRankId, rId);
+        HCCL_VM_ERROR("{} Remote address resolves to a different rank than the selected channel, "
+            "instruction=TransRmtMemToLocMem, rankId={}, dieId={}, queueId={}, instrId={}, channelId={}, "
+            "expectedRemoteRankId={}, actualRemoteRankId={}, remoteAddr={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_REMOTE_RANK_MISMATCH).c_str(), static_cast<uint32_t>(rankId), dieId,
+            queId, instrId, channelId, static_cast<uint32_t>(rmtRankId), static_cast<uint32_t>(rId),
+            static_cast<unsigned long long>(rmtAddr));
         return HCCL_E_INTERNAL;
     }
 
@@ -1119,10 +1284,12 @@ HcclResult TransformTransRmtMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask));
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Trans RmtMem[{}:{}] To LocMem[{}:{}] With LengthXn[{}] Use Channel[{}], Set "
-               "CKE[{}:{:04x}], clearType[{}], lengthEn[{}], DataType[{}], ReduceType[{}] reduceEn[{}]",
-               waitCKEId, waitCKEMask, rmtGSAId, rmtXnId, locGSAId, locXnId, lengthXnId, channelId, setCKEId, setCKEMask,
-               clearType, lengthEn, reduceDataType, reduceOpCode, reduceEn);
+    HCCL_VM_DEBUG("Completed remote-memory to local-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
+        "srcGsaId={}, srcOffsetXnId={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
+        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}, reduceEnabled={}, reduceDataType={}, "
+        "reduceOpCode={}",
+        waitCKEId, waitCKEMask, rmtGSAId, rmtXnId, locGSAId, locXnId, lengthXnId, channelId, setCKEId, setCKEMask,
+        clearType, lengthEn, reduceEn, reduceDataType, reduceOpCode);
 
     return HCCL_SUCCESS;
 }
@@ -1151,7 +1318,9 @@ static void ProduceMask(std::map<uint16_t, uint16_t> &producedMasks, uint16_t ck
 static HcclResult ValidateLoopLen(uint64_t len)
 {
     if (len == 0) {
-        HCCL_ERROR("The size of data transfer is 0.");
+        HCCL_VM_ERROR("{} Loop-merged transfer size is 0, instruction=LoopMergedTransfer, "
+            "transferSize={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;
@@ -1161,7 +1330,10 @@ static HcclResult GetRemoteRankByChannel(RankId rankId, uint32_t dieId, uint16_t
     uint32_t &rmtDieId)
 {
     if (g_allRankChannelInfo[rankId][dieId].count(channelId) == 0) {
-        HCCL_ERROR("channel id[%hu] in rank[%u] is not found", channelId, rankId);
+        HCCL_VM_ERROR("{} Cannot find channel mapping for this instruction, instruction=LoopMergedTransfer, "
+            "localRankId={}, localDieId={}, channelId={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_RESOURCE_NOT_FOUND).c_str(), static_cast<uint32_t>(rankId), dieId,
+            channelId);
         return HCCL_E_INTERNAL;
     }
     rmtRankId = g_allRankChannelInfo[rankId][dieId][channelId].dstRank;
@@ -1299,8 +1471,8 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
             case TRANSLOCMEMTOLOCMS_CODE: {
                 const auto &op = instr->v1.transLocMemToLocMS;
                 uint64_t locMemAddr = 0;
-                CHK_RET(AllRankParamRecorder::Global()->GetGSA(rankId, dieId, op.locGSAId, locMemAddr));
-                CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, op.lengthXnId, len));
+                CHK_GET_GSA_V3(curCcuTask, queId, op.locGSAId, locMemAddr);
+                CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 locMemAddr = UpdateGSAValue(locMemAddr, &iterParam);
                 CHK_RET(StorageManager::GetInstance().GetSlice(locMemAddr, len, srcSlice));
@@ -1315,8 +1487,8 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
                 const auto &op = instr->v1.transRmtMemToLocMS;
                 CHK_RET(GetRemoteRankByChannel(rankId, dieId, op.channelId, rmtRankId, rmtDieId));
                 uint64_t rmtAddr = 0;
-                CHK_RET(AllRankParamRecorder::Global()->GetGSA(rankId, dieId, op.rmtGSAId, rmtAddr));
-                CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, op.lengthXnId, len));
+                CHK_GET_GSA_V3(curCcuTask, queId, op.rmtGSAId, rmtAddr);
+                CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 rmtAddr = UpdateGSAValue(rmtAddr, &iterParam);
                 CHK_RET(StorageManager::GetInstance().GetSlice(rmtAddr, len, srcSlice));
@@ -1329,12 +1501,12 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
             }
             case TRANSLOCMSTOLOCMEM_CODE: {
                 const auto &op = instr->v1.transLocMSToLocMem;
-                CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, op.lengthXnId, len));
+                CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 const uint16_t locMSId = UpdateMSId(op.locMSId, &iterParam);
                 CHK_RET(GenSliceFromMs(locMSId, len, srcSlice));
                 uint64_t locMemAddr = 0;
-                CHK_RET(AllRankParamRecorder::Global()->GetGSA(rankId, dieId, op.locGSAId, locMemAddr));
+                CHK_GET_GSA_V3(curCcuTask, queId, op.locGSAId, locMemAddr);
                 locMemAddr = UpdateGSAValue(locMemAddr, &iterParam);
                 CHK_RET(StorageManager::GetInstance().GetSlice(locMemAddr, len, dstSlice));
                 transInstr->srcs.push_back(MakeCcuMemSlice(rankId, srcSlice));
@@ -1345,12 +1517,12 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
             case TRANSLOCMSTORMTMEM_CODE: {
                 const auto &op = instr->v1.transLocMSToRmtMem;
                 CHK_RET(GetRemoteRankByChannel(rankId, dieId, op.channelId, rmtRankId, rmtDieId));
-                CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, op.lengthXnId, len));
+                CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 const uint16_t locMSId = UpdateMSId(op.locMSId, &iterParam);
                 CHK_RET(GenSliceFromMs(locMSId, len, srcSlice));
                 uint64_t rmtMemAddr = 0;
-                CHK_RET(AllRankParamRecorder::Global()->GetGSA(rankId, dieId, op.rmtGSAId, rmtMemAddr));
+                CHK_GET_GSA_V3(curCcuTask, queId, op.rmtGSAId, rmtMemAddr);
                 rmtMemAddr = UpdateGSAValue(rmtMemAddr, &iterParam);
                 CHK_RET(StorageManager::GetInstance().GetSlice(rmtMemAddr, len, dstSlice));
                 transInstr->srcs.push_back(MakeCcuMemSlice(rankId, srcSlice));
@@ -1361,12 +1533,12 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
             case TRANSRMTMSTOLOCMEM_CODE: {
                 const auto &op = instr->v1.transRmtMSToLocMem;
                 CHK_RET(GetRemoteRankByChannel(rankId, dieId, op.channelId, rmtRankId, rmtDieId));
-                CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, op.lengthXnId, len));
+                CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 const uint16_t rmtMSId = UpdateMSId(op.rmtMSId, &iterParam);
                 CHK_RET(GenSliceFromMs(rmtMSId, len, srcSlice));
                 uint64_t localAddr = 0;
-                CHK_RET(AllRankParamRecorder::Global()->GetGSA(rankId, dieId, op.locGSAId, localAddr));
+                CHK_GET_GSA_V3(curCcuTask, queId, op.locGSAId, localAddr);
                 localAddr = UpdateGSAValue(localAddr, &iterParam);
                 CHK_RET(StorageManager::GetInstance().GetSlice(localAddr, len, dstSlice));
                 transInstr->srcs.push_back(MakeCcuMemSlice(rmtRankId, srcSlice));
@@ -1376,7 +1548,7 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
             }
             case TRANSLOCMSTOLOCMS_CODE: {
                 const auto &op = instr->v1.transLocMSToLocMS;
-                CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, op.lengthXnId, len));
+                CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 const uint16_t srcMSId = UpdateMSId(op.srcMSId, &iterParam);
                 const uint16_t dstMSId = UpdateMSId(op.dstMSId, &iterParam);
@@ -1391,7 +1563,7 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
             case TRANSRMTMSTOLOCMS_CODE: {
                 const auto &op = instr->v1.transRmtMSToLocMS;
                 CHK_RET(GetRemoteRankByChannel(rankId, dieId, op.channelId, rmtRankId, rmtDieId));
-                CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, op.lengthXnId, len));
+                CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 const uint16_t rmtMSId = UpdateMSId(op.rmtMSId, &iterParam);
                 const uint16_t locMSId = UpdateMSId(op.locMSId, &iterParam);
@@ -1409,7 +1581,7 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
                     return HCCL_E_NOT_SUPPORT;
                 }
                 CHK_RET(GetRemoteRankByChannel(rankId, dieId, op.channelId, rmtRankId, rmtDieId));
-                CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, op.lengthXnId, len));
+                CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 const uint16_t locMSId = UpdateMSId(op.locMSId, &iterParam);
                 const uint16_t rmtMSId = UpdateMSId(op.rmtMSId, &iterParam);
@@ -1483,7 +1655,7 @@ static HcclResult CollectReduceLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGra
     reduceInstr->reduceOp = checkerReduceOp;
 
     uint64_t len = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthId, len));
+    CHK_GET_XN_V3(curCcuTask, queId, lengthId, len);
     CHK_RET(ValidateLoopLen(len));
     for (uint64_t iter = 0; iter < loopCnt; ++iter) {
         LoopGroupParam iterParam;
@@ -1585,7 +1757,7 @@ static HcclResult CollectLoopExpandA5(const CcuRep::CcuInstr *loopInstr, CcuGrap
     uint32_t dieId = INVALID_DIE_ID;
     curCcuTask->GetDieId(queId, dieId);
     uint64_t value = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, loopInstr->v1.loop.xnId, value));
+    CHK_GET_XN_V3(curCcuTask, queId, loopInstr->v1.loop.xnId, value);
     LoopGroupParam sampleParam = loopParam;
     if (sampleParam.loopXms.size() <= sampleParam.curLoopIdx) {
         sampleParam.loopXms.resize(sampleParam.curLoopIdx + 1);
@@ -1607,7 +1779,7 @@ static HcclResult RecordMergedLoopParamA5(const CcuRep::CcuInstr *loopInstr, Ccu
     uint32_t dieId = INVALID_DIE_ID;
     curCcuTask->GetDieId(queId, dieId);
     uint64_t value = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, loopInstr->v1.loop.xnId, value));
+    CHK_GET_XN_V3(curCcuTask, queId, loopInstr->v1.loop.xnId, value);
     if (loopParam.loopXms.size() <= loopParam.curLoopIdx) {
         loopParam.loopXms.resize(loopParam.curLoopIdx + 1);
     }
@@ -1663,8 +1835,8 @@ static HcclResult TryProcessMergedLoopA5(const CcuRep::CcuInstr *loopInstr, CcuG
     if (loopEnd == nullptr) {
         return HCCL_E_INTERNAL;
     }
-    HCCL_VM_INFO("[ccu_loop_merge_V3][A5] merge loop success, loopInstrId={}, loopCnt={}, expandTimes={}, "
-        "mergedInstrCount={}", loopInstr->v1.loop.startInstrId, mergedLoopCnt, expandTimes,
+    HCCL_VM_INFO("Merged LoopGroup body successfully, loopInstructionId={}, loopCount={}, "
+        "expandTimes={}, mergedInstructionCount={}", loopInstr->v1.loop.startInstrId, mergedLoopCnt, expandTimes,
         mergedLoop.loopExpands.front().instrs.size());
     merged = true;
     return HCCL_SUCCESS;
@@ -1688,14 +1860,15 @@ HcclResult TransformLoopGroupInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV
     curCcuTask->GetDieId(queId, dieId);
 
     LoopGroupParam loopGroupParam;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, xnId, loopGroupParam.loopGroupXn.value);
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, xmId, loopGroupParam.loopGroupXm.value);
+    CHK_GET_XN_V3(curCcuTask, queId, xnId, loopGroupParam.loopGroupXn.value);
+    CHK_GET_XN_V3(curCcuTask, queId, xmId, loopGroupParam.loopGroupXm.value);
 
     hcomm::CcuRep::CcuInstrInfo &microCodeQue = curCcuTask->instrInfo[queId];
     auto loopGroupIdx = curCcuTask->loopGroupIdx++;
     uint64_t loopCnt = loopGroupParam.loopGroupXn.loopInsCnt;
-    HCCL_VM_DEBUG("[LoopGroup]loop cnt= {}, loop offset= {}, expand cnt= {}",
-        loopCnt, static_cast<uint64_t>(loopGroupParam.loopGroupXn.expandOffset), static_cast<uint64_t>(loopGroupParam.loopGroupXn.expandCnt));
+    HCCL_VM_DEBUG("Parsed LoopGroup configuration, loopCount={}, expandOffset={}, expandCount={}",
+        loopCnt, static_cast<uint64_t>(loopGroupParam.loopGroupXn.expandOffset),
+        static_cast<uint64_t>(loopGroupParam.loopGroupXn.expandCnt));
 
     for (u32 curLoopIdx = 0; curLoopIdx < loopCnt; curLoopIdx++) {
         loopGroupParam.curLoopIdx = curLoopIdx;
@@ -1724,8 +1897,8 @@ HcclResult TransformLoopGroupInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV
         }
     }
 
-    HCCL_VM_DEBUG("LoopGroup From startLoopInstrId[{}] with loopGroupXn[{}], offsetXn[{}] and highPerfModeEn[{}]",
-               startLoopInstrId, xnId, xmId, highPerfModeEn);
+    HCCL_VM_DEBUG("Finished LoopGroup expansion, startLoopInstructionId={}, loopGroupXnId={}, "
+        "loopGroupXmId={}, highPerfModeEnabled={}", startLoopInstrId, xnId, xmId, highPerfModeEn);
     return HCCL_SUCCESS;
 }
 
@@ -1735,7 +1908,9 @@ HcclResult TransformLoopInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cu
     uint16_t startInstrId = instr->v1.loop.startInstrId;
     uint16_t endInstrId   = instr->v1.loop.endInstrId;
     uint16_t xnId         = instr->v1.loop.xnId;
-    HCCL_ERROR("Loop From startInstrId[%u] to endInstrId[%u] with loopXn[%u]", startInstrId, endInstrId, xnId);
+    HCCL_VM_ERROR("{} A loop instruction cannot be executed by itself; it must be triggered from a "
+        "LoopGroup, startInstructionId={}, endInstructionId={}, loopCountXnId={}",
+        MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(), startInstrId, endInstrId, xnId);
     // 当前Loop都需要通过LoopGoup来触发，暂不支持单独解析Loop命令
     return HCCL_E_INTERNAL;
 }
@@ -1759,14 +1934,16 @@ HcclResult TransformClearCKEInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3
     }
 
     if (clearMask != 0x0000) {
-        HCCL_ERROR("do not support Clear CKE[%u:%04x]", clearCKEId, clearMask);
+        HCCL_VM_ERROR("{} CheckerV3 only supports clearing an entire CKE register here; partial clear "
+            "mask is not supported, clearCkeId={}, clearMask=0x{:04x}",
+            MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(), clearCKEId, clearMask);
         return HCCL_E_INTERNAL;
     }
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:{:04x}], Clear CKE[{}:{:04x}], clearType[{}]", waitCKEId, waitCKEMask, clearCKEId,
-               clearMask, clearType);
+    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}], Clear CKE[{}:0x{:04x}], clearType[{}]",
+        waitCKEId, waitCKEMask, clearCKEId, clearMask, clearType);
     return HCCL_SUCCESS;
 }
 
@@ -1796,7 +1973,10 @@ HcclResult TransformSyncGSAInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 
 
     // 获取远端rankId与dieId
     if (g_allRankChannelInfo[rankId][dieId].count(channelId) == 0) {
-        HCCL_ERROR("channel id[%hu] in rank[%u] is not found", channelId, rankId);
+        HCCL_VM_ERROR("{} Cannot find channel mapping for this instruction, instruction=SyncGSA, "
+            "localRankId={}, localDieId={}, channelId={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_RESOURCE_NOT_FOUND).c_str(), static_cast<uint32_t>(rankId), dieId,
+            channelId);
         return HCCL_E_INTERNAL;
     }
 
@@ -1804,7 +1984,7 @@ HcclResult TransformSyncGSAInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 
     uint32_t rmtDieId = g_allRankChannelInfo[rankId][dieId][channelId].remoteDieId;
 
     uint64_t localGSAValue = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetGSA(rankId, dieId, locGSAId, localGSAValue));
+    CHK_GET_GSA_V3(curCcuTask, queId, locGSAId, localGSAValue);
     CHK_RET(AllRankParamRecorder::Global()->SetGSA(rmtRankId, rmtDieId, rmtGSAId, localGSAValue));
 
     if (setRmtCKEMask != 0x0000) {
@@ -1820,11 +2000,10 @@ HcclResult TransformSyncGSAInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG(
-        "Wait CKE[{}:{:04x}], Sync locGSAId[{}] To rmtGSAId[{}] Use Channel[{}], Set rmtCKE[{}:{:04x}], Set "
-        "CKE[{}:{:04x}], clearType[{}]",
-        waitCKEId, waitCKEMask, locGSAId, rmtGSAId, channelId, setRmtCKEId, setRmtCKEMask, setCKEId, setCKEMask,
-        clearType);
+    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}], Sync GSA[{}]({}) To rmtGSA[{}] Use Channel[{}], Set rmtCKE[{}:0x{:04x}], "
+        "Set CKE[{}:0x{:04x}], clearType[{}]",
+        waitCKEId, waitCKEMask, locGSAId, localGSAValue, rmtGSAId, channelId, setRmtCKEId, setRmtCKEMask,
+        setCKEId, setCKEMask, clearType);
 
     return HCCL_SUCCESS;
 }
@@ -1844,18 +2023,21 @@ HcclResult GetHcclDataTypeFromCCUDataType(uint16_t ccuDataType, uint16_t ccuRedu
 
     if (ccuReduceType == CcuRep::CCU_REDUCE_SUM) {
         if (ccuSumDataTypeMap.find(ccuDataType) == ccuSumDataTypeMap.end()) {
-            HCCL_ERROR("Unsupported CCUDataType[%hu] for Ccu SUM", ccuDataType);
+            HCCL_VM_ERROR("{} This CCU reduce data type is not supported for SUM, ccuDataType={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(), ccuDataType);
             return HCCL_E_INTERNAL;
         }
         dataType = ccuSumDataTypeMap[ccuDataType];
     } else if (ccuReduceType == CcuRep::CCU_REDUCE_MAX || ccuReduceType == CcuRep::CCU_REDUCE_MIN) {
         if (ccuMaxMinDataTypeMap.find(ccuDataType) == ccuMaxMinDataTypeMap.end()) {
-            HCCL_ERROR("Unsupported CCUDataType[%hu] for Ccu MAX/MIN", ccuDataType);
+            HCCL_VM_ERROR("{} This CCU reduce data type is not supported for MAX or MIN, "
+                "ccuDataType={}", MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(), ccuDataType);
             return HCCL_E_INTERNAL;
         }
         dataType = ccuMaxMinDataTypeMap[ccuDataType];
     } else {
-        HCCL_ERROR("Unsupported ccuReduceType[%hu]", ccuReduceType);
+        HCCL_VM_ERROR("{} This CCU reduce opcode is not supported, ccuReduceType={}",
+            MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(), ccuReduceType);
         return HCCL_E_INTERNAL;
     }
 
@@ -1891,7 +2073,7 @@ HcclResult TransformAddInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cur
     }
 
     uint64_t len = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthId, len));
+    CHK_GET_XN_V3(curCcuTask, queId, lengthId, len);
     DataSlice dstSlice;
     CHK_RET(GenSliceFromMs(msId[0], len, dstSlice));
 
@@ -1910,8 +2092,8 @@ HcclResult TransformAddInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cur
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG(
-        "Wait CKE[{}:{:04x}], Add {} with Count[{}], DataType[{}] and CastEn[{}], Set CKE[{}:{:04x}], clearType[{}]",
+    HCCL_VM_DEBUG("Completed local SUM reduce, waitCkeId={}, waitMask=0x{:04x}, msList={}, "
+        "sourceCount={}, dataType={}, castEnabled={}, setCkeId={}, setMask=0x{:04x}, clearType={}",
         waitCKEId, waitCKEMask, ParseMSList(instr), count, dataType, castEn, setCKEId, setCKEMask, clearType);
 
     return HCCL_SUCCESS;
@@ -1945,7 +2127,7 @@ HcclResult TransformMaxInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cur
     }
 
     uint64_t len = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthId, len));
+    CHK_GET_XN_V3(curCcuTask, queId, lengthId, len);
     DataSlice dstSlice;
     CHK_RET(GenSliceFromMs(msId[0], len, dstSlice));
 
@@ -1964,9 +2146,9 @@ HcclResult TransformMaxInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cur
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG(
-        "Wait CKE[{}:{:04x}], Max {} with Count[{}], DataType[{}] and CastEn[{}], Set CKE[{}:{:04x}], clearType[{}]",
-        waitCKEId, waitCKEMask, ParseMSList(instr), count, dataType, "N/A", setCKEId, setCKEMask, clearType);
+    HCCL_VM_DEBUG("Completed local MAX reduce, waitCkeId={}, waitMask=0x{:04x}, msList={}, "
+        "sourceCount={}, dataType={}, setCkeId={}, setMask=0x{:04x}, clearType={}",
+        waitCKEId, waitCKEMask, ParseMSList(instr), count, dataType, setCKEId, setCKEMask, clearType);
 
     return HCCL_SUCCESS;
 }
@@ -1999,7 +2181,7 @@ HcclResult TransformMinInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cur
     }
 
     uint64_t len = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, lengthId, len));
+    CHK_GET_XN_V3(curCcuTask, queId, lengthId, len);
     DataSlice dstSlice;
     CHK_RET(GenSliceFromMs(msId[0], len, dstSlice));
 
@@ -2018,9 +2200,9 @@ HcclResult TransformMinInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cur
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG(
-        "Wait CKE[{}:{:04x}], Min {} with Count[{}], DataType[{}] and CastEn[{}], Set CKE[{}:{:04x}], clearType[{}]",
-        waitCKEId, waitCKEMask, ParseMSList(instr), count, dataType, "N/A", setCKEId, setCKEMask, clearType);
+    HCCL_VM_DEBUG("Completed local MIN reduce, waitCkeId={}, waitMask=0x{:04x}, msList={}, "
+        "sourceCount={}, dataType={}, setCkeId={}, setMask=0x{:04x}, clearType={}",
+        waitCKEId, waitCKEMask, ParseMSList(instr), count, dataType, setCKEId, setCKEMask, clearType);
     return HCCL_SUCCESS;
 }
 
@@ -2213,7 +2395,7 @@ HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *curCcu
     curCcuTask->GetDieId(queId, dieId);
 
     uint64_t value = 0;
-    AllRankParamRecorder::Global()->GetXn(rankId, dieId, xnId, value);
+    CHK_GET_XN_V3(curCcuTask, queId, xnId, value);
     LoopXm xm{};
     xm.value = value;
     loopGroupParam->loopXms.push_back(xm);
@@ -2222,20 +2404,24 @@ HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *curCcu
     auto loopStart = AddLoopStartTask(queId, loopIdx, loopGroupIdx, curCcuTask,
         startInstrId, endInstrId, static_cast<uint64_t>(xm.loopCnt), 1ULL); // loop前新增loopStart标记节点
 
-    HCCL_VM_DEBUG("[LOOP] loop cnt = {}", static_cast<uint64_t>(xm.loopCnt));
+    HCCL_VM_DEBUG("Entered loop execution, loopCount={}", static_cast<uint64_t>(xm.loopCnt));
     hcomm::CcuRep::CcuInstrInfo& microCodeQue = curCcuTask->instrInfo[queId];
     u32 &pos = curCcuTask->microCodePosInQue[queId];
     const u32 savedPos = pos;
     for (u32 curLoopCnt = 0; curLoopCnt < xm.loopCnt; curLoopCnt++) {
         loopGroupParam->curLoopCnt = curLoopCnt;
-        HCCL_VM_DEBUG("[LOOP] loop cnt = {}, cur loop= {}", static_cast<uint64_t>(xm.loopCnt), curLoopCnt);
+        HCCL_VM_DEBUG("Running loop iteration, loopCount={}, currentIteration={}",
+            static_cast<uint64_t>(xm.loopCnt), curLoopCnt);
         for (uint16_t insId = startInstrId; insId <= endInstrId; insId++) {
             pos = insId - curCcuTask->startInstrIdInQue[queId];
             // 获取当前要处理的指令
             const CcuRep::CcuInstr* instr = &microCodeQue.instrVec[pos];
-            HCCL_VM_DEBUG("Current process instruction id = {}", insId);
+            HCCL_VM_DEBUG("Expanding loop instruction, instructionId={}", insId);
             if (transformA5InstrSqeMap.count(instr->header.header) == 0) {
-                HCCL_ERROR("ins type not supported %hu", instr->header.header);
+                HCCL_VM_ERROR("{} This A5 CCU instruction type is not supported during loop expansion, "
+                    "rankId={}, queueId={}, instructionId={}, instructionHeader=0x{:04x}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(), curCcuTask->GetRankId(), queId, insId,
+                    instr->header.header);
                 pos = savedPos;
                 return HCCL_E_INTERNAL;
             }
@@ -2245,7 +2431,8 @@ HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *curCcu
     pos = savedPos;
     auto loopEnd = AddLoopEndTask(queId, loopIdx, loopGroupIdx, curCcuTask); // loop后新增loopEnd标记节点
 
-    HCCL_VM_DEBUG("Loop From startInstrId[{}] to endInstrId[{}] with loopXn[{}]", startInstrId, endInstrId, xnId);
+    HCCL_VM_DEBUG("Finished loop expansion, startInstructionId={}, endInstructionId={}, "
+        "loopCountXnId={}", startInstrId, endInstrId, xnId);
     return HCCL_SUCCESS;
 }
 
@@ -2257,7 +2444,11 @@ HcclResult InstructMapA5::Transform(const CcuRep::CcuInstr* instr, CcuGraphState
         bool& isContinue, void* loopParam) {
     auto it = transformInstrSqeMap.find(instr->header.header);
     if (it == transformInstrSqeMap.end()) {
-        HCCL_ERROR("[A5] Unsupported: 0x%04x", instr->header.header);
+        HCCL_VM_ERROR("{} This A5 CCU instruction type is not supported by CheckerV3 graph expansion, "
+            "rankId={}, queueId={}, instructionHeader=0x{:04x}",
+            MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(),
+            curCcuTask == nullptr ? std::string("null") : std::to_string(curCcuTask->GetRankId()), queId,
+            instr->header.header);
         return HCCL_E_INTERNAL;
     }
     auto* param = static_cast<LoopGroupParam*>(loopParam);

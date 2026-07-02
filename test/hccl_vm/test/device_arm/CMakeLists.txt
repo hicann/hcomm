@@ -25,8 +25,8 @@ set(COMMON_INCLUDE_DIRS
     $ENV{HCCL_CODE_HOME}/src/ops/op_common/inc
     $ENV{HCCL_CODE_HOME}/src/common
     $ENV{HCCL_CODE_HOME}/src/common/hcomm_dlsym
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/driver
     $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/include/driver
+    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/driver
     $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/runtime
     $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/toolchain
     $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/profiling

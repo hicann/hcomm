@@ -822,3 +822,46 @@ TEST_F(MyRankTest, LLT_SocketTagFormat_CommTagWithUnderscore_Success)
 
     unsetenv("HCCL_DFS_CONFIG");
 }
+
+TEST_F(MyRankTest, Ut_CreateChannels_When_CpuEngine_Success_Expect_HCCL_SUCCESS)
+{
+    setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
+    uint32_t devPort = 60001;
+    MOCKER_CPP(&Hccl::IRankGraph::GetDevicePort).stubs().with(any(), outBoundP(&devPort)).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::IRankGraph::GetDeviceId).stubs().with(any()).will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+    MockerFuncs();
+    MOCKER(hcomm::ChannelProcess::CreateChannelsLoop).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcommCollectiveChannelCreate).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+    MOCKER(hcomm::ChannelProcess::ChannelGetStatus).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcclCommDfx::AddChannelRemoteRankId).stubs().will(ignoreReturnValue());
+    MOCKER_CPP(&ExchangeInfoMgr::BatchExchangeAndCheckConsistency).stubs().will(returnValue(HCCL_SUCCESS));
+
+    aclrtBinHandle binHandle;
+    CommConfig config;
+    ManagerCallbacks callbacks;
+    void* rankGraphPtr = (void*)0x114514;
+    std::shared_ptr<RankGraph> rankGraph = std::make_shared<RankGraphV2>(rankGraphPtr);
+    MyRank myRank(binHandle, 0, config, callbacks, rankGraph.get(), rankIpPortMap);
+
+    HcclMem cclBuffer;
+    CreateCclBuffer(cclBuffer);
+    ASSERT_EQ(myRank.Init(cclBuffer, 2, 2), HCCL_SUCCESS);
+
+    EndpointDesc localEp;
+    CreateEndpointDesc(localEp, COMM_PROTOCOL_UB_MEM, "1.0.0.0");
+    EndpointDesc rmtEp;
+    CreateEndpointDesc(rmtEp, COMM_PROTOCOL_UB_MEM, "2.0.0.0");
+
+    HcclChannelDesc channelDesc[1];
+    channelDesc[0].channelProtocol = COMM_PROTOCOL_UB_MEM;
+    channelDesc[0].remoteRank = 1;
+    channelDesc[0].notifyNum = 2;
+    channelDesc[0].localEndpoint = localEp;
+    channelDesc[0].remoteEndpoint = rmtEp;
+
+    ChannelHandle channelHandles[1] = {0};
+    ASSERT_EQ(myRank.CreateChannels(COMM_ENGINE_CPU, "testComm", channelDesc, 1, channelHandles), HCCL_SUCCESS);
+
+    unsetenv("HCCL_DFS_CONFIG");
+}

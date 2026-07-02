@@ -197,7 +197,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::LOCAL_COPY: {
             TaskStubLocalCopy *localCopyTask = dynamic_cast<TaskStubLocalCopy *>(task);
             if (localCopyTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubLocalCopy.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalCopy.",
                     taskType);
                 break;
             }
@@ -209,7 +209,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::LOCAL_REDUCE: {
             TaskStubLocalReduce *localReduceTask = dynamic_cast<TaskStubLocalReduce *>(task);
             if (localReduceTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubLocalReduce.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalReduce.",
                     taskType);
                 break;
             }
@@ -223,7 +223,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::LOCAL_BATCH_REDUCE: {
             TaskStubLocalBatchReduce *localBatchReduceTask = dynamic_cast<TaskStubLocalBatchReduce *>(task);
             if (localBatchReduceTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubLocalBatchReduce.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalBatchReduce.",
                     taskType);
                 break;
             }
@@ -239,7 +239,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::LOCAL_POST_TO: {
             TaskStubLocalPostTo *localPostToTask = dynamic_cast<TaskStubLocalPostTo *>(task);
             if (localPostToTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubLocalPostTo.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalPostTo.",
                     taskType);
                 break;
             }
@@ -255,7 +255,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::LOCAL_WAIT_FROM: {
             TaskStubLocalWaitFrom *localWaitFromTask = dynamic_cast<TaskStubLocalWaitFrom *>(task);
             if (localWaitFromTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubLocalWaitFrom.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalWaitFrom.",
                     taskType);
                 break;
             }
@@ -265,7 +265,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::POST: {
             TaskStubPost *postTask = dynamic_cast<TaskStubPost *>(task);
             if (postTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubPost.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubPost.",
                     taskType);
                 break;
             }
@@ -279,7 +279,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::WAIT: {
             TaskStubWait *waitTask = dynamic_cast<TaskStubWait *>(task);
             if (waitTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubWait.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubWait.",
                     taskType);
                 break;
             }
@@ -292,7 +292,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::READ: {
             TaskStubRead *readTask = dynamic_cast<TaskStubRead *>(task);
             if (readTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubRead.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubRead.",
                     taskType);
                 break;
             }
@@ -306,7 +306,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::READ_REDUCE: {
             TaskStubReadReduce *readReduceTask = dynamic_cast<TaskStubReadReduce *>(task);
             if (readReduceTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubReadReduce.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubReadReduce.",
                     taskType);
                 break;
             }
@@ -322,7 +322,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::WRITE: {
             TaskStubWrite *writeTask = dynamic_cast<TaskStubWrite *>(task);
             if (writeTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubWrite.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubWrite.",
                     taskType);
                 break;
             }
@@ -336,7 +336,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::WRITE_REDUCE: {
             TaskStubWriteReduce *writeReduceTask = dynamic_cast<TaskStubWriteReduce *>(task);
             if (writeReduceTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubWriteReduce.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubWriteReduce.",
                     taskType);
                 break;
             }
@@ -352,7 +352,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::LOCAL_POST_TO_SHADOW: {
             TaskStubLocalPostToShadow *localPostToShadowTask = dynamic_cast<TaskStubLocalPostToShadow *>(task);
             if (localPostToShadowTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubLocalPostToShadow.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalPostToShadow.",
                     taskType);
                 break;
             }
@@ -362,7 +362,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::LOCAL_WAIT_FROM_SHADOW: {
             TaskStubLocalWaitFromShadow *localWaitFromShadowTask = dynamic_cast<TaskStubLocalWaitFromShadow *>(task);
             if (localWaitFromShadowTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubLocalWaitFromShadow.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalWaitFromShadow.",
                     taskType);
                 break;
             }
@@ -372,7 +372,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::BEING_READ: {
             TaskStubBeingRead *beingReadTask = dynamic_cast<TaskStubBeingRead *>(task);
             if (beingReadTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubBeingRead.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingRead.",
                     taskType);
                 break;
             }
@@ -386,7 +386,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::BEING_READ_REDUCE: {
             TaskStubBeingReadReduce *beingReadReduceTask = dynamic_cast<TaskStubBeingReadReduce *>(task);
             if (beingReadReduceTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubBeingReadReduce.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingReadReduce.",
                     taskType);
                 break;
             }
@@ -402,7 +402,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::BEING_WRITTEN: {
             TaskStubBeingWritten *beingWrittenTask = dynamic_cast<TaskStubBeingWritten *>(task);
             if (beingWrittenTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubBeingWritten.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingWritten.",
                     taskType);
                 break;
             }
@@ -416,7 +416,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::BEING_WRITTEN_REDUCE: {
             TaskStubBeingWrittenReduce *beingWrittenReduceTask = dynamic_cast<TaskStubBeingWrittenReduce *>(task);
             if (beingWrittenReduceTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubBeingWrittenReduce.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingWrittenReduce.",
                     taskType);
                 break;
             }
@@ -432,7 +432,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::CCU_GRAPH: {
             TaskStubCcuGraph *ccuGraphTask = dynamic_cast<TaskStubCcuGraph *>(task);
             if (ccuGraphTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubCcuGraph.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubCcuGraph.",
                     taskType);
                 break;
             }
@@ -444,7 +444,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::LOOP_START: {
             TaskStubLoopStart *loopStartTask = dynamic_cast<TaskStubLoopStart *>(task);
             if (loopStartTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubLoopStart.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLoopStart.",
                     taskType);
                 break;
             }
@@ -455,7 +455,7 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
         case TaskTypeStub::LOOP_END: {
             TaskStubLoopEnd *loopEndTask = dynamic_cast<TaskStubLoopEnd *>(task);
             if (loopEndTask == nullptr) {
-                HCCL_VM_WARN("[MakeTaskStubFields] failed to cast task [{}] to TaskStubLoopEnd.",
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLoopEnd.",
                     taskType);
                 break;
             }
@@ -568,7 +568,7 @@ void CollectTaskNodesWithGlobalIds(TaskNode *dummyStart, std::vector<TaskNode *>
         }
         std::string nodeId = node->task->GetTaskId();
         if (nodeId.empty()) {
-            HCCL_VM_ERROR("[CollectTaskNodesWithGlobalIds] task id not found, fallback to local node id.");
+            HCCL_VM_ERROR("task id not found, fallback to local node id.");
             const uint64_t nodeIndex = rankNodeCounters[node->rankIdx]++;
             nodeId = BuildNodeId(node->rankIdx, nodeIndex);
         }
@@ -726,7 +726,7 @@ static nlohmann::json DumpTaskNodeToJson(TaskNode *node, const std::string &node
         }
         auto iter = nodeIdMap.find(parent);
         if (iter == nodeIdMap.end()) {
-            HCCL_VM_ERROR("[TaskNodeToJson] parent node id not found.");
+            HCCL_VM_ERROR("parent node id not found.");
             continue;
         }
         nodeJson["parents"].push_back(iter->second);
@@ -740,7 +740,7 @@ static nlohmann::json DumpTaskNodeToJson(TaskNode *node, const std::string &node
         }
         auto iter = nodeIdMap.find(child);
         if (iter == nodeIdMap.end()) {
-            HCCL_VM_ERROR("[TaskNodeToJson] child node id not found.");
+            HCCL_VM_ERROR("child node id not found.");
             continue;
         }
         nodeJson["children"].push_back(iter->second);
@@ -793,7 +793,7 @@ static Json DumpCcuSubGraph(TaskStubCcuGraph *ccuGraphTask, const std::map<TaskN
             continue;
         }
         if (node->queIdx >= queueBuckets.size()) {
-            HCCL_VM_WARN("[DumpCcuSubGraph] queue id[%u] is out of range[%zu], skip node.",
+            HCCL_VM_WARN("queue id[{}] is out of range[{}], skip node.",
                 node->queIdx, queueBuckets.size());
             continue;
         }
@@ -805,7 +805,7 @@ static Json DumpCcuSubGraph(TaskStubCcuGraph *ccuGraphTask, const std::map<TaskN
         for (auto *node : queueBuckets[queueIdx]) {
             auto nodeIdIter = resolvedNodeIdMap->find(node);
             if (nodeIdIter == resolvedNodeIdMap->end()) {
-                HCCL_VM_ERROR("[DumpCcuSubGraph] node id not found.");
+                HCCL_VM_ERROR("node id not found.");
                 continue;
             }
             queueJson.push_back(DumpTaskNodeToJson(node, nodeIdIter->second, *resolvedNodeIdMap,
@@ -869,7 +869,7 @@ static std::map<RankId, Json> BuildTaskGraphJsonMap(TaskNode *dummyStart)
     for (auto *currentNode : graphNodes) {
         auto currentNodeIdIter = nodeIdMap.find(currentNode);
         if (currentNodeIdIter == nodeIdMap.end()) {
-            HCCL_VM_ERROR("[DumpTaskGraph] current node id not found.");
+            HCCL_VM_ERROR("current node id not found.");
             continue;
         }
 
@@ -889,7 +889,7 @@ static std::map<RankId, Json> BuildTaskGraphJsonMap(TaskNode *dummyStart)
             }
             auto parentIdIter = nodeIdMap.find(parent);
             if (parentIdIter == nodeIdMap.end()) {
-                HCCL_VM_ERROR("[DumpTaskGraph] parent node id not found.");
+                HCCL_VM_ERROR("parent node id not found.");
                 continue;
             }
 
@@ -908,7 +908,7 @@ static std::map<RankId, Json> BuildTaskGraphJsonMap(TaskNode *dummyStart)
             }
             auto childIdIter = nodeIdMap.find(child);
             if (childIdIter == nodeIdMap.end()) {
-                HCCL_VM_ERROR("[DumpTaskGraph] child node id not found.");
+                HCCL_VM_ERROR("child node id not found.");
                 continue;
             }
 
@@ -926,7 +926,7 @@ static HcclResult DumpRankJsonMapByStage(const std::map<RankId, Json> &rankJsonM
     const std::string &stage)
 {
     if (stage.empty()) {
-        HCCL_VM_WARN("[DumpRankJsonMapByStage] stage is empty.");
+        HCCL_VM_WARN("stage is empty.");
         return HcclResult::HCCL_E_PARA;
     }
 
@@ -962,14 +962,14 @@ static HcclResult DumpRankJsonMapByStage(const std::map<RankId, Json> &rankJsonM
             }
 
             if (unlink(childPath.c_str()) != 0) {
-                HCCL_VM_WARN("[DumpRankJsonMapByStage] failed to remove file[%s], errno[%d].",
+                HCCL_VM_WARN("failed to remove file[{}], errno[{}].",
                     childPath.c_str(), errno);
             }
         }
 
         closedir(dir);
         if (rmdir(path.c_str()) != 0 && errno != ENOENT) {
-            HCCL_VM_WARN("[DumpRankJsonMapByStage] failed to remove dir[%s], errno[%d].",
+            HCCL_VM_WARN("failed to remove dir[{}], errno[{}].",
                 path.c_str(), errno);
         }
     };
@@ -993,7 +993,7 @@ static HcclResult DumpRankJsonMapByStage(const std::map<RankId, Json> &rankJsonM
         const std::string rankDumpPath = BuildStageRankDumpPath(stage, rankJsonPair.first);
         const HcclResult writeRet = dumpManager.Write(rankDumpPath, rankDumpJson);
         if (writeRet != HcclResult::HCCL_SUCCESS) {
-            HCCL_VM_WARN("[DumpRankJsonMapByStage] failed to dump rank[%u], stage[%s], ret[%u].",
+            HCCL_VM_WARN("failed to dump rank[{}], stage[{}], ret[{}].",
                 rankJsonPair.first, stage.c_str(), static_cast<u32>(writeRet));
             return writeRet;
         }

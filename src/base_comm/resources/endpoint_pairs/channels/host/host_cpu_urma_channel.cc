@@ -106,7 +106,8 @@ HcclResult HostCpuUrmaChannel::BuildSocket()
         HCCL_INFO("[HostCpuUrmaChannel::%s] channelDesc port is 0, use default port [%u]", __func__, port);
     }
     
-    std::string socketTag = "AUTOMATIC_SOCKET_TAG";
+    std::string socketTag = (channelDesc_.channelName != nullptr)
+        ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
     Hccl::SocketConfig socketConfig = (channelDesc_.role != HCOMM_SOCKET_ROLE_RESERVED)
         ? Hccl::SocketConfig(linkData, port, socketTag, channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER)
         : Hccl::SocketConfig(linkData, socketTag, true);
@@ -223,9 +224,6 @@ ChannelStatus HostCpuUrmaChannel::GetStatus()
 {
     memTransport_->SetIsHost();
     ChannelStatus out = Channel::TransportStatusToChannelStatus(memTransport_->GetStatus());
-    if (out == ChannelStatus::READY && channelDesc_.socket == nullptr && socket_ != nullptr) {
-        SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
-    }
     return out;
 }
 

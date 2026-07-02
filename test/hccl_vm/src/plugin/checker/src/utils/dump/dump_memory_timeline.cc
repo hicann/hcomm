@@ -285,7 +285,7 @@ HcclResult MemoryTimelineDumpStream::Initialize(const std::vector<RankId> &rankI
 
     const EventIdToEventMap eventIdToEvent = BuildEventIdToEventMap(timelineEvents);
     m_globalStepToEvent = BuildGlobalStepToEventMap(globalStepToEventId, eventIdToEvent);
-    HCCL_VM_INFO("[DumpMemoryTimelines] start dump memory timeline, rank_count={}, event_count={}, step_event_count={}",
+    HCCL_VM_INFO("start dump memory timeline, rank_count={}, event_count={}, step_event_count={}",
         rankIds.size(), eventIdToEvent.size(), m_globalStepToEvent.size());
 
     for (RankId rankId : rankIds) {
@@ -312,7 +312,7 @@ HcclResult MemoryTimelineDumpStream::FlushOpenChunk(RankId rankId, RankDumpState
                 rankDumpState.openChunkSnapshotEntries);
         });
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_WARN("[DumpMemoryTimelines] failed to dump rank [%u] snapshot chunk [%zu].", rankId, chunkId);
+        HCCL_VM_WARN("failed to dump rank [{}] snapshot chunk [{}].", rankId, chunkId);
         return ret;
     }
 
@@ -397,7 +397,7 @@ HcclResult MemoryTimelineDumpStream::Finalize()
         const std::string snapshotManifestPath = BuildRankSnapshotManifestPath(rankId);
         ret = DumpManager::GetInstance().Write(snapshotManifestPath, snapshotManifestJson);
         if (ret != HcclResult::HCCL_SUCCESS) {
-            HCCL_VM_WARN("[DumpMemoryTimelines] failed to dump rank [%u] snapshot manifest.", rankId);
+            HCCL_VM_WARN("failed to dump rank [{}] snapshot manifest.", rankId);
             return ret;
         }
 
@@ -413,7 +413,7 @@ HcclResult MemoryTimelineDumpStream::Finalize()
     memoryStatsJson["snapshot_count"] = totalSnapshotCount;
     memoryStatsJson["chunk_count"] = totalChunkCount;
     DumpRunManifest::GetInstance().SetMemorySnapshotStats(memoryStatsJson);
-    HCCL_VM_INFO("[DumpMemoryTimelines] finish dump memory timeline, rank_count={}", m_rankDumpStates.size());
+    HCCL_VM_INFO("finish dump memory timeline, rank_count={}", m_rankDumpStates.size());
     return HcclResult::HCCL_SUCCESS;
 }
 }  // namespace HcclSim

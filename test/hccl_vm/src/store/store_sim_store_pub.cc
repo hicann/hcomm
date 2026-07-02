@@ -32,7 +32,7 @@ HcclVmResult GetAddrByOffset(uint64_t offset, VmUniquePtr& addrPtr)  // todo
 {
     // 1. 入参合法性检查（避免空指针和无效输出）
     if (addrPtr) {
-        HCCL_VM_ERROR("[GetAddrByOffset] 错误：指针已持有资源，不可重复获取！");
+        HCCL_VM_ERROR("错误：指针已持有资源，不可重复获取！");
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
 
@@ -40,12 +40,12 @@ HcclVmResult GetAddrByOffset(uint64_t offset, VmUniquePtr& addrPtr)  // todo
     sim::PhyMemBlock phyMem{};
     void *addr = sim::AcquireDevPtrInNoHostProcess(offserPtr, phyMem);
     if (addr == nullptr) {
-        HCCL_VM_ERROR("[GetAddrByOffset] 错误：无法获取设备地址(addr= {})！", offserPtr);
+        HCCL_VM_ERROR("错误：无法获取设备地址(addr= {})！", offserPtr);
         return HcclVmResult::HCCL_SIM_E_PTR;
     }
 
     // 5. 日志打印（可选，便于问题排查）
-    HCCL_VM_INFO("[GetAddrByOffset] 计算成功, 虚拟地址: {}, 物理地址: {}", offset, addr);
+    HCCL_VM_INFO("计算成功, 虚拟地址: {}, 物理地址: {}", offset, addr);
 
     addrPtr = VmUniquePtr(addr, VmPtrReleaser{phyMem});
 
@@ -58,11 +58,11 @@ HcclVmResult InsertTaskToCollection(HcclTaskMetaData *task, uint32_t *index)
 
     // 1. 入参合法性检查（避免空指针访问）
     if (task == nullptr) {
-        HCCL_VM_ERROR("[InsertTaskToCollection] 错误：输入任务指针 task 不能为空！");
+        HCCL_VM_ERROR("错误：输入任务指针 task 不能为空！");
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
     if (index == nullptr) {
-        HCCL_VM_ERROR("[InsertTaskToCollection] 错误：输出索引指针 index 不能为空！");
+        HCCL_VM_ERROR("错误：输出索引指针 index 不能为空！");
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
 
@@ -81,7 +81,7 @@ HcclVmResult InsertTaskToCollection(HcclTaskMetaData *task, uint32_t *index)
     
     auto ret = sim::InsertOpTask(opTaskInfo);
     if (ret != 0) {
-        HCCL_VM_ERROR("[InsertTaskToCollection] 错误：插入任务到数据库失败 - {}", ret);
+        HCCL_VM_ERROR("错误：插入任务到数据库失败 - {}", ret);
         return HcclVmResult::HCCL_SIM_SHM_FAIL;
     }
     return HcclVmResult::HCCL_SIM_SUCCESS;

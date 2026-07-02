@@ -291,20 +291,17 @@ HcclResult HcclCommTaskExceptionLite::GenerateErrorMessageReport(CollCommAicpu *
     const Hccl::TaskInfo& taskInfo, const rtLogicCqReport_t &exceptionInfo, Hccl::ErrorMessageReport &errMsgInfo)
 {
     // 获取需要上报的关键信息
-    errMsgInfo.remoteUserRank = taskInfo.remoteRank_;
+    errMsgInfo.remoteUserRank = taskInfo.GetRemoteRankId();
     errMsgInfo.streamId = taskInfo.streamId_;
     errMsgInfo.taskId = taskInfo.taskId_;
     errMsgInfo.rankId = aicpuComm->GetTopoInfo().userRank;
     errMsgInfo.rankSize = aicpuComm->GetTopoInfo().userRankSize;
-    CHK_SAFETY_FUNC_RET(strcpy_s(errMsgInfo.algType, MAX_NAME_LEN, taskInfo.dfxOpInfo_->algType_.c_str()));
     errMsgInfo.opIndex = taskInfo.dfxOpInfo_->opIndex_;
     errMsgInfo.opType = taskInfo.dfxOpInfo_->op_.opType;
     errMsgInfo.count = taskInfo.dfxOpInfo_->op_.dataCount;
     errMsgInfo.dataType = taskInfo.dfxOpInfo_->op_.dataType;
-    errMsgInfo.srcAddr = taskInfo.dfxOpInfo_->op_.inputMem == nullptr ? 0 :
-        static_cast<u64>(taskInfo.dfxOpInfo_->op_.inputMem->GetAddr());
-    errMsgInfo.dstAddr = taskInfo.dfxOpInfo_->op_.outputMem == nullptr ? 0 :
-        static_cast<u64>(taskInfo.dfxOpInfo_->op_.outputMem->GetAddr());
+    errMsgInfo.srcAddr = taskInfo.dfxOpInfo_->op_.newInputMem;
+    errMsgInfo.dstAddr = taskInfo.dfxOpInfo_->op_.newOutputMem;
     errMsgInfo.taskType = taskInfo.taskParam_.taskType;
 
     errMsgInfo.rtCqErrorType = exceptionInfo.errorType;
@@ -493,7 +490,7 @@ HcclResult HcclCommTaskExceptionLite::CollectTaskContext(CollCommAicpu *aicpuCom
     CHK_PRT_RET(queue == nullptr,
         HCCL_ERROR("[%s]GetQueue nullptr, devId[%u], sqId[%u].", __func__, devId_, sqId), HCCL_E_PARA);
 
-    auto func = [taskId] (const std::shared_ptr<Hccl::TaskInfo>& task) { return task->taskId_ == taskId; };
+    auto func = [taskId] (const std::unique_ptr<Hccl::TaskInfo>& task) { return task->taskId_ == taskId; };
     auto taskIterPtr = queue->Find(func);
     CHK_PRT_RET(taskIterPtr == nullptr || *taskIterPtr == *queue->End(),
         HCCL_ERROR("[%s]exception task not found, devId[%u], sqId[%u], taskId[%u]", __func__, devId_, sqId, taskId),
@@ -506,7 +503,7 @@ HcclResult HcclCommTaskExceptionLite::CollectTaskContext(CollCommAicpu *aicpuCom
                 __func__, (**taskIterPtr)->taskId_, taskId, taskContext.size());
             break;
         }
-        taskContext.emplace_back(**taskIterPtr);
+        taskContext.emplace_back((**taskIterPtr).get());
 
         if (*taskIterPtr == *queue->Begin()) { // 遍历到起始位置中止
             HCCL_ERROR("[%s]taskId[%u] is queue Begin, taskNum[%u], stop traversal",

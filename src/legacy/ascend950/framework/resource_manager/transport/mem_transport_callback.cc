@@ -17,10 +17,10 @@ MemTransportCallback::MemTransportCallback(const LinkData link, MirrorTaskManage
 
 void MemTransportCallback::operator()(u32 streamId, u32 taskId, const TaskParam &taskParam)
 {
-    shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(streamId, taskId,
+    std::unique_ptr<TaskInfo> taskInfo = std::make_unique<TaskInfo>(streamId, taskId,
         link_.GetRemoteRankId(), taskParam, mirrorTaskManager_.GetCurrDfxOpInfo());
         
-    mirrorTaskManager_.AddTaskInfo(taskInfo);
+    mirrorTaskManager_.AddTaskInfo(std::move(taskInfo));
     return;
 }
 

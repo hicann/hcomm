@@ -28,6 +28,7 @@
         <block name="EngineeringCommon"/>
         <block name="EngineeringFiles"/>
         <block name="CommLib"/>
+        <block name="../../../../experimental/ExperimentalNicPlugin"/>
     </block_info>
     <dir_info value="hcomm" install_path="hcomm" install_type="all">
         <path value="share" install_mod="750"/>

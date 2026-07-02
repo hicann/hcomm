@@ -148,6 +148,7 @@ add_library(hccl_llt SHARED  ${hccl_list})
 
 target_compile_definitions(hccl_llt PRIVATE
     OPEN_BUILD_PROJECT
+    ENABLE_EXPERIMENTAL
 )
 
 #头文件搜索路径
@@ -339,6 +340,7 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/socket
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/common/
 
+    ${HCCL_CODE_ROOT}/src/base_comm
     ${HCCL_CODE_ROOT}/src/base_comm/common/
     ${HCCL_CODE_ROOT}/src/base_comm/common/device
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels
@@ -413,6 +415,7 @@ target_include_directories(hccl_llt  PRIVATE
 
     ${HCCL_CODE_ROOT}/src/base_comm/primitives
     ${HCCL_CODE_ROOT}/src/base_comm/primitives/api_c_adpt
+    ${HCCL_CODE_ROOT}/src/base_comm/primitives/api_c_adpt/nic_plugin
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoints/server_socket/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/southbound_adpt/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/pub_inc/

@@ -718,6 +718,8 @@ struct HcclOpResParam {
     // 外部mc2等算子跨框AIV场景使用
     u64 sizeOfAiRMAInfo = 0; // sizeof(HcclAiRMAInfo), 用于内存校验
     u64 aiRMAInfo = 0; // HcclAiRMAInfo* 单个结构体指针
+    // 用户自定义udi，用于profiling显示
+    char udi[128];
 };
 
 struct OpTilingData {

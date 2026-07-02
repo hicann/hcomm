@@ -84,7 +84,6 @@ private:
     uint32_t                                                    notifyNum_{0};
     AicpuTsHccsEndpoint                                         *localEpPtr_{nullptr};
     uint32_t                                                    serverPort_{AICPU_CHANNEL_DEFAULT_PORT};
-    uint32_t                                                    socketTagIdx_;
     bool                                                        serverInited_{false};
     // --------------------- 具体成员 ---------------------
     std::shared_ptr<hccl::HcclSocket>                           socket_{nullptr};

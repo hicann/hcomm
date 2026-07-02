@@ -74,7 +74,7 @@ HcclVmResult AivResourceManager::Init(uint32_t rankId, const sim::OpMemInfoTab &
         return ret;
     }
     if (rankId >= rankSize) {
-        HCCL_VM_ERROR("[AivResourceManager][Init] rankId={} out of range, rankSize={}", rankId, rankSize);
+        HCCL_VM_ERROR("rankId={} out of range, rankSize={}", rankId, rankSize);
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
 
@@ -91,7 +91,7 @@ HcclVmResult AivResourceManager::Init(uint32_t rankId, const sim::OpMemInfoTab &
         return ret;
     }
 
-    HCCL_VM_DEBUG("[AivResourceManager][Init] init rank op mem success, rankId={}, rankSize={}, "
+    HCCL_VM_DEBUG("init rank op mem success, rankId={}, rankSize={}, "
         "input={:x}/{} output={:x}/{} ccl={:x}/{}",
         rankId,
         rankSize,
@@ -130,7 +130,7 @@ const AivRankResource *AivResourceManager::GetRankResource(uint32_t rankId) cons
 HcclVmResult AivResourceManager::EnsureInitialized(uint32_t rankSize)
 {
     if (rankSize == 0) {
-        HCCL_VM_ERROR("[AivResourceManager][EnsureInitialized] rankSize is 0");
+        HCCL_VM_ERROR("rankSize is 0");
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
 
@@ -141,12 +141,12 @@ HcclVmResult AivResourceManager::EnsureInitialized(uint32_t rankSize)
             Reset();
             return ret;
         }
-        HCCL_VM_INFO("[AivResourceManager][EnsureInitialized] init base resource success, rankSize={}", rankSize);
+        HCCL_VM_INFO("init base resource success, rankSize={}", rankSize);
         return HcclVmResult::HCCL_SIM_SUCCESS;
     }
 
     if (rankResources_.size() != rankSize) {
-        HCCL_VM_ERROR("[AivResourceManager][EnsureInitialized] rankSize mismatch, current={}, incoming={}",
+        HCCL_VM_ERROR("rankSize mismatch, current={}, incoming={}",
             rankResources_.size(), rankSize);
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
@@ -157,7 +157,7 @@ HcclVmResult AivResourceManager::MapBuffer(
     uint32_t rankSize, uint32_t rankId, uint8_t bufferType, uint64_t startAddr, uint64_t size, bool allowDuplicateSame)
 {
     if (rankId >= rankSize) {
-        HCCL_VM_ERROR("[AivResourceManager][MapBuffer] rankId={} out of range, rankSize={}",
+        HCCL_VM_ERROR("rankId={} out of range, rankSize={}",
             rankId, rankSize);
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
@@ -165,18 +165,18 @@ HcclVmResult AivResourceManager::MapBuffer(
     auto &rankResource = rankResources_[rankId];
     AivBufferResource *bufferSlot = GetBufferSlot(rankResource, bufferType);
     if (bufferSlot == nullptr) {
-        HCCL_VM_ERROR("[AivResourceManager][MapBuffer] unsupported buffer type={}, rankId={}",
+        HCCL_VM_ERROR("unsupported buffer type={}, rankId={}",
             bufferType, rankId);
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
     if (bufferSlot->realAddr != nullptr) {
         if (allowDuplicateSame && bufferSlot->virtualAddr == startAddr && bufferSlot->size == size) {
-            HCCL_VM_DEBUG("[AivResourceManager][MapBuffer] duplicate same {} buffer skipped, "
+            HCCL_VM_DEBUG("duplicate same {} buffer skipped, "
                 "rankId={}, virtualAddr={:x}, size={}",
                 GetBufferTypeName(bufferType), rankId, startAddr, size);
             return HcclVmResult::HCCL_SIM_SUCCESS;
         }
-        HCCL_VM_ERROR("[AivResourceManager][MapBuffer] duplicate {} buffer found, rankId={}, virtualAddr={:x}, size={}",
+        HCCL_VM_ERROR("duplicate {} buffer found, rankId={}, virtualAddr={:x}, size={}",
             GetBufferTypeName(bufferType), rankId, startAddr, size);
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
@@ -184,7 +184,7 @@ HcclVmResult AivResourceManager::MapBuffer(
     sim::PhyMemBlock phyMem {};
     void *realAddr = sim::AcquireDevPtrInNoHostProcess(reinterpret_cast<void *>(startAddr), phyMem);
     if (realAddr == nullptr) {
-        HCCL_VM_ERROR("[AivResourceManager][MapBuffer] translate addr failed, rankId={}, type={}, addr={:x}",
+        HCCL_VM_ERROR("translate addr failed, rankId={}, type={}, addr={:x}",
             rankId, bufferType, startAddr);
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
@@ -197,7 +197,7 @@ HcclVmResult AivResourceManager::MapBuffer(
     *bufferSlot = bufferResource;
 
     acquiredPhyMemBlocks_.push_back(phyMem);
-    HCCL_VM_DEBUG("[AivResourceManager][MapBuffer] rankId={}, type={}, virtualAddr={:x}, realAddr={}, size={}",
+    HCCL_VM_DEBUG("rankId={}, type={}, virtualAddr={:x}, realAddr={}, size={}",
         rankId, bufferType, startAddr, realAddr, size);
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
@@ -207,7 +207,7 @@ HcclVmResult AivResourceManager::MapOpMemBuffer(
 {
     if (startAddr == 0 || size == 0) {
         if (startAddr != 0 || size != 0) {
-            HCCL_VM_WARN("[AivResourceManager][MapOpMemBuffer] incomplete {} buffer skipped, "
+            HCCL_VM_WARN("incomplete {} buffer skipped, "
                 "rankId={}, virtualAddr={:x}, size={}",
                 GetBufferTypeName(bufferType), rankId, startAddr, size);
         }
@@ -223,7 +223,7 @@ HcclVmResult AivResourceManager::InitFlagBuffers(uint32_t rankSize)
     for (uint32_t rankId = 0; rankId < rankSize; ++rankId) {
         auto flagBuffer = std::make_unique<uint8_t[]>(AIV_FLAG_BUFFER_SIZE);
         if (flagBuffer == nullptr) {
-            HCCL_VM_ERROR("[AivResourceManager][InitFlagBuffers] alloc flag buffer failed, rankId={}, size={}",
+            HCCL_VM_ERROR("alloc flag buffer failed, rankId={}, size={}",
                 rankId, AIV_FLAG_BUFFER_SIZE);
             return HcclVmResult::HCCL_SIM_E_INTERNAL;
         }
@@ -232,7 +232,7 @@ HcclVmResult AivResourceManager::InitFlagBuffers(uint32_t rankSize)
         rankResources_[rankId].flagBuffer.size = AIV_FLAG_BUFFER_SIZE;
         flagBufferOwners_[rankId] = std::move(flagBuffer);
 
-        HCCL_VM_DEBUG("[AivResourceManager][InitFlagBuffers] rankId={}, realAddr={}, size={}",
+        HCCL_VM_DEBUG("rankId={}, realAddr={}, size={}",
             rankId,
             rankResources_[rankId].flagBuffer.realAddr,
             rankResources_[rankId].flagBuffer.size);

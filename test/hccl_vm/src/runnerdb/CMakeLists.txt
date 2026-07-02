@@ -59,3 +59,6 @@ find_package(SQLite3 REQUIRED)
 
 target_link_libraries(runnerdb PUBLIC SQLite::SQLite3)
 
+
+# 日志染色: 模块 tag
+target_compile_definitions(runnerdb PRIVATE HCCL_VM_MODULE="RUNNERDB")

@@ -56,9 +56,9 @@ void TransLocMemToLocMemExecutor::Process(CcuResourceManager &ccuResMgr)
         srcLocAddr += gsaOffset;
         dstLocAddr += gsaOffset;
         setCKEId_ += ckeOffset;
-        HCCL_VM_DEBUG("[TransLocMemToLocMemExecutor][Process] locCcu[{}:{}], Get gsa addr offset = [{:x}], cke id offset = [{}]", rankId_, dieId_, gsaOffset, ckeOffset);
+        HCCL_VM_DEBUG("locCcu[{}:{}], Get gsa addr offset = [{:x}], cke id offset = [{}]", rankId_, dieId_, gsaOffset, ckeOffset);
     }
-    HCCL_VM_DEBUG("[TransLocMemToLocMemExecutor][Process] locCcu[{}:{}] Trans data from srcLocGSAId_[{}] srcLocAddr[{:x}] to dstLocGSAId_[{}] "
+    HCCL_VM_DEBUG("locCcu[{}:{}] Trans data from srcLocGSAId_[{}] srcLocAddr[{:x}] to dstLocGSAId_[{}] "
                "dstLocAddr[{:x}], with lengthXnId[{}] transLength[{}].",
         rankId_, dieId_, srcGSAId_, srcLocAddr, dstGSAId_, dstLocAddr, lengthXnId_, transLength_);
     ccuResMgr.TransMemToMem(reinterpret_cast<void *>(srcLocAddr), reinterpret_cast<void *>(dstLocAddr), transLength_, false, 0, 0);

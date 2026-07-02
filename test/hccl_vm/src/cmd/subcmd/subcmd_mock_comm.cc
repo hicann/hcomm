@@ -28,19 +28,19 @@ void MockCommCommand::Setup(CLI::App& app) {
 }
 
 void MockCommCommand::Execute() {
-    HCCL_VM_INFO("[HVM] Initializing mock communication domain: Config={}, Level={}", configFileName, g_hcclVmLevel);
+    HCCL_VM_INFO("Initializing mock communication domain: Config={}, Level={}", configFileName, g_hcclVmLevel);
 
     // 首先清理动态数据库表项
     auto ret = ClearDbTables();
     if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-        HCCL_VM_ERROR("[HVM] Failed to clear database tables.");
+        HCCL_VM_ERROR("Failed to clear database tables.");
         return;
     }
 
     // 重置通信域
     ret = HcclVmResetCommDomain();
     if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-        HCCL_VM_ERROR("[HVM] Failed to reset mock communication domain.");
+        HCCL_VM_ERROR("Failed to reset mock communication domain.");
         return;
     }
     
@@ -52,7 +52,7 @@ void MockCommCommand::Execute() {
 
     ret = InitHvmCommEnv(topoMeta, configFileName, g_hcclVmLevel);
     if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-        HCCL_VM_ERROR("[HVM] Failed to initialize mock communication environment. Cleaning up environment.");
+        HCCL_VM_ERROR("Failed to initialize mock communication environment. Cleaning up environment.");
         return;
     }
     return;

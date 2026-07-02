@@ -37,7 +37,6 @@ target_include_directories(store PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include/toolchain
 
     # cann包头文件
-    ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/driver
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/trace
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/profiling
@@ -47,3 +46,6 @@ target_include_directories(store PRIVATE
 )
 
 target_link_libraries(store PUBLIC log loader)
+
+# 日志染色: 模块 tag
+target_compile_definitions(store PRIVATE HCCL_VM_MODULE="STORE")

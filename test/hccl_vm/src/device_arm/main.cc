@@ -31,11 +31,11 @@ int main(int argc, char *argv[])
 
     RegisterSignalHandler();
     setvbuf(stdout, nullptr, _IOLBF, 0);
-    HCCL_VM_INFO("[device] main process start.");
+    HCCL_VM_INFO("main process start.");
     
     uint32_t rankId = static_cast<uint32_t>(std::stoi(argv[1]));
     SetCurRankId(rankId);
-    HCCL_VM_INFO("[device] rankId[{}] process start...", rankId);
+    HCCL_VM_INFO("rankId[{}] process start...", rankId);
 
     HcclAicpuData *aicpuData = GetHcclAicpuDataShmPtr();
     if (aicpuData == nullptr) {
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
             uint32_t opDetailId = 0;
             int ret = sim::QueryNewestOpDeatailIdByPid(getppid(), opDetailId);
             if (ret != 0) {
-                HCCL_VM_ERROR("[device] rankId[{}] QueryNewestOpDeatailIdByPid failed.", rankId);
+                HCCL_VM_ERROR("rankId[{}] QueryNewestOpDeatailIdByPid failed.", rankId);
             }
             sim::g_currOpDetailId = opDetailId;
         }

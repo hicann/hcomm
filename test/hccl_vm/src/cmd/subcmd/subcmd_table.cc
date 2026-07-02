@@ -28,7 +28,7 @@ void TableCommand::Setup(CLI::App& app) {
             std::vector<std::string> tables;
             tables = RunnerDB::GetAllTableName();
             for (auto &tbl : tables) {
-                std::cout << tbl << std::endl;
+                HCCL_VM_INFO("{}", tbl);
             }
         } else {
             CmdTableShow(showStr);

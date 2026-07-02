@@ -91,8 +91,8 @@ TEST_F(ProfilingReporterTest, Call_profilingReporter_api_test)
     dfxOpInfo->op_ = op;
     dfxOpInfo->comm_ = &comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo1 = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo2 = std::make_shared<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
+    auto taskInfo1 = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    auto taskInfo2 = std::make_unique<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
     mirrorTaskManager.AddTaskInfo(taskInfo1);
     mirrorTaskManager.AddTaskInfo(taskInfo2);
 

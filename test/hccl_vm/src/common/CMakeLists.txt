@@ -43,7 +43,6 @@ target_include_directories(common PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
     ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include/toolchain
 
-    ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/driver
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/trace
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/profiling

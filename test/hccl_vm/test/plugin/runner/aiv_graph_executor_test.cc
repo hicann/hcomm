@@ -30,12 +30,12 @@ protected:
     void SetUp() override {
         testDir_ = fs::temp_directory_path() / ("aiv_exec_test_" + std::to_string(::getpid()));
         fs::create_directories(testDir_ / "data");
-        setenv("HCCL_VM_INSTALL_DIR", testDir_.c_str(), 1);
+        setenv("HCCL_VM_INSTALL_ROOT", testDir_.c_str(), 1);
         AivResourceManager::GetInstance().Reset();
     }
 
     void TearDown() override {
-        unsetenv("HCCL_VM_INSTALL_DIR");
+        unsetenv("HCCL_VM_INSTALL_ROOT");
         AivResourceManager::GetInstance().Reset();
         fs::remove_all(testDir_);
     }

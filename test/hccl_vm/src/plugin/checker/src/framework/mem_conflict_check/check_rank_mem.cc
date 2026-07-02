@@ -495,7 +495,7 @@ HcclResult CheckRankMem::CompareSliceMemoryInfo(FragQueueMemStatus &left, FragQu
         if (right.count(type) != 0) {
             auto ret = CompareBufferTypeMemoryInfo(iter->second, right[type]);
             if (ret != HcclResult::HCCL_SUCCESS) {
-                HCCL_ERROR("failed to check memory %", type);
+                HCCL_ERROR("failed to check memory type[%d]", static_cast<int>(type));
                 return ret;
             }
         }
@@ -901,7 +901,7 @@ HcclResult CheckRankMem::CcuGraphMemCheck()
             }
             numCcuGraph++;
         }
-        HCCL_VM_INFO("[CcuGraphMemCheck] %u CcuGraphMemCheck proc success. ccu graph num: %d", rankId, numCcuGraph);
+        HCCL_VM_INFO("{} CcuGraphMemCheck proc success. ccu graph num: {}", rankId, numCcuGraph);
     }
     ClearCcuData();
 
@@ -1034,7 +1034,7 @@ void CheckRankMem::GenFragQueueInOneQueueOnly(TaskNode *head)
                     auto type = child->task->GetType();
                     if (type == TaskTypeStub::LOCAL_WAIT_FROM ||
                         type == TaskTypeStub::LOCAL_WAIT_FROM_SHADOW) {
-                        HCCL_VM_DEBUG("[GenFragQueueInOneQueueOnly] ccu multi samequeue node found, node: {} "
+                        HCCL_VM_DEBUG("ccu multi samequeue node found, node: {} "
                             "ignore child: {} addr: {}",
                             curNode->task->Describe(),
                             child->task->Describe(),
@@ -1126,7 +1126,7 @@ HcclResult CheckRankMem::CcuGraphMemCheckProc(RankId rankId, uint32_t queueId, T
     CHK_RET(GenFragQueConcurrencyMatrixAndCompare(rankId));
     ClearCcuData();
 
-    HCCL_VM_DEBUG("[CcuGraphMemCheckProc] ccuHeadChildNum= {}", ccuHeadChildNum);
+    HCCL_VM_DEBUG("ccuHeadChildNum= {}", ccuHeadChildNum);
     return HcclResult::HCCL_SUCCESS;
 }
 

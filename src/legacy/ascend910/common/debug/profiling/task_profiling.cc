@@ -257,11 +257,15 @@ HcclResult TaskProfiling::Run(const TaskData &taskData, bool isCapture)
     GetTaskData(taskData.taskType, taskData, hcclReportData.profInfo);
 
     hcclReportData.profInfo.cclTag = hrtMsprofGetHashId(hcclReportData.tag.c_str(), hcclReportData.tag.length());
-    hcclReportData.profInfo.groupName =
-        hrtMsprofGetHashId(hcclReportData.groupName.c_str(), hcclReportData.groupName.length());
+    std::string udi = groupUdiMap_[deviceLogicId_][hcclReportData.groupName];
+    std::string groupnameWithUdi = hcclReportData.groupName; // 若用户自定义了udi，groupname拼接udi
+    if (!udi.empty() && udi != "Unspecified") {
+        groupnameWithUdi = udi + groupnameWithUdi;
+    }
+    hcclReportData.profInfo.groupName = hrtMsprofGetHashId(groupnameWithUdi.c_str(), groupnameWithUdi.length());
 
     HCCL_DEBUG("ReportMsprofData:streamID[%u] tag[%s][%llu] group[%s][%llu]", taskData.streamID,
-        hcclReportData.tag.c_str(), hcclReportData.profInfo.cclTag, hcclReportData.groupName.c_str(),
+        hcclReportData.tag.c_str(), hcclReportData.profInfo.cclTag, groupnameWithUdi.c_str(),
         hcclReportData.profInfo.groupName);
 
     DumpReportDataInfo(hcclReportData.type, hcclReportData.profInfo);
@@ -360,13 +364,16 @@ HcclResult TaskProfiling::Save(u32 captureStreamID, u32 streamID, u32 taskID, co
     hcclReportData.profInfo.rankSize = rankSize_;
 
     hcclReportData.profInfo.dataSize = paraAiv.size;
-
     hcclReportData.profInfo.cclTag = hrtMsprofGetHashId(hcclReportData.tag.c_str(), hcclReportData.tag.length());
-    hcclReportData.profInfo.groupName =
-        hrtMsprofGetHashId(hcclReportData.groupName.c_str(), hcclReportData.groupName.length());
+    std::string udi = groupUdiMap_[deviceLogicId_][hcclReportData.groupName];
+    std::string groupnameWithUdi = hcclReportData.groupName; // 若用户自定义了udi，groupname拼接udi
+    if (!udi.empty() && udi != "Unspecified") {
+        groupnameWithUdi = udi + groupnameWithUdi;
+    }
+    hcclReportData.profInfo.groupName = hrtMsprofGetHashId(groupnameWithUdi.c_str(), groupnameWithUdi.length());    
 
     HCCL_DEBUG("ReportMsprofData:streamID[%u] tag[%s][%llu] group[%s][%llu]", captureStreamID,
-        hcclReportData.tag.c_str(), hcclReportData.profInfo.cclTag, hcclReportData.groupName.c_str(),
+        hcclReportData.tag.c_str(), hcclReportData.profInfo.cclTag, groupnameWithUdi.c_str(),
         hcclReportData.profInfo.groupName);
 
     DumpReportDataInfo(hcclReportData.type, hcclReportData.profInfo);

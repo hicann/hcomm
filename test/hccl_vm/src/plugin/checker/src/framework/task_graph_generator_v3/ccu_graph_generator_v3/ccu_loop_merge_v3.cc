@@ -17,6 +17,7 @@
 
 #include "ccu_task_transform_v3.h"
 #include "sim_log.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
@@ -256,7 +257,8 @@ bool CcuLoopInstrV3::MergeMemSlices(std::vector<MemSlice> &slices, bool allowOve
             const uint64_t lastEnd = last.offset + last.len;
             const uint64_t curEnd = cur.offset + cur.len;
             if (lastEnd > cur.offset && !allowOverlap) {
-                HCCL_VM_INFO("[ccu_loop_merge_V3] MemSlice overlap between loop expands, instrId={}", instrId);
+                HCCL_VM_WARN("Skip merged-loop optimization because memory slices from different "
+                    "loop expansions overlap, loopInstrId={}", instrId);
                 return false;
             }
             // 相邻或重叠的切片合并为一个，取并集区间
@@ -478,14 +480,15 @@ bool CcuLoopV3::CheckResourceConflict() const
     for (const auto &loopInstrs : loopExpands) {
         for (uint16_t ckeId : loopInstrs.GetUsedCKE()) {
             if (!allCKEs.insert(ckeId).second) {
-                HCCL_VM_INFO("[ccu_loop_merge_V3] loop expand cke conflict, loopInstrId={}, ckeId={}", instrId,
-                    ckeId);
+                HCCL_VM_WARN("Skip merged-loop optimization because different loop expansions reuse "
+                    "the same CKE resource, loopInstrId={}, ckeId={}", instrId, ckeId);
                 return false;
             }
         }
         for (uint16_t msId : loopInstrs.GetUsedMS()) {
             if (!allMSs.insert(msId).second) {
-                HCCL_VM_INFO("[ccu_loop_merge_V3] loop expand ms conflict, loopInstrId={}, msId={}", instrId, msId);
+                HCCL_VM_WARN("Skip merged-loop optimization because different loop expansions reuse "
+                    "the same MS resource, loopInstrId={}, msId={}", instrId, msId);
                 return false;
             }
         }
@@ -497,7 +500,8 @@ bool CcuLoopV3::LoopIterationMerge()
 {
     for (auto &loopInstrs : loopExpands) {
         if (!loopInstrs.MemMerge(true)) {
-            HCCL_VM_INFO("[ccu_loop_merge_V3] loop iteration merge failed, loopInstrId={}", instrId);
+            HCCL_VM_WARN("Skip merged-loop optimization because memory slices inside one loop "
+                "iteration cannot be merged, loopInstrId={}", instrId);
             return false;
         }
     }
@@ -514,7 +518,8 @@ bool CcuLoopV3::LoopExpandMerge()
     const size_t instrCnt = loopExpands.front().instrs.size();
     for (const auto &expand : loopExpands) {
         if (expand.instrs.size() != instrCnt) {
-            HCCL_VM_INFO("[ccu_loop_merge_V3] loop expand instr count mismatch, loopInstrId={}", instrId);
+            HCCL_VM_WARN("Skip merged-loop optimization because loop expansions contain different "
+                "numbers of instructions, loopInstrId={}", instrId);
             return false;
         }
     }
@@ -534,14 +539,15 @@ bool CcuLoopV3::LoopExpandMerge()
         }
         auto mergedInstr = loopExpands.front().instrs[instrIdx]->InstrMerge(parallelInstrs);
         if (mergedInstr == nullptr) {
-            HCCL_VM_INFO("[ccu_loop_merge_V3] loop expand instr merge failed, loopInstrId={}, instrIdx={}", instrId,
-                instrIdx);
+            HCCL_VM_WARN("Skip merged-loop optimization because one instruction position cannot be "
+                "merged across loop expansions, loopInstrId={}, instructionIndex={}", instrId, instrIdx);
             return false;
         }
         merged.instrs.push_back(std::move(mergedInstr));
     }
     if (!merged.MemMerge(false)) {
-        HCCL_VM_INFO("[ccu_loop_merge_V3] loop expand mem merge failed, loopInstrId={}", instrId);
+        HCCL_VM_WARN("Skip merged-loop optimization because merged instruction memory ranges still "
+            "overlap, loopInstrId={}", instrId);
         return false;
     }
 
@@ -555,14 +561,26 @@ HcclResult EmitMergedLoopInstrsV3(CcuGraphStateV3 *curCcuTask, uint32_t queId,
     const CcuLoopInstrsV3 &mergedInstrs, bool &isContinue)
 {
     if (curCcuTask == nullptr) {
+        HCCL_VM_ERROR("{} Failed to emit merged loop instructions because loop graph state is null, "
+            "queueId={}", MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(), queId);
         return HCCL_E_PTR;
     }
     const RankId rankId = curCcuTask->GetRankId();
     for (const auto &instr : mergedInstrs.instrs) {
         if (instr == nullptr) {
+            HCCL_VM_ERROR("{} Failed to emit one merged loop instruction because the merged instruction "
+                "entry is null, rankId={}, queueId={}", MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(),
+                static_cast<uint32_t>(rankId), queId);
             return HCCL_E_PTR;
         }
-        CHK_RET(ProcessWaitOps(curCcuTask, queId, instr->waitOps, isContinue));
+        HcclResult ret = ProcessWaitOps(curCcuTask, queId, instr->waitOps, isContinue);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_VM_ERROR("{} Failed to process wait conditions before emitting one merged loop "
+                "instruction, rankId={}, queueId={}, mergedLoopInstr={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(), static_cast<uint32_t>(rankId), queId,
+                instr->Describe());
+            return ret;
+        }
         if (!isContinue) {
             return HCCL_SUCCESS;
         }
@@ -570,27 +588,72 @@ HcclResult EmitMergedLoopInstrsV3(CcuGraphStateV3 *curCcuTask, uint32_t queId,
         if (auto trans = std::dynamic_pointer_cast<CcuLoopTransMemV3>(instr)) {
             CcuNodeRoleV3 role = CcuNodeRoleV3::UNKNOWN;
             RankId peerRank = INVALID_RANK_ID;
-            CHK_RET(ResolveTransRole(rankId, trans->srcs, trans->dsts, role, peerRank));
-            CHK_RET(AddBatchTransMem(rankId, queId, curCcuTask, trans->srcs, trans->dsts, trans->mergedSrcs,
-                trans->mergedDsts, role, peerRank));
+            ret = ResolveTransRole(rankId, trans->srcs, trans->dsts, role, peerRank);
+            if (ret != HCCL_SUCCESS) {
+                HCCL_VM_ERROR("{} Failed to determine the transfer direction for one merged loop "
+                    "instruction, rankId={}, queueId={}, mergedLoopInstr={}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(),
+                    static_cast<uint32_t>(rankId), queId, trans->Describe());
+                return ret;
+            }
+            ret = AddBatchTransMem(rankId, queId, curCcuTask, trans->srcs, trans->dsts, trans->mergedSrcs,
+                trans->mergedDsts, role, peerRank);
+            if (ret != HCCL_SUCCESS) {
+                HCCL_VM_ERROR("{} Failed to emit one merged loop transfer task, rankId={}, queueId={}, "
+                    "mergedLoopInstr={}", MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(),
+                    static_cast<uint32_t>(rankId), queId, trans->Describe());
+                return ret;
+            }
         } else if (auto reduce = std::dynamic_pointer_cast<CcuLoopReduceV3>(instr)) {
             CcuNodeRoleV3 role = CcuNodeRoleV3::UNKNOWN;
             RankId peerRank = INVALID_RANK_ID;
-            CHK_RET(ResolveReduceRole(rankId, reduce->srcs, reduce->dsts, role, peerRank));
-            CHK_RET(AddBatchReduce(rankId, queId, curCcuTask, reduce->srcs, reduce->dsts, reduce->mergedSrcs,
-                reduce->mergedDsts, reduce->dataType, reduce->reduceOp, role, peerRank));
+            ret = ResolveReduceRole(rankId, reduce->srcs, reduce->dsts, role, peerRank);
+            if (ret != HCCL_SUCCESS) {
+                HCCL_VM_ERROR("{} Failed to determine the reduce direction for one merged loop "
+                    "instruction, rankId={}, queueId={}, mergedLoopInstr={}",
+                    MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(),
+                    static_cast<uint32_t>(rankId), queId, reduce->Describe());
+                return ret;
+            }
+            ret = AddBatchReduce(rankId, queId, curCcuTask, reduce->srcs, reduce->dsts, reduce->mergedSrcs,
+                reduce->mergedDsts, reduce->dataType, reduce->reduceOp, role, peerRank);
+            if (ret != HCCL_SUCCESS) {
+                HCCL_VM_ERROR("{} Failed to emit one merged loop reduce task, rankId={}, queueId={}, "
+                    "mergedLoopInstr={}", MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(),
+                    static_cast<uint32_t>(rankId), queId, reduce->Describe());
+                return ret;
+            }
         } else if (auto clear = std::dynamic_pointer_cast<CcuLoopClearCkeV3>(instr)) {
             if (clear->clearMask != 0) {
-                HCCL_VM_INFO("[ccu_loop_merge_V3] clear cke mask is not supported in merged loop, instrId={}",
-                    clear->instrId);
+                HCCL_VM_WARN("{} Skip merged-loop optimization because ClearCKE uses a non-zero "
+                    "mask, instrId={}, clearMask=0x{:x}", MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED),
+                    clear->instrId, clear->clearMask);
                 return HCCL_E_NOT_SUPPORT;
             }
         } else {
+            HCCL_VM_ERROR("{} Failed to emit one merged loop instruction because its merged instruction "
+                "type is not supported, rankId={}, queueId={}, mergedLoopInstr={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(), static_cast<uint32_t>(rankId), queId,
+                instr->Describe());
             return HCCL_E_NOT_SUPPORT;
         }
 
-        CHK_RET(ProcessSetOps(curCcuTask, queId, instr->setOps));
-        CHK_RET(ClearWaitOps(curCcuTask, queId, instr->waitOps));
+        ret = ProcessSetOps(curCcuTask, queId, instr->setOps);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_VM_ERROR("{} Failed to apply set masks after emitting one merged loop instruction, "
+                "rankId={}, queueId={}, mergedLoopInstr={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(), static_cast<uint32_t>(rankId), queId,
+                instr->Describe());
+            return ret;
+        }
+        ret = ClearWaitOps(curCcuTask, queId, instr->waitOps);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_VM_ERROR("{} Failed to clear consumed wait masks after emitting one merged loop "
+                "instruction, rankId={}, queueId={}, mergedLoopInstr={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_LOOP_MERGE_ERROR).c_str(), static_cast<uint32_t>(rankId), queId,
+                instr->Describe());
+            return ret;
+        }
     }
     return HCCL_SUCCESS;
 }

@@ -67,9 +67,9 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_AddTaskInfo_1)
 
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
 
-    std::shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
+    auto taskInfo = std::make_unique<TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
 
-    mirrorTaskManager.AddTaskInfo(taskInfo);
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
 
     mirrorTaskManager.GetCurrDfxOpInfo();
 
@@ -84,7 +84,8 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_AddTaskInfo_2)
 
     MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 0);
 
-    EXPECT_THROW(mirrorTaskManager.AddTaskInfo(nullptr), InternalException);
+    std::unique_ptr<TaskInfo> nullTaskInfo = nullptr;
+    EXPECT_THROW(mirrorTaskManager.AddTaskInfo(nullTaskInfo), InternalException);
 }
 
 TEST_F(MirrorTaskManagerTest, MirrorTaskManager_GetQueue_1)
@@ -118,8 +119,8 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_Iterator_1)
 
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
 
-    std::shared_ptr<TaskInfo> taskInfo1 = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo2 = std::make_shared<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
+    auto taskInfo1 = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    auto taskInfo2 = std::make_unique<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
 
     mirrorTaskManager.AddTaskInfo(taskInfo1);
     mirrorTaskManager.AddTaskInfo(taskInfo2);
@@ -129,11 +130,11 @@ TEST_F(MirrorTaskManagerTest, MirrorTaskManager_Iterator_1)
 
         // 获取对应streamId和任务队列的指针
         auto streamId = queueIter->first;
-        Queue<std::shared_ptr<TaskInfo>> *taskInfoQueue = queueIter->second;
+        Queue<std::unique_ptr<TaskInfo>> *taskInfoQueue = queueIter->second;
 
         // 枚举所有任务信息
-        for (auto taskInfoIter = taskInfoQueue->Begin(); (*taskInfoIter) != *taskInfoQueue->End(); (*taskInfoIter)++) {
-            std::cout << (*(*taskInfoIter))->Describe().c_str() << std::endl;
+        for (auto taskInfoIter = taskInfoQueue->Begin(); *taskInfoIter != *taskInfoQueue->End(); (*taskInfoIter)++) {
+            std::cout << (**taskInfoIter)->Describe().c_str() << std::endl;
         }
     }
 }

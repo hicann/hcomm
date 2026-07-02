@@ -1468,13 +1468,11 @@ protected:
         sim::MemoryManager::GetInstance().FreeMemByName(sim::CommPoolPolicy::kPoolName);
         shm_unlink(sim::CommPoolPolicy::kPoolName);
         unsetenv("HCCL_OP_EXPANSION_MODE");
-        unsetenv("HCCL_VM_INSTALL_DIR");
     }
     void TearDown() override {
         sim::MemoryManager::GetInstance().FreeMemByName("HcclAicpuData");
         sim::MemoryManager::GetInstance().FreeMemByName(sim::CommPoolPolicy::kPoolName);
         unsetenv("HCCL_OP_EXPANSION_MODE");
-        unsetenv("HCCL_VM_INSTALL_DIR");
     }
 };
 
@@ -1488,13 +1486,6 @@ TEST_F(InitHvmEnvTest, InitializesSharedMemoryWithoutAivValidation) {
 
     // clean 模式不建复用区 HcclCommPool。
     EXPECT_EQ(sim::MemoryManager::GetInstance().AcquireMemByName(sim::CommPoolPolicy::kPoolName), nullptr);
-}
-
-TEST_F(InitHvmEnvTest, FailsInAivModeWithoutInstallDir) {
-    setenv("HCCL_OP_EXPANSION_MODE", "AIV", 1);
-
-    HcclVmResult ret = InitHvmEnv("/nonexistent/path/for/ut", 2, false);
-    EXPECT_EQ(ret, HCCL_SIM_HOST_ERROR_CMD);
 }
 
 TEST_F(InitHvmEnvTest, FailsWhenCommPoolNameAlreadyExists) {
@@ -1553,32 +1544,13 @@ TEST_F(IsAivExpansionModeEnabledTest, ToggleOnOff) {
 class ValidateAivTaskJsonByRankTest : public testing::Test {
 protected:
     void SetUp() override {
-        unsetenv("HCCL_VM_INSTALL_DIR");
-        setenv("HCCL_VM_INSTALL_DIR", "/tmp/hvm_ut_aiv_dummy", 1);
+        unsetenv("HCCL_VM_INSTALL_ROOT");
+        setenv("HCCL_VM_INSTALL_ROOT", "/tmp/hvm_ut_aiv_dummy", 1);
     }
     void TearDown() override {
-        unsetenv("HCCL_VM_INSTALL_DIR");
+        unsetenv("HCCL_VM_INSTALL_ROOT");
     }
 };
-
-TEST_F(ValidateAivTaskJsonByRankTest, FailsWithoutInstallDir) {
-    std::vector<sim::Rank> allRank;
-    sim::Rank r;
-    r.rank_id = 0;
-    allRank.push_back(r);
-    HcclVmResult ret = ValidateAivTaskJsonByRank(allRank);
-    EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_HOST_ERROR_CMD);
-}
-
-TEST_F(ValidateAivTaskJsonByRankTest, FailsWithEmptyInstallDir) {
-    setenv("HCCL_VM_INSTALL_DIR", "", 1);
-    std::vector<sim::Rank> allRank;
-    sim::Rank r;
-    r.rank_id = 0;
-    allRank.push_back(r);
-    HcclVmResult ret = ValidateAivTaskJsonByRank(allRank);
-    EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_HOST_ERROR_CMD);
-}
 
 TEST_F(ValidateAivTaskJsonByRankTest, SucceedsWithEmptyRankList) {
     std::vector<sim::Rank> allRank;
@@ -1587,7 +1559,7 @@ TEST_F(ValidateAivTaskJsonByRankTest, SucceedsWithEmptyRankList) {
 }
 
 TEST_F(ValidateAivTaskJsonByRankTest, FailsWithNonExistentDataDir) {
-    setenv("HCCL_VM_INSTALL_DIR", "/tmp/hvm_ut_no_such_dir_validate", 1);
+    setenv("HCCL_VM_INSTALL_ROOT", "/tmp/hvm_ut_no_such_dir_validate", 1);
     std::vector<sim::Rank> allRank;
     sim::Rank r;
     r.rank_id = 0;
@@ -1602,10 +1574,10 @@ protected:
     void SetUp() override {
         installDir_ = std::filesystem::temp_directory_path() / "hvm_ut_aiv_validate";
         std::filesystem::create_directories(installDir_ / "data");
-        setenv("HCCL_VM_INSTALL_DIR", installDir_.string().c_str(), 1);
+        setenv("HCCL_VM_INSTALL_ROOT", installDir_.string().c_str(), 1);
     }
     void TearDown() override {
-        unsetenv("HCCL_VM_INSTALL_DIR");
+        unsetenv("HCCL_VM_INSTALL_ROOT");
         std::filesystem::remove_all(installDir_);
     }
     void WriteAivTaskFile(uint32_t rankId, uint32_t launchIdx) {

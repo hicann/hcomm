@@ -17,6 +17,7 @@
 #include <sstream>
 #include <sys/stat.h>
 
+#include "sim_common_api.h"
 #include "sim_log.h"
 
 namespace HcclSim {
@@ -41,15 +42,9 @@ void SetError(std::string &errorMessage, const std::string &message)
 
 std::string ResolveAivTaskFilePath(RankId rankId, uint64_t launchIndex)
 {
-    const char *installDir = std::getenv("HCCL_VM_INSTALL_DIR");
-    if (installDir == nullptr || installDir[0] == '\0') {
-        return "";
-    }
-
-    std::ostringstream os;
-    os << installDir << "/data/" << AIV_RANK_TASK_FILE_PREFIX << rankId
-       << AIV_RANK_TASK_FILE_LAUNCH_MARKER << launchIndex << AIV_RANK_TASK_FILE_SUFFIX;
-    return os.str();
+    const std::string dataRelPath = std::string("data/") + AIV_RANK_TASK_FILE_PREFIX + std::to_string(rankId)
+       + AIV_RANK_TASK_FILE_LAUNCH_MARKER + std::to_string(launchIndex) + AIV_RANK_TASK_FILE_SUFFIX;
+    return InstallPath::ResolveToInstallRoot(dataRelPath);
 }
 
 bool CheckObjectField(const Json &json, const char *fieldName, std::string &errorMessage)
@@ -225,10 +220,6 @@ HcclResult AivSnapshotJsonLoaderV3::LoadByRankAndLaunch(RankId rankId, uint64_t 
 {
     snapshot = AivRuntimeTaskSnapshotV3 {};
     const std::string filePath = ResolveAivTaskFilePath(rankId, launchIndex);
-    if (filePath.empty()) {
-        SetError(errorMessage, "HCCL_VM_INSTALL_DIR is not set");
-        return HCCL_E_NOT_FOUND;
-    }
     if (!FileExists(filePath)) {
         SetError(errorMessage, "AIV task json file does not exist: " + filePath);
         return HCCL_E_NOT_FOUND;
@@ -263,7 +254,7 @@ HcclResult AivSnapshotJsonLoaderV3::LoadByRankAndLaunch(RankId rankId, uint64_t 
         return HCCL_E_PARA;
     }
 
-    HCCL_VM_INFO("[AivSnapshotJsonLoaderV3] Loaded AIV snapshot, rankId={}, launchIndex={}, blockCount={}, file={}",
+    HCCL_VM_INFO("Loaded AIV snapshot, rankId={}, launchIndex={}, blockCount={}, file={}",
         rankId, launchIndex, snapshot.blocks.size(), filePath);
     return HCCL_SUCCESS;
 }

@@ -175,6 +175,9 @@ HcclResult TopoMatcher::GetRankMap(const CommParaInfo &commParaInfo, std::vector
 HcclResult TopoMatcher::SetRankMap()
 {
     // 构建由UserRank到子通信域的映射
+    CHK_PRT_RET(CommPlaneVector_.size() > COMM_LEVEL_RESERVED,
+        HCCL_ERROR("[TopoMatcher][SetRankMap]CommPlaneVector.size[%u] > COMM_LEVEL_RESERVED[%u]",
+        CommPlaneVector_.size(), COMM_LEVEL_RESERVED), HCCL_E_PARA);
     subCommRank2UserRank_.resize(static_cast<u32>(COMM_LEVEL_RESERVED));
     userRank2subCommRank_.resize(static_cast<u32>(COMM_LEVEL_RESERVED));
     for (u32 levelIndex = 0; levelIndex < CommPlaneVector_.size(); levelIndex++) {

@@ -86,6 +86,7 @@ add_executable(test_binary_data_operator binary_data_operator_test.cc)
 target_sources(test_binary_data_operator PRIVATE
     ${CMAKE_SOURCE_DIR}/src/store/store_binary_data_operator.cc
 )
+target_link_libraries(test_binary_data_operator PRIVATE log)
 set_target_properties(test_binary_data_operator PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
 )

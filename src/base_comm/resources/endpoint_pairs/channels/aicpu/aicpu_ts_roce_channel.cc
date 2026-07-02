@@ -114,6 +114,16 @@ HcclResult WaitClientSocketLinkEstablished(const std::shared_ptr<hccl::HcclSocke
 
 HcclResult AicpuTsRoceChannel::BuildSocketTagName(std::string &outTag) const
 {
+    if (channelDesc_.channelName != nullptr) {
+        outTag = std::string(channelDesc_.channelName);
+        if (outTag.size() + 1U > SOCK_CONN_TAG_SIZE) {
+            HCCL_ERROR("[AicpuTsRoceChannel] channelName too long (max %u bytes)",
+                static_cast<unsigned int>(SOCK_CONN_TAG_SIZE - 1U));
+            return HCCL_E_PARA;
+        }
+        return HCCL_SUCCESS;
+    }
+
     hccl::HcclIpAddress localIp{};
     hccl::HcclIpAddress remoteIp{};
     CHK_RET(CommAddrToHcclIp(localEp_.commAddr, localIp));
@@ -121,10 +131,7 @@ HcclResult AicpuTsRoceChannel::BuildSocketTagName(std::string &outTag) const
     const std::string clientStr(isLocalIpClient_ ? localIp.GetReadableIP() : remoteIp.GetReadableIP());
     const std::string serverStr(isLocalIpClient_ ? remoteIp.GetReadableIP() : localIp.GetReadableIP());
     const uint32_t port = channelDesc_.port != 0 ? channelDesc_.port : kDefaultRocePort;
-    uint32_t socketTagIdx = 0;
-    CHK_SAFETY_FUNC_RET(memcpy_s(&socketTagIdx, sizeof(socketTagIdx),
-        channelDesc_.raws + sizeof(channelDesc_.raws) - sizeof(uint32_t), sizeof(uint32_t)));
-    outTag = clientStr + "_" + serverStr + ":" + std::to_string(port) + "_" + std::to_string(socketTagIdx);
+    outTag = clientStr + "_" + serverStr + ":" + std::to_string(port);
     if (outTag.size() + 1U > SOCK_CONN_TAG_SIZE) {
         HCCL_ERROR("[AicpuTsRoceChannel] socketTag too long (max %u bytes)", static_cast<unsigned int>(SOCK_CONN_TAG_SIZE - 1U));
         return HCCL_E_PARA;

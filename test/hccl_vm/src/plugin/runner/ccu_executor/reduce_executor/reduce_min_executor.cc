@@ -49,7 +49,7 @@ void ReduceMinExecutor::Parser()
 // Reduce Min操作
 void ReduceMinExecutor::Process(CcuResourceManager &ccuResMgr)
 {
-    HCCL_VM_DEBUG("[ReduceMinExecutor][Process] Reduce Min info, locCcu[{}:{}], count:[{}], dataType:[{}]", rankId_, dieId_, count_, dataType_);
+    HCCL_VM_DEBUG("Reduce Min info, locCcu[{}:{}], count:[{}], dataType:[{}]", rankId_, dieId_, count_, dataType_);
     if (dataType_ >= ReduceMaxMinDataType::MAX_MIN_RESERVED4 || dataType_ == ReduceMaxMinDataType::MAX_MIN_RESERVED1 ||
         dataType_ == ReduceMaxMinDataType::MAX_MIN_RESERVED2 || dataType_ == ReduceMaxMinDataType::MAX_MIN_RESERVED3) {
         return;
@@ -66,7 +66,7 @@ void ReduceMinExecutor::Process(CcuResourceManager &ccuResMgr)
         for (uint32_t i = 0; i < hcomm::CcuRep::CCU_REDUCE_MAX_MS; i++) {
             msId_[i] += msOffset;
         }
-        HCCL_VM_DEBUG("[ReduceMinExecutor][Process] locCcu[{}:{}], ms offset=[{}]", rankId_, dieId_, msOffset);
+        HCCL_VM_DEBUG("locCcu[{}:{}], ms offset=[{}]", rankId_, dieId_, msOffset);
     }
     // 2. reduce操作
     ReduceMaxMinDataType type = static_cast<ReduceMaxMinDataType>(dataType_);

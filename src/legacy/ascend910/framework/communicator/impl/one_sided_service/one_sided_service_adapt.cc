@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "hccl_one_sided_services.h"
+#include <hccl/hccl_one_sided_services.h>
 #include "exception_handler.h"
 #include "hccl_one_sided_service.h"
 #include "hccl_comm_pub.h"
@@ -64,7 +64,7 @@ static HcclResult AddDescTraceInfo(hccl::hcclComm* hcclComm, HcclOneSideOpDesc* 
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclRemapRegistedMemory(HcclComm *comm, HcclMem *memInfoArray, u64 commSize, u64 arraySize)
+HcclResult HcclRemapRegistedMemory(HcclComm *comm, CommMem *memInfoArray, u64 commSize, u64 arraySize)
 {
     RPT_INPUT_ERR(comm == nullptr,
         "EI0003",
@@ -108,7 +108,7 @@ HcclResult HcclRemapRegistedMemory(HcclComm *comm, HcclMem *memInfoArray, u64 co
         CHK_PTR_NULL(hcclComm);
         CHK_RET(hcclComm->GetOneSidedService(&service));
         CHK_PTR_NULL(service);
-        CHK_RET(static_cast<HcclOneSidedService*>(service)->ReMapMem(memInfoArray, arraySize));
+        CHK_RET(static_cast<HcclOneSidedService*>(service)->ReMapMem(reinterpret_cast<HcclMem*>(memInfoArray), arraySize));
     }
 
     return HCCL_SUCCESS;
@@ -290,7 +290,7 @@ HcclResult HcclExchangeMemDesc(HcclComm comm, u32 remoteRank, HcclMemDescs* loca
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclEnableMemAccess(HcclComm comm, HcclMemDesc* remoteMemDesc, HcclMem* remoteMem)
+HcclResult HcclEnableMemAccess(HcclComm comm, HcclMemDesc* remoteMemDesc, CommMem* remoteMem)
 {
     EXCEPTION_HANDLE_BEGIN
         // 参数校验和适配
@@ -314,7 +314,7 @@ HcclResult HcclEnableMemAccess(HcclComm comm, HcclMemDesc* remoteMemDesc, HcclMe
             hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm *>(comm);
             HcclComm commV2 = hcclComm->GetCommunicatorV2();
             CHK_PTR_NULL(commV2);
-            CHK_RET(HcclEnableMemAccessV2(commV2, remoteMemDesc, remoteMem));
+            CHK_RET(HcclEnableMemAccessV2(commV2, remoteMemDesc, reinterpret_cast<HcclMem*>(remoteMem)));
             return HCCL_SUCCESS;
         }());
         hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm *>(comm);
@@ -324,7 +324,7 @@ HcclResult HcclEnableMemAccess(HcclComm comm, HcclMemDesc* remoteMemDesc, HcclMe
         IHcclOneSidedService *service = nullptr;
         CHK_RET(hcclComm->GetOneSidedService(&service));
         CHK_PTR_NULL(service);
-        static_cast<HcclOneSidedService*>(service)->EnableMemAccess(*remoteMemDesc, *remoteMem);
+        static_cast<HcclOneSidedService*>(service)->EnableMemAccess(*remoteMemDesc, *reinterpret_cast<HcclMem*>(remoteMem));
 
         HCCL_RUN_INFO("%s success:comm[%s], remoteMemDescPtr[%p], remoteMemPtr[%p]", __func__, commIdentifier.c_str(), remoteMemDesc,
                       remoteMem);
@@ -535,7 +535,7 @@ HcclResult HcclBuildOneSidedService(std::unique_ptr<IHcclOneSidedService> &servi
 }
 
 // 进程粒度注册内存
-HcclResult HcclRegisterGlobalMem(const HcclMem* mem, void** memHandle)
+HcclResult HcclRegisterGlobalMem(const CommMem* mem, void** memHandle)
 {
     EXCEPTION_HANDLE_BEGIN
     // 入参校验
@@ -548,7 +548,7 @@ HcclResult HcclRegisterGlobalMem(const HcclMem* mem, void** memHandle)
 
     // 注册内存
     // 内部检查内存是否重复
-    CHK_RET(GlobalMemRegMgr::GetInstance().Reg(mem, memHandle));
+    CHK_RET(GlobalMemRegMgr::GetInstance().Reg(reinterpret_cast<const HcclMem*>(mem), memHandle));
 
     HCCL_RUN_INFO("%s success:mem addr[%p], size[%llu], type[%d], memHandle[%p]",
         __func__, mem->addr, mem->size, mem->type, *memHandle);

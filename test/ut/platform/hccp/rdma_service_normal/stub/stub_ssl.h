@@ -15,6 +15,7 @@
 #ifndef __SUB_TLS_H
 #define __SUB_TLS_H
 
+# define SSL_ERROR_SYSCALL               5
 # define SSL_ERROR_WANT_WRITE            3
 # define SSL_ERROR_WANT_READ             2
 

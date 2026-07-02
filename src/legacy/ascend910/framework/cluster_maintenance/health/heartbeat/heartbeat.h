@@ -223,6 +223,7 @@ struct ConnInfo {
     u32 restSize = 0;
     RingBuffer recvBuffer;
     u32 lostNum = 0;
+    u32 lostReportCnt = 0;
     bool newConn = false;
     std::vector<SocketWlistInfo> wlistInfosVec;
     ConnInfo() {}

@@ -41,9 +41,9 @@ cd {HCCL_VM路径}/test
 ./run_ut.sh
 ```
 
-- 执行所有 `test` 目录下的测试
-- 完整三步流程：编译 → 生成可执行文件 → 执行所有测试
-- 适用于完整回归测试
+- 执行所有 `test` 目录下的测试。
+- 完整三步流程：编译 → 生成可执行文件 → 执行所有测试。
+- 适用于完整回归测试。
 
 ### 2. 覆盖率报告
 
@@ -51,11 +51,11 @@ cd {HCCL_VM路径}/test
 ./run_ut.sh --cov
 ```
 
-- 全量编译 + 执行所有测试 + 生成 gcov/lcov 覆盖率 HTML 报告
-- 自动启用 `--coverage` 编译选项，生成 `.gcno`/`.gcda` 文件
-- 四步流程：编译（含覆盖率插桩）→ 执行 → 收集覆盖率数据 → 生成 HTML 报告
-- 报告输出路径：`$CODE_DIR/coverage_report/html/index.html`
-- 会自动过滤系统头文件、第三方库、stub 文件等非业务代码
+- 全量编译 + 执行所有测试 + 生成 gcov/lcov 覆盖率 HTML 报告。
+- 自动启用 `--coverage` 编译选项，生成 `.gcno`/`.gcda` 文件。
+- 四步流程：编译（含覆盖率插桩）→ 执行 → 收集覆盖率数据 → 生成 HTML 报告。
+- 报告输出路径：`$CODE_DIR/coverage_report/html/index.html`。
+- 会自动过滤系统头文件、第三方库、stub 文件等非业务代码。
 
 ### 3. 目录执行
 
@@ -65,9 +65,9 @@ cd {HCCL_VM路径}/test
 ./run_ut.sh store
 ```
 
-- 递归查找指定目录下所有 `*_test.cc` 文件
-- 编译并执行该目录下所有测试
-- 适用于模块级测试
+- 递归查找指定目录下所有 `*_test.cc` 文件。
+- 编译并执行该目录下所有测试。
+- 适用于模块级测试。
 
 ### 4. 二进制执行
 
@@ -76,8 +76,8 @@ cd {HCCL_VM路径}/test
 ./run_ut.sh test_allgather_semantics_checker
 ```
 
-- 编译并执行指定的测试二进制
-- 二进制名以 `test_` 开头
+- 编译并执行指定的测试二进制。
+- 二进制名以 `test_` 开头。
 
 ### 5. 文件执行
 
@@ -86,8 +86,8 @@ cd {HCCL_VM路径}/test
 ./run_ut.sh allgather_semantics_checker_test.cc
 ```
 
-- 根据测试文件名自动匹配对应二进制
-- 编译并执行
+- 根据测试文件名自动匹配对应二进制。
+- 编译并执行。
 
 ### 6. 单个用例执行
 
@@ -96,8 +96,8 @@ cd {HCCL_VM路径}/test
 ./run_ut.sh allgather_semantics_checker_test.cc AllgatherSemanticsCheckerTest.CheckBasic
 ```
 
-- 执行指定测试文件中的单个测试用例
-- 用例名格式：`TestSuiteName.TestCaseName`
+- 执行指定测试文件中的单个测试用例。
+- 用例名格式：`TestSuiteName.TestCaseName`。
 
 ### 7. 列出测试
 
@@ -106,8 +106,8 @@ cd {HCCL_VM路径}/test
 ./run_ut.sh --list
 ```
 
-- 列出所有可用测试文件及其状态
-- 显示用例数量和对应二进制名
+- 列出所有可用测试文件及其状态。
+- 显示用例数量和对应二进制名。
 
 ## 示例
 
@@ -222,12 +222,12 @@ export HCCL_CODE_HOME=/home/q30033976/checker/hccl        # hccl源码路径（A
 source /home/q30033976/checker/Ascend/cann/set_env.sh     # CANN安装路径下的环境脚本
 ```
 
-**示例**：假设您的工作目录为 `/home/myuser/workspace`，则修改为：
+**示例**：假设您的工作目录为 `/home/workspace`，则修改为：
 
 ```bash
-export HCOMM_CODE_HOME=/home/myuser/workspace/hcomm
-export HCCL_CODE_HOME=/home/myuser/workspace/hccl
-source /home/myuser/workspace/Ascend/cann/set_env.sh
+export HCOMM_CODE_HOME=/home/workspace/hcomm
+export HCCL_CODE_HOME=/home/workspace/hccl
+source /home/workspace/Ascend/cann/set_env.sh
 ```
 
 脚本会自动加载这些环境变量，未修改将导致编译失败。
@@ -244,10 +244,10 @@ source /home/myuser/workspace/Ascend/cann/set_env.sh
 
 ## 注意事项
 
-1. **首次执行**：首次执行会进行完整的 CMake 配置，耗时较长
-2. **编译失败**：如果编译失败，请检查 `build.log` 查看详细错误信息
-3. **测试失败**：如果测试失败，请检查 `run.log` 查看具体失败的用例
-4. **日志清理**：日志目录按时间戳命名，定期清理旧日志以节省空间
+1. **首次执行**：首次执行会进行完整的 CMake 配置，耗时较长。
+2. **编译失败**：如果编译失败，请检查 `build.log` 查看详细错误信息。
+3. **测试失败**：如果测试失败，请检查 `run.log` 查看具体失败的用例。
+4. **日志清理**：日志目录按时间戳命名，定期清理旧日志以节省空间。
 
 ## 常见问题
 
@@ -281,8 +281,8 @@ cd <coverage_report/html所在路径>
 python3 -m http.server 8080
 ```
 
-- 本机浏览器访问：`http://localhost:8080`
-- 远程服务器：通过 SSH 端口转发后本地访问
+- 本机浏览器访问：`http://localhost:8080`。
+- 远程服务器：通过 SSH 端口转发后本地访问。
 
 ```bash
 ssh -L 8080:localhost:8080 <user>@<server_ip>
@@ -293,6 +293,6 @@ ssh -L 8080:localhost:8080 <user>@<server_ip>
 
 ## 版本历史
 
-- v1.0 - 初始版本，支持全量/目录/文件/用例级测试执行
-- v2.0 - 优化命令行参数，支持自动路径推导，三步流程日志记录
-- v2.1 - 新增 `--cov` 参数，支持 gcov/lcov 覆盖率 HTML 报告生成
+- v1.0 - 初始版本，支持全量/目录/文件/用例级测试执行。
+- v2.0 - 优化命令行参数，支持自动路径推导，三步流程日志记录。
+- v2.1 - 新增 `--cov` 参数，支持 gcov/lcov 覆盖率 HTML 报告生成。

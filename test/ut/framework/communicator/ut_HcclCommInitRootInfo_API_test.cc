@@ -96,31 +96,3 @@ TEST_F(HcclCommInitRootInfoTest, Ut_HcclCommInitRootInfo_When_PCommIsNull_Expect
 
     Ut_Comm_Destroy(comm);
 }
-
-TEST_F(HcclCommInitRootInfoTest, Ut_InitCommParams_WithoutUdi_CommNameEqualsIdentifier)
-{
-    std::unique_ptr<HcclCommunicator> communicator(new (std::nothrow) HcclCommunicator());
-    ASSERT_NE(communicator, nullptr);
-    HcclCommParams params;
-    params.identifier = "test_comm_id";
-    HcclResult ret = communicator->InitCommParams(params);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(communicator->commName_, "test_comm_id");
-}
-
-TEST_F(HcclCommInitRootInfoTest, Ut_InitCommParams_WithUdi_CommNameEqualsGroupName)
-{
-    HcclCommConfig config;
-    HcclCommConfigInit(&config);
-    strncpy(config.hcclUdi, "test_udi", UDI_MAX_LENGTH);
-    strncpy(config.hcclCommName, "group_name", COMM_NAME_MAX_LENGTH);
-    CommConfig commConfig;
-    commConfig.Load(&config);
-    std::unique_ptr<HcclCommunicator> communicator(new (std::nothrow) HcclCommunicator(commConfig));
-    ASSERT_NE(communicator, nullptr);
-    HcclCommParams params;
-    params.identifier = "test_comm_id";
-    HcclResult ret = communicator->InitCommParams(params);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(communicator->commName_, commConfig.GetConfigGroupName());
-}

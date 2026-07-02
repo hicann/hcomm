@@ -115,6 +115,7 @@ private:
     std::mutex ipConstuctMutex_;
     std::mutex whiteListMutex_; //删除白名单需要加锁
     std::mutex clientThreadMutex_; //删除clients需要加锁
+    std::mutex clientResourcesMutex_; // 保护clientNicCtxs_和clientSockets_的并发访问
     std::mutex printDetectInfoMutex_; // 打印锁
     std::mutex detectThreadMutex_;
     std::set<HcclIpAddress> whiteVnicSet_; // 保存vnic的白名单 whiteVnicSet_

@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include <thread>
 #include <time.h>
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
@@ -269,10 +270,23 @@ int mock_dcmiv2_get_mainboard_id(int npu_id, unsigned int* mainboard_id)
     return 0;
 }
 
+// 预期整个生命周期只会被调用1次
 int mock_get_logicid_from_chipphy_id(unsigned int phyId, unsigned int* logicId)
 {
    *logicId = phyId;
    return 0;
+}
+
+int mock_aclrtGetLogicDevIdByPhyDevId(const int phyId, int* const logicId)
+{
+   *logicId = phyId;
+   return 0;
+}
+
+int mock_halGetDeviceInfo(unsigned int devId, uint32_t moduleType, int32_t infoType, int64_t *value)
+{
+    *value = 0x07;
+    return 0;
 }
 
 void *mock_dlsym(void *handle, const char *symbol)
@@ -286,6 +300,14 @@ void *mock_dlsym(void *handle, const char *symbol)
     if (strcmp(symbol, "dcmiv2_get_dev_id_from_chip_phyid") == 0
      || strcmp(symbol, "dcmiv2_get_dev_id_by_chip_phy_id") == 0) {
         return (void*)mock_get_logicid_from_chipphy_id;
+    }
+                        
+    if (strcmp(symbol, "aclrtGetLogicDevIdByPhyDevId") == 0) {
+        return (void*)mock_aclrtGetLogicDevIdByPhyDevId;
+    }
+
+    if (strcmp(symbol, "halGetDeviceInfo") == 0) {
+        return (void*)mock_halGetDeviceInfo;
     }
     return (void*)0x1;
 }
@@ -309,6 +331,33 @@ TEST_F(TopoAddrInfoTest, ut_multi_init)
     hal_get_mainboard_id(0, &mainBoardId2);
     EXPECT_EQ(mainBoardId2, expectedMainboardId);
 }
+
+
+/**
+ * 验证多线程并发调用
+ */
+TEST_F(TopoAddrInfoTest, ut_multi_thread_init)
+{
+    // mock data
+    unsigned int expectedMainboardId = 0x07;
+    MOCKER(hal_dlopen).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(mock_dlopen));
+    MOCKER(hal_dlsym).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(mock_dlsym));
+    std::vector<std::thread> ts;
+    constexpr int testThreadNum = 16;
+    std::vector<unsigned int> mids(testThreadNum, 0);
+    std::vector<int> rets(testThreadNum, 0);
+    for (int i = 0; i < testThreadNum; i++) {
+        ts.emplace_back([i, &mids, &rets] {
+            rets[i] = hal_get_mainboard_id(0, &mids[i]);
+        });
+    }
+    for (int i = 0; i < testThreadNum; i++) {
+        ts[i].join();
+        EXPECT_EQ(rets[i], 0);
+        EXPECT_EQ(mids[i], expectedMainboardId);
+    }
+}
+
 
 void mock_uelist_for_server_with_uboe(UEList *ueList)
 {

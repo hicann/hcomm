@@ -23,7 +23,7 @@ std::string GetCurrentPath()
 {
     char absPath[PATH_MAX];
     if (realpath(".", absPath) == nullptr) {
-        HCCL_VM_ERROR("[GetCurrentPath] realpath failed for current path.");
+        HCCL_VM_ERROR("realpath failed for current path.");
         return "";
     }
     return std::string(absPath);
@@ -45,7 +45,7 @@ std::string GetRootPath(const std::string& anchorPath, int maxDepth)
         currentSearchPath = GetParentPath(currentSearchPath);
     }
 
-    HCCL_VM_INFO("[GetRootPath] RootPath NOT found.");
+    HCCL_VM_INFO("RootPath NOT found.");
     return "";
 }
 
@@ -91,7 +91,7 @@ HcclResult EnsureDirectory(const std::string& path)
             current = JoinPath(current, part);
             if (!DirExists(current)) {
                 if (mkdir(current.c_str(), 0755) != 0 && errno != EEXIST) {
-                    HCCL_VM_ERROR("[EnsureDirectory] mkdir failed for {}: {}", current, strerror(errno));
+                    HCCL_VM_ERROR("mkdir failed for {}: {}", current, strerror(errno));
                     return HcclResult::HCCL_E_INTERNAL;
                 }
             }

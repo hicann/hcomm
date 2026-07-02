@@ -25,11 +25,11 @@ protected:
     void SetUp() override {
         testDir_ = fs::temp_directory_path() / ("aiv_test_" + std::to_string(::getpid()));
         fs::create_directories(testDir_ / "data");
-        setenv("HCCL_VM_INSTALL_DIR", testDir_.c_str(), 1);
+        setenv("HCCL_VM_INSTALL_ROOT", testDir_.c_str(), 1);
     }
 
     void TearDown() override {
-        unsetenv("HCCL_VM_INSTALL_DIR");
+        unsetenv("HCCL_VM_INSTALL_ROOT");
         fs::remove_all(testDir_);
     }
 
@@ -299,14 +299,6 @@ TEST_F(AivTaskSnapshotLoaderTest, LoadByLaunchDirect_ErrorNullPointer_Succeeds) 
 }
 
 // ==================== LoadRuntimeTaskSnapshotByLaunchDirect Error Tests ====================
-
-TEST_F(AivTaskSnapshotLoaderTest, LoadByLaunchDirect_EnvNotSet_ReturnsFalse) {
-    unsetenv("HCCL_VM_INSTALL_DIR");
-    AivRuntimeTaskSnapshot snapshot;
-    std::string errorMsg;
-    EXPECT_FALSE(AivTaskSnapshotLoader::LoadRuntimeTaskSnapshotByLaunchDirect(0, 0, snapshot, &errorMsg));
-    EXPECT_FALSE(errorMsg.empty());
-}
 
 TEST_F(AivTaskSnapshotLoaderTest, LoadByLaunchDirect_FileNotExist_ReturnsFalse) {
     AivRuntimeTaskSnapshot snapshot;

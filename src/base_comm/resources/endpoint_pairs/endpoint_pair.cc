@@ -13,6 +13,8 @@
 #include "hcomm_c_adpt.h"
 #include "orion_adpt_utils.h"
 #include "channel_process.h"
+#include "comm_engine_utils.h"
+
 
 #include "hcom_common.h"
 #include "exception_handler.h"
@@ -193,18 +195,18 @@ HcclResult EndpointPair::CreateChannel(EndpointHandle endpointHandle, CommEngine
 HcclResult EndpointPair::DestroyChannel(CommEngine engine, u32 reuseIdx)
 {
     if (IsChannelNotExist(engine, reuseIdx)) {
-        HCCL_WARNING("EndpointPair::DestroyChannel: engine[%d] reuseIdx[%u], channelHandle size[%u],"
-                     "channel not found, skip destroy channel", engine, reuseIdx, channelHandles_[engine].size());
+        HCCL_WARNING("EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u], channelHandle size[%u],"
+                     "channel not found, skip destroy channel", GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
         return HCCL_SUCCESS;
     }
-    HCCL_INFO("EndpointPair::DestroyChannel: engine[%d] reuseIdx[%u], channelHandle size[%u],"
-              "start destroy channel", engine, reuseIdx, channelHandles_[engine].size());
+    HCCL_INFO("EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u], channelHandle size[%u],"
+              "start destroy channel", GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
     ChannelHandle channelHandle = channelHandles_[engine][reuseIdx];
     CHK_RET(static_cast<HcclResult>(HcommChannelDestroy(&channelHandle, 1)));
     // 去掉channelHandles_中reuseIdx位置的channelHandle
     channelHandles_[engine].erase(channelHandles_[engine].begin() + reuseIdx);
-    HCCL_INFO("EndpointPair::DestroyChannel: engine[%d] reuseIdx[%u] destroy channel success,"
-              "channelHandle size[%u]", engine, reuseIdx, channelHandles_[engine].size());
+    HCCL_INFO("EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u] destroy channel success,"
+              "channelHandle size[%u]", GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
     return HCCL_SUCCESS;
 }
 

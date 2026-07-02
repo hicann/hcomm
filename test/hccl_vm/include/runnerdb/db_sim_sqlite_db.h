@@ -235,7 +235,7 @@ public:
             return *static_cast<sim::SqliteTable<T>*>(it->second);
         }
         std::string name = std::string("Unregistered_") + typeid(T).name();
-        fprintf(stderr, "[SimRunnerSqliteDB::GetTable] Lazily registering unregistered type: %s\n", name.c_str());
+        HCCL_VM_WARN("[SimRunnerSqliteDB::GetTable] Lazily registering unregistered type: {}", name.c_str());
         auto table = std::make_unique<sim::SqliteTable<T>>(m_db.GetDb(), name);
         auto* rawPtr = table.get();
         m_lazyTables.push_back(std::move(table));

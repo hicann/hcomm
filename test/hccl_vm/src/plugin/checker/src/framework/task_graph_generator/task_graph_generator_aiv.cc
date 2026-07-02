@@ -192,7 +192,7 @@ HcclResult TaskGraphGenerator::ConnectNextAivTaskNodeAndPushInQue(const AivSingl
         return HcclResult::HCCL_SUCCESS;
     }
 
-    HCCL_VM_DEBUG("[TaskGraphGenerator] Rank [{}], Block [{}], Pipe [{}], end of current Pipe [{}]: TrimType [{}].",
+    HCCL_VM_DEBUG("Rank [{}], Block [{}], Pipe [{}], end of current Pipe [{}]: TrimType [{}].",
                   currNode->rankIdx, currNode->blockIdx, currNode->pipeIdx, currNode->pipeIdx,
                   currNode->task->GetType().Describe());
     return HcclResult::HCCL_SUCCESS;
@@ -348,12 +348,12 @@ HcclResult TaskGraphGenerator::ProcAivNode4Graph(TaskNodePtr currNode, std::vect
     if (!IsExecutable(currNode)) {
         graphNodeQue.push_back(currNode);
         unmatchedCnt++;
-        HCCL_VM_DEBUG("[TaskGraphGenerator] taskNode not executable, push back to the queue.");
+        HCCL_VM_DEBUG("taskNode not executable, push back to the queue.");
         return HcclResult::HCCL_SUCCESS;
     }
     if(currNode->task == nullptr){
         currNode->execFlag = true;
-        HCCL_VM_DEBUG("[TaskGraphGenerator] aiv end node.");
+        HCCL_VM_DEBUG("aiv end node.");
         return HcclResult::HCCL_SUCCESS;
     }
     switch (currNode->task->GetType()) {

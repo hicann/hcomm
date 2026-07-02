@@ -35,8 +35,7 @@ CommConfig::CommConfig(const std::string &commName)
       retryIntervalTime_(GetExternalInputRetryIntervalTime()),
       bufferName_(""),
       hcclQos_(HCCL_COMM_QOS_CONFIG_NOT_SET),
-      symmetricMemoryStride_(HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE),
-      groupName_(commName)
+      symmetricMemoryStride_(HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE)
 {
     InitAlgoConfig();
     InitRetryEnable();
@@ -60,8 +59,7 @@ CommConfig::CommConfig()
       retryIntervalTime_(GetExternalInputRetryIntervalTime()),
       bufferName_(""),
       hcclQos_(HCCL_COMM_QOS_CONFIG_NOT_SET),
-      symmetricMemoryStride_(HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE),
-      groupName_("")
+      symmetricMemoryStride_(HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE)
 {
     InitAlgoConfig();
     InitRetryEnable();
@@ -117,8 +115,8 @@ HcclResult CommConfig::Load(const HcclCommConfig *userConfig)
     // 根据版本号读取配置，检查配置参数合法性
     CHK_RET(SetConfigByVersion(configHandle));
 
-    HCCL_RUN_INFO("[Load] comm config info of [%s]: groupName[%s], configSize[%llu], version[%u], opExpansionMode[%u]", commName_.c_str(),
-        groupName_.c_str(), configHandle.info.configSize, configHandle.info.version, configHandle.opExpansionMode);
+    HCCL_RUN_INFO("[Load] comm config info of [%s]: configSize[%llu], version[%u], opExpansionMode[%u]", commName_.c_str(),
+        configHandle.info.configSize, configHandle.info.version, configHandle.opExpansionMode);
     HCCL_RUN_INFO("[Load] comm config of [%s]: bufferSize[%llu], deterministic[%u], trafficClass[%u], serviceLevel[%u]"
         ", execTimeOut[%u]s, bufferName[%s], hcclQos[%u], symmetricMemoryStride[%llu], aclGraphZeroCopyEnable[%u]",
         commName_.c_str(), bufferSize_, deterministic_, trafficClass_, serviceLevel_, execTimeOut_, bufferName_.c_str(), hcclQos_, symmetricMemoryStride_, aclGraphZeroCopyEnable_);
@@ -310,16 +308,9 @@ HcclResult CommConfig::SetConfigCommName(const CommConfigHandle &config)
 {
     if (config.commName[0] != '\0') {
         auto commNameLength = strlen(config.commName);
-        commNameLength = commNameLength < COMM_NAME_MAX_LENGTH ? commNameLength : COMM_NAME_MAX_LENGTH;
+        commNameLength = commNameLength < COMM_NAME_MAX_LENGTH - 1? commNameLength : COMM_NAME_MAX_LENGTH - 1;
         commName_ = std::string(config.commName, commNameLength);
-        groupName_ = commName_;
     }
-    return HCCL_SUCCESS;
-}
-
-HcclResult CommConfig::UpdateConfigCommName(std::string suffix)
-{
-    commName_ = suffix + "_" + commName_;
     return HCCL_SUCCESS;
 }
 
@@ -330,10 +321,8 @@ HcclResult CommConfig::SetConfigUdi(const CommConfigHandle &config)
         return HCCL_SUCCESS;
     }
     auto udiLength = strlen(config.udi);
-    udiLength = udiLength < COMM_NAME_MAX_LENGTH ? udiLength : COMM_NAME_MAX_LENGTH;
+    udiLength = udiLength < COMM_NAME_MAX_LENGTH - 1 ? udiLength : COMM_NAME_MAX_LENGTH - 1;
     udi_ = std::string(config.udi, udiLength);
-    // 用户自定义udi时，通信域名称拼接udi
-    CHK_RET(UpdateConfigCommName(udi_));
     return HCCL_SUCCESS;
 }
 
@@ -688,7 +677,7 @@ u8 CommConfig::GetConfigDeterministic() const
     return deterministic_;
 }
 
-const std::string& CommConfig::GetConfigCommName() const // 获取通信域名称：udi + commName
+const std::string& CommConfig::GetConfigCommName() const
 {
     return commName_;
 }
@@ -802,10 +791,5 @@ u32 CommConfig::GetConfigHcclQos() const
 u64 CommConfig::GetConfigSymmetricMemoryStride() const
 {
     return symmetricMemoryStride_;
-}
-
-const std::string& CommConfig::GetConfigGroupName() const  // 获取通信域名称
-{
-    return groupName_;
 }
 }

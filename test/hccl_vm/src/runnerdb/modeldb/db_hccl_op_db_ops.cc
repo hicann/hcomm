@@ -36,16 +36,16 @@ OpDbOps::OpDbOps()
 
     auto db = HcclSim::DB::HcclDBFactory::Instance().CreateDB(config.type);
     if (!db || db->Connect(config) != HcclSim::HCCL_SIM_SUCCESS) {
-        HCCL_VM_ERROR("[dbInit] Connect database failed");
+        HCCL_VM_ERROR("Connect database failed");
         return;
     }
 
     SetDB(std::move(db));
 
     if (InitSchema() != HcclSim::HCCL_SIM_SUCCESS) {
-        HCCL_VM_ERROR("[dbInit] Init schema failed");
+        HCCL_VM_ERROR("Init schema failed");
     } else {
-        HCCL_VM_INFO("[dbInit] OpDbOps tables initialized successfully");
+        HCCL_VM_INFO("OpDbOps tables initialized successfully");
     }
 }
 
@@ -150,7 +150,7 @@ HcclVmResult OpDbOps::InitSchema() {
     });
 
     if (ret == HCCL_SIM_SUCCESS) {
-        HCCL_VM_INFO("[OpDbOps::InitSchema] All tables created");
+        HCCL_VM_INFO("All tables created");
     }
     return ret;
 }

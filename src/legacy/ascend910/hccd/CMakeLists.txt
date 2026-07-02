@@ -23,6 +23,7 @@ target_compile_definitions(hccd PRIVATE
 # 编译选项
 target_compile_options(hccd PRIVATE
     -Werror
+    -Wno-deprecated-declarations
     -Wall
     -fno-common
     -fstack-protector-strong

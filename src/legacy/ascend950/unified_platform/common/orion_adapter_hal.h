@@ -16,7 +16,7 @@ namespace Hccl
 {
 HcclResult HrtHalDrvQueryProcessHostPid(int pid, unsigned int *chipId, unsigned int *vfid,
     unsigned int *hostPid, unsigned int *cpType);
-HcclResult HrtHalGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t *value);
+HcclResult HrtHalGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t &value);
 HcclResult HrtHalHostRegister(void *srcPtr, uint64_t size, uint32_t flag, int32_t deviceLogicId, void **dstPtr);
 HcclResult HrtHalHostUnregister(void *ptr, int32_t deviceLogicId);
 }

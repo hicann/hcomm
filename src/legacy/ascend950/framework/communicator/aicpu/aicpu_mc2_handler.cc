@@ -51,6 +51,7 @@ HcclResult AicpuMc2Handler::HcclGetCommHandleByCtx(void *ctx, void **opHandle) c
     // 创建单例对象
     std::shared_lock<std::shared_timed_mutex> sharedLock(AicpuUtils::GetInstance().handlerMutex_);
     AicpuUtils::GetInstance().CreateSingleInstance(ctx);
+    CHK_RET(AicpuUtils::GetInstance().Init());
 
     // 初始化硬件参数
     DevCapability::GetInstance().Init(AicpuUtils::GetInstance().kernelParam_->comm.devType);

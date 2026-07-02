@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "NEW_STUB"
+
 #include <atomic>
 #include <cstdint>
 #include <iostream>
@@ -27,6 +30,7 @@
 #include "db_sim_runner_common.h"
 #include "db_sim_runner_ops.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
@@ -37,16 +41,16 @@ HcclResult hrtGetDeviceType(DevType &devType)
     auto device = RunnerDB::GetById<sim::Device>(devKey);
     if (!device.has_value()) {
         // not find
-        HCCL_VM_ERROR("[aclstub] can not get current device type: {:d}", devKey);
+        HCCL_VM_ERROR("current device type not found: {:d}", devKey);
         return HCCL_E_NOT_FOUND;
     }
     if (strcmp(device->soc_version, "Ascend950") == 0) {
         devType = DevType::DEV_TYPE_950;
     } else {
-        HCCL_VM_ERROR("[aclstub] not support device soc version: {:s}", device->soc_version);
+        HCCL_VM_ERROR("not support device soc version: {:s}", device->soc_version);
         return HCCL_E_NOT_SUPPORT;
     }
-    HCCL_VM_TRACE("[aclstub] Get current device type: {}", static_cast<int>(devType));
+    HCCL_VM_TRACE("Get current device type: {}", static_cast<int>(devType));
     return HCCL_SUCCESS;
 }
 
@@ -93,7 +97,6 @@ rtError_t rtGetDevResAddress(rtDevResInfo *const resInfo, rtDevResAddrInfo *cons
         // 非NotifyRecord场景暂不处理
         return RT_ERROR_NONE;
     }
-    // std::cout<<"[ERROR][rtGetDevResAddress] Not support...."<<std::endl;
 
     uint32_t notifyId = resInfo->resId;
     uint32_t len = 8;

@@ -133,6 +133,7 @@ TEST_F(ProfilingHandlerLiteTest, ReportHcclOpInfo1_test)
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     ableNum = 1;
     handler.enableHcclL0_ = true;
+    handler.reportAdditionalInfo_ = AdprofReportAdditionalInfo;
     EXPECT_THROW(handler.ReportHcclOpInfo(*dfxOpInfo), InternalException);
 }
 
@@ -162,7 +163,7 @@ TEST_F(ProfilingHandlerLiteTest, ReportMainStreamTask_test)
 {
     ProfilingHandlerLite &handler = Hccl::ProfilingHandlerLite::GetInstance();
     FlagTaskInfo flagTaskInfo;
-    flagTaskInfo.streamId = 0;
+    flagTaskInfo.taskId = 0;
     flagTaskInfo.type =  MainStreamTaskType::HEAD;
     handler.enableHcclL0_ = true;
     handler.enableHcclL1_ = true;
@@ -172,11 +173,10 @@ TEST_F(ProfilingHandlerLiteTest, ReportMainStreamTask_test)
 // 测试ReporttHcclTaskDetails接口
 TEST_F(ProfilingHandlerLiteTest, ReporttHcclTaskDetails_test)
 {
-    std::vector<TaskInfo> taskInfo;
+    std::vector<TaskInfo*> taskInfo;
     u32 streamId =1;
     u32 taskId = 1;
     u32 remoteRank = 1;
-    // TaskParamType不同，进入不同的分支
     TaskParam taskParam = {TaskParamType::TASK_NOTIFY_RECORD,
         std::chrono::high_resolution_clock::now().time_since_epoch().count(),
         std::chrono::high_resolution_clock::now().time_since_epoch().count(),
@@ -196,7 +196,7 @@ TEST_F(ProfilingHandlerLiteTest, ReporttHcclTaskDetails_test)
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     TaskInfo task(streamId, taskId, remoteRank, taskParam, dfxOpInfo);
     for(int i  =0 ; i <= 2; i++){
-        taskInfo.push_back(task);
+        taskInfo.push_back(&task);
     }
     handler.enableHcclL1_ = true;
     handler.ReportHcclTaskDetails(taskInfo);
@@ -206,11 +206,10 @@ TEST_F(ProfilingHandlerLiteTest, ReporttHcclTaskDetails_test)
 // 测试ReporttHcclTaskDetails接口
 TEST_F(ProfilingHandlerLiteTest, ReporttHcclTaskDetails1_test)
 {
-    std::vector<TaskInfo> taskInfo;
+    std::vector<TaskInfo*> taskInfo;
     u32 streamId =1;
     u32 taskId = 1;
     u32 remoteRank = 1;
-    // TaskParamType不同，进入不同的分支
     TaskParam taskParam = {TaskParamType::TASK_SDMA,
         std::chrono::high_resolution_clock::now().time_since_epoch().count(),
         std::chrono::high_resolution_clock::now().time_since_epoch().count(),
@@ -228,7 +227,7 @@ TEST_F(ProfilingHandlerLiteTest, ReporttHcclTaskDetails1_test)
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     TaskInfo task(streamId, taskId, remoteRank, taskParam, dfxOpInfo);
-    taskInfo.push_back(task);
+    taskInfo.push_back(&task);
     handler.enableHcclL1_ = true;
     handler.ReportHcclTaskDetails(taskInfo);
     delete comm;
@@ -236,11 +235,10 @@ TEST_F(ProfilingHandlerLiteTest, ReporttHcclTaskDetails1_test)
 
 TEST_F(ProfilingHandlerLiteTest, ReporttHcclTaskDetails2_test)
 {
-    std::vector<TaskInfo> taskInfo;
+    std::vector<TaskInfo*> taskInfo;
     u32 streamId =1;
     u32 taskId = 1;
     u32 remoteRank = 1;
-    // TaskParamType不同，进入不同的分支
     TaskParam taskParam = {TaskParamType::TASK_REDUCE_INLINE,
         std::chrono::high_resolution_clock::now().time_since_epoch().count(),
         std::chrono::high_resolution_clock::now().time_since_epoch().count(),
@@ -258,7 +256,7 @@ TEST_F(ProfilingHandlerLiteTest, ReporttHcclTaskDetails2_test)
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     TaskInfo task(streamId, taskId, remoteRank, taskParam, dfxOpInfo);
-    taskInfo.push_back(task);
+    taskInfo.push_back(&task);
     handler.enableHcclL1_ = true;
     handler.ReportHcclTaskDetails(taskInfo);
     delete comm;
@@ -314,10 +312,10 @@ TEST_F(ProfilingHandlerLiteTest, Ut_ReportHcclOpInfo_When_CommNullptr_Expect_NoT
 TEST_F(ProfilingHandlerLiteTest, Ut_ReportHcclTaskDetails_When_DfxOpInfoNullptr_Expect_NoCrash)
 {
     ProfilingHandlerLite &handler = Hccl::ProfilingHandlerLite::GetInstance();
-    std::vector<TaskInfo> taskInfoVec;
+    std::vector<TaskInfo*> taskInfoVec;
     TaskParam taskParam{};
     TaskInfo taskInfo(0, 0, 0, taskParam, nullptr);
-    taskInfoVec.push_back(taskInfo);
+    taskInfoVec.push_back(&taskInfo);
     handler.enableHcclL1_ = true;
     EXPECT_NO_THROW(handler.ReportHcclTaskDetails(taskInfoVec));
 }

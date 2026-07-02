@@ -37,7 +37,7 @@ void LoadSqeArgsToGsaExecutor::Run() {
     uint64_t sqeArgValue = ccuResMgr.GetSqeArgValue(rankId_, dieId_, sqeArgId_);
 
     ccuResMgr.UpdateXnValue(rankId_, dieId_, gsaId_, sqeArgValue);
-    HCCL_VM_DEBUG("[LoadSqeArgsToGsaExecutor] Load SqeArg: locCcu[{}:{}], GSAId=[{}], sqeArgValue=[{}]",
+    HCCL_VM_DEBUG("Load SqeArg: locCcu[{}:{}], GSAId=[{}], sqeArgValue=[{}]",
         rankId_, dieId_, gsaId_, sqeArgValue);
 }
 

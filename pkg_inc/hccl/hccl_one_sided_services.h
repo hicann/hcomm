@@ -13,7 +13,7 @@
 
 #include <hccl/hccl_types.h>
 #include <hccl/base.h>
-#include "hccl_mem_defs.h"
+#include "hcomm_res_defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -92,7 +92,7 @@ extern HcclResult HcclExchangeMemDesc(HcclComm comm, u32 remoteRank, HcclMemDesc
  * @param remoteMem [output]描述符对应的对端内存
  * @return HcclResult
  */
-extern HcclResult HcclEnableMemAccess(HcclComm comm, HcclMemDesc* remoteMemDesc, HcclMem* remoteMem);
+extern HcclResult HcclEnableMemAccess(HcclComm comm, HcclMemDesc* remoteMemDesc, CommMem* remoteMem);
 
 /**
  * @brief 去使能一个memDesc，使本端不再具有访问对端memDesc对应的远端memory的能力
@@ -136,7 +136,7 @@ extern HcclResult HcclBatchGet(HcclComm comm, u32 remoteRank, HcclOneSideOpDesc*
  * @param arraySize [input]memInfoArray数组的长度
  * @return HcclResult
  */
-extern HcclResult HcclRemapRegistedMemory(HcclComm *comm, HcclMem *memInfoArray, u64 commSize, u64 arraySize);
+extern HcclResult HcclRemapRegistedMemory(HcclComm *comm, CommMem *memInfoArray, u64 commSize, u64 arraySize);
 
 /**
  * @brief 进程粒度注册内存
@@ -144,7 +144,7 @@ extern HcclResult HcclRemapRegistedMemory(HcclComm *comm, HcclMem *memInfoArray,
  * @param mem [input]要注册的内存信息
  * @param memHandle [output]注册成功后返回的内存句柄
  */
-extern HcclResult HcclRegisterGlobalMem(const HcclMem* mem, void** memHandle);
+extern HcclResult HcclRegisterGlobalMem(const CommMem* mem, void** memHandle);
 
 /**
  * @brief 进程粒度注销内存

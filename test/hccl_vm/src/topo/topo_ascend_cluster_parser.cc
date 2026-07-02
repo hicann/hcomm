@@ -11,6 +11,7 @@
 #include "topo_ascend_cluster_parser.h"
 
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <map>
@@ -137,7 +138,7 @@ HcclVmResult AscendClusterTopoParser::InitClusterTopo(const std::string &cluster
  */
 HcclVmResult AscendClusterTopoParser::ParseRanktableAndInitCommDomain(const std::string &ranktablePath)
 {
-    HCCL_VM_DEBUG("Enter ParseRanktableAndInitCommDomain, status: {}");
+    HCCL_VM_DEBUG("Enter ParseRanktableAndInitCommDomain, ranktablePath: {}", ranktablePath);
 
     TopoMeta topoMeta;
     if (ParseRanktable(ranktablePath, topoMeta) != HcclVmResult::HCCL_SIM_SUCCESS) {
@@ -416,13 +417,7 @@ HcclVmResult AscendClusterTopoParser::CreateRankTableFile(const TopoMeta &topoMe
         }
     }
 
-    std::error_code ec;
-    fs::path exePath = fs::read_symlink("/proc/self/exe", ec);
-    fs::path binDir = ec ? fs::current_path() : exePath.parent_path();
-    if (binDir.filename() == "bin") {
-        binDir = binDir.parent_path();
-    }
-    fs::path dataDir = binDir / "data";
+    fs::path dataDir = fs::path(InstallPath::ResolveToInstallRoot("data"));
     std::error_code ec2;
     fs::create_directories(dataDir, ec2);
     std::string outputPath = (dataDir / "ranktable.json").string();
@@ -434,6 +429,8 @@ HcclVmResult AscendClusterTopoParser::CreateRankTableFile(const TopoMeta &topoMe
 
     ofs << rankTable.dump(4) << std::endl;
     ofs.close();
+
+    setenv("RANK_TABLE_FILE", outputPath.c_str(), 1);
 
     HCCL_VM_DEBUG("[{}] ranktable.json generated with {:d} ranks", __func__, rankId);
     return HcclVmResult::HCCL_SIM_SUCCESS;
@@ -685,7 +682,7 @@ HcclVmResult AscendClusterTopoParser::ParseRanktable(const std::string &ranktabl
         !network_.superPods[0].servers[0].devices.empty()) {
     }
 
-    HCCL_VM_DEBUG("[{}] parsed ranktable: podNum={}, serverCount={}, rankNum={}",
+    HCCL_VM_DEBUG("[{}] parsed ranktable: topoMetaSize={}",
                  __func__, topoMeta.size());
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }

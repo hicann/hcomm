@@ -363,7 +363,7 @@ protected:
         collOpParams.staticAddr     = true;
         collOpParams.staticShape    = true;
         collOpParams.outputDataType = DataType::INT8;
-        collOpParams.debugCase      = 1;
+        
         collOpParams.dstRank        = 0;
         return collOpParams;
     }
@@ -1637,7 +1637,7 @@ TEST_F(InsRulesTest, Interpret_ccu_instruction)
     MOCKER(CcuCtxMgr::GetTaskParam).stubs().will(invoke(GetTaskParamStub));
     MOCKER(CcuCtxMgr::GetProfilingInfo).stubs().will(invoke(GetProfilingInfoStub));
     MOCKER_CPP(&Hccl::CcuJettyMgr::GetRemoteRankIdByChannelId).stubs().with(mockcpp::any()).will(returnValue(0x23));
-    MOCKER_CPP(&Hccl::MirrorTaskManager::AddTaskInfo).stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(static_cast<void (Hccl::MirrorTaskManager::*)(std::unique_ptr<Hccl::TaskInfo>&&)>(&Hccl::MirrorTaskManager::AddTaskInfo)).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     comm.streamManager->opbase = make_unique<OpbaseStreamManager>(&comm);
     comm.streamManager->opbase->master = make_unique<Stream>(&comm);
     comm.currentCollOperator = make_unique<CollOperator>();
@@ -1664,7 +1664,7 @@ TEST_F(InsRulesTest, Interpret_aiv_instruction)
     AivInstruction ins(links, aivOpArgs);
 
     rtStream_t fakePtr = nullptr;
-    MOCKER_CPP(&Hccl::MirrorTaskManager::AddTaskInfo).stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(static_cast<void (Hccl::MirrorTaskManager::*)(std::unique_ptr<Hccl::TaskInfo>&&)>(&Hccl::MirrorTaskManager::AddTaskInfo)).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     
     s32 fakeStreamId = 123;
     MOCKER(aclrtStreamGetId)
@@ -1711,7 +1711,7 @@ TEST_F(InsRulesTest, SubmitCcuInsGroupTasks_GetRts1ToNCntNotify_nullptr)
     MOCKER(CcuCtxMgr::GetTaskParam).stubs().will(invoke(GetTaskParamStub));
     MOCKER(CcuCtxMgr::GetProfilingInfo).stubs().will(invoke(GetProfilingInfoStub));
     MOCKER_CPP(&Hccl::CcuJettyMgr::GetRemoteRankIdByChannelId).stubs().with(mockcpp::any()).will(returnValue(0x23));
-    MOCKER_CPP(&Hccl::MirrorTaskManager::AddTaskInfo).stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(static_cast<void (Hccl::MirrorTaskManager::*)(std::unique_ptr<Hccl::TaskInfo>&&)>(&Hccl::MirrorTaskManager::AddTaskInfo)).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     comm.streamManager->opbase = make_unique<OpbaseStreamManager>(&comm);
     comm.streamManager->opbase->master = make_unique<Stream>(&comm);
     comm.currentCollOperator = make_unique<CollOperator>();
@@ -1747,7 +1747,7 @@ TEST_F(InsRulesTest, SubmitCcuInsGroupTasks_GetRtsNTo1CntNotify_nullptr)
     MOCKER(CcuCtxMgr::GetTaskParam).stubs().will(invoke(GetTaskParamStub));
     MOCKER(CcuCtxMgr::GetProfilingInfo).stubs().will(invoke(GetProfilingInfoStub));
     MOCKER_CPP(&Hccl::CcuJettyMgr::GetRemoteRankIdByChannelId).stubs().with(mockcpp::any()).will(returnValue(0x23));
-    MOCKER_CPP(&Hccl::MirrorTaskManager::AddTaskInfo).stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(static_cast<void (Hccl::MirrorTaskManager::*)(std::unique_ptr<Hccl::TaskInfo>&&)>(&Hccl::MirrorTaskManager::AddTaskInfo)).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     comm.streamManager->opbase = make_unique<OpbaseStreamManager>(&comm);
     comm.streamManager->opbase->master = make_unique<Stream>(&comm);
     comm.currentCollOperator = make_unique<CollOperator>();

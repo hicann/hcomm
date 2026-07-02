@@ -51,7 +51,7 @@ void ReduceAddExecutor::Parser()
 // Reduce Add操作
 void ReduceAddExecutor::Process(CcuResourceManager &ccuResMgr)
 {
-    HCCL_VM_DEBUG("[ReduceAddExecutor][Process] Reduce Add info, locCcu[{}:{}], count=[{}], castEn=[{}], dataType=[{}]",
+    HCCL_VM_DEBUG("Reduce Add info, locCcu[{}:{}], count=[{}], castEn=[{}], dataType=[{}]",
         rankId_, dieId_, count_, castEn_, dataType_);
     for (uint32_t i = 0; i < CCU_REDUCE_MAX_MS; i++) {
         HCCL_VM_TRACE("msId_[{}]:dieId[{}], msId[{}]", i, msId_[i] >> 15, msId_[i] & 0x7FFF);
@@ -68,7 +68,7 @@ void ReduceAddExecutor::Process(CcuResourceManager &ccuResMgr)
         for (uint32_t i = 0; i < hcomm::CcuRep::CCU_REDUCE_MAX_MS; i++) {
             msId_[i] += msOffset;
         }
-        HCCL_VM_DEBUG("[ReduceAddExecutor][Process] locCcu[{}:{}], ms offset=[{}], ckeOffset[{}]", rankId_, dieId_, msOffset, ckeOffset);
+        HCCL_VM_DEBUG("locCcu[{}:{}], ms offset=[{}], ckeOffset[{}]", rankId_, dieId_, msOffset, ckeOffset);
     }
     // 2. reduce操作
     ReduceAddDataType type = static_cast<ReduceAddDataType>(dataType_);

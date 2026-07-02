@@ -326,6 +326,9 @@ HcclResult DpuManager::InitDpuKernel()
 
 HcclResult DpuManager::DeInitDpuKernel()
 {
+    if (!isDpuKernelLaunched_) {
+        return HCCL_SUCCESS;
+    }
     (void)DestroyDpuKernelResource();
     (void)DestroyKFCWorkSpaceVA();
     if (hostShareBuf_ != nullptr) {

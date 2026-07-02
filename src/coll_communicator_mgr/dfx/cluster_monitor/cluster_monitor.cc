@@ -147,7 +147,9 @@ HcclResult ClusterMonitor::GetSocketDescFromRankInfo(HcclComm comm, uint32_t rem
         HCCL_WARNING("[%s] Get links between myRank[%u] and remoteRank[%u] failed, ret:%d", __func__, myRankId, remoteRank, result);
         return HCCL_E_NOT_FOUND;
     }
-    if (linkNum == 0) { // 如果没有查询到任何链接，不报错，不把该link加入needConnectRank，直接返回成功
+    // 如果没有查询到任何链接，不报错，不把该link加入needConnectRank，直接返回成功
+    if (linkNum == 0 || links[0].srcEndpointDesc.loc.locType == EndpointLocType::ENDPOINT_LOC_TYPE_HOST || 
+        links[0].dstEndpointDesc.loc.locType == EndpointLocType::ENDPOINT_LOC_TYPE_HOST) {
         HCCL_INFO("[%s] no link between myRank[%u] and remoteRank[%u]", __func__, myRankId, remoteRank);
         return HCCL_E_NOT_FOUND;
     }

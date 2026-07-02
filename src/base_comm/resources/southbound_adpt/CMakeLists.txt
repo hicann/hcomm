@@ -10,6 +10,7 @@
 
 set(src_list
     hcomm_adapter_hccp.cc
+    hcomm_adapter_runtime.cc
     hcomm_adapter_rts.cc
     hcomm_adapter_urma.cc
 )

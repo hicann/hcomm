@@ -13,6 +13,8 @@
 #include <thread>
 #include <chrono>
 
+#include "env_config.h"
+
 #define private public
 #define protected public
 #include "detect_connect_anomalies.h"
@@ -229,6 +231,70 @@ TEST_F(DetectConnectAnomaliesTest, CreateClients_Success)
     EXPECT_EQ(linkClientThreads.size(), 1u);
     ASSERT_TRUE(linkClientThreads[0]->joinable());
     linkClientThreads[0]->join();
+
+    GlobalMockObject::verify();
+}
+
+TEST_F(DetectConnectAnomaliesTest, CreateClient_Success_ClientSocketSaved)
+{
+    ErrInfo errInfo;
+    errInfo.nicType = NicType::VNIC_TYPE;
+    errInfo.localRankInfo.devicePhyId = 0;
+    errInfo.deviceLogicId = HOST_DEVICE_ID; // 跳过 hrtSetDevice/hrtResetDevice
+    errInfo.localRankInfo.serverId = "test_server_id";
+    errInfo.remoteRankInfo.serverId = "remote_server_id";
+
+    HcclIpAddress localIp("192.168.1.1");
+    HcclIpAddress remoteIp("192.168.1.2");
+    errInfo.localRankInfo.deviceVnicIp = localIp;
+    errInfo.remoteRankInfo.deviceVnicIp = remoteIp;
+    errInfo.remoteRankInfo.deviceVnicPort = 16677;
+
+    // 预设置 vnicCtx_ 为非空，跳过 HcclNetOpenDev
+    dca_->vnicCtx_ = reinterpret_cast<HcclNetDevCtx>(0x1);
+
+    // Mock GetExternalInputDfsConnectionFaultDetectionTime
+    MOCKER(GetExternalInputDfsConnectionFaultDetectionTime)
+        .stubs()
+        .will(returnValue(1));
+
+    // Mock HcclSocket::Init
+    MOCKER_CPP(&HcclSocket::Init)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+
+    // Mock HcclSocket::Connect
+    MOCKER_CPP(&HcclSocket::Connect)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+
+    // Mock HcclSocket::GetStatus 返回 SOCKET_OK，使 GetStatus 立即返回成功
+    MOCKER_CPP(&HcclSocket::GetStatus)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HcclSocketStatus::SOCKET_OK));
+
+    // 记录原始 clientSockets_ 大小
+    size_t originalSize = dca_->clientSockets_.size();
+
+    // 设置 threadExit_ = false 让 while 循环快速退出
+    dca_->threadExit_ = false;
+    dca_->broadCastTime = 0;
+
+    // 执行 CreateClient，覆盖 lines 506-509
+    HcclResult ret = dca_->CreateClient(errInfo);
+
+    // 验证返回成功
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // 验证 clientSocket 被正确保存到 clientSockets_
+    EXPECT_EQ(dca_->clientSockets_.size(), originalSize + 1);
+    EXPECT_NE(dca_->clientSockets_.back(), nullptr);
+
+    // 清理
+    dca_->clientSockets_.clear();
+    dca_->vnicCtx_ = nullptr;
 
     GlobalMockObject::verify();
 }

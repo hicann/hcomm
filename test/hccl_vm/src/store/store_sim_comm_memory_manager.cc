@@ -48,7 +48,7 @@ CommunicationMemoryManager::~CommunicationMemoryManager()
 void* CommunicationMemoryManager::AllocCommMem(const char* name) 
 {
     if (!name) {
-        HCCL_VM_ERROR("[COMM_MEM] acquire name is null");
+        HCCL_VM_ERROR("acquire name is null");
         return nullptr;
     }
 
@@ -56,7 +56,7 @@ void* CommunicationMemoryManager::AllocCommMem(const char* name)
 
     void* ptr = MemoryManager::GetInstance().AllocMemByName(name, sizeof(CommMemHead));
     if (ptr == nullptr) {
-        HCCL_VM_ERROR("[COMM_MEM] alloc failed, name: {}", name);
+        HCCL_VM_ERROR("alloc failed, name: {}", name);
         return nullptr;
     }
 
@@ -64,7 +64,7 @@ void* CommunicationMemoryManager::AllocCommMem(const char* name)
     head->bufferSize = 0;
     head->writeTotalBytes = 0;
     head->readTotalBytes = 0;
-    HCCL_VM_INFO("[COMM_MEM] acquire name: {}, ptr: {:p}", name, ptr);
+    HCCL_VM_INFO("acquire name: {}, ptr: {:p}", name, ptr);
     m_commMemMap[name] = ptr;
     return head->data;
 }
@@ -72,7 +72,7 @@ void* CommunicationMemoryManager::AllocCommMem(const char* name)
 void* CommunicationMemoryManager::AcquireCommMem(const char* name) 
 {
     if (!name) {
-        HCCL_VM_ERROR("[COMM_MEM] acquire name is null");
+        HCCL_VM_ERROR("acquire name is null");
         return nullptr;
     }
     void* ptr = nullptr;
@@ -83,7 +83,7 @@ void* CommunicationMemoryManager::AcquireCommMem(const char* name)
     } else {
         ptr = MemoryManager::GetInstance().AcquireMemByName(name);
         if (ptr == nullptr) {
-            HCCL_VM_ERROR("[COMM_MEM] acquire failed, name: {}", name);
+            HCCL_VM_ERROR("acquire failed, name: {}", name);
             return nullptr;
         }
         m_commMemMap[name] = ptr;
@@ -95,17 +95,17 @@ void* CommunicationMemoryManager::AcquireCommMem(const char* name)
 
 int CommunicationMemoryManager::ReleaseCommMem(const char* name) {
     if (!name) {
-        HCCL_VM_ERROR("[COMM_MEM] release name is nullptr");
+        HCCL_VM_ERROR("release name is nullptr");
         return -1;
     }
 
     std::lock_guard<std::mutex> lock(m_mutex);
     if (m_commMemMap.find(name) == m_commMemMap.end()) {
-        HCCL_VM_ERROR("[COMM_MEM] release comm mem not found, name: {}", name);
+        HCCL_VM_ERROR("release comm mem not found, name: {}", name);
         return -1;
     }
     m_commMemMap.erase(name);
-    HCCL_VM_INFO("[COMM_MEM] release name: {}", name);
+    HCCL_VM_INFO("release name: {}", name);
     MemoryManager::GetInstance().ReleaseMemByName(name);
     return 0;
 }
@@ -113,13 +113,13 @@ int CommunicationMemoryManager::ReleaseCommMem(const char* name) {
 int CommunicationMemoryManager::WriteCommMem(const char* name, const void* dataPtr, size_t size)
 {
     if (!name || !dataPtr || size == 0) {
-        HCCL_VM_ERROR("[COMM_MEM] write invalid params");
+        HCCL_VM_ERROR("write invalid params, name: {}, dataPtr: {}, size: {}", name, dataPtr, size);
         return -1;
     }
 
     std::lock_guard<std::mutex> lock(m_mutex);
     if (m_commMemMap.find(name) == m_commMemMap.end()) {
-        HCCL_VM_ERROR("[COMM_MEM] write comm mem not found, name: {}", name);
+        HCCL_VM_ERROR("write comm mem not found, name: {}", name);
         return -1;
     }
     void* ptr = m_commMemMap[name];
@@ -129,7 +129,7 @@ int CommunicationMemoryManager::WriteCommMem(const char* name, const void* dataP
 
     if (size + head->bufferSize > RA_SOCKET_BUF_SIZE) {
         MemoryManager::GetInstance().UnlockMemByName(name);
-        HCCL_VM_ERROR("[COMM_MEM] write size too large, size: {}, max: {}", size, RA_SOCKET_BUF_SIZE);
+        HCCL_VM_ERROR("write size too large, size: {}, max: {}", size, RA_SOCKET_BUF_SIZE);
         return -1;
     }
 
@@ -139,20 +139,20 @@ int CommunicationMemoryManager::WriteCommMem(const char* name, const void* dataP
     uint64_t totalWrite = head->writeTotalBytes;
 
     MemoryManager::GetInstance().UnlockMemByName(name);
-    HCCL_VM_INFO("[COMM_MEM] write name: {}, size: {}, totalWriteBytes: {}", name, size, totalWrite);
+    HCCL_VM_INFO("write name: {}, size: {}, totalWriteBytes: {}", name, size, totalWrite);
     return 0;
 }
 
 int CommunicationMemoryManager::ReadCommMem(const char* name, void* dataPtr, size_t size)
 {
     if (!name || !dataPtr || size == 0) {
-        HCCL_VM_ERROR("[COMM_MEM] read invalid params");
+        HCCL_VM_ERROR("read invalid params, name: {}, dataPtr: {}, size: {}", name, dataPtr, size);
         return -1;
     }
 
     std::lock_guard<std::mutex> lock(m_mutex);
     if (m_commMemMap.find(name) == m_commMemMap.end()) {
-        HCCL_VM_ERROR("[COMM_MEM] read comm mem not found, name: {}", name);
+        HCCL_VM_ERROR("read comm mem not found, name: {}", name);
         return -1;
     }
     void* ptr = m_commMemMap[name];
@@ -177,7 +177,7 @@ int CommunicationMemoryManager::ReadCommMem(const char* name, void* dataPtr, siz
 
     MemoryManager::GetInstance().UnlockMemByName(name);
 
-    HCCL_VM_INFO("[COMM_MEM] read name: {}, size: {}, totalReadBytes: {}", name, recvSize, totalRead);
+    HCCL_VM_INFO("read name: {}, size: {}, totalReadBytes: {}", name, recvSize, totalRead);
     return recvSize;
 }
 

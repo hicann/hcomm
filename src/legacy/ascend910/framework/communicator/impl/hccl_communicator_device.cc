@@ -1637,8 +1637,9 @@ namespace hccl
         return HCCL_SUCCESS;
     }
 
-    bool HcclCommunicator::EnableAicpuUnfold()
+    bool HcclCommunicator::EnableAicpuUnfold(bool isCapture)
     {
+        (void)isCapture;
         return false;
     }
 

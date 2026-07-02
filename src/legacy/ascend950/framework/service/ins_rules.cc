@@ -183,17 +183,17 @@ inline vector<RtsCntNotify *> LocalCntNotifyGet(ConnLocalCntNotifyManager &connL
     return notifyList;
 }
 
-static void SaveDfxTaskInfo(const CommunicatorImpl &comm, const TaskParam &taskParam, const RankId remoteRankId, bool isMaster = false)
+static void SaveDfxTaskInfo(const CommunicatorImpl &comm, const TaskParam &taskParam, const u32 remoteRankId, bool isMaster = false)
 {
     u32 taskId;
     u32 streamId;
     HrtGetTaskIdAndStreamID(taskId, streamId);
 
-    shared_ptr<TaskInfo> taskInfo = std::make_shared<TaskInfo>(streamId, taskId, remoteRankId, taskParam, 
+    std::unique_ptr<TaskInfo> taskInfo = std::make_unique<TaskInfo>(streamId, taskId, remoteRankId, taskParam, 
         comm.GetMirrorTaskManager().GetCurrDfxOpInfo(), isMaster);
  
     HCCL_INFO("Begin to AddTaskInfo: streamId[%lu], taskId[%lu], remoteRankId[%u].", streamId, taskId, remoteRankId);
-    comm.GetMirrorTaskManager().AddTaskInfo(taskInfo);
+    comm.GetMirrorTaskManager().AddTaskInfo(std::move(taskInfo));
 }
 
 void Interpret(const InsPostReady &insPostReady, CommunicatorImpl &comm, const Stream &stream,
@@ -241,7 +241,7 @@ void Interpret(const InsWaitGroupFin &insWaitGroupFin, CommunicatorImpl &comm, c
     taskParam.taskPara.Notify.notifyID = notifyList[NOTIFY_INDEX_FIN]->GetId();
     taskParam.taskPara.Notify.value = insWaitGroupFin.GetValue();
  
-    SaveDfxTaskInfo(comm, taskParam, -1); //本地填充rmt rankId， 为0xffff
+    SaveDfxTaskInfo(comm, taskParam, INVALID_VALUE_RANKID); //本地填充rmt rankId， 为0xffff
 }
 
 void Interpret(const InsWaitFinAck &insWaitFinAck, CommunicatorImpl &comm, const Stream &stream,
@@ -363,7 +363,7 @@ void Interpret(const InsLocalPostTo &insLocalPostTo, CommunicatorImpl &comm, con
     taskParam.taskPara.Notify.notifyID = notifyID;
     taskParam.taskPara.Notify.value = bitValue;
  
-    SaveDfxTaskInfo(comm, taskParam, -1); //本地填充rmt rankId， 为0xffff
+    SaveDfxTaskInfo(comm, taskParam, INVALID_VALUE_RANKID); //本地填充rmt rankId， 为0xffff
 }
 
 void Interpret(const InsLocalWaitFrom &insLocalWaitFrom, CommunicatorImpl &comm, const Stream &stream,
@@ -399,7 +399,7 @@ void Interpret(const InsLocalWaitFrom &insLocalWaitFrom, CommunicatorImpl &comm,
     taskParam.taskPara.Notify.notifyID = notifyID;
     taskParam.taskPara.Notify.value = bitValue;
  
-    SaveDfxTaskInfo(comm, taskParam, -1); //本地填充rmt rankId， 为0xffff
+    SaveDfxTaskInfo(comm, taskParam, INVALID_VALUE_RANKID); //本地填充rmt rankId， 为0xffff
 }
 
 void Interpret(const InsLocalWaitGroup &insLocalWaitGroup, CommunicatorImpl &comm, const Stream &stream,
@@ -422,7 +422,7 @@ void Interpret(const InsLocalWaitGroup &insLocalWaitGroup, CommunicatorImpl &com
     taskParam.taskPara.Notify.notifyID = notify->GetId();
     taskParam.taskPara.Notify.value = value;
  
-    SaveDfxTaskInfo(comm, taskParam, -1); //本地填充rmt rankId， 为0xffff
+    SaveDfxTaskInfo(comm, taskParam, INVALID_VALUE_RANKID); //本地填充rmt rankId， 为0xffff
 }
 
 void Interpret(const InsLocalBcastPost &insLocalBcastPost, CommunicatorImpl &comm, const Stream &stream,
@@ -445,7 +445,7 @@ void Interpret(const InsLocalBcastPost &insLocalBcastPost, CommunicatorImpl &com
     taskParam.taskPara.Notify.notifyID = notify->GetId();
     taskParam.taskPara.Notify.value = value;
  
-    SaveDfxTaskInfo(comm, taskParam, -1); //本地填充rmt rankId， 为0xffff
+    SaveDfxTaskInfo(comm, taskParam, INVALID_VALUE_RANKID); //本地填充rmt rankId， 为0xffff
 }
 
 void Interpret(const InsLocalCopy &insLocalCopy, CommunicatorImpl &comm, const Stream &stream,
@@ -570,7 +570,6 @@ static void LaunchCcuTasks(vector<CcuTaskParam> params, const Stream *stream, Ta
         for (std::size_t i = 0; i < taskInfo.argSize; i++) { // args 大小为 13
             if (i == TOKEN_VALUE_INDEX) { continue; }
             HCCL_INFO("arg[%lu] = %lu", i, taskInfo.args[i]);
-            taskParam.taskPara.Ccu.costumArgs[i] = taskInfo.args[i];
         }
         HrtCcuLaunch(taskInfo, stream->GetPtr());
     }
@@ -603,7 +602,7 @@ static void ReportCcuProfilingInfo(uint64_t execId, std::vector<CcuProfilingInfo
     }
     taskParam.ccuDetailInfo = std::make_shared<std::vector<CcuProfilingInfo>>(streamProfilingInfo);
     HCCL_INFO("Begin to SaveDfxTaskInfo. taskType[%d]", static_cast<int32_t>(TaskParamType::TASK_CCU));
-    SaveDfxTaskInfo(comm, taskParam, INVALID_RANKID, isMaster);
+    SaveDfxTaskInfo(comm, taskParam, INVALID_VALUE_RANKID, isMaster);
 }
 
 static void GetCcuProfilingInfo(const CcuInstruction &ccuInstruction, const vector<vector<CcuTaskParam>> &ccuParams,
@@ -774,14 +773,13 @@ static void ReportAivTaskInfo(const CommunicatorImpl &comm, AivOpArgs &aivOpArgs
                     .flagMemSize = AIV_FLAG_AREA_SIZE,
                     .rank        = aivOpArgs.rank,
                     .sendRecvRemoteRank = aivOpArgs.sendRecvRemoteRank,
-                    .isOpbase    = aivOpArgs.isOpBase,
                     .dataType    = DataTypeToHcclDataType(aivOpArgs.dataType),
             }
         },
         .ccuDetailInfo  = nullptr
     };
  
-    SaveDfxTaskInfo(comm, taskParam, INVALID_RANKID, isMaster);
+    SaveDfxTaskInfo(comm, taskParam, INVALID_VALUE_RANKID, isMaster);
 }
 
 void Interpret(const AivInstruction &aivInstruction, const CommunicatorImpl &comm, const Stream &stream,

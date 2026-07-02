@@ -286,6 +286,7 @@ set(UT_COMMON_INCLUDE_LIST
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels/aicpu/device
     ${HCCL_CODE_ROOT}/src/base_comm/primitives
     ${HCCL_CODE_ROOT}/src/base_comm/primitives/api_c_adpt
+    ${HCCL_CODE_ROOT}/src/base_comm/primitives/api_c_adpt/nic_plugin
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/api_c_adpt/
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/ns_recovery
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/ns_recovery/aicpu
@@ -357,6 +358,7 @@ add_subdirectory(framework/next/comms/ccu)
 add_subdirectory(common/prepare_ut_env)
 add_subdirectory(common/binary_package)
 add_subdirectory(common/debug/profiling)
+add_subdirectory(experimental/base_comm/nic_plugin)
 add_subdirectory(misc)
 add_subdirectory(impl)
 add_subdirectory(device)

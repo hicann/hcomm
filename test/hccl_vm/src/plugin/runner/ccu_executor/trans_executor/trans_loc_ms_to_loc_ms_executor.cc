@@ -54,10 +54,10 @@ void TransLocMSToLocMSExecutor::Process(CcuResourceManager &ccuResMgr)
         srcMSId_ += msOffset;
         dstMSId_ += msOffset;
         setCKEId_ += ckeOffset;
-        HCCL_VM_DEBUG("[TransLocMSToLocMSExecutor][Process] locCcu[{}:{}], Get ms offset = [{:04x}], cke offset = [{:04x}]",
+        HCCL_VM_DEBUG("locCcu[{}:{}], Get ms offset = [{:04x}], cke offset = [{:04x}]",
                rankId_, dieId_, msOffset, ckeOffset);
     }
-    HCCL_VM_DEBUG("[TransLocMSToLocMSExecutor][Process] locCcu[{}:{}] Trans data "
+    HCCL_VM_DEBUG("locCcu[{}:{}] Trans data "
            "from locSrcMsId[{}] to locDstMsId[{}], "
            "with lengthXnId[{}] transLength[{}].",
            rankId_, dieId_, srcMSId_, dstMSId_, lengthXnId_, transLength_);

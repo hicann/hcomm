@@ -41,7 +41,7 @@ void LoadXnXnExecutor::Run()
     uint64_t val = xn1 + xn2;
     ccuResMgr.UpdateXnValue(rankId_, dieId_, xdId_, val);
 
-    HCCL_VM_DEBUG("[LoadXnXnExecutor] Load Xn[%u] + Xn[%u] to Xn[%u]",
+    HCCL_VM_DEBUG("Load Xn[{}] + Xn[{}] to Xn[{}]",
         xmId_, xnId_, xdId_);
 }
 

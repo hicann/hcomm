@@ -1075,7 +1075,7 @@ HcclResult TaskCheckOpSemantics::Execute()
     } else if (opType_ == HcclCMDType::HCCL_CMD_ALLTOALL || opType_ == HcclCMDType::HCCL_CMD_ALLTOALLVC) {
         ret = TaskCheckAll2AllSemantics(allRankMemSemantics_, all2AllDataDes_);
     } else if (opType_ == HcclCMDType::HCCL_CMD_ALLTOALLV) {
-        printf("TaskCheckOpSemantics not support HCCL_CMD_ALLTOALLV, please use HCCL_CMD_ALLTOALLVV instead\n");
+        HCCL_WARNING("TaskCheckOpSemantics not support HCCL_CMD_ALLTOALLV, please use HCCL_CMD_ALLTOALLVV instead");
     } else if (opType_ == HcclCMDType::HCCL_CMD_SEND || opType_ == HcclCMDType::HCCL_CMD_RECEIVE) {
         ret = TaskCheckSendRecvSemantics(allRankMemSemantics_, dataSize_, srcRank_, dstRank_);
     } else if (opType_ == HcclCMDType::HCCL_CMD_BROADCAST) {

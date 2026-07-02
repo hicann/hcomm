@@ -46,6 +46,12 @@ void AicpuUtils::CreateSingleInstance(void *args) const
     CommunicatorImplLiteMgr::GetInstance().SetEnvConfig(kernelParam->envConfig); // 初始化并设置Device侧环境变量
 }
 
+HcclResult AicpuUtils::Init() const
+{
+    CHK_RET(ProfilingHandlerLite::GetInstance().Init());
+    return HCCL_SUCCESS;
+}
+
 HcclResult AicpuUtils::WaitCommFree(CommunicatorImplLite *communicatorImplLite, const char* funcName) const
 {
     auto                    startTime         = std::chrono::steady_clock::now();

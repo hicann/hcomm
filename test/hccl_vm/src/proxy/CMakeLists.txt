@@ -41,7 +41,6 @@ target_include_directories(hccl_proxy_level2 PRIVATE
 
 target_include_directories(hccl_proxy_level2 PRIVATE
         # cann包头文件
-        ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/driver
         ${ASCEND_CANN_PACKAGE_PATH}/include/driver
         ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/hccl
         ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/base

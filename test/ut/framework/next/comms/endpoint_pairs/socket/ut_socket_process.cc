@@ -67,6 +67,53 @@ public:
 SocketHandle SocketProcessTest::socketHandle = nullptr;
 SocketDesc SocketProcessTest::socketDesc{};
 
+namespace {
+constexpr uint32_t SOCKET_MGR_TEMP_LISTEN_PORT = 60001U;
+
+Hccl::SocketConfig BuildSocketMgrConfig(Hccl::PortDeploymentType portType)
+{
+    Hccl::BasePortType basePortType(portType, Hccl::ConnectProtoType::RDMA);
+    Hccl::LinkData linkData(basePortType, 0, 1, 0, 1);
+    return Hccl::SocketConfig(linkData, "UT_SOCKET_MGR_INIT", true);
+}
+
+HcclResult StubSocketMgrHrtGetDevice(s32 *deviceLogicId)
+{
+    *deviceLogicId = 3;
+    return HCCL_SUCCESS;
+}
+
+HcclResult StubSocketMgrHrtGetDevicePhyIdByIndex(u32 deviceLogicId, u32 &devicePhyId)
+{
+    (void)deviceLogicId;
+    devicePhyId = 7;
+    return HCCL_SUCCESS;
+}
+
+HcclResult StubSocketMgrHrtGetDeviceCountNoDevice(u32 *deviceCount)
+{
+    *deviceCount = 0;
+    return HCCL_SUCCESS;
+}
+
+HcclResult StubSocketMgrHrtGetDeviceCountWithDevice(u32 *deviceCount)
+{
+    *deviceCount = 1;
+    return HCCL_SUCCESS;
+}
+
+void ResetSocketMgrForTest(SocketMgr &socketMgr, uint32_t devicePhyId = 0)
+{
+    socketMgr.isLoaded_ = false;
+    socketMgr.isHostOnlyInit_ = false;
+    socketMgr.devicePhyId_ = devicePhyId;
+    socketMgr.serverListenPort_ = 0;
+    socketMgr.socketMap_.clear();
+    socketMgr.handle2WhiteListMap_.clear();
+    socketMgr.socketInUseMap_.clear();
+}
+} // namespace
+
 TEST_F(SocketProcessTest, Ut_GetSocket_When_NullptrInput_Expect_ReturnError)
 {
     SocketDesc *tempSocketDesc = nullptr;
@@ -252,4 +299,53 @@ TEST_F(SocketProcessTest, Ut_SocketMgr_GetSocket)
     SocketMgr::GetInstance(devicePhyId).GetSocket(socketConfig, socketTmp);
     SocketMgr::GetInstance(devicePhyId).PutSocket(configPtr, socketTmp);
     SocketMgr::GetInstance(devicePhyId).GetSocket(socketConfig, socketTmp);
+}
+
+TEST_F(SocketProcessTest, Ut_SocketMgr_Init_When_HostNet_Expect_HostOnlyInit)
+{
+    SocketMgr &socketMgr = SocketMgr::GetInstance(0);
+    ResetSocketMgrForTest(socketMgr);
+    MOCKER(hrtGetDeviceCount).stubs().with(mockcpp::any()).will(invoke(StubSocketMgrHrtGetDeviceCountNoDevice));
+
+    HcclResult ret = socketMgr.Init();
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_TRUE(socketMgr.isLoaded_);
+    EXPECT_TRUE(socketMgr.isHostOnlyInit_);
+    EXPECT_EQ(socketMgr.devicePhyId_, 0U);
+    EXPECT_EQ(socketMgr.serverListenPort_, SOCKET_MGR_TEMP_LISTEN_PORT);
+}
+
+TEST_F(SocketProcessTest, Ut_SocketMgr_Init_When_DevNet_Expect_DeviceInit)
+{
+    SocketMgr &socketMgr = SocketMgr::GetInstance(7);
+    ResetSocketMgrForTest(socketMgr, 7U);
+    MOCKER(hrtGetDeviceCount).stubs().with(mockcpp::any()).will(invoke(StubSocketMgrHrtGetDeviceCountWithDevice));
+    MOCKER(hrtGetDevice).stubs().with(mockcpp::any()).will(invoke(StubSocketMgrHrtGetDevice));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any(), mockcpp::any())
+        .will(invoke(StubSocketMgrHrtGetDevicePhyIdByIndex));
+
+    HcclResult ret = socketMgr.Init();
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_TRUE(socketMgr.isLoaded_);
+    EXPECT_FALSE(socketMgr.isHostOnlyInit_);
+    EXPECT_EQ(socketMgr.devicePhyId_, 7U);
+    EXPECT_EQ(socketMgr.serverListenPort_, SOCKET_MGR_TEMP_LISTEN_PORT);
+}
+
+TEST_F(SocketProcessTest, Ut_SocketMgr_GetSocket_When_UnsupportedPortType_Expect_NotSupport)
+{
+    SocketMgr &socketMgr = SocketMgr::GetInstance(0);
+    ResetSocketMgrForTest(socketMgr);
+    Hccl::SocketConfig socketConfig = BuildSocketMgrConfig(Hccl::PortDeploymentType::P2P);
+    MOCKER(hrtGetDeviceCount).stubs().with(mockcpp::any()).will(invoke(StubSocketMgrHrtGetDeviceCountNoDevice));
+    Hccl::Socket *socket = nullptr;
+
+    HcclResult ret = socketMgr.GetSocket(socketConfig, socket);
+
+    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+    EXPECT_TRUE(socketMgr.isLoaded_);
+    EXPECT_TRUE(socketMgr.isHostOnlyInit_);
+    EXPECT_EQ(socket, nullptr);
 }

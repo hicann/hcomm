@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "DEVICE"
+
 #include "device_sqe_parse_stub.h"
 
 #include <cstdint>
@@ -20,6 +23,7 @@
 #include "sim_log.h"
 #include "sqe_v82_stub.h"
 #include "udma_data_struct_stub.h"
+
 
 constexpr int SHIFT_BIT32 = 32;
 uint32_t curRankId = 0;
@@ -72,7 +76,7 @@ void ParseA5SqeFromSqBuffer(uint32_t devId, struct halSqCqConfigInfo *info)
                 break;
             }
             default: {
-                HCCL_VM_ERROR("[ParseA5SqeFromSqBuffer] not support sqe type[{}].", static_cast<uint32_t>(header->type));
+                HCCL_VM_ERROR("not support sqe type[{}].", static_cast<uint32_t>(header->type));
                 break;
             }
         }
@@ -170,7 +174,7 @@ uint32_t CalculateCiValue(uint64_t wqeBuffer, uint32_t piValue)
         ubCommon = reinterpret_cast<UdmaSqeCommon *>(wqeAddr);
     }
     
-    HCCL_VM_ERROR("[CalculateCiValue] calculate ciValue failed.");
+    HCCL_VM_ERROR("calculate ciValue failed.");
     return 0;
 }
 
@@ -181,24 +185,24 @@ void ParseDavidUDMASqe(uint32_t streamId, void *sqeBuf)
 
     HcclAicpuData *aicpuData = GetHcclAicpuDataShmPtr();
     if (aicpuData == nullptr) {
-        HCCL_VM_ERROR("[ParseDavidUDMASqe] aicpuData is nullptr.");
+        HCCL_VM_ERROR("aicpuData is nullptr.");
         return;
     }
     uint64_t wqeAddrDev = aicpuData->common.jettyId2WqeBufMap[jettyId];
     uint64_t wqeBuffer = reinterpret_cast<uint64_t>(GetRealPtrByDevPtr(reinterpret_cast<void *>(wqeAddrDev)));
     if (wqeBuffer == 0) {
-        HCCL_VM_ERROR("[ParseDavidUDMASqe] wqeBuffer is nullptr, wqeAddrDev[{}].", wqeAddrDev);
+        HCCL_VM_ERROR("wqeBuffer is nullptr, wqeAddrDev[{}].", wqeAddrDev);
         return;
     }
 
     uint32_t piValue = ubSqe->piValue1;
     uint32_t ciValue = CalculateCiValue(wqeBuffer, ubSqe->piValue1);
     if (ciValue >= piValue) {
-        HCCL_VM_ERROR("[ParseDavidUDMASqe] jettyId[{}] ciVal[{}] piValue[{}] streamId[{}].", jettyId, ciValue, piValue, streamId);
+        HCCL_VM_ERROR("jettyId[{}] ciVal[{}] piValue[{}] streamId[{}].", jettyId, ciValue, piValue, streamId);
         return;
     }
 
-    HCCL_VM_INFO("[ParseDavidUDMASqe] jettyId[{}] ciVal[{}] piValue[{}] streamId[{}].", jettyId, ciValue, piValue, streamId);
+    HCCL_VM_INFO("jettyId[{}] ciVal[{}] piValue[{}] streamId[{}].", jettyId, ciValue, piValue, streamId);
     for (auto index = ciValue; index < piValue; index++) {
         uint64_t wqeAddr = wqeBuffer + index * HCCL_WQE_SIZE;
         UdmaSqeCommon *ubCommon = reinterpret_cast<UdmaSqeCommon *>(wqeAddr);
@@ -217,7 +221,7 @@ void ParseDavidUDMASqe(uint32_t streamId, void *sqeBuf)
                 break;
             }
             default: {
-                HCCL_VM_ERROR("[ParseDavidUDMASqe] not support opcode[{}].", static_cast<uint32_t>(ubCommon->opcode));
+                HCCL_VM_ERROR("not support opcode[{}].", static_cast<uint32_t>(ubCommon->opcode));
                 return;
             }
         }
@@ -344,7 +348,7 @@ HcclReduceOp ParseReduceTypeDavid(uint8_t result)
         return DavidReduceOpMap[reduceType];
     }
 
-    HCCL_VM_ERROR("[ParseReduceTypeDavid] not support reduceType[{}].", reduceType);
+    HCCL_VM_ERROR("not support reduceType[{}].", reduceType);
     return HcclReduceOp::HCCL_REDUCE_RESERVED;
 }
 
@@ -367,7 +371,7 @@ HcclDataType ParseDataTypeDavid(uint8_t result)
         return DavidDataTypeMap[dataType];
     }
 
-    HCCL_VM_ERROR("[ParseDataTypeDavid] not support dataType[{}].", dataType);
+    HCCL_VM_ERROR("not support dataType[{}].", dataType);
     return HcclDataType::HCCL_DATA_TYPE_RESERVED;
 }
 
@@ -383,7 +387,7 @@ HcclReduceOp ParseUbReduceTypeDavid(uint32_t type)
         return DavidUbReduceOpMap[type];
     }
 
-    HCCL_VM_ERROR("[ParseUbReduceTypeDavid] not support type[{}].", type);
+    HCCL_VM_ERROR("not support type[{}].", type);
     return HcclReduceOp::HCCL_REDUCE_RESERVED;
 }
 
@@ -405,7 +409,7 @@ HcclDataType ParseUbDataTypeDavid(uint32_t type)
         return DavidUbDataTypeMap[type];
     }
 
-    HCCL_VM_ERROR("[ParseUbDataTypeDavid] not support type[{}].", type);
+    HCCL_VM_ERROR("not support type[{}].", type);
     return HcclDataType::HCCL_DATA_TYPE_RESERVED;
 }
 
@@ -414,22 +418,22 @@ void PrintTaskMetaData(const HcclTaskMetaData &taskMeta)
     pid_t pid = getpid();
     switch (taskMeta.taskType) {
         case HccLTaskMetaType::MEM_CPY:
-            printf("[HcclTaskMetaData]pid[%u]: rankId[%u], streamId[%lu], taskType[MEM_CPY], srcOffset[%lu], dstOffset[%lu], len[%lu], srcRankId[%u], dstRankId[%u]\n",
+            HCCL_VM_INFO("pid{}: rankId[{}] streamId[{}] taskType[MEM_CPY], srcOffset[{}] dstOffset[{}], len[{}], srcRankId[{}], dstRankId[{}]",
                    pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.transMem.srcOffset, taskMeta.taskData.transMem.dstOffset, taskMeta.taskData.transMem.len,
                    taskMeta.taskData.transMem.srcRankId, taskMeta.taskData.transMem.dstRankId);
             break;
         case HccLTaskMetaType::REDUCE: 
-            printf("[HcclTaskMetaData]pid[%u]: rankId[%u], streamId[%lu], taskType[REDUCE], srcOffset[%lu], dstOffset[%lu], len[%lu], srcRankId[%u], dstRankId[%u], reduceOp[%u], dataType[%u]\n",
+            HCCL_VM_INFO("pid{}: rankId[{}] streamId[{}] taskType[REDUCE], srcOffset[{}] dstOffset[{}], len[{}], srcRankId[{}], dstRankId[{}], reduceOp[%{}], dataType[%{}]",
                    pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.reduce.srcOffset, taskMeta.taskData.reduce.dstOffset, taskMeta.taskData.reduce.dataCount,
                    taskMeta.taskData.reduce.srcRankId, taskMeta.taskData.reduce.dstRankId, taskMeta.taskData.reduce.reduceOp, taskMeta.taskData.reduce.dataType);
             break;
         case HccLTaskMetaType::NOTIFY_WAIT:
-            printf("[HcclTaskMetaData]pid[%u]: rankId[%u], streamId[%lu], taskType[NOTIFY_WAIT], notifyId[%lu], srcRankId[%u], dstRankId[%u]\n",
-                pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.notify.notifyId, taskMeta.taskData.notify.srcRankId, taskMeta.taskData.notify.dstRankId);
+            HCCL_VM_INFO("pid{}: rankId[{}] streamId[{}] taskType[NOTIFY_WAIT], notifyId[{}], srcRankId[{}], dstRankId[{}]",
+                   pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.notify.notifyId, taskMeta.taskData.notify.srcRankId, taskMeta.taskData.notify.dstRankId);
             break;
         case HccLTaskMetaType::NOTIFY_RECORD:
-            printf("[HcclTaskMetaData]pid[%u]: rankId[%u], streamId[%lu], taskType[NOTIFY_RECORD], notifyId[%lu], srcRankId[%u], dstRankId[%u]\n",
-                pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.notify.notifyId, taskMeta.taskData.notify.srcRankId, taskMeta.taskData.notify.dstRankId);
+            HCCL_VM_INFO("pid{}: rankId[{}] streamId[{}] taskType[NOTIFY_RECORD], notifyId[{}], srcRankId[{}], dstRankId[{}]",
+                   pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.notify.notifyId, taskMeta.taskData.notify.srcRankId, taskMeta.taskData.notify.dstRankId);
             break;
         default:
             break;
@@ -442,6 +446,6 @@ uint32_t GetRmtRankIdByEid(uint32_t eid)
                      std::to_string((eid >> 16) & 0xFF) + "." +
                      std::to_string((eid >> 8) & 0xFF) + "." +
                      std::to_string(eid & 0xFF);
-    printf("[GetRmtRankIdByEid] eid[%u] convert to ip[%s].\n", eid, ip.c_str());
+    HCCL_VM_INFO("eid[{}] convert to ip[{}].", eid, ip.c_str());
     return GetRankIdByIpAddr(ip);
 }

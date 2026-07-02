@@ -118,7 +118,7 @@ void GenWaitNode(TaskStubCcuGraph *curCcuTask, uint32_t queId, uint16_t waitCKEI
 HcclResult ProcessWaitMask(RankId rankId, uint32_t dieId, TaskStubCcuGraph *curCcuTask, uint32_t queId,
     uint16_t waitCKEId, uint16_t waitCKEMask, bool& isContinue)
 {
-    HCCL_VM_DEBUG("[ProcessWaitMask] Enter...rank {:d}, die{:d}, que{:d}, waitCke{:d}, waitMask{:d}",
+    HCCL_VM_DEBUG("Enter...rank {:d}, die{:d}, que{:d}, waitCke{:d}, waitMask{:d}",
         rankId, static_cast<uint32_t>(dieId), queId, waitCKEId, waitCKEMask);
     if (waitCKEMask != 0x0000) {
         uint16_t ckeValue = 0;
@@ -126,7 +126,7 @@ HcclResult ProcessWaitMask(RankId rankId, uint32_t dieId, TaskStubCcuGraph *curC
         // 条件不满足，继续等待
         if ((ckeValue & waitCKEMask) != waitCKEMask) {
             isContinue = 0;
-            HCCL_VM_DEBUG("[ProcessWaitMask] Does not meet the condition, continue: ckeId: {:d}, ckeValue: {:d}, mask: {:x}", waitCKEId, ckeValue, waitCKEMask);
+            HCCL_VM_DEBUG("Does not meet the condition, continue: ckeId: {:d}, ckeValue: {:d}, mask: {:x}", waitCKEId, ckeValue, waitCKEMask);
             return HCCL_SUCCESS;
         } else {
             GenWaitNode(curCcuTask, queId, waitCKEId, waitCKEMask);
@@ -216,7 +216,7 @@ HcclResult TransformInstrQue(TaskNodePtr node, TaskStubCcuGraph *curCcuTask, uin
         AddCcuSubGraphEnd(node, curCcuTask);
     }
 
-    HCCL_VM_DEBUG("[TransformInstrQue] end...");
+    HCCL_VM_DEBUG("end...");
     return HCCL_SUCCESS;
 }
 
@@ -242,17 +242,17 @@ void PrintCcuSingleQue(TaskNodePtr head, u32 rankId, u32 queueIdx)
     std::set<TaskNode*> alreadyPrintedNodes;
 
     // 打印首节点
-    printf("ccu single queue head[%p]%s\n", head, head->task->Describe().c_str());
+    HCCL_VM_INFO("ccu single queue head[{:p}]{}", (void*)head, head->task->Describe().c_str());
     alreadyPrintedNodes.insert(head);
 
-    printf("children[");
+    HCCL_VM_INFO("children[");
     for (auto& child : head->children) {
         if (isVisitedNode.count(child) == 0 && child->rankIdx == rankId && child->queIdx == queueIdx) {
             candNode.push_back(child);
             isVisitedNode.insert(child);
         }
     }
-    printf("]\n");
+    HCCL_VM_INFO("]");
 
     while(!candNode.empty()) {
         TaskNodePtr curNode = candNode.front();
@@ -275,7 +275,7 @@ void PrintCcuSingleQue(TaskNodePtr head, u32 rankId, u32 queueIdx)
         }
 
         if (parentsAllPrint) {
-            printf("[%p]%s\n", curNode, curNode->task->Describe().c_str());
+            HCCL_VM_INFO("[{:p}]{}", (void*)curNode, curNode->task->Describe().c_str());
             alreadyPrintedNodes.insert(curNode);
         } else {
             candNode.push_back(curNode);
@@ -304,19 +304,18 @@ void PrintCcuGraph(TaskNodePtr dummyStart)
             continue;
         }
 
-        printf("=======================================================\n");
-        printf("rank id is %d\n", curNode->rankIdx);
+        HCCL_VM_INFO("=======================================================");
+        HCCL_VM_INFO("rank id is {:d}", curNode->rankIdx);
 
         TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(curNode->task);
         for (auto& child : curCcuTask->ccuHeadTaskNode->children) {
             u32 queueIdx = child->queIdx;
-            printf("-------------------------------------------------------\n");
-            printf("stream/queue id is %d\n", queueIdx);
+            HCCL_VM_INFO("-------------------------------------------------------");
+            HCCL_VM_INFO("stream/queue id is {:d}", queueIdx);
             PrintCcuSingleQue(child, curNode->rankIdx, queueIdx);
         }
     }
-    printf("-------------------------------------------------------\n");
-    return;
+    HCCL_VM_INFO("-------------------------------------------------------");
 }
 
 void PrintSQEGraph(TaskNodePtr dummyStart)
@@ -330,27 +329,27 @@ void PrintSQEGraph(TaskNodePtr dummyStart)
         candNode.push_back(child);
     }
 
-    printf("---------------------------YY----------------------------\n");
+    HCCL_VM_INFO("---------------------------YY----------------------------");
     while(!candNode.empty()) {
         TaskNodePtr curNode = candNode.front();
         candNode.pop_front();
         addChildNode(candNode, isVisitedNode, curNode);
 
-        std::cout<<"currNode: "<<curNode<<", "<<curNode->task->Describe().c_str()<<std::endl;
+        HCCL_VM_INFO("currNode: {}, {}", (void*)curNode, curNode->task->Describe().c_str());
         for (auto father : curNode->parents) {
             if (father->task == nullptr) {
                 continue;
             }
-            std::cout<<"father: "<<father<<", "<<father->task->Describe().c_str()<<std::endl;
+            HCCL_VM_INFO("father: {}, {}", (void*)father, father->task->Describe().c_str());
         }
         for (auto child : curNode->children) {
             if (child->task == nullptr) {
                 continue;
             }
-            std::cout<<"child: "<<child<<", "<<child->task->Describe().c_str()<<std::endl;
+            HCCL_VM_INFO("child: {}, {}", (void*)child, child->task->Describe().c_str());
         }
     }
-    printf("---------------------------YY----------------------------\n");
+    HCCL_VM_INFO("---------------------------YY----------------------------");
     return;
 }
 
@@ -361,7 +360,7 @@ HcclResult GenCcuGraph(TaskNode* dummyStart) {
     AllRankParamRecorder::Global()->InitParam();
     HcclSim::StorageManager::GetInstance().InitCcuInfo(AllRankParamRecorder::Global()->devType_,
         AllRankParamRecorder::Global()->ccu_resource_base_addr_);
-    HCCL_INFO("[GenCcuGraph] dummyStart children size: %u", dummyStart->children.size());
+    HCCL_VM_INFO("dummyStart children size: {}", dummyStart->children.size());
 
     bool isPrintCcuGraph = std::getenv("CCU_TASK_PRINT");
     completedNodes.insert(dummyStart);
@@ -371,7 +370,7 @@ HcclResult GenCcuGraph(TaskNode* dummyStart) {
         candNode.push_back(child);
     }
 
-    HCCL_INFO("[GenCcuGraph] start......%u", candNode.size());
+    HCCL_VM_INFO("start......{}", candNode.size());
     u32 unmatchedCnt = 0;
     while(!candNode.empty()) {
         // 先判断是否存在死锁的情况
@@ -379,7 +378,7 @@ HcclResult GenCcuGraph(TaskNode* dummyStart) {
             for (auto &node : candNode) {
                 node->unmatch = true;
             }
-            HCCL_ERROR("deadLocking occurs due to mismatch.");
+            HCCL_VM_ERROR("deadLocking occurs due to mismatch.");
             return HcclResult::HCCL_E_INTERNAL;
         }
 
@@ -405,7 +404,7 @@ HcclResult GenCcuGraph(TaskNode* dummyStart) {
         std::vector<u32> microCodePosInQuePre = curCcuTask->microCodePosInQue;
         HcclResult ret = ProcessCcuNode(curNode, curCcuTask);
         if (ret != HCCL_SUCCESS) {
-            HCCL_ERROR("ProcessCcuNode failed");
+            HCCL_VM_ERROR("ProcessCcuNode failed");
             if (isPrintCcuGraph) {
                 PrintCcuGraph(dummyStart);
             }

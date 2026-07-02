@@ -462,6 +462,7 @@ HcclResult DetectConnectionAnomalies::Connect(struct ErrInfo errInfo, std::share
         CHK_RET(HcclNetOpenDev(&Ctx, errInfo.nicType, errInfo.localRankInfo.devicePhyId,
             errInfo.deviceLogicId, localIp));
         CHK_PTR_NULL(Ctx);
+        std::lock_guard<std::mutex> lock(clientResourcesMutex_);
         clientNicCtxs_.push_back(Ctx);
     }
 
@@ -502,7 +503,9 @@ HcclResult DetectConnectionAnomalies::CreateClient(struct ErrInfo errInfo)
     localServerId[errInfo.localRankInfo.serverId.size()] = '\0';
 
     // 保存clientSocket，在析构时join
+    clientResourcesMutex_.lock();
     clientSockets_.push_back(clientSocket);
+    clientResourcesMutex_.unlock();
 
     // 开始计时
     auto waitTime = std::chrono::seconds(GetExternalInputDfsConnectionFaultDetectionTime()) +

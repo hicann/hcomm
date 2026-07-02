@@ -78,7 +78,7 @@ AivBlock::~AivBlock() {
 }
 
 bool AivGraphExecutor::Init(uint32_t rankId, uint32_t launchIdx) {
-    HCCL_VM_DEBUG("[AivGraphExecutor][Init] begin, launchIdx={}, rankId={}", launchIdx_, rankId_);
+    HCCL_VM_DEBUG("begin, launchIdx={}, rankId={}", launchIdx_, rankId_);
     rankId_ = rankId;
     launchIdx_ = launchIdx;
 
@@ -86,7 +86,7 @@ bool AivGraphExecutor::Init(uint32_t rankId, uint32_t launchIdx) {
     std::string errorMessage;
     if (!AivTaskSnapshotLoader::LoadRuntimeTaskSnapshotByLaunchDirect(
             rankId_, static_cast<uint32_t>(launchIdx_), taskSnapshot, &errorMessage)) {
-        HCCL_VM_ERROR("[AivGraphExecutor][Init] failed to load runtime snapshot, launchIdx={}, rankId={}, reason={}",
+        HCCL_VM_ERROR("failed to load runtime snapshot, launchIdx={}, rankId={}, reason={}",
                   launchIdx_, rankId_, errorMessage);
         return false;
     }
@@ -99,7 +99,7 @@ bool AivGraphExecutor::Init(uint32_t rankId, uint32_t launchIdx) {
 
     rankId_ = taskSnapshot.rankId;
     rankSize_ = taskSnapshot.rankSize;
-    HCCL_VM_DEBUG("[AivGraphExecutor][Init] snapshot loaded, launchIdx={}, rankId={}, rankSize={}, file={}, aivBlockNum={}",
+    HCCL_VM_DEBUG("snapshot loaded, launchIdx={}, rankId={}, rankSize={}, file={}, aivBlockNum={}",
               launchIdx_, rankId_, rankSize_, taskSnapshot.filePath, taskSnapshot.blocks.size());
 
     uint32_t maxTaskId = 0;
@@ -116,7 +116,7 @@ bool AivGraphExecutor::Init(uint32_t rankId, uint32_t launchIdx) {
         aivTaskQueues_.emplace_back();
         AppendPipeTasksToQueue(block.mte3Tasks, aivTaskQueues_.back(), maxTaskId, maxEventId, maxSyncRound);
 
-        HCCL_VM_TRACE("[AivGraphExecutor][Init] blockIdx={}, scalarTaskCount={}, mte2TaskCount={}, mte3TaskCount={}, maxEventId={}",
+        HCCL_VM_TRACE("blockIdx={}, scalarTaskCount={}, mte2TaskCount={}, mte3TaskCount={}, maxEventId={}",
                   block.blockIdx, block.scalarTasks.size(), block.mte2Tasks.size(), block.mte3Tasks.size(), maxEventId);
         aivBlocks_.emplace_back(std::make_unique<AivBlock>(block.blockIdx, maxEventId, AivSim::AIV_UB_SIZE));
     }
@@ -129,11 +129,11 @@ bool AivGraphExecutor::Init(uint32_t rankId, uint32_t launchIdx) {
         syncAllRegisters_.emplace_back(pipeSize, false);
     }
 
-    HCCL_VM_DEBUG("[AivGraphExecutor][Init] queueCount={}, maxTaskId={}, pipeBarrierRegisterCount={}, syncAllRegisterCount={}, aivBlockNum={}",
+    HCCL_VM_DEBUG("queueCount={}, maxTaskId={}, pipeBarrierRegisterCount={}, syncAllRegisterCount={}, aivBlockNum={}",
               aivTaskQueues_.size(), maxTaskId, pipeBarrierRegisters_.size(), syncAllRegisters_.size(), aivBlocks_.size());
 
     isInitialized_ = true;
-    HCCL_VM_INFO("[AivGraphExecutor][Init] success, launchIdx={}, rankId={}", launchIdx_, rankId_);
+    HCCL_VM_INFO("success, launchIdx={}, rankId={}", launchIdx_, rankId_);
     return true;
 }
 
@@ -204,7 +204,7 @@ HcclVmResult AivGraphExecutor::ExecuteTask(std::shared_ptr<AivSim::AivTask> task
 }
 
 HcclVmResult AivGraphExecutor::ExecuteTask(std::shared_ptr<AivSim::AivTaskMemCopy> task) {
-    HCCL_VM_DEBUG(task->Describe());
+    HCCL_VM_DEBUG("{}", task->Describe());
 
     if (task->GetSrc().GetSize() != task->GetDst().GetSize()) {
         HCCL_VM_ERROR("task invalid, len not match, taskId={:d}", task->GetTaskId());
@@ -270,7 +270,7 @@ void* AivGraphExecutor::GetMemPtr(std::shared_ptr<T> task, bool isSrc) {
 }
 
 HcclVmResult AivGraphExecutor::ExecuteTask(std::shared_ptr<AivSim::AivTaskReduce> task) {
-    HCCL_VM_DEBUG(task->Describe());
+    HCCL_VM_DEBUG("{}", task->Describe());
 
     if (task->GetSrc().GetSize() != task->GetDst().GetSize()) {
         HCCL_VM_ERROR("task invalid, len not match, taskId={:d}", task->GetTaskId());
@@ -399,7 +399,7 @@ HcclVmResult AivGraphExecutor::ExecuteTask(std::shared_ptr<AivSim::AivTaskSyncAl
 }
 
 HcclVmResult AivGraphExecutor::ExecuteTask(std::shared_ptr<AivSim::AivTaskSendFlag> task) {
-    HCCL_VM_DEBUG(task->Describe());
+    HCCL_VM_DEBUG("{}", task->Describe());
 
     auto* rankResource = AivResourceManager::GetInstance().GetRankResource(task->GetRank());
     if (rankResource == nullptr) {
@@ -417,7 +417,7 @@ HcclVmResult AivGraphExecutor::ExecuteTask(std::shared_ptr<AivSim::AivTaskSendFl
 }
 
 HcclVmResult AivGraphExecutor::ExecuteTask(std::shared_ptr<AivSim::AivTaskRecvFlag> task) {
-    HCCL_VM_DEBUG(task->Describe());
+    HCCL_VM_DEBUG("{}", task->Describe());
 
     auto* rankResource = AivResourceManager::GetInstance().GetRankResource(task->GetRank());
     if (rankResource == nullptr) {
@@ -456,5 +456,5 @@ void AivGraphExecutor::ShowCurrentTaskStatus() {
         ss << "]";
     }
     ss << "}";
-    HCCL_VM_DEBUG(ss.str());
+    HCCL_VM_DEBUG("{}", ss.str());
 }

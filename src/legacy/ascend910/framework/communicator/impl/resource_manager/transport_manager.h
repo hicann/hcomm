@@ -202,7 +202,6 @@ public:
         const std::vector<RankInfo> &rankInfoList,
         RankId userRank,
         const std::string &identifier,
-        const std::string &commName,
         s32 deviceLogicId,
         NICDeployment nicDeployment,
         bool isHaveCpuRank,
@@ -317,8 +316,7 @@ private:
     const std::unique_ptr<NotifyPool> &notifyPool_;
     const std::vector<RankInfo> &rankInfoList_;
     RankId userRank_;
-    std::string identifier_; // udi + commName, udi用户未定义时与commName一致
-    std::string commName_; // 通信域名称，用于建链tag拼接
+    std::string identifier_;
     s32 deviceLogicId_;
     NICDeployment nicDeployment_;
     bool isHaveCpuRank_{ false };

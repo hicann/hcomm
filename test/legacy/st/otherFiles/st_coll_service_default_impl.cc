@@ -550,7 +550,7 @@ TEST(CollServiceDefaultImplTest, coll_service_default_impl_orchestrate_with_ins_
     collOpParams.staticAddr = true;
     collOpParams.staticShape = true;
     collOpParams.outputDataType = DataType::INT8;
-    collOpParams.debugCase = 1;
+    
     collOpParams.dstRank = 0;
     std::string name = "test";
     comm.CovertToCurrentCollOperator(name, collOpParams, OpMode::OPBASE);
@@ -652,7 +652,7 @@ TEST(CollServiceDefaultImplTest, col_service_default_impl_update_ub_ci_if_need_s
     collOpParams.staticAddr  = true;
     collOpParams.staticShape = true;
     collOpParams.outputDataType = DataType::INT8;
-    collOpParams.debugCase = 1;
+    
     collOpParams.dstRank = 0;
     std::string name = "test";
     comm.cclBuffer = DevBuffer::Create(0x100, 200);

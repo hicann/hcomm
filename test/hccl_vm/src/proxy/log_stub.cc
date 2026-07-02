@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "HCCL_LOG"
+
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
@@ -16,6 +19,7 @@
 #include <string>
 
 #include "sim_log.h"
+
 
 constexpr size_t LOG_MSG_BUFFER_SIZE = 1024;
 
@@ -44,19 +48,19 @@ void DlogPrintStub(int level, const char *msgBuffer)
 
     switch (level) {
     case 0:
-        HCCL_VM_DEBUG("[HCCL_LOG]{}", msgBuffer);
+        HCCL_VM_DEBUG("{}", msgBuffer);
         break;
     case 1:
-        HCCL_VM_INFO("[HCCL_LOG]{}", msgBuffer);
+        HCCL_VM_INFO("{}", msgBuffer);
         break;
     case 2:
-        HCCL_VM_WARN("[HCCL_LOG]{}", msgBuffer);
+        HCCL_VM_WARN("{}", msgBuffer);
         break;
     case 3:
-        HCCL_VM_ERROR("[HCCL_LOG]{}", msgBuffer);
+        HCCL_VM_ERROR("{}", msgBuffer);
         break;
     default:
-        HCCL_VM_TRACE("[HCCL_LOG]{}", msgBuffer);
+        HCCL_VM_TRACE("{}", msgBuffer);
     }
 }
 

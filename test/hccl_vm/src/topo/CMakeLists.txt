@@ -40,3 +40,6 @@ target_compile_options(topo PRIVATE
 )
 
 target_link_libraries(topo PRIVATE log)
+
+# 日志染色: 模块 tag
+target_compile_definitions(topo PRIVATE HCCL_VM_MODULE="TOPO")

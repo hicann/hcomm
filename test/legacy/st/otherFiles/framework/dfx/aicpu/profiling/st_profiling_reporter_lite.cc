@@ -67,12 +67,12 @@ TEST_F(ProfilingReporterLiteTest, Call_profilingReporterLite_api_test)
     CommunicatorImplLite* comm = new CommunicatorImplLite(0);
     dfxOpInfo->comm_ = comm;
     mirrorTaskManagerLite.SetCurrDfxOpInfo(dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo1 = std::make_shared<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
-    std::shared_ptr<TaskInfo> taskInfo2 = std::make_shared<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
+    std::unique_ptr<TaskInfo> taskInfo1 = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
+    std::unique_ptr<TaskInfo> taskInfo2 = std::make_unique<TaskInfo>(0, 1, 1, taskParam, dfxOpInfo);
     mirrorTaskManagerLite.AddTaskInfo(taskInfo1);
     mirrorTaskManagerLite.AddTaskInfo(taskInfo2);
     ProfilingReporterLite profilingReporter(&mirrorTaskManagerLite, &ProfilingHandlerLite::GetInstance());
-    profilingReporter.Init();
+    ASSERT_EQ(profilingReporter.Init(), HCCL_SUCCESS);
     profilingReporter.ReportAllTasks();
     profilingReporter.UpdateProfStat();
     delete comm;

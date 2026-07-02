@@ -54,7 +54,13 @@ HcclResult CallMsprofReportHostApi(hccl::hcclComm* hcclComm, HcclCMDType cmdType
     } else {
         CHK_RET(hcclComm->GetAlgType(algType, cmdType));
     }
-    uint64_t groupName = hrtMsprofGetHashId(hcclComm->GetIdentifier().c_str(), hcclComm->GetIdentifier().length());
+
+    std::string identifierWithUdi = hcclComm->GetIdentifier(); // 若用户自定义了udi，groupname拼接udi
+    std::string udi = hcclComm->GetUdi();
+    if (!udi.empty() && udi != "Unspecified") {
+        identifierWithUdi = udi + identifierWithUdi;
+    }
+    uint64_t groupName = hrtMsprofGetHashId(identifierWithUdi.c_str(), identifierWithUdi.length());
     CHK_RET(profilingManager.CallMsprofReportHostApi(cmdType, beginTime, count, dataType, algType, groupName));
     hcclComm->SetAivCoreLimit(0);
     HCCL_DEBUG("CallMsprofReportHostApi success, cmdType[%d], count[%llu], dataType[%d], algType[%d], groupName[%llu]",

@@ -28,6 +28,7 @@ public:
     std::function<int32_t(uint32_t, const MsprofApi *)> dlMsprofReportApi{};
     std::function<int32_t(uint32_t, const VOID_PTR, uint32_t)> dlMsprofReportCompactInfo{};
     std::function<int32_t(uint32_t, const VOID_PTR, uint32_t)> dlMsprofReportAdditionalInfo{};
+    std::function<int32_t(uint32_t, const VOID_PTR, uint32_t)> dlMsprofReportBatchAdditionalInfo{};
     std::function<uint64_t(const char *, uint32_t)> dlMsprofStr2Id{};
     std::function<uint64_t(void)> dlMsprofSysCycleTime{};
 

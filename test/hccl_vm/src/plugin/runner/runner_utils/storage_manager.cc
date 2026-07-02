@@ -70,16 +70,16 @@ HcclVmResult StorageManager::PrintAllRankInputBuffer()
             sim::PhyMemBlock srcPhyMem{};
             auto srcAddr = sim::AcquireDevPtrInNoHostProcess((void*)startAddr, srcPhyMem);
             if (srcAddr == nullptr) {
-                HCCL_VM_ERROR("[PrintAllRankInputBuffer] 无法获取startAddr的设备地址(addr= {:x})！", reinterpret_cast<uintptr_t>((void*)startAddr));
+                HCCL_VM_ERROR("无法获取startAddr的设备地址(addr= {:x})！", reinterpret_cast<uintptr_t>((void*)startAddr));
                 return HcclVmResult::HCCL_SIM_E_INTERNAL;
             }
             m_allPhyMem.push_back(srcPhyMem);
 
             auto size = m_synData.memory_info.data[i].size;
-            HCCL_VM_DEBUG("[PrintAllRankInputBuffer] rankId={}, input buffer= {:x}, size={}",
+            HCCL_VM_DEBUG("rankId={}, input buffer= {:x}, size={}",
                 m_synData.memory_info.data[i].rank_id, startAddr, size);
             for (uint32_t idx = 0; idx < size; idx++) {
-                HCCL_VM_TRACE("[PrintAllRankInputBuffer] idx={}, value={:x}", idx, *((char*)srcAddr + idx));
+                HCCL_VM_TRACE("idx={}, value={:x}", idx, *((char*)srcAddr + idx));
             }
         }
     }
@@ -116,7 +116,7 @@ HcclVmResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::O
         }
     }
 
-    HCCL_VM_DEBUG("[Trans2CheckerParam] Success");
+    HCCL_VM_DEBUG("Success");
 
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
@@ -124,7 +124,7 @@ HcclVmResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::O
 HcclVmResult StorageManager::LoadHcclVmSynthesisData(sim::OpDetailTab& detailTab, std::vector<sim::CcuChannelTab>& channels)
 {
     if (detailTab.opDetail.size() < sizeof(::OpDetails)) {
-        HCCL_VM_ERROR("[LoadHcclVmSynthesisData] opDetail BLOB too small");
+        HCCL_VM_ERROR("opDetail BLOB too small");
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
     ::OpDetails opDetails{};
@@ -151,7 +151,7 @@ HcclVmResult StorageManager::LoadHcclVmSynthesisData(sim::OpDetailTab& detailTab
 HcclVmResult StorageManager::LoadHcclVmInstrData(std::vector<sim::CcuInstrResTab>& instrRes)
 {
     for (auto &ccuInstr : instrRes) {
-        HCCL_VM_DEBUG("[LoadHcclVmInstrData] rankId={}, dieId={}, count={}",
+        HCCL_VM_DEBUG("rankId={}, dieId={}, count={}",
                       ccuInstr.rankId, ccuInstr.dieId, ccuInstr.instrCount);
     }
     
@@ -167,11 +167,11 @@ HcclVmResult StorageManager::LoadHcclVmTaskMetaData(std::vector<sim::OpTaskTab>&
             std::memcpy(&metaData, task.optaskMeta.data(), sizeof(HcclTaskMetaData));
             taskMeataData.task_meta.push_back(metaData);
         } else {
-            HCCL_VM_WARN("[LoadHcclVmTaskMetaData] optaskMeta too small, taskSeq={} src:{:d}, dst:{:d}", task.taskSeq, task.optaskMeta.size(), sizeof(HcclTaskMetaData));
+            HCCL_VM_WARN("optaskMeta too small, taskSeq={} src:{:d}, dst:{:d}", task.taskSeq, task.optaskMeta.size(), sizeof(HcclTaskMetaData));
         }
     }
     for (auto &taskMeta : taskMeataData.task_meta) {
-        HCCL_VM_DEBUG("[LoadHcclVmTaskMetaData] rankId={}, dieId={}, instrCnt={}, argSize={}, streamId={}",
+        HCCL_VM_DEBUG("rankId={}, dieId={}, instrCnt={}, argSize={}, streamId={}",
             taskMeta.rankId, static_cast<uint32_t>(taskMeta.taskData.ccu.dieId), 
             taskMeta.taskData.ccu.instCnt, taskMeta.taskData.ccu.argSize, taskMeta.streamId);
     }
@@ -184,20 +184,20 @@ HcclVmResult StorageManager::GetHcclVmFlagData(HcclSim::HcclVmFlagData &waitFlag
     // 1. 构造路径
     std::string rootPath = FindRootPath();
     if (rootPath.empty()) {
-        HCCL_VM_ERROR("[StorageManager][GetHcclVmFlagData] Failed to find root path");
+        HCCL_VM_ERROR("Failed to find root path");
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
     std::string fullPath = rootPath + DATA_FILE_PATH + HCCLVM_FLAG_DATA_FILE;
     // 2. 写文件，通知runner启动
     FILE *fp = fopen(fullPath.c_str(), "rb");
     if (!fp) {
-        HCCL_VM_ERROR("[StorageManager][GetHcclVmFlagData] Open file failed: {}", fullPath);
+        HCCL_VM_ERROR("Open file failed: {}", fullPath);
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
 
     auto ret = HcclVmFlagDataRead(fp, waitFlag, HCCLVM_FLAG_FILE_MAGIC);
     if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
-        HCCL_VM_ERROR("[StorageManager][GetHcclVmFlagData] HcclVmFlagDataRead failed");
+        HCCL_VM_ERROR("HcclVmFlagDataRead failed");
         fclose(fp);
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
@@ -207,18 +207,18 @@ HcclVmResult StorageManager::GetHcclVmFlagData(HcclSim::HcclVmFlagData &waitFlag
 
 HcclVmResult StorageManager::DumpHcclVmFlagData(uint16_t status)
 {
-    HCCL_VM_DEBUG("[StorageManager][DumpHcclVmFlagData] Start dumping hccl vm flag data...");
+    HCCL_VM_DEBUG("Start dumping hccl vm flag data...");
     // 1. 构造完整路径
     std::string rootPath = FindRootPath();
     if (rootPath.empty()) {
-        HCCL_VM_ERROR("[StorageManager][GetHcclVmFlagData] Failed to find root path");
+        HCCL_VM_ERROR("Failed to find root path");
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
     std::string fullPath = rootPath + DATA_FILE_PATH + HCCLVM_FLAG_DATA_FILE;
     // 2. 写文件，通知runner启动
     FILE *fp = fopen(fullPath.c_str(), "wb");
     if (!fp) {
-        HCCL_VM_ERROR("[StorageManager][DumpHcclVmFlagData] Open file failed: {}", fullPath);
+        HCCL_VM_ERROR("Open file failed: {}", fullPath);
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
 
@@ -227,7 +227,7 @@ HcclVmResult StorageManager::DumpHcclVmFlagData(uint16_t status)
     flagData.runner_status = status;
     auto ret = HcclVmFlagDataWrite(fp, flagData);
     if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
-        HCCL_VM_ERROR("[StorageManager][DumpHcclVmFlagData] HcclVmFlagDataWrite failed");
+        HCCL_VM_ERROR("HcclVmFlagDataWrite failed");
         fclose(fp);
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
@@ -252,14 +252,14 @@ std::string StorageManager::FindRootPath()
             }
         } else {
             // 如果 realpath 失败（例如路径被删除或权限不足）
-            HCCL_VM_WARN("[FindRootPath] Iteration {}: realpath failed for {}", i, current_search_path);
+            HCCL_VM_WARN("Iteration {}: realpath failed for {}", i, current_search_path);
         }
 
         // 没找到，将探测路径向上推一级
         current_search_path += "/..";
     }
 
-    HCCL_VM_WARN("[FindRootPath] RootPath NOT found");
+    HCCL_VM_WARN("RootPath NOT found");
     return ""; 
 }
 
@@ -267,14 +267,14 @@ HcclVmResult StorageManager::ConvertTaskQueue(const HcclVmTaskMetaData &taskMeat
 {
     auto rankSize = GetRankSize();
     m_allRankTaskQueues.resize(rankSize);
-    HCCL_VM_INFO("[ConvertTaskQueue] rankSize={}", rankSize);
+    HCCL_VM_INFO("rankSize={}", rankSize);
 
     auto taskMetaVec = taskMeataData.task_meta;
     uint32_t size = taskMetaVec.size();
     for (uint32_t i = 0; i < size; i++) {
         uint32_t rankId = taskMetaVec[i].rankId;
         if (rankId >= rankSize) {
-            HCCL_VM_ERROR("[ConvertTaskQueue] rankId={} is out of range. rankSize={}", rankId, rankSize);
+            HCCL_VM_ERROR("rankId={} is out of range. rankSize={}", rankId, rankSize);
             return HcclVmResult::HCCL_SIM_E_PARA;
         }
         uint32_t streamId = (taskMetaVec[i].streamId);
@@ -315,7 +315,7 @@ HcclVmResult StorageManager::InitCcuResource(std::vector<sim::CcuInstrResTab>& i
     if (devType_ == DevType::DEV_TYPE_950) {
         ccuVersion = RunnerCcuVersion::CCU_V1;
     } else {
-        HCCL_VM_ERROR("[InitCcuResource] Wrong devive type: {:d}", static_cast<int>(devType_));
+        HCCL_VM_ERROR("Wrong devive type: {:d}", static_cast<int>(devType_));
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
     std::vector<uint64_t> ccuResourceBaseAddr{};
@@ -346,7 +346,7 @@ HcclVmResult StorageManager::InitAivResourceFromCompositeOpDetail(const sim::Com
 {
     auto ret = AivResourceManager::GetInstance().Init(opDetail.rankId, opDetail.memInfo, GetRankSize());
     if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
-        HCCL_VM_ERROR("[InitAivResourceFromCompositeOpDetail] init aiv resource failed, "
+        HCCL_VM_ERROR("init aiv resource failed, "
             "rankId={}, opDetailId={}, memInfoId={}, ret={}",
             opDetail.rankId, opDetail.detail.id, opDetail.memInfo.id, static_cast<int>(ret));
         return ret;
@@ -364,27 +364,27 @@ void StorageManager::DumpAllRankInputOutput(std::vector<std::map<uint32_t, sim::
 {
     const char* enableDumpData = std::getenv("HCCLVM_ENABLE_DUMP_DATA");
     if (enableDumpData == nullptr || std::string(enableDumpData).empty() || std::string(enableDumpData) == "0") {
-        HCCL_VM_DEBUG("[DumpAllRankInputOutput] HCCLVM_ENABLE_DUMP_DATA is not set");
+        HCCL_VM_DEBUG("HCCLVM_ENABLE_DUMP_DATA is not set");
         return;
     }
     auto rankSize = GetRankSize();
     if (compositeDataMap.empty() || compositeDataMap[0].empty()) {
-        HCCL_VM_ERROR("[DumpAllRankInputOutput] compositeDataMap is empty");
+        HCCL_VM_ERROR("compositeDataMap is empty");
         return;
     }
     std::string rootPath = FindRootPath();
     if (rootPath.empty()) {
-        HCCL_VM_ERROR("[DumpAllRankInputOutput] Failed to find root path");
+        HCCL_VM_ERROR("Failed to find root path");
         return;
     }
     std::string fullPath = rootPath + HCCLVM_ALL_RANK_INPUT_OUTPUT_FILE;
     std::ofstream ofs(fullPath);
     if (!ofs.is_open()) {
-        HCCL_VM_ERROR("[DumpAllRankInputOutput] Open file failed: {}", fullPath);
+        HCCL_VM_ERROR("Open file failed: {}", fullPath);
         return;
     }
 
-    HCCL_VM_INFO("[DumpAllRankInputOutput] Dump All Rank Input Output Data. rankSize={}", rankSize);
+    HCCL_VM_INFO("Dump All Rank Input Output Data. rankSize={}", rankSize);
     for (size_t opIdx = 0; opIdx < compositeDataMap.size(); opIdx++) {
         auto& rankTask = compositeDataMap[opIdx];
         if (rankTask.empty()) {
@@ -399,7 +399,7 @@ void StorageManager::DumpAllRankInputOutput(std::vector<std::map<uint32_t, sim::
                 sim::PhyMemBlock srcPhyMem{};
                 auto startAddr = sim::AcquireDevPtrInNoHostProcess((void*)(memInfo.inputAddr), srcPhyMem);
                 if (startAddr == nullptr) {
-                    HCCL_VM_ERROR("[DumpAllRankInputOutput] fail addr(type={}, addr={:x})!",
+                    HCCL_VM_ERROR("fail addr(type={}, addr={:x})!",
                                   static_cast<int>(BufferType::INPUT),
                                   memInfo.inputAddr);
                     return;
@@ -408,7 +408,7 @@ void StorageManager::DumpAllRankInputOutput(std::vector<std::map<uint32_t, sim::
                 allRankInput[it.first].virtualAddr = memInfo.inputAddr;
                 allRankInput[it.first].phyAddr = (char*)startAddr;
                 allRankInput[it.first].size = memInfo.inputSize;
-                HCCL_VM_INFO("[DumpAllRankInputOutput] opIdx={}, rankId={}, inputAddr={:x}, size={}",
+                HCCL_VM_INFO("opIdx={}, rankId={}, inputAddr={:x}, size={}",
                              opIdx, it.first, memInfo.inputAddr, memInfo.inputSize);
             }
 
@@ -416,7 +416,7 @@ void StorageManager::DumpAllRankInputOutput(std::vector<std::map<uint32_t, sim::
                 sim::PhyMemBlock srcPhyMem{};
                 auto startAddr = sim::AcquireDevPtrInNoHostProcess((void*)(memInfo.outputAddr), srcPhyMem);
                 if (startAddr == nullptr) {
-                    HCCL_VM_ERROR("[DumpAllRankInputOutput] fail addr(type={}, addr={:x})!",
+                    HCCL_VM_ERROR("fail addr(type={}, addr={:x})!",
                                   static_cast<int>(BufferType::OUTPUT),
                                   memInfo.outputAddr);
                     return;
@@ -425,7 +425,7 @@ void StorageManager::DumpAllRankInputOutput(std::vector<std::map<uint32_t, sim::
                 allRankOutput[it.first].virtualAddr = memInfo.outputAddr;
                 allRankOutput[it.first].phyAddr = (char*)startAddr;
                 allRankOutput[it.first].size = memInfo.outputSize;
-                HCCL_VM_INFO("[DumpAllRankInputOutput] opIdx={}, rankId={}, outputAddr={:x}, size={}",
+                HCCL_VM_INFO("opIdx={}, rankId={}, outputAddr={:x}, size={}",
                              opIdx, it.first, memInfo.outputAddr, memInfo.outputSize);
             }
 
@@ -433,7 +433,7 @@ void StorageManager::DumpAllRankInputOutput(std::vector<std::map<uint32_t, sim::
                 sim::PhyMemBlock srcPhyMem{};
                 auto startAddr = sim::AcquireDevPtrInNoHostProcess((void*)(memInfo.cclAddr), srcPhyMem);
                 if (startAddr == nullptr) {
-                    HCCL_VM_ERROR("[DumpAllRankInputOutput] fail addr(type={}, addr={:x})!",
+                    HCCL_VM_ERROR("fail addr(type={}, addr={:x})!",
                                   static_cast<int>(BufferType::CCL),
                                   memInfo.cclAddr);
                     return;
@@ -442,14 +442,14 @@ void StorageManager::DumpAllRankInputOutput(std::vector<std::map<uint32_t, sim::
                 allRankCCL[it.first].virtualAddr = memInfo.cclAddr;
                 allRankCCL[it.first].phyAddr = (char*)startAddr;
                 allRankCCL[it.first].size = memInfo.cclSize;
-                HCCL_VM_INFO("[DumpAllRankInputOutput] opIdx={}, rankId={}, cclAddr={:x}, size={}",
+                HCCL_VM_INFO("opIdx={}, rankId={}, cclAddr={:x}, size={}",
                              opIdx, it.first, memInfo.cclAddr, memInfo.cclSize);
             }
         }
 
         const auto& firstComp = rankTask.begin()->second;
         if (firstComp.detail.opDetail.size() < sizeof(::OpDetails)) {
-            HCCL_VM_ERROR("[DumpAllRankInputOutput] opDetail BLOB too small, opIdx={}, size={}",
+            HCCL_VM_ERROR("opDetail BLOB too small, opIdx={}, size={}",
                           opIdx, firstComp.detail.opDetail.size());
             continue;
         }
@@ -475,7 +475,7 @@ void StorageManager::DumpAllRankInputOutput(std::vector<std::map<uint32_t, sim::
         }
     }
     ofs.close();
-    HCCL_VM_INFO("[DumpAllRankInputOutput] Dump All Rank Input Output Data success.");
+    HCCL_VM_INFO("Dump All Rank Input Output Data success.");
 }
 
 void StorageManager::FlexiblePrintData(std::ofstream &ofs, const BufferInfo &buffer)

@@ -9,6 +9,7 @@
  */
 
 #include "aiv_task_json.h"
+#include "sim_common_api.h"
 
 #include <cstdint>
 #include <cstdlib>
@@ -210,15 +211,9 @@ bool WriteJsonAtomically(const json &content, const std::string &filePath)
 
 bool ResolveExecutorJsonFilePath(const AivKernelExecutor &executor, uint32_t launchIndex, std::string &filePath)
 {
-    const char *installDirEnv = std::getenv("HCCL_VM_INSTALL_DIR");
-    if (installDirEnv == nullptr || installDirEnv[0] == '\0') {
-        return false;
-    }
-
-    const fs::path outputPath = fs::path(installDirEnv) / "data" /
-        ("hcclvm_aiv_rank" + std::to_string(executor.GetRankId()) +
-            "_launch" + std::to_string(launchIndex) + "_task.json");
-    filePath = outputPath.string();
+    const std::string dataRelPath = "data/hcclvm_aiv_rank" + std::to_string(executor.GetRankId()) +
+        "_launch" + std::to_string(launchIndex) + "_task.json";
+    filePath = InstallPath::ResolveToInstallRoot(dataRelPath);
     return true;
 }
 

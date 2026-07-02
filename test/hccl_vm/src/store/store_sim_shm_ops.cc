@@ -92,13 +92,13 @@ static uint64_t FromLe64(uint64_t value) {
 
 void* ShmCreate(const char* name, size_t size) {
     if (!name || size == 0) {
-        HCCL_VM_ERROR("[SHM_OPS] create: name is nullptr or size is 0");
+        HCCL_VM_ERROR("create: name is nullptr or size is 0");
         return nullptr;
     }
 
     int shmFd = shm_open(name, O_CREAT | O_RDWR | O_EXCL, 0666);
     if (shmFd == -1) {
-        HCCL_VM_ERROR("[SHM_OPS] create: shm_open failed, name: {}", name);
+        HCCL_VM_ERROR("create: shm_open failed, name: {}", name);
         return nullptr;
     }
 
@@ -106,7 +106,7 @@ void* ShmCreate(const char* name, size_t size) {
     if (ftruncate(shmFd, totalSize) == -1) {
         close(shmFd);
         shm_unlink(name);
-        HCCL_VM_ERROR("[SHM_OPS] create: ftruncate failed, name: {}", name);
+        HCCL_VM_ERROR("create: ftruncate failed, name: {}", name);
         return nullptr;
     }
 
@@ -115,7 +115,7 @@ void* ShmCreate(const char* name, size_t size) {
 
     if (addr == MAP_FAILED) {
         shm_unlink(name);
-        HCCL_VM_ERROR("[SHM_OPS] create: mmap failed, name: {}", name);
+        HCCL_VM_ERROR("create: mmap failed, name: {}", name);
         return nullptr;
     }
 
@@ -127,25 +127,25 @@ void* ShmCreate(const char* name, size_t size) {
     head->size = ToLe64(size);
     head->lock = 0;
     head->refCount = 1;
-    HCCL_VM_INFO("[SHM_OPS] create name: {}, size: {:d}, ptr: {:p} ref:{:d}", head->name, size, (char*)addr + SHM_HEAD_SIZE, (int)head->refCount);
+    HCCL_VM_INFO("create name: {}, size: {:d}, ptr: {:p} ref:{:d}", head->name, size, (char*)addr + SHM_HEAD_SIZE, (int)head->refCount);
     return (char*)addr + SHM_HEAD_SIZE;
 }
 
 void* ShmOpen(const char* name, size_t* size) {
     if (!name) {
-        HCCL_VM_ERROR("[SHM_OPS] open: name is nullptr");
+        HCCL_VM_ERROR("open: name is nullptr");
         return nullptr;
     }
 
     int shmFd = shm_open(name, O_RDWR, 0666);
     if (shmFd == -1) {
-        HCCL_VM_ERROR("[SHM_OPS] open: shm_open failed, name: {}", name);
+        HCCL_VM_ERROR("open: shm_open failed, name: {}", name);
         return nullptr;
     }
 
     struct stat statBuf;
     if (fstat(shmFd, &statBuf) == -1) {
-        HCCL_VM_ERROR("[SHM_OPS] open: fstat failed, name: {}", name);
+        HCCL_VM_ERROR("open: fstat failed, name: {}", name);
         close(shmFd);
         return nullptr;
     }
@@ -154,13 +154,13 @@ void* ShmOpen(const char* name, size_t* size) {
     close(shmFd);
 
     if (addr == MAP_FAILED) {   
-        HCCL_VM_ERROR("[SHM_OPS] open: mmap failed, name: {}", name);
+        HCCL_VM_ERROR("open: mmap failed, name: {}", name);
         return nullptr;
     }
 
     ShmHead* head = (ShmHead*)addr;
     if (FromLe32(head->magic) != SHM_MAGIC) {
-        HCCL_VM_ERROR("[SHM_OPS] open: invalid magic number, name: {}", name);
+        HCCL_VM_ERROR("open: invalid magic number, name: {}", name);
         munmap(addr, statBuf.st_size);
         return nullptr;
     }
@@ -173,14 +173,14 @@ void* ShmOpen(const char* name, size_t* size) {
         current_count = FromLe32(head->refCount);
         new_count = current_count + 1;
     }
-    HCCL_VM_INFO("[SHM_OPS] open name: {}, size: {:d}, ptr: {:p}", head->name, *size, (char*)addr + SHM_HEAD_SIZE);
+    HCCL_VM_INFO("open name: {}, size: {:d}, ptr: {:p}", head->name, *size, (char*)addr + SHM_HEAD_SIZE);
     return (void*)((char*)addr + SHM_HEAD_SIZE);
 }
 
 void ShmClose(void* shm)
 {
     if (!shm) {
-        HCCL_VM_ERROR("[SHM_OPS] close: shm is nullptr");
+        HCCL_VM_ERROR("close: shm is nullptr");
         return;
     }
 
@@ -195,10 +195,10 @@ void ShmClose(void* shm)
     munmap(head, totalSize);
     if (refCount == 1) {
         // 最后一个引用，删除共享内存
-        HCCL_VM_INFO("[SHM_OPS] close name: {}, ptr: {:p}", tmp, (char*)head);
+        HCCL_VM_INFO("close name: {}, ptr: {:p}", tmp, (char*)head);
         shm_unlink(tmp);
     } else {
-        HCCL_VM_INFO("[SHM_OPS] close name: {}, ptr: {:p}, refCount: {} {}", tmp, (char*)head, refCount, ref);
+        HCCL_VM_INFO("close name: {}, ptr: {:p}, refCount: {} {}", tmp, (char*)head, refCount, ref);
     }
 }
 

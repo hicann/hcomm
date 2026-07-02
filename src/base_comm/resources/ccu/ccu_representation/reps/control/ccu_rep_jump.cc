@@ -92,6 +92,9 @@ CcuRepJumpEQ::CcuRepJumpEQ(const std::string &label, const Variable &targetInstr
 
 bool CcuRepJumpEQ::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
+    if (instr == nullptr) {
+        return false;
+    }
     if (this->instr == nullptr) {
         this->instrId = instrId;
         this->instr   = instr;

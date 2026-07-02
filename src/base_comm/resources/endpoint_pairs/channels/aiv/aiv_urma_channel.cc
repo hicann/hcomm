@@ -378,7 +378,8 @@ HcclResult AivUrmaChannel::BuildSocket()
     Hccl::LinkData linkData = BuildDefaultLinkData();
     CHK_RET(EndpointDescPairToLinkData(localEp_, remoteEp_, linkData));
     HCCL_INFO("[AivUrmaChannel][%s] built linkData: %s", __func__, linkData.Describe().c_str());
-    std::string socketTag = "AUTOMATIC_SOCKET_TAG";
+    std::string socketTag = (channelDesc_.channelName != nullptr)
+        ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
     bool noRankId = true;
     EXCEPTION_CATCH(socketConfigHolder_ = std::make_unique<Hccl::SocketConfig>(linkData, socketTag, noRankId),
         return HCCL_E_PTR);
@@ -603,9 +604,6 @@ ChannelStatus AivUrmaChannel::GetStatus()
             HCCL_ERROR("[AivUrmaChannel][%s] Invalid TransportStatus[%d]", __func__, transportStatus);
             out = ChannelStatus::INVALID;
             break;
-    }
-    if (out == ChannelStatus::READY) {
-        PutSocketIfNeeded();
     }
     return out;
 }

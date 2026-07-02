@@ -64,7 +64,6 @@ protected:
 
 TEST_F(DevUbConnectionTest, rma_ub_connection_get_status_return_exchanging_and_ok)
 {
-    MOCKER_CPP(&DevUbConnection::GetTpAttrAsync).stubs().will(returnValue(HCCL_SUCCESS));
     // Given
     RdmaHandle rdmaHandle = (void *)0x1000000;
 
@@ -139,7 +138,6 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_get_rma_conn_lite)
 
 TEST_F(DevUbConnectionTest, rma_ub_connection_getstatus_change_status_ready)
 {
-    MOCKER_CPP(&DevUbConnection::GetTpAttrAsync).stubs().will(returnValue(HCCL_SUCCESS));
     // construct DevUbConnection
     RdmaHandle rdmaHandle = (void *)0x1000000;
 
@@ -860,7 +858,6 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_ready_import_jetty)
 TEST_F(DevUbConnectionTest, tp_import_test)
 {
     MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
-    MOCKER_CPP(&DevUbConnection::GetTpAttrAsync).stubs().will(returnValue(HCCL_SUCCESS));
     // construct DevUbConnection
     RdmaHandle rdmaHandle = (void *)0x1000000;
 
@@ -888,7 +885,6 @@ TEST_F(DevUbConnectionTest, tp_import_test)
 
 TEST_F(DevUbConnectionTest, ctp_import_test)
 {
-    MOCKER_CPP(&DevUbConnection::GetTpAttrAsync).stubs().will(returnValue(HCCL_SUCCESS));
     // construct DevUbConnection
     RdmaHandle rdmaHandle = (void *)0x1000000;
 
@@ -977,7 +973,6 @@ TEST_F(DevUbConnectionTest, Ut_Describe_Tp_Mode)
 
 TEST_F(DevUbConnectionTest, Ut_ImportRmtDto)
 {
-    MOCKER_CPP(&DevUbConnection::GetTpAttrAsync).stubs().will(returnValue(HCCL_E_NOT_FOUND));
     MOCKER_CPP(&DevUbConnection::ThrowAbnormalStatus).stubs();
     // Given
     RdmaHandle rdmaHandle = (void *)0x1000000;
@@ -991,10 +986,7 @@ TEST_F(DevUbConnectionTest, Ut_ImportRmtDto)
     devUbConnection.ubConnStatus = DevUbConnection::UbConnStatus::JETTY_CREATED;
     devUbConnection.tpProtocol = TpProtocol::UBOE;
     devUbConnection.ImportRmtDto();
-    GlobalMockObject::verify();
-    MOCKER_CPP(&DevUbConnection::GetTpAttrAsync).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&DevUbConnection::ThrowAbnormalStatus).stubs();
-    devUbConnection.ImportRmtDto();
+    EXPECT_EQ(DevUbConnection::UbConnStatus::JETTY_IMPORTING, devUbConnection.ubConnStatus);
     GlobalMockObject::verify();
 }
 
@@ -1025,7 +1017,6 @@ TEST_F(DevUbConnectionTest, Ut_DevUsed_DeferJettyUntilTpReady_And_MapQos)
 {
     GlobalMockObject::verify();
     gCapturedJettyCreateQos = 0U;
-    MOCKER_CPP(&DevUbConnection::GetTpAttrAsync).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(RaUbCreateJettyAsync).stubs().will(invoke(CaptureQosRaUbCreateJettyAsync));
     MOCKER_CPP(&TpManager::GetTpInfo)
         .stubs()

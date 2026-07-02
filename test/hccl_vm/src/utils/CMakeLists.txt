@@ -69,7 +69,6 @@ target_include_directories(loader PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
     ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include/toolchain
 
-    ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/driver
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/trace
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/profiling
@@ -83,3 +82,9 @@ target_link_libraries(loader PRIVATE
     runnerdb
     rt
 )
+
+# 日志染色: 模块 tag
+target_compile_definitions(log PRIVATE HCCL_VM_MODULE="UTILS")
+
+# 日志染色: 模块 tag
+target_compile_definitions(loader PRIVATE HCCL_VM_MODULE="UTILS")

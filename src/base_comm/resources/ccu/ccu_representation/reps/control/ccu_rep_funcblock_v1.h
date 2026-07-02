@@ -38,8 +38,8 @@ private:
  
     std::vector<CcuRepArg> inArgs;
     std::vector<CcuRepArg> outArgs;
-    uint32_t               inArgCount{0};
-    uint32_t               outArgCount{0};
+    uint64_t               inArgCount{0};
+    uint64_t               outArgCount{0};
  
     uint16_t callLayer{0};
 };

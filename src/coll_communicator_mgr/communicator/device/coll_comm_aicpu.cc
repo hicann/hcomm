@@ -58,7 +58,7 @@ HcclResult CollCommAicpu::InitAicpuIndOp(CommAicpuParam *commAicpuParam)
     CHK_RET(hrtSetlocalDevice(topoInfo_.deviceLogicId));
     CHK_RET(hrtSetlocalDeviceType(topoInfo_.deviceType));
     CHK_RET(hrtDrvGetLocalDevIDByHostDevID(topoInfo_.devicePhyId, &devId_));
-    CHK_RET(dfx_.Init(devId_, identifier_));
+    CHK_RET(dfx_.Init(devId_, identifier_, topoInfo_.userRankSize));
     CHK_RET(RegisterProfCallBack());
     CHK_RET(InitHDCommunicate(commAicpuParam));
 

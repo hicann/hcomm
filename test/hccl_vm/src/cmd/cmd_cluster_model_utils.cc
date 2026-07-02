@@ -14,10 +14,9 @@
 #include <cstring>
 #include <string>
 
+#include "sim_common_api.h"
 #include "sim_log.h"
 #include "yaml-cpp/yaml.h"
-
-std::string GetBinLocation();
 
 namespace {
 constexpr const char* HVM_MODEL_ENV_KEY = "HCCL_VM_MODEL";
@@ -31,18 +30,18 @@ bool SetEnvValue(const char* key, const std::string& value)
     if (setenv(key, value.c_str(), 1) == 0) {
         return true;
     }
-    HCCL_VM_ERROR("[HVM] setenv failed: {}={}, errno={}, err={}", key, value, errno, std::strerror(errno));
+    HCCL_VM_ERROR("setenv failed: {}={}, errno={}, err={}", key, value, errno, std::strerror(errno));
     return false;
 }
 
 bool ParseYamlTopoImpl(const std::string& fileName, TopoMeta& topo)
 {
     try {
-        std::string filePath = GetBinLocation() + "/config/topo_meta/" + fileName + ".yaml";
+        std::string filePath = InstallPath::ResolveToInstallRoot("config/topo_meta/" + fileName + ".yaml");
         YAML::Node root = YAML::LoadFile(filePath);
 
         if (!root["meta"]) {
-            HCCL_VM_ERROR("[HVM] YAML : 'meta' node not found.");
+            HCCL_VM_ERROR("YAML : 'meta' node not found.");
             return false;
         }
         uint32_t podNum = root["meta"]["podNum"].as<uint32_t>();
@@ -51,7 +50,7 @@ bool ParseYamlTopoImpl(const std::string& fileName, TopoMeta& topo)
         HCCL_VM_DEBUG("PodNum: {}, SerNum: {}, RankNum: {}", podNum, serNum, rankNum);
         topo.reserve(podNum);
         if (podNum <= 0 || podNum >1024 || serNum <= 0 || serNum >1024 || rankNum <= 0 || rankNum >1024) {
-            HCCL_VM_ERROR("[HVM] YAML : 'meta' number not surport, please check your config.yaml.");
+            HCCL_VM_ERROR("YAML : 'meta' number not surport, please check your config.yaml.");
             return false;
         }
         if (root["topology"] && root["topology"].IsSequence()) {
@@ -73,7 +72,7 @@ bool ParseYamlTopoImpl(const std::string& fileName, TopoMeta& topo)
         }
         return true;
     } catch (const YAML::Exception& e) {
-        HCCL_VM_ERROR("[HVM] Exception when parsing YAML: {}", e.what());
+        HCCL_VM_ERROR("Exception when parsing YAML: {}", e.what());
         return false;
     }
 }

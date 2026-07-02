@@ -104,7 +104,6 @@ std::unique_ptr<CommunicatorImpl> MockCommImpl()
     impl->currentCollOperator = std::make_unique<CollOperator>();
     impl->currentCollOperator->opMode = OpMode::OPBASE;
     impl->currentCollOperator->opType = OpType::DEBUGCASE;
-    impl->currentCollOperator->debugCase = 0;
     impl->currentCollOperator->inputMem = std::make_shared<DevBuffer>(0x100, 10);
     impl->currentCollOperator->outputMem = std::make_shared<DevBuffer>(0x100, 10);
     impl->currentCollOperator->scratchMem = std::make_shared<DevBuffer>(0x100, 10);

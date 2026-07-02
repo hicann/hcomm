@@ -60,12 +60,12 @@ bool InsertRunner(uint64_t serverKey)
         g_runner.thread_id = pthread_self();
 
         g_cur_server_key = serverKey;
-        HCCL_VM_INFO("[InsertRunner] Init host ip= {}, server key= {}.", ret.first.ip_addr, g_cur_server_key);
+        HCCL_VM_INFO("Init host ip= {}, server key= {}.", ret.first.ip_addr, g_cur_server_key);
 
         g_runner.id = RunnerDB::Add<sim::Runner>(runner);
         return true;
     } catch (const std::exception &e) {
-        HCCL_VM_ERROR("[InsertRunner] SQLite exception: {}", e.what());
+        HCCL_VM_ERROR("SQLite exception: {}", e.what());
         return false;
     }
 }
@@ -93,7 +93,7 @@ bool SetCurrCtxTls(uint64_t ctx)
                                        [currRunnerId, ctx](sim::Runner &runner) { runner.current_ctx_id = ctx; });
         return true;
     } catch (const std::exception &e) {
-        HCCL_VM_ERROR("[SetCurrCtxTls] SQLite exception: {}", e.what());
+        HCCL_VM_ERROR("SQLite exception: {}", e.what());
         return false;
     }
 }
@@ -139,7 +139,7 @@ uint64_t GetCurrRankId()
         return r.device_id == devKey;
     });
     if (!rank.second) {
-        HCCL_VM_ERROR("[GetCurrRankId] can not find any rank");
+        HCCL_VM_ERROR("can not find any rank");
         return 0;
     }
 
@@ -216,7 +216,7 @@ uint64_t GetServerKeyById(uint32_t superPodIdx, uint32_t serverIdx)
         return r.pod_id == superPodIdx && r.server_id == serverIdx;
     });
     if (!serverRet.second) {
-        HCCL_VM_ERROR("[GetServerKeyById] can not find server by id: {:d}, {:d}", superPodIdx, serverIdx);
+        HCCL_VM_ERROR("can not find server by id: {:d}, {:d}", superPodIdx, serverIdx);
         return 0;
     }
     return serverRet.first.id;

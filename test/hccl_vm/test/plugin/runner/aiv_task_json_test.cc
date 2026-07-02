@@ -440,32 +440,14 @@ TEST_F(AivTaskJsonTest, SerializeExecutor_WithTasks) {
 
 // ========== ResolveExecutorJsonFilePath ==========
 
-TEST_F(AivTaskJsonTest, ResolveExecutorJsonFilePath_NoEnvVar) {
-    unsetenv("HCCL_VM_INSTALL_DIR");
-    auto &executor = AivKernelExecutor::GetInstance();
-    std::string filePath;
-    bool result = ResolveExecutorJsonFilePath(executor, 0, filePath);
-    EXPECT_FALSE(result);
-    EXPECT_TRUE(filePath.empty());
-}
-
-TEST_F(AivTaskJsonTest, ResolveExecutorJsonFilePath_EmptyEnvVar) {
-    setenv("HCCL_VM_INSTALL_DIR", "", 1);
-    auto &executor = AivKernelExecutor::GetInstance();
-    std::string filePath;
-    bool result = ResolveExecutorJsonFilePath(executor, 0, filePath);
-    EXPECT_FALSE(result);
-    unsetenv("HCCL_VM_INSTALL_DIR");
-}
-
 TEST_F(AivTaskJsonTest, ResolveExecutorJsonFilePath_Success) {
-    setenv("HCCL_VM_INSTALL_DIR", "/tmp/hccl_test", 1);
+    setenv("HCCL_VM_INSTALL_ROOT", "/tmp/hccl_test", 1);
     auto &executor = AivKernelExecutor::GetInstance();
     std::string filePath;
     bool result = ResolveExecutorJsonFilePath(executor, 3, filePath);
     EXPECT_TRUE(result);
     EXPECT_NE(filePath.find("hcclvm_aiv_rank0_launch3_task.json"), std::string::npos);
-    unsetenv("HCCL_VM_INSTALL_DIR");
+    unsetenv("HCCL_VM_INSTALL_ROOT");
 }
 
 // ========== WriteJsonAtomically ==========
@@ -524,16 +506,9 @@ TEST_F(AivTaskJsonTest, WriteJsonAtomically_RenameFallback) {
 
 // ========== DumpExecutorToJsonFile ==========
 
-TEST_F(AivTaskJsonTest, DumpExecutorToJsonFile_NoEnvVar) {
-    unsetenv("HCCL_VM_INSTALL_DIR");
-    auto &executor = AivKernelExecutor::GetInstance();
-    bool result = DumpExecutorToJsonFile(executor, 0);
-    EXPECT_FALSE(result);
-}
-
 TEST_F(AivTaskJsonTest, DumpExecutorToJsonFile_Success) {
     std::error_code ec;
-    setenv("HCCL_VM_INSTALL_DIR", "/tmp/hccl_dump_test", 1);
+    setenv("HCCL_VM_INSTALL_ROOT", "/tmp/hccl_dump_test", 1);
     fs::remove_all("/tmp/hccl_dump_test", ec);
 
     auto &executor = AivKernelExecutor::GetInstance();
@@ -554,7 +529,7 @@ TEST_F(AivTaskJsonTest, DumpExecutorToJsonFile_Success) {
     EXPECT_NE(content.find("\"aiv\""), std::string::npos);
 
     fs::remove_all("/tmp/hccl_dump_test", ec);
-    unsetenv("HCCL_VM_INSTALL_DIR");
+    unsetenv("HCCL_VM_INSTALL_ROOT");
 }
 
 // ========== aiv_task.h coverage: AivTask base ==========

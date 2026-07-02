@@ -23,6 +23,8 @@
 
 #include "sim_log.h"
 #include "storage_manager.h"
+#include "utils/check_utils.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
@@ -80,15 +82,32 @@ const char *TaskTypeName(TaskType taskType)
 std::string DescribePosition(const TaskPosition &loc)
 {
     std::ostringstream os;
-    os << "rank=" << loc.rankId << ", stream=" << loc.streamId;
+    os << "rankId=";
+    if (loc.rankId == INVALID_RANK_ID) {
+        os << "invalid";
+    } else {
+        os << loc.rankId;
+    }
+    os << ", streamId=";
+    if (loc.streamId == INVALID_STREAM_ID) {
+        os << "invalid";
+    } else {
+        os << loc.streamId;
+    }
     return os.str();
 }
 
 std::string DescribeMemSlice(const MemSlice &slice)
 {
     std::ostringstream os;
-    os << "{rank=" << slice.rankId << ", mem=" << static_cast<uint32_t>(slice.memType)
-       << ", offset=0x" << std::hex << slice.offset << ", len=0x" << slice.len << std::dec << "}";
+    os << "{rankId=";
+    if (slice.rankId == INVALID_RANK_ID) {
+        os << "invalid";
+    } else {
+        os << slice.rankId;
+    }
+    os << ", memType=" << DescribeMemType(slice.memType)
+       << ", offset=0x" << std::hex << slice.offset << ", length=0x" << slice.len << std::dec << "}";
     return os.str();
 }
 
@@ -224,8 +243,10 @@ HcclResult AccumulateCoveredSizeByKey(const TaskNode *node, const std::vector<Me
             continue;
         }
         if (slice.len > std::numeric_limits<uint64_t>::max() - slice.offset) {
-            HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Memory slice overflow while accumulating coverage, "
-                "node={}, slice={}", node->Describe(), DescribeMemSlice(slice));
+            HCCL_VM_ERROR("{} One memory slice is invalid because its end address overflows "
+                "while total coverage is being calculated, task={}, memorySlice={}, offset=0x{:x}, length=0x{:x}",
+                MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+                DescribeMemSlice(slice), slice.offset, slice.len);
             return HCCL_E_PARA;
         }
         const MemoryKey key{slice.rankId, slice.memType};
@@ -293,7 +314,7 @@ HcclResult BuildCoverageSummary(const TaskNode *node, const std::vector<std::vec
 }
 
 HcclResult CheckCoverageMultiple(const TaskNode *node, uint64_t srcSize, uint64_t dstSize,
-    const std::string &srcName, const std::string &dstName)
+    const std::string &group)
 {
     if (node == nullptr) {
         return HCCL_E_PTR;
@@ -302,15 +323,17 @@ HcclResult CheckCoverageMultiple(const TaskNode *node, uint64_t srcSize, uint64_
         if (srcSize == 0) {
             return HCCL_SUCCESS;
         }
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Zero destination coverage with non-zero source coverage, "
-            "node={}, {}={}, {}={}", node->Describe(), srcName, srcSize, dstName, dstSize);
+        HCCL_VM_ERROR("{} Source data exists but the target range is empty, task={}, "
+            "srcDataSize={}, dstDataSize={}, group={}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(), srcSize, dstSize, group);
         return HCCL_E_INTERNAL;
     }
     if (srcSize % dstSize == 0) {
         return HCCL_SUCCESS;
     }
-    HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Source coverage is not a multiple of destination coverage, "
-        "node={}, {}={}, {}={}", node->Describe(), srcName, srcSize, dstName, dstSize);
+    HCCL_VM_ERROR("{} Source data size is not an integer multiple of target data size, "
+        "task={}, srcDataSize={}, dstDataSize={}, group={}",
+        MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(), srcSize, dstSize, group);
     return HCCL_E_INTERNAL;
 }
 
@@ -323,8 +346,10 @@ HcclResult CheckSliceLenEqual(const TaskNode *node, const MemSlice &src, const M
     if (src.len == dst.len) {
         return HCCL_SUCCESS;
     }
-    HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Batch trans slice length mismatch, node={}, label={}, index={}, "
-        "src={}, dst={}", node->Describe(), label, index, DescribeMemSlice(src), DescribeMemSlice(dst));
+    HCCL_VM_ERROR("{} In one batch transfer pair, source length and target length are "
+        "different, task={}, group={}, pairIndex={}, sourceMemorySlice={}, targetMemorySlice={}",
+        MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(), label, index,
+        DescribeMemSlice(src), DescribeMemSlice(dst));
     return HCCL_E_INTERNAL;
 }
 
@@ -365,8 +390,10 @@ HcclResult CheckBatchTransSlices(const TaskNode *node, const std::vector<MemSlic
     // 原始 src/dst 负责逐对检查 memcpy 语义是否满足“长度一一对应”；
     // merged src/dst 只用于更快地检查 batch 节点内部是否存在自冲突。
     if (srcs.size() != dsts.size()) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Batch trans pair size mismatch, node={}, label={}, "
-            "srcCount={}, dstCount={}", node->Describe(), label, srcs.size(), dsts.size());
+        HCCL_VM_ERROR("{} Batch transfer has different counts of source memory slices and "
+            "target memory slices, task={}, group={}, sourceMemorySliceCount={}, targetMemorySliceCount={}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(), label, srcs.size(),
+            dsts.size());
         return HCCL_E_PARA;
     }
     for (size_t index = 0; index < srcs.size(); ++index) {
@@ -409,9 +436,10 @@ HcclResult CheckBatchTransSlices(const TaskNode *node, const std::vector<MemSlic
             }
         }
     }
-    HCCL_VM_DEBUG("[TaskGraphSingleTaskCheckV3] Batch trans merged slices checked, "
-        "nodeId={}, label={}, originalSrcCount={}, originalDstCount={}, mergedSrcCount={}, mergedDstCount={}, "
-        "dedupMergedSrcCount={}, dedupMergedDstCount={}", node->GetNodeId(), label, srcs.size(), dsts.size(),
+    HCCL_VM_DEBUG("Batch transfer merged-slice check finished, "
+        "taskId={}, group={}, originalSourceMemorySliceCount={}, originalTargetMemorySliceCount={}, "
+        "mergedSourceMemorySliceCount={}, mergedTargetMemorySliceCount={}, uniqueMergedSourceMemorySliceCount={}, "
+        "uniqueMergedTargetMemorySliceCount={}", node->GetNodeId(), label, srcs.size(), dsts.size(),
         mergedSrcs.size(), mergedDsts.size(), dedupMergedSrcs.size(), dedupMergedDsts.size());
     return HCCL_SUCCESS;
 }
@@ -426,8 +454,10 @@ HcclResult CheckBatchReduceSlices(const TaskNode *node, const std::vector<std::v
     // batch reduce 仍然按原始 group 校验：每组 src 必须能落到同一个 dst，
     // 且所有 src 总覆盖量应当是 dst 总覆盖量的整倍数。
     if (srcGroups.empty() || srcGroups.size() != dsts.size()) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Batch reduce group size mismatch, node={}, label={}, "
-            "srcGroupCount={}, dstCount={}", node->Describe(), label, srcGroups.size(), dsts.size());
+        HCCL_VM_ERROR("{} Batch reduce has different counts of source groups and target "
+            "memory slices, task={}, group={}, sourceGroupCount={}, targetMemorySliceCount={}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(), label, srcGroups.size(),
+            dsts.size());
         return HCCL_E_PARA;
     }
     for (size_t groupIndex = 0; groupIndex < srcGroups.size(); ++groupIndex) {
@@ -436,8 +466,9 @@ HcclResult CheckBatchReduceSlices(const TaskNode *node, const std::vector<std::v
             return ret;
         }
         if (srcGroups[groupIndex].empty()) {
-            HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Batch reduce source list is empty, node={}, label={}, "
-                "groupIndex={}", node->Describe(), label, groupIndex);
+            HCCL_VM_ERROR("{} One reduce group has no source data at all, task={}, group={}, "
+                "groupIndex={}", MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+                label, groupIndex);
             return HCCL_E_PARA;
         }
         for (const auto &src : srcGroups[groupIndex]) {
@@ -460,8 +491,7 @@ HcclResult CheckBatchReduceSlices(const TaskNode *node, const std::vector<std::v
     if (ret != HCCL_SUCCESS) {
         return ret;
     }
-    return CheckCoverageMultiple(node, srcSummary.totalCoveredSize, dstSummary.totalCoveredSize,
-        label + " srcCoveredSize", label + " dstCoveredSize");
+    return CheckCoverageMultiple(node, srcSummary.totalCoveredSize, dstSummary.totalCoveredSize, label);
 }
 
 HcclResult CheckSingleSlice(const TaskNode *node, const MemSlice &slice)
@@ -473,21 +503,28 @@ HcclResult CheckSingleSlice(const TaskNode *node, const MemSlice &slice)
         return HCCL_SUCCESS;
     }
     if (slice.rankId == INVALID_RANK_ID || slice.memType == MemType::INVALID) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Invalid memory slice, node={}, slice={}",
-            node->Describe(), DescribeMemSlice(slice));
+        HCCL_VM_ERROR("{} One memory slice is missing a valid rank or memory type, task={}, "
+            "memorySlice={}, rankId={}, memType={}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+            DescribeMemSlice(slice), slice.rankId == INVALID_RANK_ID ? "invalid" : std::to_string(slice.rankId),
+            DescribeMemType(slice.memType));
         return HCCL_E_PARA;
     }
     if (slice.len > std::numeric_limits<uint64_t>::max() - slice.offset) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Memory slice overflow, node={}, slice={}",
-            node->Describe(), DescribeMemSlice(slice));
+        HCCL_VM_ERROR("{} One memory slice is invalid because offset + length exceeds the "
+            "numeric limit, task={}, memorySlice={}, offset=0x{:x}, length=0x{:x}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+            DescribeMemSlice(slice), slice.offset, slice.len);
         return HCCL_E_PARA;
     }
 
     if (slice.memType == MemType::UB_AIV || slice.memType == MemType::FLAG_AIV) {
         const uint64_t boundSize = GetAivSliceBoundSize(slice.memType);
         if (boundSize != 0 && slice.offset + slice.len > boundSize) {
-            HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] AIV slice out-of-bounds, node={}, slice={}, boundSize={}",
-                node->Describe(), DescribeMemSlice(slice), boundSize);
+            HCCL_VM_ERROR("{} One AIV memory slice goes past the valid AIV buffer boundary, "
+                "task={}, memorySlice={}, bufferLimit={}, memType={}",
+                MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+                DescribeMemSlice(slice), boundSize, DescribeMemType(slice.memType));
             return HCCL_E_INTERNAL;
         }
         return HCCL_SUCCESS;
@@ -495,15 +532,20 @@ HcclResult CheckSingleSlice(const TaskNode *node, const MemSlice &slice)
 
     const BufferType storageType = ConvertMemTypeToBufferType(slice.memType);
     if (storageType == BufferType::RESERVED) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Unsupported memory type, node={}, slice={}",
-            node->Describe(), DescribeMemSlice(slice));
+        HCCL_VM_ERROR("{} This task uses a memory type that the checker does not support, "
+            "task={}, memorySlice={}, memType={}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+            DescribeMemSlice(slice), DescribeMemType(slice.memType));
         return HCCL_E_NOT_SUPPORT;
     }
 
     const uint64_t blockSize = StorageManager::GetInstance().GetBlockSize(slice.rankId, storageType);
     if (slice.offset + slice.len > blockSize) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Failed to check slice, {}, node={}, slice={}, blockSize={}",
-            DescribePosition(node->GetPosition()), node->Describe(), DescribeMemSlice(slice), blockSize);
+        HCCL_VM_ERROR("{} One memory slice goes past the end of its buffer, task={}, "
+            "memorySlice={}, bufferType={}, bufferSize={}, position={}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+            DescribeMemSlice(slice), BufferTypeToString(storageType), blockSize,
+            DescribePosition(node->GetPosition()));
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;
@@ -519,15 +561,18 @@ HcclResult CheckTwoSliceOverlap(const TaskNode *node, const MemSlice &lhs, const
     }
     if (lhs.len > std::numeric_limits<uint64_t>::max() - lhs.offset ||
         rhs.len > std::numeric_limits<uint64_t>::max() - rhs.offset) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Memory slice overflow, node={}, sliceA={}, sliceB={}",
-            node->Describe(), DescribeMemSlice(lhs), DescribeMemSlice(rhs));
+        HCCL_VM_ERROR("{} Two memory slices cannot be compared because one slice already "
+            "overflowed, task={}, memorySlice1={}, memorySlice2={}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+            DescribeMemSlice(lhs), DescribeMemSlice(rhs));
         return HCCL_E_PARA;
     }
 
     if (node->HasCcuTrace()) {
         // CCU mode下，允许src == dst
         if (lhs.rankId == rhs.rankId && IsSameMemoryType(lhs, rhs) && lhs.offset == rhs.offset && lhs.len == rhs.len) {
-            HCCL_VM_WARN("[TaskGraphSingleTaskCheckV3] MemSlice are same (src == dst), which may affect performance, {}, node={}, sliceA={}, sliceB={}",
+            HCCL_VM_WARN("Source and destination use the same memory slice, which may hurt "
+                "performance, position={}, task={}, memorySlice1={}, memorySlice2={}",
                 DescribePosition(node->GetPosition()), node->Describe(), DescribeMemSlice(lhs), DescribeMemSlice(rhs));
             return HCCL_SUCCESS;
         }
@@ -536,8 +581,10 @@ HcclResult CheckTwoSliceOverlap(const TaskNode *node, const MemSlice &lhs, const
     const bool conflictCase1 = lhs.offset >= rhs.offset && lhs.offset < (rhs.offset + rhs.len);
     const bool conflictCase2 = rhs.offset >= lhs.offset && rhs.offset < (lhs.offset + lhs.len);
     if (conflictCase1 || conflictCase2) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Slice conflict, {}, node={}, sliceA={}, sliceB={}",
-            DescribePosition(node->GetPosition()), node->Describe(), DescribeMemSlice(lhs), DescribeMemSlice(rhs));
+        HCCL_VM_ERROR("{} Two memory slices overlap inside the same task, task={}, "
+            "memorySlice1={}, memorySlice2={}, position={}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_CONFLICT), node->Describe(),
+            DescribeMemSlice(lhs), DescribeMemSlice(rhs), DescribePosition(node->GetPosition()));
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;
@@ -566,14 +613,18 @@ HcclResult CheckAivFlagNodeMem(const TaskNode *node)
         return HCCL_SUCCESS;
     }
     if (flag->flagOffset > (std::numeric_limits<uint64_t>::max() - sizeof(int32_t)) / AIV_FLAG_SLOT_BYTES) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] AIV flag offset overflow, node={}", node->Describe());
+        HCCL_VM_ERROR("{} AIV flag address overflowed while calculating its byte offset, "
+            "task={}, flagOffset={}", MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
+            flag->flagOffset);
         return HCCL_E_PARA;
     }
     const uint64_t flagByteOffset = flag->flagOffset * AIV_FLAG_SLOT_BYTES;
     const uint64_t flagBufferSize = GetAivSliceBoundSize(MemType::FLAG_AIV);
     if (flagBufferSize != 0 && flagByteOffset + sizeof(int32_t) > flagBufferSize) {
-        HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] AIV flag offset out-of-bounds, node={}, "
-            "flagByteOffset={}, flagBufferSize={}", node->Describe(), flagByteOffset, flagBufferSize);
+        HCCL_VM_ERROR("{} AIV flag address goes past the valid flag buffer boundary, task={}, "
+            "flagByteOffset={}, flagBufferSize={}",
+            MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(), flagByteOffset,
+            flagBufferSize);
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;
@@ -611,7 +662,8 @@ HcclResult CheckDataMoveTaskMem(const TaskNode *node)
         }
         const std::vector<MemSlice> &srcs = reduce->GetSrcs();
         if (srcs.empty()) {
-            HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Reduce source list is empty, node={}", node->Describe());
+            HCCL_VM_ERROR("{} This reduce task has no source data at all, task={}",
+                MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe());
             return HCCL_E_PARA;
         }
         for (const auto &src : srcs) {
@@ -674,8 +726,8 @@ HcclResult CheckSlaveTaskQueue(const std::vector<std::unique_ptr<TaskNode>> &nod
             const auto &stream = taskQueue[streamId];
             const size_t taskSize = stream.size();
             if (StreamHasAivGraph(nodes, stream)) {
-                HCCL_VM_DEBUG("[TaskGraphSingleTaskCheckV3] Skip legacy slave stream shape check for AIV stream, "
-                    "rank={}, stream={}", rankId, streamId);
+                HCCL_VM_DEBUG("Skip this slave-stream structure check because the stream contains "
+                    "an AIV graph task, rankId={}, streamId={}", rankId, streamId);
                 continue;
             }
             if (taskSize < 2) {
@@ -685,31 +737,43 @@ HcclResult CheckSlaveTaskQueue(const std::vector<std::unique_ptr<TaskNode>> &nod
             const TaskNode *firstTask = GetQueueNode(nodes, stream.front());
             const TaskNode *lastTask = GetQueueNode(nodes, stream.back());
             if (firstTask == nullptr || lastTask == nullptr) {
-                HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Invalid slave stream node, rank={}, stream={}",
-                    rankId, streamId);
+                HCCL_VM_ERROR("{} This slave stream is missing its start node "
+                    "or end node, rankId={}, streamId={}, taskCount={}, startNode={}, endNode={}",
+                    MakeErrorCodeText(ErrorCode::SINGLETASK_SLAVE_STREAM_INVALID), rankId, streamId, taskSize,
+                    firstTask == nullptr ? "null" : firstTask->Describe(),
+                    lastTask == nullptr ? "null" : lastTask->Describe());
                 return HCCL_E_PTR;
             }
 
             size_t backStep = 1;
+            size_t skippedEmptyLocalCopyCount = 0;
             while (IsEmptyLocalCopy(lastTask) && backStep < taskSize) {
                 lastTask = GetQueueNode(nodes, stream[taskSize - 1 - backStep]);
                 if (lastTask == nullptr) {
-                    HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] Invalid slave stream tail node, rank={}, stream={}",
-                        rankId, streamId);
+                    HCCL_VM_ERROR("{} This slave stream still has no valid end "
+                        "node after empty local-copy tasks are skipped, rankId={}, streamId={}, "
+                        "skippedEmptyLocalCopyCount={}, currentTailNode={}",
+                        MakeErrorCodeText(ErrorCode::SINGLETASK_SLAVE_STREAM_INVALID), rankId, streamId,
+                        skippedEmptyLocalCopyCount, "null");
                     return HCCL_E_PTR;
                 }
+                ++skippedEmptyLocalCopyCount;
                 ++backStep;
             }
 
             if (!IsLocalAicpuWait(firstTask)) {
-                HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] RankId:{}, streamId:{} first task type should be "
-                    "local WAIT, while is {}", rankId, streamId, TaskTypeName(firstTask->GetType()));
+                HCCL_VM_ERROR("{} The first task in this slave stream is not a "
+                    "local WAIT task, rankId={}, streamId={}, actualFirstTaskType={}, firstTask={}",
+                    MakeErrorCodeText(ErrorCode::SINGLETASK_SLAVE_STREAM_INVALID), rankId, streamId,
+                    TaskTypeName(firstTask->GetType()), firstTask->Describe());
                 return HCCL_E_INTERNAL;
             }
 
             if (!IsLocalAicpuRecord(lastTask)) {
-                HCCL_VM_ERROR("[TaskGraphSingleTaskCheckV3] RankId:{}, streamId:{} last task type should be "
-                    "local RECORD, while is {}", rankId, streamId, TaskTypeName(lastTask->GetType()));
+                HCCL_VM_ERROR("{} The last task in this slave stream is not a "
+                    "local RECORD task, rankId={}, streamId={}, actualLastTaskType={}, lastTask={}",
+                    MakeErrorCodeText(ErrorCode::SINGLETASK_SLAVE_STREAM_INVALID), rankId, streamId,
+                    TaskTypeName(lastTask->GetType()), lastTask->Describe());
                 return HCCL_E_INTERNAL;
             }
         }

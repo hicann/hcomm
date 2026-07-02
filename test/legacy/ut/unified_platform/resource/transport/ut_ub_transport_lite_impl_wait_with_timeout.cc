@@ -176,7 +176,7 @@ TEST_F(UbTransportLiteImplWaitWithTimeoutTest, UbTransportLiteImpl_WaitWithTimeo
     RmaConnLite rmaConnLite;
     RmaConnLite *connLite =  &rmaConnLite;
     MOCKER_CPP(&UbConnLiteMgr::Get).stubs().will(returnValue(connLite));
-    MOCKER_CPP(&MirrorTaskManager::AddTaskInfo).stubs().with(mockcpp::any());
+    MOCKER_CPP(static_cast<void (MirrorTaskManager::*)(std::unique_ptr<TaskInfo>&&)>(&MirrorTaskManager::AddTaskInfo)).stubs().with(mockcpp::any());
     LinkData linkData(BasePortType(PortDeploymentType::DEV_NET, ConnectProtoType::UB), 0, 1, 0, 1);
     MirrorTaskManager mirrorTaskMgr(0, &GlobalMirrorTasks::Instance(), true);
     auto transportCallback = MemTransportCallback(linkData, mirrorTaskMgr);
@@ -208,7 +208,7 @@ TEST_F(UbTransportLiteImplWaitWithTimeoutTest, UbTransportLiteImpl_WaitWithTimeo
     RmaConnLite rmaConnLite;
     RmaConnLite *connLite =  &rmaConnLite;
     MOCKER_CPP(&UbConnLiteMgr::Get).stubs().will(returnValue(connLite));
-    MOCKER_CPP(&MirrorTaskManager::AddTaskInfo).stubs().with(mockcpp::any());
+    MOCKER_CPP(static_cast<void (MirrorTaskManager::*)(std::unique_ptr<TaskInfo>&&)>(&MirrorTaskManager::AddTaskInfo)).stubs().with(mockcpp::any());
     LinkData linkData(BasePortType(PortDeploymentType::DEV_NET, ConnectProtoType::UB), 0, 1, 0, 1);
     MirrorTaskManager mirrorTaskMgr(0, &GlobalMirrorTasks::Instance(), true);
     auto transportCallback = MemTransportCallback(linkData, mirrorTaskMgr);
@@ -240,7 +240,7 @@ TEST_F(UbTransportLiteImplWaitWithTimeoutTest, UbTransportLiteImpl_WaitWithTimeo
     RmaConnLite rmaConnLite;
     RmaConnLite *connLite =  &rmaConnLite;
     MOCKER_CPP(&UbConnLiteMgr::Get).stubs().will(returnValue(connLite));
-    MOCKER_CPP(&MirrorTaskManager::AddTaskInfo).stubs().with(mockcpp::any());
+    MOCKER_CPP(static_cast<void (MirrorTaskManager::*)(std::unique_ptr<TaskInfo>&&)>(&MirrorTaskManager::AddTaskInfo)).stubs().with(mockcpp::any());
     LinkData linkData(BasePortType(PortDeploymentType::DEV_NET, ConnectProtoType::UB), 0, 1, 0, 1);
     MirrorTaskManager mirrorTaskMgr(0, &GlobalMirrorTasks::Instance(), true);
     auto transportCallback = MemTransportCallback(linkData, mirrorTaskMgr);

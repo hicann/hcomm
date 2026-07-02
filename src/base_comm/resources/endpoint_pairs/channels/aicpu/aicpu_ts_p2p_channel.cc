@@ -175,7 +175,8 @@ HcclResult AicpuTsP2pChannel::BuildSocket()
     Hccl::LinkData linkData = BuildDefaultLinkData();
     CHK_RET(EndpointDescPairToLinkData(localEp_, remoteEp_, linkData));
     HCCL_INFO("[AicpuTsP2pChannel][%s] built linkData: %s", __func__, linkData.Describe().c_str());
-    std::string socketTag = "AUTOMATIC_SOCKET_TAG";
+    std::string socketTag = (channelDesc_.channelName != nullptr)
+        ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
     bool noRankId = true;
     Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, socketTag, noRankId);
     CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket_));
@@ -215,9 +216,6 @@ HcclResult AicpuTsP2pChannel::GetRemoteMems(uint32_t *memNum, CommMem **remoteMe
 ChannelStatus AicpuTsP2pChannel::GetStatus()
 {
     ChannelStatus out = Channel::TransportStatusToChannelStatus(memTransport_->GetStatus());
-    if (out == ChannelStatus::READY && channelDesc_.socket == nullptr && socket_ != nullptr) {
-        SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
-    }
     return out;
 }
 

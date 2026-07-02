@@ -1820,26 +1820,40 @@ RS_ATTRI_VISI_DEF int RsSocketSend(int fd, const void *data, uint64_t size)
     return ret;
 }
 
+RS_ATTRI_VISI_DEF int RsHdcSocketSend(int fd, const void *data, uint64_t size)
+{
+    static __thread char buf[RS_BUF_SIZE] = {0};
+    const void *sendData = data;
+    uint64_t sendSize = size;
+    int ret;
+
+    if (gRsCb->sslEnable == RS_SSL_ENABLE) {
+        // reuse buf to fix SSL_write retry issue
+        sendSize = (size > RS_BUF_SIZE) ? RS_BUF_SIZE : size;
+        (void)memcpy_s(buf, sendSize, data, sendSize);
+        sendData = buf;
+    }
+
+    ret = RsDrvSocketSend(fd, sendData, sendSize, MSG_DONTWAIT | MSG_NOSIGNAL);
+
+    hccp_dbg("send fd:%d, sendSize:%llu, send %dB", fd, sendSize, ret);
+    return ret;
+}
+
 RS_ATTRI_VISI_DEF int RsPeerSocketSend(uint32_t sslEnable, int fd, const void *data, uint64_t size)
 {
+    struct RsConnInfo *conn = NULL;
     int ret = 0;
     int errNo;
 
     CHK_PRT_RETURN(fd < 0 || size == 0 || data == NULL, hccp_err("param error ! fd:%d < 0, size:%llu or data is NULL",
         fd, size), -EINVAL);
     if (sslEnable != RS_SSL_DISABLE) {
-        int err;
-        struct RsConnInfo *conn = NULL;
-
         ret = RsFd2conn(fd, &conn);
         CHK_PRT_RETURN(ret, hccp_err("fd to conn failed, ret:%d", ret), ret);
         ret = ssl_adp_write(conn->ssl, data, (int)size);
         if (ret <= 0) {
-            hccp_warn("ssl_adp_write ret:%d, size:%llu", ret, size);
-            err = ssl_adp_get_error(conn->ssl, ret);
-            rs_ssl_err_string(conn->connfd, err);
-            CHK_PRT_RETURN((err == SSL_ERROR_WANT_WRITE) || (err == SSL_ERROR_WANT_READ), hccp_info("ssl_adp_write need"
-                "to retry"), -EAGAIN);
+            ret = RsSslWriteInnerCheck(conn, ret, size);
         }
     } else {
         ret = (int)send(fd, data, size, MSG_DONTWAIT | MSG_NOSIGNAL);
@@ -1869,25 +1883,19 @@ RS_ATTRI_VISI_DEF int RsSocketRecv(int fd, void *data, uint64_t size)
 
 RS_ATTRI_VISI_DEF int RsPeerSocketRecv(uint32_t sslEnable, int fd, void *data, uint64_t size)
 {
+    struct RsConnInfo *conn = NULL;
     int ret = 0;
     int errNo;
 
     CHK_PRT_RETURN(fd < 0 || data == NULL || size == 0, hccp_err("param error ! fd:%d < 0 or data is NULL, size:%llu",
         fd, size), -EINVAL);
     if (sslEnable != RS_SSL_DISABLE) {
-        int err;
-        struct RsConnInfo *conn = NULL;
-
         ret = RsFd2conn(fd, &conn);
         CHK_PRT_RETURN(ret, hccp_warn("can not find conn for fd[%d], ret:%d, the local fd may have been closed ",
             fd, ret), ret);
         ret = ssl_adp_read(conn->ssl, data, (int)size);
         if (ret <= 0) {
-            hccp_dbg("ssl_adp_read ret:%d, size:%llu", ret, size);
-            err = ssl_adp_get_error(conn->ssl, ret);
-            rs_ssl_err_string(conn->connfd, err);
-            CHK_PRT_RETURN((err == SSL_ERROR_WANT_WRITE) || (err == SSL_ERROR_WANT_READ), hccp_dbg("ssl_adp_read"
-                "need to retry"), -EAGAIN);
+            ret = RsSslReadInnerCheck(conn, ret, size);
         }
     } else {
         ret = (int)recv(fd, data, size, MSG_DONTWAIT);

@@ -629,7 +629,7 @@ TEST_F(PingMesh_UT, ut_PingMeshStartStopPing)
 
 TEST_F(PingMesh_UT, ut_PingMeshGetResult)
 {
-    MOCKER(hrtMemSyncCopyEx)
+    MOCKER(hrtMemcpyEx)
     .stubs()
     .with(mockcpp::any())
     .will(returnValue(HCCL_SUCCESS));
@@ -695,7 +695,7 @@ TEST_F(PingMesh_UT, ut_PingMeshGetResult)
 
 TEST_F(PingMesh_UT, ut_PingMeshGetResultFail)
 {
-    MOCKER(hrtMemSyncCopyEx)
+    MOCKER(hrtMemcpyEx)
     .stubs()
     .with(mockcpp::any())
     .will(returnValue(HCCL_E_NOT_SUPPORT));
@@ -881,7 +881,7 @@ TEST_F(PingMesh_UT, ut_PingMeshSendRecvInfoPatch1)
 
 TEST_F(PingMesh_UT, ut_PingMeshGetPayload)
 {
-    MOCKER(hrtMemSyncCopyEx)
+    MOCKER(hrtMemcpyEx)
     .stubs()
     .with(mockcpp::any())
     .will(returnValue(HCCL_SUCCESS));
@@ -955,4 +955,56 @@ TEST_F(PingMesh_UT, ut_PingMeshGetPayload)
     } else {
         std::cout << "Payload is null." << std::endl;
     }
+}
+
+// ====== hrtMemcpyEx 单元测试 ======
+TEST_F(PingMesh_UT, HrtMemcpyEx_normal)
+{
+    char srcBuf[64] = {0};
+    char dstBuf[64] = {0};
+    const char *testData = "hello hrtMemcpyEx";
+    memcpy_s(srcBuf, sizeof(srcBuf), testData, strlen(testData) + 1);
+
+    HcclResult ret = hrtMemcpyEx(dstBuf, sizeof(dstBuf), srcBuf, strlen(testData) + 1,
+        rtMemcpyKind_t::RT_MEMCPY_HOST_TO_HOST);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_STREQ(dstBuf, testData);
+}
+
+TEST_F(PingMesh_UT, HrtMemcpyEx_null_dst)
+{
+    char srcBuf[64] = {0};
+    HcclResult ret = hrtMemcpyEx(nullptr, sizeof(srcBuf), srcBuf, sizeof(srcBuf),
+        rtMemcpyKind_t::RT_MEMCPY_HOST_TO_HOST);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(PingMesh_UT, HrtMemcpyEx_null_src)
+{
+    char dstBuf[64] = {0};
+    HcclResult ret = hrtMemcpyEx(dstBuf, sizeof(dstBuf), nullptr, sizeof(dstBuf),
+        rtMemcpyKind_t::RT_MEMCPY_HOST_TO_HOST);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(PingMesh_UT, HrtMemcpyEx_count_exceeds_destMax)
+{
+    char srcBuf[8] = {0};
+    char dstBuf[4] = {0};
+    HcclResult ret = hrtMemcpyEx(dstBuf, sizeof(dstBuf), srcBuf, sizeof(srcBuf),
+        rtMemcpyKind_t::RT_MEMCPY_HOST_TO_HOST);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(PingMesh_UT, HrtMemcpyEx_rt_fail)
+{
+    MOCKER(rtMemcpyEx)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE + 1));
+    char srcBuf[64] = {0};
+    char dstBuf[64] = {0};
+    HcclResult ret = hrtMemcpyEx(dstBuf, sizeof(dstBuf), srcBuf, sizeof(srcBuf),
+        rtMemcpyKind_t::RT_MEMCPY_DEVICE_TO_HOST);
+    EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }

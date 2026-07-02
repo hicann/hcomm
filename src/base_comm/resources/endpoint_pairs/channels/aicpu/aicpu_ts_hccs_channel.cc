@@ -82,14 +82,11 @@ HcclResult AicpuTsHccsChannel::ParseInputParam()
         }
     }
 
-    CHK_SAFETY_FUNC_RET(memcpy_s(&socketTagIdx_, sizeof(socketTagIdx_),
-        channelDesc_.raws + sizeof(channelDesc_.raws) - sizeof(uint32_t), sizeof(uint32_t)));
-
     HCCL_INFO("[AicpuTsHccsChannel][ParseInputParam] local devPhyId [%u] ip[%u] remote devPhyId[%u] ip[%s], "
-        "isSocketServer_[%u], serverPort_[%u] socketTagIdx_[%u]", 
+        "isSocketServer_[%u], serverPort_[%u]",
         localEp_.loc.device.devPhyId, localReadableAddress.c_str(),
         remoteEp_.loc.device.devPhyId, remoteReadableAddress.c_str(),
-        static_cast<u32>(isSocketServer_), serverPort_, socketTagIdx_);
+        static_cast<u32>(isSocketServer_), serverPort_);
 
     return HCCL_SUCCESS;
 }
@@ -116,12 +113,18 @@ HcclResult AicpuTsHccsChannel::BuildConnection()
         localEp_.loc.device.devPhyId, localReadableAddress.c_str(),
         remoteEp_.loc.device.devPhyId, remoteReadableAddress.c_str());
 
+    if (channelDesc_.channelName != nullptr) {
+        socketTag_ = std::string(channelDesc_.channelName);
+    } else if (isSocketServer_) {
+        GlobalNetDevMgr::MakeSocketTag(localIp_, serverPort_, remoteIp_, socketTag_);
+    } else {
+        GlobalNetDevMgr::MakeSocketTag(remoteIp_, serverPort_, localIp_, socketTag_);
+    }
+
     if (isSocketServer_) {
-        GlobalNetDevMgr::MakeSocketTag(localIp_, serverPort_, remoteIp_, socketTag_, socketTagIdx_);
         CHK_RET(GlobalNetDevMgr::GetInstance(localEp_.loc.device.devPhyId).AcceptClient(serverPort_,
             remoteIp_, socketTag_, socket_));
     } else {
-        GlobalNetDevMgr::MakeSocketTag(remoteIp_, serverPort_, localIp_, socketTag_, socketTagIdx_);
         CHK_RET(GlobalNetDevMgr::GetInstance(localEp_.loc.device.devPhyId).ConnectToServer(serverPort_,
             remoteIp_, serverPort_, socketTag_, socket_));
     }

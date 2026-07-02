@@ -147,18 +147,22 @@ HcclResult hrtGetDeviceCount(u32 *count)
     // 参数有效性检查
     CHK_PTR_NULL(count);
 
+    aclError ret = aclrtGetDeviceCount(count);
+
+    HCCL_DEBUG("Call rtGetDeviceCount, return value[%d], para: count[%u].", ret, *count);
+    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[hrtGetDeviceCount]errNo[0x%016llx] aclGet device count fail, "\
+        "return[%d], para:count[%u]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *count), HCCL_E_RUNTIME);
+
+    if (*count == 0) {
+        return HCCL_SUCCESS;
+    }
+
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_NOSOC) {
         *count = 0;
         return HCCL_SUCCESS;
     }
-
-    aclError ret = aclrtGetDeviceCount(count);
-
-    HCCL_DEBUG("Call rtGetDeviceCount, return value[%d], para: count[%u].", ret, *count);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[hrtGetDeviceCount]errNo[0x%016llx] aclGet device count fail, "\
-        "return[%d], para:count[%u]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *count), HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -500,7 +504,6 @@ HcclResult hrtSetlocalDeviceType(DevType devType)
 
 HcclResult __hrtGetDeviceType(DevType &devType)
 {
-    HCCL_DEBUG("[hrtGetDeviceType]g_deviceType = %d.", static_cast<s32>(g_deviceType));
     if (LIKELY((g_deviceType != DevType::DEV_TYPE_COUNT))) {
         devType = g_deviceType;
         return HCCL_SUCCESS;
@@ -511,7 +514,6 @@ HcclResult __hrtGetDeviceType(DevType &devType)
     CHK_RET(hrtGetSocVer(socName));
 #else
     if (g_workModeAicpu) {
-        HCCL_DEBUG("[hrtGetDeviceType]DeviceType = %d.", static_cast<s32>(g_localDeviceType));
         devType = g_localDeviceType;
         return HCCL_SUCCESS;
     }
@@ -2581,4 +2583,24 @@ __attribute__((constructor)) void CallBackInitRts()
     g_devicePhyId = INVALID_UINT;
     HCCL_RUN_INFO("[adapter_rts.cc][CallBackInitRts] g_deviceType [%d] g_deviceLogicId [%d] g_devicePhyId [%d]",
         g_deviceType, g_deviceLogicId, g_devicePhyId);
+}
+
+HcclResult hrtMemcpyEx(void *dst, uint64_t destMax, void *src, uint64_t count, rtMemcpyKind_t kind)
+{
+#ifndef HCCD
+    CHK_PTR_NULL(dst);
+    CHK_PTR_NULL(src);
+    CHK_PRT_RET(count > destMax, HCCL_ERROR("[hrtMemcpyEx] count[%llu] exceeds destMax[%llu].",
+        count, destMax), HCCL_E_PARA);
+    rtError_t ret = rtMemcpyEx(dst, destMax, src, count, kind);
+    HCCL_DEBUG("[hrtMemcpyEx] Call rtMemcpyEx, ret[%d], dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], "
+        "rtKind[%d]", ret, dst, destMax, src, count, kind);
+    CHK_PRT_RET(ret != RT_ERROR_NONE,
+        HCCL_ERROR("[hrtMemcpyEx] rtMemcpyEx failed, return[%d], dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], "
+        "rtKind[%d].", ret, dst, destMax, src, count, kind), HCCL_E_RUNTIME);
+    return HCCL_SUCCESS;
+#else
+    HCCL_ERROR("[hrtMemcpyEx] Does not support this interface.");
+    return HCCL_E_NOT_SUPPORT;
+#endif
 }

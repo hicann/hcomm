@@ -1303,6 +1303,7 @@ HcclResult Heartbeat::ParseFrame(HeartBeatFrame &bf, UIDType &src)
     // 能够收到进程卡住表示心跳是正常的
     if (bf.status == HeartBeatStatus::HEARTBEAT_OK || bf.status == HeartBeatStatus::HEARTBEAT_STUCK) {
         rankId2SocketMap_[src].lostNum = 0;
+        rankId2SocketMap_[src].lostReportCnt = 0;
     }
 
     // 只有心跳非正常时才需要打印TRACE
@@ -1329,6 +1330,7 @@ HcclResult Heartbeat::ParseFrameWithOpCheck(HeartBeatFrameWithOpCheck &bf, UIDTy
  
     if (bf.status == HeartBeatStatus::HEARTBEAT_OK || bf.status == HeartBeatStatus::HEARTBEAT_STUCK) {
         rankId2SocketMap_[src].lostNum = 0;
+        rankId2SocketMap_[src].lostReportCnt = 0;
     }
  
     if (bf.status != HeartBeatStatus::HEARTBEAT_OK) {
@@ -1584,8 +1586,12 @@ void Heartbeat::HeartbeatStatusMonitor()
             ret = !GetExternalInconsistentCheckSwitch()? RecvFrame(rem) : RecvFrameWithOpCheck(rem);
             if (ret == HCCL_E_INTERNAL) {
                 errorSocket_.push_back(rem);
-            } else if (rankId2SocketMap_[rem].lostNum >= lostThreshold_) {
+                continue;
+            }
+            uint32_t threshold = lostThreshold_ << rankId2SocketMap_[rem].lostReportCnt; // LOST帧发送周期放长
+            if (rankId2SocketMap_[rem].lostNum >= threshold) {
                 SetStatus(rem, uid_, HeartBeatStatus::HEARTBEAT_LOST);
+                rankId2SocketMap_[rem].lostReportCnt++;
             }
         }
         CheckRecvOpInfoList();

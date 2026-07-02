@@ -25,21 +25,21 @@ HcclResult DumpManager::Initialize(const std::string& dataId)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (dataId.empty()) {
-        HCCL_VM_ERROR("[DumpManager::Initialize] dataId is empty.");
+        HCCL_VM_ERROR("dataId is empty.");
         return HcclResult::HCCL_E_PARA;
     }
 
     m_dataId = dataId;
     m_pluginRootDir = HcclSim::GetCurrentPath();
     if (m_pluginRootDir.empty()) {
-        HCCL_VM_ERROR("[DumpManager::Initialize] failed to get current path.");
+        HCCL_VM_ERROR("failed to get current path.");
         return HcclResult::HCCL_E_INTERNAL;
     }
     m_dataDir = HcclSim::JoinPath(m_pluginRootDir, DATA_DIR_NAME);
     m_dumpRootDir = HcclSim::JoinPath(HcclSim::JoinPath(m_dataDir, INSIGHT_DIR_NAME), m_dataId);
 
     if (!SettingManager::GetInstance().IsInsightDumpEnabled()) {
-        HCCL_VM_INFO("[DumpManager] insight dump disabled by manifest setting.");
+        HCCL_VM_INFO("insight dump disabled by manifest setting.");
         return HcclResult::HCCL_SUCCESS;
     }
     return PrepareDumpDirs();
@@ -141,7 +141,7 @@ HcclResult DumpManager::WriteMsgpackFile(const std::string& dumpRootDir, const s
 
     std::ofstream out(fullPath.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
     if (!out.is_open()) {
-        HCCL_VM_ERROR("[DumpManager::WriteMsgpackFile] failed to open file: {}", fullPath);
+        HCCL_VM_ERROR("failed to open file: {}", fullPath);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -149,7 +149,7 @@ HcclResult DumpManager::WriteMsgpackFile(const std::string& dumpRootDir, const s
     try {
         nlohmann::json::to_msgpack(document, nlohmann::detail::output_adapter<char>(out));
     } catch (const std::exception &ex) {
-        HCCL_VM_ERROR("[DumpManager::WriteMsgpackFile] stream msgpack serialize failed: {}, file: {}", ex.what(),
+        HCCL_VM_ERROR("stream msgpack serialize failed: {}, file: {}", ex.what(),
             fullPath);
         return HcclResult::HCCL_E_INTERNAL;
     }
@@ -158,7 +158,7 @@ HcclResult DumpManager::WriteMsgpackFile(const std::string& dumpRootDir, const s
     const uint64_t writeBeginMs = NowMs();
     out.flush();
     if (!out.good()) {
-        HCCL_VM_ERROR("[DumpManager::WriteMsgpackFile] failed to flush file: {}", fullPath);
+        HCCL_VM_ERROR("failed to flush file: {}", fullPath);
         return HcclResult::HCCL_E_INTERNAL;
     }
     const uint64_t writeCostMs = NowMs() - writeBeginMs;
@@ -167,7 +167,7 @@ HcclResult DumpManager::WriteMsgpackFile(const std::string& dumpRootDir, const s
         static_cast<uint64_t>(finalPos) : 0;
 
     if (relativePath.compare(0, std::string("memory/").size(), "memory/") == 0) {
-        HCCL_VM_INFO("[DumpManager::WriteMsgpackFile][perf] path={}, ensure_dir_ms={}, serialize_ms={}, "
+        HCCL_VM_INFO("path={}, ensure_dir_ms={}, serialize_ms={}, "
             "write_file_ms={}, msgpack_bytes={}", relativePath, ensureDirCostMs, serializeCostMs, writeCostMs,
             msgpackBytes);
     }
@@ -185,19 +185,19 @@ HcclResult DumpManager::WriteJsonFile(const std::string& dumpRootDir, const std:
 
     std::ofstream out(fullPath.c_str(), std::ios::out | std::ios::trunc);
     if (!out.is_open()) {
-        HCCL_VM_ERROR("[DumpManager::WriteJsonFile] failed to open file: {}", fullPath);
+        HCCL_VM_ERROR("failed to open file: {}", fullPath);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     try {
         out << document.dump(2) << std::endl;
     } catch (const std::exception &ex) {
-        HCCL_VM_ERROR("[DumpManager::WriteJsonFile] json serialize failed: {}, file: {}", ex.what(), fullPath);
+        HCCL_VM_ERROR("json serialize failed: {}, file: {}", ex.what(), fullPath);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     if (!out.good()) {
-        HCCL_VM_ERROR("[DumpManager::WriteJsonFile] failed to write file: {}", fullPath);
+        HCCL_VM_ERROR("failed to write file: {}", fullPath);
         return HcclResult::HCCL_E_INTERNAL;
     }
     return HcclResult::HCCL_SUCCESS;
@@ -221,7 +221,7 @@ HcclResult DumpManager::WriteMsgpackStreamFile(const std::string& dumpRootDir, c
 
     std::ofstream out(fullPath.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
     if (!out.is_open()) {
-        HCCL_VM_ERROR("[DumpManager::WriteMsgpackStreamFile] failed to open file: {}", fullPath);
+        HCCL_VM_ERROR("failed to open file: {}", fullPath);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -229,14 +229,14 @@ HcclResult DumpManager::WriteMsgpackStreamFile(const std::string& dumpRootDir, c
     ret = writer(out);
     const uint64_t serializeCostMs = NowMs() - serializeBeginMs;
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[DumpManager::WriteMsgpackStreamFile] custom writer failed. path: {}", fullPath);
+        HCCL_VM_ERROR("custom writer failed. path: {}", fullPath);
         return ret;
     }
 
     const uint64_t writeBeginMs = NowMs();
     out.flush();
     if (!out.good()) {
-        HCCL_VM_ERROR("[DumpManager::WriteMsgpackStreamFile] failed to flush file: {}", fullPath);
+        HCCL_VM_ERROR("failed to flush file: {}", fullPath);
         return HcclResult::HCCL_E_INTERNAL;
     }
     const uint64_t writeCostMs = NowMs() - writeBeginMs;
@@ -245,7 +245,7 @@ HcclResult DumpManager::WriteMsgpackStreamFile(const std::string& dumpRootDir, c
         static_cast<uint64_t>(finalPos) : 0;
 
     if (relativePath.compare(0, std::string("memory/").size(), "memory/") == 0) {
-        HCCL_VM_INFO("[DumpManager::WriteMsgpackStreamFile][perf] path={}, ensure_dir_ms={}, serialize_ms={}, "
+        HCCL_VM_INFO("path={}, ensure_dir_ms={}, serialize_ms={}, "
             "write_file_ms={}, msgpack_bytes={}", relativePath, ensureDirCostMs, serializeCostMs, writeCostMs,
             msgpackBytes);
     }

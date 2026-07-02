@@ -51,6 +51,7 @@ public:
     static AicpuUtils &GetInstance();
 
     void CreateSingleInstance(void *args) const;
+    HcclResult Init() const;
 
     HcclResult WaitCommFree(CommunicatorImplLite *communicatorImplLite, const char *funcName) const;
 

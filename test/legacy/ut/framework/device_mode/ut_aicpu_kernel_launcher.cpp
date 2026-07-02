@@ -67,7 +67,6 @@ protected:
         comm.currentCollOperator = std::make_unique<CollOperator>();
         comm.currentCollOperator->opMode = OpMode::OPBASE;
         comm.currentCollOperator->opType = OpType::DEBUGCASE;
-        comm.currentCollOperator->debugCase = 0;
         comm.currentCollOperator->opTag = "test";
         comm.currentCollOperator->inputMem = DevBuffer::Create(0x100, 10);
         comm.currentCollOperator->outputMem = DevBuffer::Create(0x100, 10);

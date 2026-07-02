@@ -1031,8 +1031,18 @@ void HrtCcuLaunch(rtCcuTaskInfo_t &taskInfo, aclrtStream const streamPtr)
     HCCL_INFO("[HrtCcuLaunch] taskInfo[%p], streamPtr[%p].", &taskInfo, streamPtr);
     auto ret = rtCCULaunch(&taskInfo, streamPtr);
     if (ret != RT_ERROR_NONE) {
-        string msg = StringFormat("Call rtCCULaunch failed. return[%d], taskInfo[%p], streamPtr[%p].", 
-                                ret, &taskInfo, streamPtr);
+        std::string msg;
+        if (ret == ACL_ERROR_RT_STREAM_TASK_FULL) {
+            // task 队列满
+            msg = StringFormat("[%s] rtCCULaunch failed because the task queue on the stream is full. "
+                    "ret[%d], param: taskInfo[%p], streamPtr[%p]. "
+                    "Possible causes: 1) too many tasks have been submitted to the stream; "
+                    "2) the HCCL buffer is configured too small.",
+                    __func__, ret, &taskInfo, streamPtr);
+        } else {
+            msg = StringFormat("Call rtCCULaunch failed. return[%d], taskInfo[%p], streamPtr[%p].",
+                    ret, &taskInfo, streamPtr);
+        }
         THROW<RuntimeApiException>(msg);
     }
 }

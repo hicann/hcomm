@@ -24,17 +24,29 @@ namespace CcuRep {
 
 template <typename T> bool CheckType(const std::shared_ptr<CcuRepBlock> &refer)
 {
+    if (refer == nullptr) {
+        HCCL_ERROR("input refer is nullptr");
+        return false;
+    }
     HCCL_INFO("[ChechType] refer->Type() = %d", refer->Type());
     return false;
 }
 
 template <> bool CheckType<CcuRepFuncBlock>(const std::shared_ptr<CcuRepBlock> &refer)
 {
+    if (refer == nullptr) {
+        HCCL_ERROR("input refer is nullptr");
+        return false;
+    }
     return refer->Type() == CcuRepType::FUNC_BLOCK ? true : false;
 }
 
 template <> bool CheckType<CcuRepLoopBlock>(const std::shared_ptr<CcuRepBlock> &refer)
 {
+    if (refer == nullptr) {
+        HCCL_ERROR("input refer is nullptr");
+        return false;
+    }
     return refer->Type() == CcuRepType::LOOP_BLOCK ? true : false;
 }
 
@@ -279,8 +291,18 @@ void CcuRepTranslator::DumpRep(const std::vector<std::shared_ptr<CcuRepBase>> &r
     for (uint32_t index = 0; index < repVec.size(); index++) {
         HCCL_INFO("rep[%u]: %s", index, repVec[index]->Describe().c_str());
         uint16_t startInstrId = repVec[index]->StartInstrId();
-        uint16_t endInstrId   = startInstrId + repVec[index]->InstrCount();
+        uint32_t sum = static_cast<uint32_t>(startInstrId) + repVec[index]->InstrCount();
+        if (sum > UINT16_MAX) {
+            HCCL_ERROR("instrId overflow: startInstrId[%u] + InstrCount[%u] = %u exceeds UINT16_MAX",
+                       startInstrId, repVec[index]->InstrCount(), sum);
+            continue;
+        }
+        uint16_t endInstrId = static_cast<uint16_t>(sum);
         for (uint16_t instrId = startInstrId; instrId < endInstrId; instrId++) {
+            if (instrId < instrInfo.startInstrId) {
+                HCCL_ERROR("instrId[%u] less than startInstrId[%u]", instrId, instrInfo.startInstrId);
+                continue;
+            }
             HCCL_INFO("microcode[%u]: %s", instrId,
                       ParseInstr(instrInfo.instrVec.data() + (instrId - instrInfo.startInstrId)).c_str());
         }

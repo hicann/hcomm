@@ -21,6 +21,8 @@
 #include <thread>
 #include <unistd.h>
 
+#include "sim_log.h"
+
 namespace sim {
 // Sentinel value written to proxy_ready to signal runner to exit.
 // Normal rounds use values in [1, UINT32_MAX-1].
@@ -135,23 +137,23 @@ private:
 
         int fd = ::open(tmpPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd < 0) {
-            std::fprintf(stderr, "[ProcessSyncer] open tmp failed: %s, error: %s\n",
-                         tmpPath.c_str(), std::strerror(errno));
+            HCCL_VM_ERROR("[ProcessSyncer] open tmp failed: {}, error: {}",
+                          tmpPath.c_str(), std::strerror(errno));
             return;
         }
 
         ssize_t written = ::write(fd, buf, n);
         if (written != n) {
-            std::fprintf(stderr, "[ProcessSyncer] write failed: %s\n", std::strerror(errno));
+            HCCL_VM_ERROR("[ProcessSyncer] write failed: {}", std::strerror(errno));
         }
 
         if (::fsync(fd) != 0) {
-            std::fprintf(stderr, "[ProcessSyncer] fsync failed: %s\n", std::strerror(errno));
+            HCCL_VM_ERROR("[ProcessSyncer] fsync failed: {}", std::strerror(errno));
         }
         ::close(fd);
 
         if (::rename(tmpPath.c_str(), filepath.c_str()) != 0) {
-            std::fprintf(stderr, "[ProcessSyncer] rename failed: %s\n", std::strerror(errno));
+            HCCL_VM_ERROR("[ProcessSyncer] rename failed: {}", std::strerror(errno));
         }
     }
 

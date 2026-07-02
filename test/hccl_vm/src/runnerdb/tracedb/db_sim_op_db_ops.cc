@@ -180,7 +180,7 @@ int UpdateAndInsertByCcuId(uint64_t& ccuId, uint32_t deviceId, uint32_t rankId, 
     ExRows rows;
     int ret = OpDbOps::Instance().ExecQueryEx(querySql, queryParams, rows);
     if (ret != 0) {
-        HCCL_VM_ERROR("[UpdateAndInsertByCcuId] query ccuInstrRes failed for deviceId: {} dieId: {}", deviceId, dieId);
+        HCCL_VM_ERROR("query ccuInstrRes failed for deviceId: {} dieId: {}", deviceId, dieId);
         return -1;
     }
 
@@ -303,14 +303,14 @@ int QueryCurrentOpMemInfoByRank(uint32_t rankId, OpMemInfoTab& out)
     std::vector<Value> params = {(int64_t)g_currOpDetailId, (int64_t)rankId};
     std::vector<std::vector<std::string>> rows;
     if (OpDbOps::Instance().ExecQuery(sql, params, rows) != 0 || rows.empty()) {
-        HCCL_VM_ERROR("[QueryCurrentOpMemInfoByRank] query failed, currentOpDetailId={}, rankId={}",
+        HCCL_VM_ERROR("query failed, currentOpDetailId={}, rankId={}",
             g_currOpDetailId, rankId);
         return -1;
     }
 
     const auto& row = rows[0];
     if (row.size() < 8) {
-        HCCL_VM_ERROR("[QueryCurrentOpMemInfoByRank] invalid row size={}, currentOpDetailId={}, rankId={}",
+        HCCL_VM_ERROR("invalid row size={}, currentOpDetailId={}, rankId={}",
             row.size(), g_currOpDetailId, rankId);
         return -1;
     }
@@ -332,7 +332,7 @@ int UpdateOpExpansionMode(uint8_t mode)
     std::vector<Value> params = {(int64_t)mode, (int64_t)g_currOpDetailId};
     int ret = OpDbOps::Instance().ExecUpdate(sql, params);
     if (ret != 0) {
-        HCCL_VM_ERROR("[UpdateOpExpansionMode] Failed to update mode={}, id={}", mode, g_currOpDetailId);
+        HCCL_VM_ERROR("Failed to update mode={}, id={}", mode, g_currOpDetailId);
     }
     return ret;
 }
@@ -343,7 +343,7 @@ int QueryLatestOpExpansionMode()
     std::vector<Value> params = {(int64_t)g_currOpDetailId};
     std::vector<std::vector<std::string>> rows;
     if (OpDbOps::Instance().ExecQuery(sql, params, rows) != 0 || rows.empty() || rows[0].empty()) {
-        HCCL_VM_ERROR("[QueryLatestOpExpansionMode] Failed to query, id={}", g_currOpDetailId);
+        HCCL_VM_ERROR("Failed to query, id={}", g_currOpDetailId);
         return static_cast<int>(SimOpExpansionMode::SIM_OP_EXPANSION_MODE_RESERVED);
     }
     return static_cast<int>(std::stoul(rows[0][0]));
@@ -376,7 +376,7 @@ int QueryCompositeOpDetailBySyncIter(uint32_t syncIter, std::map<uint32_t, std::
     std::vector<Value> opParams = {(int64_t)syncIter};
     HcclSim::DB::ExRows opRows;
     if (OpDbOps::Instance().ExecQueryEx(opSql, opParams, opRows) != 0) {
-        HCCL_VM_ERROR("[QueryCompositeOpDetailBySyncIter] Query opDetails failed for syncIter: {}", syncIter);
+        HCCL_VM_ERROR("Query opDetails failed for syncIter: {}", syncIter);
         return -1;
     }
 

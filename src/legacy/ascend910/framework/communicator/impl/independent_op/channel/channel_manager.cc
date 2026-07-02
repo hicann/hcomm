@@ -13,6 +13,7 @@
 #include "externalinput.h"
 #include "comm_configer.h"
 #include "launch_aicpu.h"
+#include "comm_engine_utils.h"
 #include <unordered_set>
 #include <string>
 #include "adapter_prof.h"
@@ -72,7 +73,7 @@ HcclResult ChannelManager::CheckChannelParam(CommEngine engine,
         // 检查engine支持情况
         if (engine != COMM_ENGINE_CPU && engine != COMM_ENGINE_CPU_TS && 
             engine != COMM_ENGINE_AICPU && engine != COMM_ENGINE_AICPU_TS) {
-            HCCL_ERROR("[%s]Unsupported engine for channel, engine: %d.", __func__, engine);
+            HCCL_ERROR("[%s]Unsupported engine for channel, engine: %s.", __func__, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
             return HCCL_E_PARA;
         }
     }
@@ -86,8 +87,8 @@ HcclResult ChannelManager::RegisterHandle(const std::string &tag, CommEngine eng
                             ":" + std::to_string(channelDesc.channelProtocol);
 
     CHK_PRT_RET((channelHandleMap_.find(channelKey) != channelHandleMap_.end()),
-        HCCL_ERROR("[%s]Channel already exists, tag[%s], engine[%d], remoteRank[%d], channelProtocol[%d].", 
-        __func__, tag.c_str(), engine, channelDesc.remoteRank, channelDesc.channelProtocol), HCCL_E_PARA);
+        HCCL_ERROR("[%s]Channel already exists, tag[%s], engine[%s], remoteRank[%d], channelProtocol[%d].", 
+        __func__, tag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelDesc.remoteRank, channelDesc.channelProtocol), HCCL_E_PARA);
     channelHandleMap_[channelKey] = channelHandle;
     keyMap_[channelHandle] = channelKey;
     engineMap_[channelHandle] = engine;

@@ -41,10 +41,13 @@ typedef CommMem HcommMem;
 
 typedef HcommMemHandle MemHandle;
 
+#ifndef HCOMM_MEM_GRANT_INFO_DEFINED
+#define HCOMM_MEM_GRANT_INFO_DEFINED
 typedef struct {
     uint32_t sdid;
     int32_t pid;
 } HcommMemGrantInfo;
+#endif
 
 struct CommMemInfo {
     CommMem mem {};
@@ -55,6 +58,8 @@ struct CommMemInfo {
 /**
  * @brief 通信设备Endpoint监听配置结构体
  */
+#ifndef HCOMM_ENDPOINT_LISTEN_CONFIG_DEFINED
+#define HCOMM_ENDPOINT_LISTEN_CONFIG_DEFINED
 typedef struct {
     union {
         uint8_t raws[24]; ///< 通用数据区，用于未来扩展，如backlog, timeout等
@@ -62,6 +67,7 @@ typedef struct {
         };
     };
 } HcommEndpointListenConfig;
+#endif
 
 HcommResult HcommResMgrInit(uint32_t devPhyId = UINT32_MAX);
 

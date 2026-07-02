@@ -933,6 +933,26 @@ TEST_F(AdapterRtsTest, HrtCcuLaunch_run_fail)
     EXPECT_THROW(HrtCcuLaunch(taskInfo, ptr), RuntimeApiException);
 }
 
+TEST_F(AdapterRtsTest, HrtCcuLaunch_run_fail_rts_task_full)
+{
+    // Given
+    rtCcuTaskInfo_t taskInfo;
+    aclrtStream ptr = (aclrtStream *)0x1000000;
+
+    // Runtime 接口报错：Task 队列满
+    MOCKER(rtCCULaunch).stubs().will(returnValue(ACL_ERROR_RT_STREAM_TASK_FULL));
+
+    // then
+    try {
+        HrtCcuLaunch(taskInfo, ptr);
+        FAIL() << "Expected RuntimeApiException but no exception was thrown.";
+    } catch (const RuntimeApiException& e) {
+        std::string msg = e.what();
+        EXPECT_TRUE(msg.find("the task queue on the stream is full") != std::string::npos); // 报错提示 task 队列满
+        EXPECT_TRUE(msg.find("Possible causes") != std::string::npos);  // 提供可能的问题原因
+    }
+}
+
 TEST_F(AdapterRtsTest, HrtUbDevQueryInfo_run_fail)
 {
     // Given

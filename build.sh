@@ -22,6 +22,7 @@ COV="false"
 CUSTOM_OPTION="-DCMAKE_INSTALL_PREFIX=${BUILD_OUTPUT_DIR}"
 ENABLE_BUILD_DEVICE="OFF"
 ENABLE_BUILD_AARCH="OFF"
+ENABLE_EXPERIMENTAL="OFF"
 CANN_3RD_LIB_PATH="${CURRENT_DIR}/third_party"
 CUSTOM_SIGN_SCRIPT="${CURRENT_DIR}/scripts/sign/community_sign_build.py"
 ENABLE_SIGN="false"
@@ -292,6 +293,7 @@ function usage() {
   echo "    -u, --ut       Run all unit tests (UT)"
   echo "    -s, --st       Run all system tests (ST)"
   echo "    --noexec       Run build and skip executing tests"
+  echo "    --experimental Build experimental components"
   echo ""
 }
 
@@ -334,6 +336,10 @@ while [[ $# -gt 0 ]]; do
         ;;
     --noexec)
         ENABLE_NO_EXEC="on"
+        shift
+        ;;
+    --experimental)
+        ENABLE_EXPERIMENTAL="ON"
         shift
         ;;
     -u|--ut)
@@ -504,6 +510,7 @@ CUSTOM_OPTION="${CUSTOM_OPTION} -DCANN_3RD_LIB_PATH=${CANN_3RD_LIB_PATH}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DCMAKE_BUILD_TYPE=${BUILD_TYPE}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_BUILD_DEVICE=${ENABLE_BUILD_DEVICE}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_BUILD_AARCH=${ENABLE_BUILD_AARCH}"
+CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_EXPERIMENTAL=${ENABLE_EXPERIMENTAL}"
 
 CUSTOM_OPTION="${CUSTOM_OPTION} -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_SIGN=${ENABLE_SIGN}"

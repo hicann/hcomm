@@ -9,6 +9,7 @@
  */
 
 #include "rdma_conn_lite_v2.h"
+#include "rdma_vendor_1825_ops.h"
 
 namespace Hccl {
 constexpr u64 RDMA_DMA_MAX_SIZE = 0x80000000; // Byte, RDMA一次传输的最大size

@@ -13,6 +13,7 @@
 
 #include "cmd_base_utils.h"
 #include "db_sim_runner_db.h"
+#include "sim_common_api.h"
 #include "sim_common_defs.h"
 #include "sim_log.h"
 #include "sim_models.h"
@@ -32,15 +33,15 @@ void StartCommand::Setup(CLI::App& app) {
 
 void StartCommand::Execute() {
     if (g_hcclVmBashFlag) {
-        HCCL_VM_WARN("[HVM] hccl-vm has already started. Please do not start it again in a sub-bash.");
+        HCCL_VM_WARN("hccl-vm has already started. Please do not start it again in a sub-bash.");
         return;
     }
     if (configClusterName.find(".yaml") != std::string::npos) {
         configClusterName.erase(configClusterName.find(".yaml"), 5);
     }
 
-    HCCL_VM_INFO("[HVM] Initializing: Model={}, Level={}", configClusterName, g_hcclVmLevel);
-    auto clusterDir = GetBinLocation() + "/config/network/cluster/" + configClusterName;
+    HCCL_VM_INFO("Initializing: Model={}, Level={}", configClusterName, g_hcclVmLevel);
+    auto clusterDir = InstallPath::ResolveToInstallRoot("config/network/cluster/" + configClusterName);
 
     // 拷贝topo.json文件到执行目录
     auto ret = CopyFile(clusterDir);
@@ -53,24 +54,24 @@ void StartCommand::Execute() {
     runMode.mode = checkOnlyMode ? 1 : 0;
     RunnerDB::DeleteAll<sim::RunModeConfig>();
     RunnerDB::Add<sim::RunModeConfig>(runMode);
-    HCCL_VM_INFO("[HVM] run mode: {}", checkOnlyMode ? "check-only" : "normal");
+    HCCL_VM_INFO("run mode: {}", checkOnlyMode ? "check-only" : "normal");
 
     ret = InitHvmEnv(clusterDir, g_hcclVmLevel, checkOnlyMode);
     if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-        HCCL_VM_ERROR("[HVM] Failed to initialize simulation environment. Cleaning up environment.");
+        HCCL_VM_ERROR("Failed to initialize simulation environment. Cleaning up environment.");
         auto cleanRet = HcclVmExit();
         if (cleanRet != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-            HCCL_VM_ERROR("[HVM] Failed to clean up environment. Please check for residual environment artifacts.");
+            HCCL_VM_ERROR("Failed to clean up environment. Please check for residual environment artifacts.");
         }
         return;
     }
 
     ret = StartHvmCmd();
     if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-        HCCL_VM_ERROR("[HVM] Failed to start hvm command.");
+        HCCL_VM_ERROR("Failed to start hvm command.");
         auto cleanRet = HcclVmExit();
         if (cleanRet != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-            HCCL_VM_ERROR("[HVM] Failed to clean up environment. Please check for residual environment artifacts.");
+            HCCL_VM_ERROR("Failed to clean up environment. Please check for residual environment artifacts.");
         }
         return;
     }

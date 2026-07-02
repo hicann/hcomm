@@ -18,6 +18,7 @@
 #include "const_val.h"
 #include "enum_factory.h"
 #include "ip_address.h"
+#include "op_type.h"
 
 namespace Hccl {
 
@@ -37,7 +38,7 @@ constexpr uint16_t  CCU_MAX_CHANNEL_NUM     = 16;     // 最多16条link
 constexpr uint16_t  INVALID_CKE_ID          = 0xFFFF; // CKE ID非法值
 constexpr uint16_t  INVALID_VALUE_CHANNELID = 0xFFFF; // channel id非法值
 constexpr u64       INVALID_VALUE_NOTIFYID  = 0xFFFFFFFFFFFFFFFF; // NOTIFY id非法值
-
+constexpr u32       INVALID_VALUE_RANKID    = 0xFFFFFFFF;               // rank id非法值
 struct CcuProfilingInfo {
     std::string name;          // CCU任务名或微码名
     uint8_t type;              // 枚举，0为Task粒度，1为WaitCKE，2为LoopGroup，3为channelId->RemoteRankId的映射
@@ -53,11 +54,11 @@ struct CcuProfilingInfo {
     uint16_t channelId[CCU_MAX_CHANNEL_NUM];    // LoopGroup所包含的搬运指令使用的ChannelId
     uint32_t remoteRankId[CCU_MAX_CHANNEL_NUM]; // LoopGroup所包含的搬运指令的对端
     uint64_t channelHandle[CCU_MAX_CHANNEL_NUM]; // channelhandle句柄
- 
+
     CcuProfilingInfo() : name(""), type(0), dieId(0), missionId(0), instrId(0), reduceOpType(0), inputDataType(0), outputDataType(0), dataSize(0), ckeId(0), mask(0) {
         (void)memset_s(channelId, sizeof(channelId), INVALID_VALUE_CHANNELID, sizeof(channelId));
-        (void)memset_s(remoteRankId, sizeof(remoteRankId), INVALID_RANKID, sizeof(remoteRankId));
-        (void)memset_s(channelHandle, sizeof(channelHandle), 0xFF, sizeof(channelHandle));
+        for (u32 i = 0; i < CCU_MAX_CHANNEL_NUM; i++) { remoteRankId[i] = INVALID_VALUE_RANKID; }
+        for (u32 i = 0; i < CCU_MAX_CHANNEL_NUM; i++) { channelHandle[i] = INVALID_VALUE_NOTIFYID; }
     }
 };
 constexpr u32  ADD_LEN = 128;
@@ -93,13 +94,11 @@ struct ParaNotify {
     u32 value;
 };
 
-constexpr u32 CCU_COSTOM_ARGS_LEN = 32;
 struct ParaCcu {
     u8  dieId;
     u8  missionId;
     u8  execMissionId;
     u32 instrId;
-    u64 costumArgs[CCU_COSTOM_ARGS_LEN];
     u64 executeId;
     u64 ccuKernelHandle{0};
 };
@@ -114,7 +113,6 @@ struct ParaAiv{
     u64 flagMemSize;
     u32 rank;
     u32 sendRecvRemoteRank;
-    bool isOpbase;
     HcclDataType dataType;
 };
 
@@ -135,8 +133,84 @@ struct TaskParam {
     std::shared_ptr<std::vector<CcuProfilingInfo>> ccuDetailInfo; // taskType为TASK_CCU时，ParaCcu的补充profiling信息
     std::string Describe() const
     {
-        return StringFormat("TaskParam[taskType[%s] beginTime[%llu] endTime[%llu]]", taskType.Describe().c_str(), beginTime, endTime);
+        return StringFormat("TaskParam[taskType[%s] beginTime[%llu] endTime[%llu] aicpuTaskId[%llu]",
+                            taskType.Describe().c_str(), beginTime, endTime, aicpuTaskId)
+             + DescribeDetail(*this) + "]";
     }
+
+private:
+    static std::string DescribeDetail(const TaskParam &param)
+    {
+        std::string result;
+        switch (param.taskType) {
+            case TaskParamType::TASK_SDMA: case TaskParamType::TASK_RDMA:
+            case TaskParamType::TASK_SEND_PAYLOAD: case TaskParamType::TASK_UB_INLINE_WRITE:
+            case TaskParamType::TASK_UB: case TaskParamType::TASK_WRITE_WITH_NOTIFY:
+            case TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY: case TaskParamType::TASK_DPU_INLINE_WRITE:
+            case TaskParamType::TASK_DPU_WRITE_WITH_NOTIFY:
+                result += StringFormat(" src[%p] dst[%p] size[%zu] notifyID[%llu] dmaOp[%s] linkType[%s]",
+                                       param.taskPara.DMA.src, param.taskPara.DMA.dst,
+                                       param.taskPara.DMA.size, param.taskPara.DMA.notifyID,
+                                       param.taskPara.DMA.dmaOp.Describe().c_str(),
+                                       param.taskPara.DMA.linkType.Describe().c_str());
+                break;
+            case TaskParamType::TASK_REDUCE_INLINE: case TaskParamType::TASK_UB_REDUCE_INLINE:
+            case TaskParamType::TASK_REDUCE_TBE:
+                result += StringFormat(" src[%p] dst[%p] size[%zu] notifyID[%llu] reduceOp[%d] dataType[%d] linkType[%s]",
+                                       param.taskPara.Reduce.src, param.taskPara.Reduce.dst,
+                                       param.taskPara.Reduce.size, param.taskPara.Reduce.notifyID,
+                                       static_cast<int>(param.taskPara.Reduce.reduceOp),
+                                       static_cast<int>(param.taskPara.Reduce.dataType),
+                                       param.taskPara.Reduce.linkType.Describe().c_str());
+                break;
+            case TaskParamType::TASK_NOTIFY_RECORD: case TaskParamType::TASK_NOTIFY_WAIT:
+            case TaskParamType::TASK_SEND_NOTIFY: case TaskParamType::TASK_DPU_NOTIFY_WAIT:
+            case TaskParamType::TASK_DPU_CHANNEL_FENCE:
+                result += StringFormat(" notifyID[%llu] value[%u]",
+                                       param.taskPara.Notify.notifyID, param.taskPara.Notify.value);
+                break;
+            case TaskParamType::TASK_AIV:
+                result += StringFormat(" cmdType[%d] tag[%u] count[%llu] numBlocks[%u] rankSize[%u]"
+                                       " rank[%u] remoteRank[%u] dataType[%d]",
+                                       static_cast<int>(param.taskPara.Aiv.cmdType), param.taskPara.Aiv.tag,
+                                       param.taskPara.Aiv.count, param.taskPara.Aiv.numBlocks,
+                                       param.taskPara.Aiv.rankSize, param.taskPara.Aiv.rank,
+                                       param.taskPara.Aiv.sendRecvRemoteRank,
+                                       static_cast<int>(param.taskPara.Aiv.dataType));
+                break;
+            case TaskParamType::TASK_CCU:
+                result += StringFormat(" dieId[%u] missionId[%u] execMissionId[%u] instrId[%u] executeId[%llu]",
+                                       param.taskPara.Ccu.dieId, param.taskPara.Ccu.missionId,
+                                       param.taskPara.Ccu.execMissionId, param.taskPara.Ccu.instrId,
+                                       param.taskPara.Ccu.executeId);
+                break;
+            default:
+                break;
+        }
+        return result;
+    }
+};
+
+const std::map<HcclCMDType, std::pair<Hccl::OpType, std::string>> CMD_OP_TYPE_INFO_MAP = {
+    {HcclCMDType::HCCL_CMD_ALLREDUCE, {Hccl::OpType::ALLREDUCE, "OpType::ALLREDUCE"}},
+    {HcclCMDType::HCCL_CMD_ALLGATHER, {Hccl::OpType::ALLGATHER, "OpType::ALLGATHER"}},
+    {HcclCMDType::HCCL_CMD_REDUCE_SCATTER, {Hccl::OpType::REDUCESCATTER, "OpType::REDUCESCATTER"}},
+    {HcclCMDType::HCCL_CMD_SEND, {Hccl::OpType::SEND, "OpType::SEND"}},
+    {HcclCMDType::HCCL_CMD_RECEIVE, {Hccl::OpType::RECV, "OpType::RECV"}},
+    {HcclCMDType::HCCL_CMD_ALLTOALL, {Hccl::OpType::ALLTOALL, "OpType::ALLTOALL"}},
+    {HcclCMDType::HCCL_CMD_ALLTOALLV, {Hccl::OpType::ALLTOALLV, "OpType::ALLTOALLV"}},
+    {HcclCMDType::HCCL_CMD_BROADCAST, {Hccl::OpType::BROADCAST, "OpType::BROADCAST"}},
+    {HcclCMDType::HCCL_CMD_ALLGATHER_V, {Hccl::OpType::ALLGATHERV, "OpType::ALLGATHERV"}},
+    {HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V, {Hccl::OpType::REDUCESCATTERV, "OpType::REDUCESCATTERV"}},
+    {HcclCMDType::HCCL_CMD_REDUCE, {Hccl::OpType::REDUCE, "OpType::REDUCE"}},
+    {HcclCMDType::HCCL_CMD_ALLTOALLVC, {Hccl::OpType::ALLTOALLVC, "OpType::ALLTOALLVC"}},
+    {HcclCMDType::HCCL_CMD_SCATTER, {Hccl::OpType::SCATTER, "OpType::SCATTER"}},
+    {HcclCMDType::HCCL_CMD_BATCH_SEND_RECV, {Hccl::OpType::BATCHSENDRECV, "OpType::BATCHSENDRECV"}},
+    {HcclCMDType::HCCL_CMD_HALF_ALLTOALLV, {Hccl::OpType::HALFALLTOALLV, "OpType::HALFALLTOALLV"}},
+    {HcclCMDType::HCCL_CMD_BARRIER, {Hccl::OpType::BARRIER, "OpType::BARRIER"}},
+    {HcclCMDType::HCCL_CMD_GATHER, {Hccl::OpType::GATHER, "OpType::GATHER"}},
+    {HcclCMDType::HCCL_CMD_BATCH_GET, {Hccl::OpType::BATCHGET, "OpType::BATCHGET"}},
+    {HcclCMDType::HCCL_CMD_BATCH_PUT, {Hccl::OpType::BATCHPUT, "OpType::BATCHPUT"}},
 };
 
 } // namespace Hccl

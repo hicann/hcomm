@@ -19,7 +19,7 @@ protected:
 
 TEST_F(HcclHcclOpResParamStructTest, TestHcclOpResParamSize)
 {
-    EXPECT_EQ(sizeof(HcclOpResParam), 2122720u);
+    EXPECT_EQ(sizeof(HcclOpResParam), 2122848u);
 }
 
 TEST_F(HcclHcclOpResParamStructTest, TestHcclOpResParamFieldOffsets)
@@ -73,6 +73,7 @@ TEST_F(HcclHcclOpResParamStructTest, TestHcclOpResParamFieldOffsets)
     EXPECT_EQ(offsetof(HcclOpResParam, hcclSdmaQos), offsetof(HcclOpResParam, opEntry) + 3u);
     EXPECT_EQ(offsetof(HcclOpResParam, sizeOfAiRMAInfo), offsetof(HcclOpResParam, hcclSdmaQos) + 8u);
     EXPECT_EQ(offsetof(HcclOpResParam, aiRMAInfo), offsetof(HcclOpResParam, sizeOfAiRMAInfo) + 8u);
+    EXPECT_EQ(offsetof(HcclOpResParam, udi), offsetof(HcclOpResParam, aiRMAInfo) + 8u);
 }
 
 TEST_F(HcclHcclOpResParamStructTest, TestHcclOpResParamFieldSizes)

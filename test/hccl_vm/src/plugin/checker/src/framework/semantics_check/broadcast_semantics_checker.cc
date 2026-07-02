@@ -14,6 +14,9 @@
 
 #include "base.h"
 #include "check_utils.h"
+#include "sim_log.h"
+#include "utils/dump/dump_json_utils.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 HcclResult TaskCheckBroadcastSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics, u64 dataSize,
@@ -24,45 +27,68 @@ HcclResult TaskCheckBroadcastSemantics(std::map<RankId, RankMemorySemantics> &al
     for (RankId rankId = 0; rankId < rankSize; rankId++) {
         // 对应的rank不存在需要报错
         if (allRankMemSemantics.count(rankId) == 0) {
-            HCCL_ERROR("Missing rank %d mem semantics", rankId);
+            HCCL_VM_ERROR("{} Broadcast produced no result data for rank {}, but this rank is "
+                "expected to receive the full root input, expectedSourceRank={}, expectedResultSize=0x{:x}",
+                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), rankId, root, dataSize);
             return HcclResult::HCCL_E_PARA;
         }
 
         u64 totalSize = 0;
         for (auto &ele : allRankMemSemantics[rankId][BufferType::INPUT]) {
+            const u64 rangeEnd = ele.startAddr + ele.size;
             if (ele.startAddr != totalSize) {
-                HCCL_ERROR("[rankId:%u]Missing buffer semantic: expected startAddr is %llu, while cur buffer semantic startAddr is %llu, cur buffer semantic is %s",
-                    rankId, totalSize, ele.startAddr, ele.Describe().c_str());
+                HCCL_VM_ERROR("{} Broadcast result data does not start from the expected address, "
+                    "rankId={}, expectedStartAddr=0x{:x}, actualStartAddr=0x{:x}, actualBufferRange=[0x{:x},0x{:x})"
+                    "\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), rankId, totalSize, ele.startAddr,
+                    ele.startAddr, rangeEnd, ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
 
             if (ele.srcBufs.size() != 1) {
-                HCCL_ERROR("[rankId:%u]Cur buffer semantic should not be reduce, which mean srcBufs size should be 1, while cur buffer semantic is %s", rankId, ele.Describe().c_str());
+                HCCL_VM_ERROR("{} This Broadcast result range combines multiple sources, but this "
+                    "operator expects exactly one source, rankId={}, actualSourceCount={}, expectedSourceCount=1, "
+                    "outputRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_REDUCE_ERROR), rankId, ele.srcBufs.size(),
+                    ele.startAddr, rangeEnd, ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
 
             if (ele.srcBufs.begin()->rankId != root) {
-                HCCL_ERROR("[rankId:%u]Buffer semantic srcBuf rank[%u] is not from root[%u], cur buffer semantic is %s, cur rank is %u",
-                    rankId, ele.srcBufs.begin()->rankId, root, ele.Describe().c_str(), rankId);
+                HCCL_VM_ERROR("{} This Broadcast result range comes from the wrong source rank, "
+                    "rankId={}, actualSourceRank={}, expectedSourceRank={}, actualBufferRange=[0x{:x},0x{:x})"
+                    "\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR), rankId,
+                    ele.srcBufs.begin()->rankId, root, ele.startAddr, rangeEnd, ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
 
             if (ele.srcBufs.begin()->bufType != BufferType::INPUT) {
-                HCCL_ERROR("[rankId:%u]Cur buffer semantic srcBufs bufType is not INPUT, cur buffer semantic is %s",
-                    rankId, ele.Describe().c_str());
+                HCCL_VM_ERROR("{} This Broadcast result range comes from a non-INPUT buffer, but "
+                    "it should come from INPUT, rankId={}, actualSourceRank={}, actualSourceBufferType={}, "
+                    "actualBufferRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR), rankId,
+                    ele.srcBufs.begin()->rankId, BufferTypeToString(ele.srcBufs.begin()->bufType),
+                    ele.startAddr, rangeEnd, ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
 
             if (ele.srcBufs.begin()->srcAddr != totalSize) {
-                HCCL_ERROR("[rankId:%u]Cur buffer semantic srcBufs srcAddr should be %llu, while it is %llu, cur buffer semantic is %s",
-                    rankId, totalSize, ele.srcBufs.begin()->srcAddr, ele.Describe().c_str());
+                HCCL_VM_ERROR("{} Source address for this Broadcast result range does not match "
+                    "the expected input address, rankId={}, sourceRank={}, expectedAddr=0x{:x}, actualAddr=0x{:x}, "
+                    "actualBufferRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR), rankId,
+                    ele.srcBufs.begin()->rankId, totalSize, ele.srcBufs.begin()->srcAddr, ele.startAddr,
+                    rangeEnd, ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
 
             totalSize += ele.size;
         }
         if (totalSize != dataSize) {
-            HCCL_ERROR("[rankId:%u]Missing buffer semantics in tail: already checked total size is %llu, which should be %llu, cur rank is %u", rankId, totalSize, dataSize, rankId);
+            HCCL_VM_ERROR("{} Broadcast result data ends before the expected total size is reached, "
+                "rankId={}, checkedSize=0x{:x}, expectedSize=0x{:x}",
+                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), rankId, totalSize, dataSize);
             return HcclResult::HCCL_E_PARA;
         }
     }

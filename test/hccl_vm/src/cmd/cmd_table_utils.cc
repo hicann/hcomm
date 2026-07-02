@@ -26,11 +26,11 @@ template <typename T>
 static void PrintTable(const std::string &header, const std::vector<T> &rows,
                     std::function<std::string(const T &)> formatter)
 {
-    std::cout << header << std::endl;
+    HCCL_VM_INFO("{}", header);
     for (const auto &row : rows) {
-        std::cout << formatter(row) << std::endl;
+        HCCL_VM_INFO("{}", formatter(row));
     }
-    std::cout << std::endl;
+    return;
 }
 
 void CmdTableShow(std::string &tableName)
@@ -444,7 +444,7 @@ void CmdTableShow(std::string &tableName)
                 std::to_string(tmp.opcode) + " | " + std::to_string(tmp.byte_len) + " |";
         });
     } else {
-        std::cout << "undefine table " << tableName << std::endl;
+        HCCL_VM_ERROR("undefine table {}", tableName);
     }
 }
 
@@ -455,7 +455,7 @@ bool CmdTableUpdate(const std::string &table, const uint64_t id, const std::stri
                                     [value](sim::Device &d) { memcpy(d.soc_version, value.data(), value.size()); });
         return true;
     } else {
-        std::cout << "undefine update " << table << " [id=" << id << "]." << column << " = \"" << value << "\"" << std::endl;
+        HCCL_VM_ERROR("undefine update {} [id={}].{} = \"{}\"", table, id, column, value);
         return false;
     }
 }

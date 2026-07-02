@@ -56,11 +56,11 @@ void TransRmtMemToLocMSExecutor::Process(CcuResourceManager &ccuResMgr)
         rmtAddr  += addrOffset;
         locMSId_ += msOffset;
         setCKEId_ += ckeOffset;
-        HCCL_VM_DEBUG("[TransRmtMemToLocMSExecutor][Process] locCcu[{}:{}], Get gsa addr offset = [{:04x}], ms offset = [{:04x}], cke offset = [{:04x}]",
+        HCCL_VM_DEBUG("locCcu[{}:{}], Get gsa addr offset = [{:04x}], ms offset = [{:04x}], cke offset = [{:04x}]",
                rankId_, dieId_, addrOffset, msOffset, ckeOffset);
     }
     // 3.搬运动作
-    HCCL_VM_DEBUG("[TransRmtMemToLocMSExecutor][Process] locCcu[{}:{}] Trans data "
+    HCCL_VM_DEBUG("locCcu[{}:{}] Trans data "
            "from rmtGSAId[{}] rmtAddr[{:x}] to locMsId[{}], "
            "with lengthXnId[{}] transLength[{}].",
            rankId_, dieId_, rmtGSAId_, rmtAddr, locMSId_, lengthXnId_, transLength_);

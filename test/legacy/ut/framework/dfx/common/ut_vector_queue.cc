@@ -60,7 +60,7 @@ TEST_F(VectorQueueTest, Ut_Append_When_AppendNumIs2048_Return_Ok)
     EXPECT_EQ(fakeQueue.Size(), 0);
     // Then
     for (int i = 0; i < appendNum; ++i) {
-        fakeQueue.Append(i);
+        fakeQueue.Append(std::move(i));
     }
     EXPECT_EQ(fakeQueue.Size(), appendNum);
 }
@@ -70,7 +70,7 @@ TEST_F(VectorQueueTest, Ut_Traverse_When_PrintAllElems_ReturnIsAllElems)
     // When
     int appendNum = 10;
     for (int i = 0; i < appendNum; ++i) {
-        fakeQueue.Append(i);
+        fakeQueue.Append(std::move(i));
     }
     // Then
     fakeQueue.Traverse([](const int &value){std::cout << value << std::endl;});
@@ -85,7 +85,8 @@ TEST_F(VectorQueueTest, Ut_IsEmpty_When_VectorIsEmpty_ReturnIsTrue)
 TEST_F(VectorQueueTest, Ut_IsEmpty_When_VectorIsNotEmpty_ReturnIsFalse)
 {
     // When
-    fakeQueue.Append(10);
+    int val = 10;
+    fakeQueue.Append(std::move(val));
     // Then
     EXPECT_EQ(fakeQueue.IsEmpty(), false);
 }
@@ -93,17 +94,19 @@ TEST_F(VectorQueueTest, Ut_IsEmpty_When_VectorIsNotEmpty_ReturnIsFalse)
 TEST_F(VectorQueueTest, Ut_Find_When_ValueInVector_ReturnIsNeEnd)
 {
     // When
-    fakeQueue.Append(10);
+    int val = 10;
+    fakeQueue.Append(std::move(val));
     // Then
     auto it = fakeQueue.Find([](const int &value){return value == 10;});
     EXPECT_NE(*it, *fakeQueue.End());
-    EXPECT_EQ(*(*it), 10);
+    EXPECT_EQ(**it, 10);
 }
 
 TEST_F(VectorQueueTest, Ut_Find_When_ValueNotInVector_ReturnIsEqEnd)
 {
     // When
-    fakeQueue.Append(10);
+    int val = 10;
+    fakeQueue.Append(std::move(val));
     // Then
     auto it = fakeQueue.Find([](const int &value){return value == 100;});
     EXPECT_EQ(*it, *fakeQueue.End());
@@ -112,12 +115,15 @@ TEST_F(VectorQueueTest, Ut_Find_When_ValueNotInVector_ReturnIsEqEnd)
 TEST_F(VectorQueueTest, Ut_Begin_When_NotEmpty_ReturnIsBegin)
 {
     // When
-    fakeQueue.Append(10);
-    fakeQueue.Append(20);
-    fakeQueue.Append(30);
+    int val = 10;
+    fakeQueue.Append(std::move(val));
+    val = 20;
+    fakeQueue.Append(std::move(val));
+    val = 30;
+    fakeQueue.Append(std::move(val));
     // Then
     auto it = fakeQueue.Begin();
-    EXPECT_EQ(*(*it), 10);
+    EXPECT_EQ(**it, 10);
 }
 
 TEST_F(VectorQueueTest, Ut_Begin_When_IsEmpty_ReturnIsEnd)
@@ -130,62 +136,71 @@ TEST_F(VectorQueueTest, Ut_Begin_When_IsEmpty_ReturnIsEnd)
 TEST_F(VectorQueueTest, Ut_Tail_When_NotEmpty_ReturnIsBegin)
 {
     // When
-    fakeQueue.Append(10);
-    fakeQueue.Append(20);
-    fakeQueue.Append(30);
+    int val = 10;
+    fakeQueue.Append(std::move(val));
+    val = 20;
+    fakeQueue.Append(std::move(val));
+    val = 30;
+    fakeQueue.Append(std::move(val));
     // Then
     auto it = fakeQueue.Tail();
-    EXPECT_EQ(*(*it), 30);
+    EXPECT_EQ(**it, 30);
 }
 
 TEST_F(VectorQueueTest, Ut_Tail_When_IsEmpty_ReturnIsEnd)
 {
     // Then
-    EXPECT_THROW(fakeQueue.Tail(), InternalException);
+    auto it = fakeQueue.Tail();
+    EXPECT_EQ(*it, *fakeQueue.End());
 }
 
 TEST_F(VectorQueueTest, Ut_Iterator_When_PlusAndMinus_ReturnIsOk)
 {
     // When
-    fakeQueue.Append(10);
-    fakeQueue.Append(20);
-    fakeQueue.Append(30);
+    int val = 10;
+    fakeQueue.Append(std::move(val));
+    val = 20;
+    fakeQueue.Append(std::move(val));
+    val = 30;
+    fakeQueue.Append(std::move(val));
 
-    // Then ++(*it)
+    // Then ++it
     auto it = fakeQueue.Begin();
-    EXPECT_EQ(*(*it), 10);
+    EXPECT_EQ(**it, 10);
     ++(*it);
-    EXPECT_EQ(*(*it), 20);
+    EXPECT_EQ(**it, 20);
     ++(*it);
-    EXPECT_EQ(*(*it), 30);
+    EXPECT_EQ(**it, 30);
 
-    // Then --(*it)
+    // Then --it
     --(*it);
-    EXPECT_EQ(*(*it), 20);
+    EXPECT_EQ(**it, 20);
     --(*it);
-    EXPECT_EQ(*(*it), 10);
+    EXPECT_EQ(**it, 10);
 
-    // Then (*it)++
+    // Then it++
     (*it)++;
-    EXPECT_EQ(*(*it), 20);
+    EXPECT_EQ(**it, 20);
     (*it)++;
-    EXPECT_EQ(*(*it), 30);
+    EXPECT_EQ(**it, 30);
 
-    // Then (*it)--
+    // Then it--
     (*it)--;
-    EXPECT_EQ(*(*it), 20);
+    EXPECT_EQ(**it, 20);
     (*it)--;
-    EXPECT_EQ(*(*it), 10);
+    EXPECT_EQ(**it, 10);
 
 }
 
 TEST_F(VectorQueueTest, Ut_Iterator_When_ScaleUp_ReturnIsOk)
 {   
     //When
-    fakeQueue.Append(10);
+    int val = 10;
+    fakeQueue.Append(std::move(val));
     fakeQueue.elems_.shrink_to_fit(); // 缩小空间
     auto it = fakeQueue.Begin();       // 取迭代器
     // Then 
-    fakeQueue.Append(20);             // 触发扩容
-    EXPECT_EQ(*(*it), 10);            // 校验
+    val = 20;
+    fakeQueue.Append(std::move(val));             // 触发扩容
+    EXPECT_EQ(**it, 10);            // 校验
 }

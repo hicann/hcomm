@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "ACLRT_STUB"
+
 #include <atomic>
 #include <cstdint>
 #include <iostream>
@@ -19,6 +22,7 @@
 #include "runtime/base.h"
 #include "db_sim_runner_ops.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
@@ -26,8 +30,8 @@ extern "C" {
 aclError aclsysGetVersionStr(char *pkgName, char *versionStr)
 {
     (void) pkgName;
-    HCCL_VM_DEBUG("[aclrtstub][aclsysGetVersionStr]");
     memcpy(versionStr, "9.0.0", sizeof("9.0.0"));
+    HCCL_VM_DEBUG("get version:{}", versionStr);
     return ACL_SUCCESS;
 }
 
@@ -36,7 +40,6 @@ rtError_t rtEnableP2P(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t flag)
     (void) devIdDes;
     (void) phyIdSrc;
     (void) flag;
-    HCCL_VM_DEBUG("[rtEnableP2P]stub");
     return ACL_SUCCESS;
 }
 
@@ -44,7 +47,6 @@ rtError_t rtDisableP2P(uint32_t devIdDes, uint32_t phyIdSrc)
 {
     (void) devIdDes;
     (void) phyIdSrc;
-    HCCL_VM_DEBUG("[rtDisableP2P]stub");
     return ACL_SUCCESS;
 }
 #ifdef __cplusplus

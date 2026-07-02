@@ -29,7 +29,7 @@ TaskStubCcuGraph::TaskStubCcuGraph(
     instrInfo.push_back(missionInstrs);
     des = StringFormat("[CcuGraph] : [rank=%u, die=%u, mission=%u]", rankId, static_cast<uint32_t>(ccuParam[0].dieId), ccuParam[0].missionId);
     if (instrInfo.size() == 0) {
-        HCCL_VM_WARN("[TaskStubCcuGraph] Get no microcode instructions...");
+        HCCL_VM_WARN("Get no microcode instructions...");
     }
 
     ccuParams.clear();

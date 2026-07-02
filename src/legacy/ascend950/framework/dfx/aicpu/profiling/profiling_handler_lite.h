@@ -11,6 +11,7 @@
 #define HCCL_PROFILING_HANDLER_LITE_H
 
 #include <vector>
+#include <unordered_map>
 #include "hccl/hccl_types.h"
 #include "prof_common.h"
 #include "aprof_pub.h"
@@ -19,6 +20,7 @@
 
 extern "C" {
 __attribute__((weak)) int32_t MsprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length);
+__attribute__((weak)) int32_t AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length);
 __attribute__((weak)) int32_t AdprofReportAdditionalInfo(uint32_t agingFlag, const void *data, uint32_t length);
 __attribute__((weak)) int32_t MsprofReportAdditionalInfo(uint32_t nonPersistantFlag, const VOID_PTR data, uint32_t length);
 __attribute__((weak)) int32_t AdprofCheckFeatureIsOn(uint64_t feature);
@@ -38,7 +40,6 @@ MAKE_ENUM(MainStreamTaskType, HEAD = 0, TAIL = 1)
 MAKE_ENUM(ProfilingLevel, L0, L1)
 
 struct FlagTaskInfo {
-    uint32_t           streamId;
     uint32_t           taskId;
     MainStreamTaskType type;
 };
@@ -49,33 +50,56 @@ public:
     ProfilingHandlerLite(const ProfilingHandlerLite &that)                   = delete;
     ProfilingHandlerLite        &operator=(const ProfilingHandlerLite &that) = delete;
     static ProfilingHandlerLite &GetInstance();
-    void                         Init() const;
+    HcclResult                   Init();
     void                         ReportHcclOpInfo(const DfxOpInfo &opInfo) const;
-    void                         ReportHcclTaskDetails(const std::vector<TaskInfo> &taskInfo) const;
+    void                         ReportHcclTaskDetails(const std::vector<TaskInfo *> &taskInfo) const;
     void                         ReportMainStreamTask(const FlagTaskInfo &flagTaskInfo) const;
+    void                         SetCachedCclTag();
+    void                         SetCachedGroupName(const std::string &groupName, u32 rankSize);
+    uint64_t                     GetCachedAlgTypeHashId() const { return cachedAlgTypeHashId_; }
     void                         UpdateProfSwitch();
     void                         SetProL0On(bool val);
     void                         SetProL1On(bool val);
     inline bool                  GetProfL0State() const { return enableHcclL0_; }
     inline bool                  GetProfL1State() const { return enableHcclL1_; }
+    uint64_t                     GetProfHashId(const char *name, uint32_t len) const;
 
 private:
     explicit ProfilingHandlerLite();
-    void ReportAdditionInfo(uint32_t type, uint64_t timeStamp, const void *data, int len) const;
+    void ReportAdditionInfo(const MsprofAdditionalInfo& reporterData) const;
 
     bool IsProfOn(uint64_t feature) const;
     bool IsProfSwitchOn(ProfilingLevel level);
     bool IsL1fromOffToOn();
 
-    uint64_t GetProfHashId(const char *name, uint32_t len) const;
-    void DumpTaskDetails(const MsprofAicpuHcclTaskInfo& taskDetailsInfos, const TaskInfo &taskInfo) const;
-    void GetTaskDetailInfos(const TaskInfo &it, MsprofAicpuHcclTaskInfo &taskDetailsInfos) const;
+    
+    void DumpTaskDetails(const MsprofAicpuHcclTaskInfo& taskDetailsInfos, const TaskInfo *taskInfo) const;
+    void GetTaskDetailInfos(const TaskInfo *it, MsprofAicpuHcclTaskInfo &taskDetailsInfos) const;
+    void FillTaskParamDetails(const TaskInfo *it, MsprofAicpuHcclTaskInfo &taskDetailsInfos) const;
+    bool FillBatchReporterData(uint32_t batchId, const MsprofAicpuHcclTaskInfo *taskInfos,
+                               MsprofAdditionalInfo &addInfo) const;
+    void ReportHcclTaskDetailsLog(const std::vector<TaskInfo *> &taskInfo) const;
+    bool ReportBatchAddInfo(uint32_t batchId, MsprofAicpuHcclTaskInfo *taskInfos,
+                            MsprofAdditionalInfo *addInfoVec, uint32_t &addInfoIndx,
+                            uint32_t maxBatchNum, bool isLastBatch) const;
 
 private:
     static ProfilingHandlerLite instance_;
     bool                        enableHcclL0_{false};
     bool                        enableHcclL1_{false};
-    bool                        isOpbase_{false};
+    bool                        initializedFlag_{false};
+    uint64_t                    cachedGroupName_{INVALID_U64};
+    uint64_t                    cachedAlgTypeHashId_{0};
+    u32                         cachedRankSize_{0};
+    uint32_t                    cachedTid_{0};
+    std::unordered_map<uint32_t, uint64_t> taskTypeHashCache_;
+    std::unordered_map<std::string, uint64_t> cachedCclTag_;
+    using ReportAdditionalInfoHandle = int32_t (*)(uint32_t, const void*, uint32_t);
+    ReportAdditionalInfoHandle reportAdditionalInfo_{nullptr};
+    using ReportBatchAdditionalInfoHandle = int32_t (*)(uint32_t, const void*, uint32_t);
+    ReportBatchAdditionalInfoHandle reportBatchAdditionalInfo_{nullptr};
+    using GetProfHashIdHandle = uint64_t (*)(const char *, size_t);
+    GetProfHashIdHandle getProfHashId_{nullptr};
 };
 } // namespace Hccl
 

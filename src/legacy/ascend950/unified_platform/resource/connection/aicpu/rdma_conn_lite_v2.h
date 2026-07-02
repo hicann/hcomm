@@ -17,30 +17,7 @@
 #include "not_support_exception.h"
 #include "log.h"
 
-struct RdmaSqContextLite {
-    uint32_t qpn;
-    uint64_t sqVa;
-    uint32_t wqeSize;
-    uint32_t depth;
-    uint64_t headAddr;
-    uint64_t tailAddr;
-    uint64_t dbVa;
-    int8_t dbMode;
-    uint8_t sl;
-};
-
-struct RdmaCqContextLite {
-    uint32_t cqn;
-    uint64_t cqVa;
-    uint32_t cqeSize;
-    uint32_t cqDepth;
-    uint64_t headAddr;
-    uint64_t tailAddr;
-    uint64_t dbVa;
-    int8_t dbMode;
-};
-
-#include "rdma_vendor_1825_ops.h"
+#include "rdma_vendor_base_ops.h"
 
 namespace Hccl {
 class RdmaConnLiteV2 : public RmaConnLite {

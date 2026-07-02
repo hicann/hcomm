@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 
 #include "topo_cluster_parser.h"
+#include "sim_log.h"
 
 using json = nlohmann::json;
 
@@ -36,7 +37,7 @@ ParseStatus ClusterTopoParser::ParseClusterDir(const std::string& clusterDir) {
     std::string serversInfoPath = clusterDir + "/servers_info.json";
     ParseStatus siStatus = ParseServersInfoJson(serversInfoPath);
     if (siStatus != ParseStatus::OK) {
-        fprintf(stderr, "Warning: failed to parse servers_info.json\n");
+        HCCL_VM_WARN("failed to parse servers_info.json");
     }
 
     return network_.BuildIndexes();
@@ -81,7 +82,7 @@ ParseStatus ClusterTopoParser::ScanSuperPodDirs(const std::string& clusterDir) {
             try { 
                 superpod.superPodId = std::stoi(numStr);
             } catch (...) {
-                fprintf(stderr, "Convert numStr[%s] to int error.\n", numStr.c_str());
+                HCCL_VM_ERROR("Convert numStr[{}] to int error", numStr.c_str());
             }
         }
 
@@ -139,7 +140,7 @@ ParseStatus ClusterTopoParser::ScanServerDirs(const std::string& superpodDir, Su
             try { 
                 server.serverId = std::stoi(numStr);
             } catch (...) {
-                fprintf(stderr, "Convert numStr[%s] to int error.\n", numStr.c_str());
+                HCCL_VM_ERROR("Convert numStr[{}] to int error", numStr.c_str());
             }
         }
 
@@ -159,10 +160,10 @@ ParseStatus ClusterTopoParser::ParseServer(const std::string& serverDir, Server&
     std::string rootinfoPath = FindFileBySuffix(serverDir, "rootinfo");
 
     if (topoPath.empty()) {
-        fprintf(stderr, "Warning: no topo.json found in %s\n", serverDir.c_str());
+        HCCL_VM_WARN("no topo.json found in {}", serverDir.c_str());
     }
     if (rootinfoPath.empty()) {
-        fprintf(stderr, "Warning: no rootinfo.json found in %s\n", serverDir.c_str());
+        HCCL_VM_WARN("no rootinfo.json found in {}", serverDir.c_str());
     }
 
     if (!topoPath.empty()) {
@@ -299,7 +300,7 @@ ParseStatus ClusterTopoParser::ParseTopoJson(const std::string& topoPath, Server
             }
         }
     } catch (const json::exception& e) {
-        fprintf(stderr, "JSON parse error in %s: %s\n", topoPath.c_str(), e.what());
+        HCCL_VM_ERROR("JSON parse error in {}: {}", topoPath.c_str(), e.what());
         return ParseStatus::PARSE_ERROR;
     }
 
@@ -413,7 +414,7 @@ ParseStatus ClusterTopoParser::ParseRootinfoJson(const std::string& rootinfoPath
             }
         }
     } catch (const json::exception& e) {
-        fprintf(stderr, "JSON parse error in %s: %s\n", rootinfoPath.c_str(), e.what());
+        HCCL_VM_ERROR("JSON parse error in {}: {}", rootinfoPath.c_str(), e.what());
         return ParseStatus::PARSE_ERROR;
     }
 
@@ -649,7 +650,7 @@ int ClusterTopoParser::ExtractDieIdFromPortId(const std::string& portId) {
         try {
             return std::stoi(portId.substr(0, slashPos));
         } catch (...) {
-            fprintf(stderr, "ExtractDieIdFromPortId error.\n");
+            HCCL_VM_ERROR("ExtractDieIdFromPortId error");
             return -1;
         }
     }
@@ -659,7 +660,7 @@ int ClusterTopoParser::ExtractDieIdFromPortId(const std::string& portId) {
 ParseStatus ClusterTopoParser::ParseServersInfoJson(const std::string& serversInfoPath) {
     std::ifstream ifs(serversInfoPath);
     if (!ifs.is_open()) {
-        fprintf(stderr, "Warning: servers_info.json not found: %s\n", serversInfoPath.c_str());
+        HCCL_VM_WARN("servers_info.json not found: {}", serversInfoPath.c_str());
         return ParseStatus::FILE_NOT_FOUND;
     }
 
@@ -704,7 +705,7 @@ ParseStatus ClusterTopoParser::ParseServersInfoJson(const std::string& serversIn
             }
         }
     } catch (const json::exception& e) {
-        fprintf(stderr, "JSON parse error in %s: %s\n", serversInfoPath.c_str(), e.what());
+        HCCL_VM_ERROR("JSON parse error in {}: {}", serversInfoPath.c_str(), e.what());
         return ParseStatus::PARSE_ERROR;
     }
 

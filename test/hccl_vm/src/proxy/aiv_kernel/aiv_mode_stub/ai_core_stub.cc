@@ -140,7 +140,7 @@ AivDataSlice AivKernelExecutor::ResolveGlobalDataSlice(uint64_t addr, uint64_t s
 }
 
 void AivKernelExecutor::DumpAllTasks() const {
-    HCCL_VM_DEBUG("[DumpAivTasks]");
+    HCCL_VM_DEBUG("");
     HCCL_VM_DEBUG("[rankId={}]", GetRankId());
 
     for (const auto& core : aivCores_) {
@@ -175,17 +175,17 @@ void AivCore::AppendMTE3(const std::shared_ptr<AivTask>& task) {
 void AivCore::DumpAllTasks() const {
     HCCL_VM_DEBUG("[blockIdx={:d}]", blockIdx_);
 
-    HCCL_VM_DEBUG("[Scalar]");
+    HCCL_VM_DEBUG("");
     for (const auto& task : pipeScalar_) {
         HCCL_VM_DEBUG("    {:s}", task->Describe());
     }
 
-    HCCL_VM_DEBUG("[MTE2]");
+    HCCL_VM_DEBUG("MTE2 ");
     for (const auto& task : pipeMTE2_) {
         HCCL_VM_DEBUG("    {:s}", task->Describe());
     }
 
-    HCCL_VM_DEBUG("[MTE3]");
+    HCCL_VM_DEBUG("MTE3 ");
     for (const auto& task : pipeMTE3_) {
         HCCL_VM_DEBUG("    {:s}", task->Describe());
     }

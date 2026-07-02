@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "EXEC_STUB"
+
 #include <atomic>
 #include <chrono>
 #include <cstdint>
@@ -20,6 +23,7 @@
 #include "acl/acl_rt.h"
 #include "sim_log.h"
 #include "db_sim_runner_ops.h"
+
 
 #ifdef __cplusplus
 extern "C" {

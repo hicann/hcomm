@@ -12,6 +12,7 @@
 
 #include "cmd_base_utils.h"
 #include "db_sim_runner_db.h"
+#include "sim_common_api.h"
 #include "sim_common_defs.h"
 #include "sim_log.h"
 #include "sim_models.h"
@@ -32,40 +33,40 @@ void RunCommand::Setup(CLI::App& app) {
 
 void RunCommand::Execute(CLI::App& app) {
     if (g_hcclVmBashFlag) {
-        HCCL_VM_WARN("[HVM] hccl-vm is already running. Please do not run examples in one_shot mode within a sub-bash. Exit the sub-bash and try again.");
+        HCCL_VM_WARN("hccl-vm is already running. Please do not run examples in one_shot mode within a sub-bash. Exit the sub-bash and try again.");
         return;
     }
     CLI::App* tmp_cmd = app.get_subcommand("run");
     std::vector<std::string> leftargvs = tmp_cmd->remaining();
     if (leftargvs.empty()) {
-        HCCL_VM_ERROR("[HVM] In one_shot mode, an example execution command must be provided.");
+        HCCL_VM_ERROR("In one_shot mode, an example execution command must be provided.");
         return;
     }
-    HCCL_VM_INFO("[HVM] Initializing: Model={}, Level={}", configClusterName, g_hcclVmLevel);
-    auto clusterDir = GetBinLocation() + "/config/network/cluster/" + configClusterName;
+    HCCL_VM_INFO("Initializing: Model={}, Level={}", configClusterName, g_hcclVmLevel);
+    auto clusterDir = InstallPath::ResolveToInstallRoot("config/network/cluster/" + configClusterName);
 
     sim::RunModeConfig runMode{};
     runMode.mode = checkOnlyMode ? 1 : 0;
     RunnerDB::DeleteAll<sim::RunModeConfig>();
     RunnerDB::Add<sim::RunModeConfig>(runMode);
-    HCCL_VM_INFO("[HVM] run mode: {}", checkOnlyMode ? "check-only" : "normal");
+    HCCL_VM_INFO("run mode: {}", checkOnlyMode ? "check-only" : "normal");
 
     auto ret = InitHvmEnv(clusterDir, g_hcclVmLevel, checkOnlyMode);
     if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-        HCCL_VM_ERROR("[HVM] Failed to initialize simulation environment. Cleaning up environment.");
+        HCCL_VM_ERROR("Failed to initialize simulation environment. Cleaning up environment.");
         auto cleanRet = HcclVmExit();
         if (cleanRet != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {
-            HCCL_VM_ERROR("[HVM] Failed to clean up environment. Please check for residual environment artifacts.");
+            HCCL_VM_ERROR("Failed to clean up environment. Please check for residual environment artifacts.");
         }
         return;
     }
     CstyleCmd syscmd(leftargvs);
-    HCCL_VM_INFO("[HVM] one_shot mode, executing: {}", syscmd.cmd());
-    std::string proxyPath = GetBinLocation() + "/lib/x86_64/libhccl_proxy_level2.so";
+    HCCL_VM_INFO("one_shot mode, executing: {}", syscmd.cmd());
+    std::string proxyPath = InstallPath::ResolveToInstallRoot("lib/" + GetArchStr() + "/libhccl_proxy_level2.so");
     setenv("LD_PRELOAD", proxyPath.c_str(), 1);
     int sysRet = std::system(syscmd.cmd().c_str()); // system() 会阻塞当前进程直到子命令结束
     if (sysRet != 0) {
-        HCCL_VM_ERROR("[HVM] Example execution failed: {}", sysRet);
+        HCCL_VM_ERROR("Example execution failed: {}", sysRet);
     }
     RemoveFromLDPreload(proxyPath);
     auto cleanRet = HcclVmExit();

@@ -76,6 +76,15 @@ static int32_t MsprofReportAdditionalInfoStub(uint32_t agingFlag, const VOID_PTR
     return 0;
 }
 
+static int32_t MsprofReportBatchAdditionalInfoStub(uint32_t agingFlag, const VOID_PTR data, uint32_t length)
+{
+    UNUSED(agingFlag);
+    UNUSED(data);
+    UNUSED(length);
+    HCCL_WARNING("Entry MsprofReportBatchAdditionalInfoStub");
+    return 0;
+}
+
 static uint64_t MsprofStr2IdStub(const char *hashInfo, uint32_t length)
 {
     UNUSED(hashInfo);
@@ -97,6 +106,7 @@ void DlProfFunction::DlProfFunctionStubInit()
     dlMsprofReportApi = static_cast<int32_t(*)(uint32_t, const MsprofApi *)>(MsprofReportApiStub);
     dlMsprofReportCompactInfo = static_cast<int32_t(*)(uint32_t, const VOID_PTR, uint32_t)>(MsprofReportCompactInfoStub);
     dlMsprofReportAdditionalInfo = static_cast<int32_t(*)(uint32_t, const VOID_PTR, uint32_t)>(MsprofReportAdditionalInfoStub);
+    dlMsprofReportBatchAdditionalInfo = static_cast<int32_t(*)(uint32_t, const VOID_PTR, uint32_t)>(MsprofReportBatchAdditionalInfoStub);
     dlMsprofStr2Id = static_cast<uint64_t(*)(const char *, uint32_t)>(MsprofStr2IdStub);
     dlMsprofSysCycleTime = static_cast<uint64_t(*)(void)>(MsprofSysCycleTimeStub);
 }
@@ -122,7 +132,13 @@ HcclResult DlProfFunction::DlProfFunctionInterInit()
     dlMsprofReportAdditionalInfo = (int32_t(*)(uint32_t, const VOID_PTR, uint32_t))dlsym(handle_,
         "MsprofReportAdditionalInfo");
     CHK_PTR_NULL(dlMsprofReportAdditionalInfo);
- 
+
+    dlMsprofReportBatchAdditionalInfo = (int32_t(*)(uint32_t, const VOID_PTR, uint32_t))dlsym(handle_,
+        "MsprofReportBatchAdditionalInfo");
+    if (dlMsprofReportBatchAdditionalInfo == nullptr) {
+        HCCL_INFO("[DlProfFunction] MsprofReportBatchAdditionalInfo not found, batch report disabled");
+    }
+
     dlMsprofStr2Id = (uint64_t(*)(const char *, uint32_t))dlsym(handle_,
         "MsprofStr2Id");
     CHK_PTR_NULL(dlMsprofStr2Id);

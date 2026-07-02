@@ -57,8 +57,8 @@ HcclVmResult SqeuentialExecutor::Execute()
             }
         }
     }
-    
-    return HcclVmResult::HCCL_SIM_SUCCESS; 
+
+    return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
 HcclVmResult SqeuentialExecutor::ExecuteOneTask(HcclTaskMetaData& task)

@@ -279,7 +279,10 @@ void RankInfoDetectService::FailedConnectionAgentIdString(u32 rankSize)
 
     for (u32 i = 0; i < rankSize; i++) {
         if (!connectedRank[i]) {
-            failedAgentIdList_ += std::to_string(i) + ',';
+            if (!failedAgentIdList_.empty()) {
+                failedAgentIdList_ += ",";
+            }
+            failedAgentIdList_ += std::to_string(i);
         }
     }
 

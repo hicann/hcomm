@@ -97,7 +97,8 @@ public:
 
     virtual ~Queue() = default;
 
-    virtual void                      Append(const T &value)                          = 0;
+    virtual void                      Append(T &&value)                                = 0;
+    virtual T&                        GetAndUpdate()                                  = 0; // 返回当前元素并更新index
     virtual void                      Traverse(std::function<void(const T &)> action) = 0;
     virtual size_t                    Size() const                                    = 0;
     virtual bool                      IsEmpty() const                                 = 0;
@@ -110,6 +111,22 @@ public:
     virtual void                      PopFront()
     {
         THROW<InternalException>(StringFormat("Queue<T>::PopFront () is not supported"));
+    }
+};
+
+template <typename T> class QueueWithSize : public Queue<T> {
+protected:
+    size_t size_ = 0;
+
+public:
+    size_t Size() const override
+    {
+        return size_;
+    }
+
+    bool IsEmpty() const override
+    {
+        return size_ == 0;
     }
 };
 

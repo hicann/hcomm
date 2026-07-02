@@ -30,19 +30,19 @@ void DlogPrintStub(int level, const char *msgBuffer)
 {
     switch (level) {
     case 0:
-        HCCL_VM_DEBUG(msgBuffer);
+        HCCL_VM_DEBUG("{}", msgBuffer);
         break;
     case 1:
-        HCCL_VM_INFO(msgBuffer);
+        HCCL_VM_INFO("{}", msgBuffer);
         break;
     case 2:
-        HCCL_VM_WARN(msgBuffer);
+        HCCL_VM_WARN("{}", msgBuffer);
         break;
     case 3:
-        HCCL_VM_ERROR(msgBuffer);
+        HCCL_VM_ERROR("{}", msgBuffer);
         break;
     default:
-        HCCL_VM_TRACE(msgBuffer);
+        HCCL_VM_TRACE("{}", msgBuffer);
     }
 }
 

@@ -38,7 +38,7 @@ bool LoadYamlStringMap(const std::string& yamlPath,
         }
         return true;
     } catch (const std::exception& e) {
-        HCCL_VM_ERROR("[SimYamlConfig] Failed to parse YAML file {}: {}", yamlPath, e.what());
+        HCCL_VM_ERROR("Failed to parse YAML file {}: {}", yamlPath, e.what());
         return false;
     }
 #else

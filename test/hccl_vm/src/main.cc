@@ -14,18 +14,49 @@
 
 #include "cmd_base.h"
 #include "cmd_base_utils.h"
+#include "sim_common_api.h"
 #include "sim_log.h"
 #include "db_sim_op_db_ops.h"
+
+void ArchiveLogsAndData()
+{
+    const std::string& installRoot = InstallPath::GetHcclVmInstallAbsPath();
+    if (installRoot.empty())
+        return;
+
+    std::string archiveScript = installRoot + "/script/archive.sh";
+    if (access(archiveScript.c_str(), F_OK) != 0)
+        return;
+
+    pid_t pid1 = fork();
+    if (pid1 == 0) {
+        pid_t pid2 = fork();
+        if (pid2 == 0) {
+            setsid();
+            int devNull = open("/dev/null", O_RDWR);
+            dup2(devNull, STDIN_FILENO);
+            dup2(devNull, STDOUT_FILENO);
+            dup2(devNull, STDERR_FILENO);
+            if (devNull > STDERR_FILENO) {
+                close(devNull);
+            }
+            sleep(1);
+            execlp("bash", "bash", archiveScript.c_str(), nullptr);
+            _exit(1);
+        }
+        _exit(0);
+    }
+}
 
 void envInit()
 {
     setenv("HCCL_VM_INSTALL_ROOT", GetBinLocation().c_str(), 1);
-    std::string dbPrefix = GetBinLocation() + "/data/hccl_vm_data.db";
+    std::string dbPrefix = InstallPath::ResolveToInstallRoot("data/hccl_vm_data.db");
     int ret3 = system(("sudo rm -fr " + dbPrefix + " " + dbPrefix + "-wal " + dbPrefix + "-shm 2>/dev/null").c_str());
     int ret1 = system("sudo rm -fr /dev/shm/* 2>/dev/null");
     int ret2 = system("sudo rm -fr /tmp/hccl_sim.db* 2>/dev/null");
     if (ret1 != 0 || ret2 != 0) {
-        HCCL_VM_ERROR("envInit failed\n");
+        HCCL_VM_ERROR("envInit failed");
     }
     sim::InitOpDataDb();
     HCCL_VM_INFO("envInit success");
@@ -41,6 +72,7 @@ int main(int argc, char *argv[])
         LogConfig config = LoadLogConfig("hccl_vm");
         InitLogger(config);
         envInit();
+        std::atexit(ArchiveLogsAndData);
         std::string cmd = ArgvToString(argc, argv);
         if (argc == 1) {
             cmd += " --help";

@@ -31,15 +31,15 @@ HcclResult Loader::LoadOpTaskFile(const std::string dbPath)
 
     if (!dbPath.empty()) {
         if (!std::filesystem::exists(dbPath)) {
-            HCCL_VM_ERROR("[Loader] Backup database file not found: {}", dbPath);
+            HCCL_VM_ERROR("Backup database file not found: {}", dbPath);
             return HcclResult::HCCL_E_PARA;
         }
         targetPath = dbPath;
-        HCCL_VM_INFO("[Loader] Loading from specific backup path: {}", targetPath);
+        HCCL_VM_INFO("Loading from specific backup path: {}", targetPath);
     } else {
         targetPath = InstallPath::ResolveToInstallRoot("data/hccl_vm_data.db");
         std::string absPath = std::filesystem::absolute(targetPath).string();
-        HCCL_VM_INFO("[Loader] Loading using default configuration path: {}", absPath);
+        HCCL_VM_INFO("Loading using default configuration path: {}", absPath);
     }
 
     config.dbPath = targetPath;
@@ -62,67 +62,67 @@ HcclResult Loader::LoadRunnerSingleSync(const uint32_t& outSyncIter,
        HCCL_VM_ERROR("QueryCompositeOpDetailBySyncIter failed for syncIter: {}", outSyncIter);
        return HcclResult::HCCL_E_PARA;
    }
-   HCCL_VM_INFO("[LoadRunnerSingleSync] syncIter={} loaded. Rank Count: {}", outSyncIter, compositeDataMap.size());
+   HCCL_VM_INFO("syncIter={} loaded. Rank Count: {}", outSyncIter, compositeDataMap.size());
    return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult Loader::GetCcuChannelInfo(std::vector<sim::CcuChannelTab>& channels)
 {
     if (sim::QueryCcuChannelAll(channels) != 0) {
-        HCCL_VM_ERROR("[GetCcuChannelInfo] QueryCcuChannelAll failed");
+        HCCL_VM_ERROR("QueryCcuChannelAll failed");
         return HcclResult::HCCL_E_PARA;
     }
-    HCCL_VM_INFO("[GetCcuChannelInfo] Get {} channels", channels.size());
+    HCCL_VM_INFO("Get {} channels", channels.size());
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult Loader::GetJettyMapInfo(std::vector<sim::JettyMapTab>& jettyMaps)
 {
     if (sim::QueryJettyMapAll(jettyMaps) != 0) {
-        HCCL_VM_ERROR("[GetJettyMapInfo] QueryJettyMapAll failed");
+        HCCL_VM_ERROR("QueryJettyMapAll failed");
         return HcclResult::HCCL_E_PARA;
     }
-    HCCL_VM_INFO("[GetJettyMapInfo] Get {} jetty maps", jettyMaps.size());
+    HCCL_VM_INFO("Get {} jetty maps", jettyMaps.size());
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult Loader::GetInstrResInfo(std::vector<sim::CcuInstrResTab>& instrRes)
 {
     if (sim::QueryCcuInstrResAll(instrRes) != 0) {
-        HCCL_VM_ERROR("[GetInstrResInfo] QueryCcuInstrResAll failed");
+        HCCL_VM_ERROR("QueryCcuInstrResAll failed");
         return HcclResult::HCCL_E_PARA;
     }
-    HCCL_VM_INFO("[GetInstrResInfo] Get {} instr res records", instrRes.size());
+    HCCL_VM_INFO("Get {} instr res records", instrRes.size());
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult Loader::GetSyncInfo(std::vector<sim::SyncRecordTab>& syncRecords)
 {
     if (sim::QuerySyncRecordAll(syncRecords) != 0) {
-        HCCL_VM_ERROR("[GetSyncInfo] QuerySyncRecordAll failed");
+        HCCL_VM_ERROR("QuerySyncRecordAll failed");
         return HcclResult::HCCL_E_PARA;
     }
-    HCCL_VM_INFO("[GetSyncInfo] Get {} sync records", syncRecords.size());
+    HCCL_VM_INFO("Get {} sync records", syncRecords.size());
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult Loader::GetSyncRecordsByStatus(uint8_t status, std::vector<sim::SyncRecordTab>& syncRecords)
 {
     if (sim::QuerySyncRecordByStatus(status, syncRecords) != 0) {
-        HCCL_VM_ERROR("[GetSyncRecordsByStatus] QuerySyncRecordByStatus failed for status: {}", status);
+        HCCL_VM_ERROR("QuerySyncRecordByStatus failed for status: {}", status);
         return HcclResult::HCCL_E_PARA;
     }
-    HCCL_VM_INFO("[GetSyncRecordsByStatus] Get {} sync records for status: {}", syncRecords.size(), status);
+    HCCL_VM_INFO("Get {} sync records for status: {}", syncRecords.size(), status);
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult Loader::LoadCompositeOpDetailBySyncIter(uint32_t syncIter, std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
 {
     if (sim::QueryCompositeOpDetailBySyncIter(syncIter, compositeDataMap) != 0) {
-        HCCL_VM_ERROR("[LoadCompositeOpDetailBySyncIter] QueryCompositeOpDetailsBySyncIter failed for syncIter: {}", syncIter);
+        HCCL_VM_ERROR("QueryCompositeOpDetailsBySyncIter failed for syncIter: {}", syncIter);
         return HcclResult::HCCL_E_PARA;
     }
-    HCCL_VM_INFO("[LoadCompositeOpDetailBySyncIter] syncIter={}, Rank Count: {}", syncIter, compositeDataMap.size());
+    HCCL_VM_INFO("syncIter={}, Rank Count: {}", syncIter, compositeDataMap.size());
     return HcclResult::HCCL_SUCCESS;
 }
 } // namespace loader

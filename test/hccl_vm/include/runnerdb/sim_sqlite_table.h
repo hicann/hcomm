@@ -27,6 +27,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "sim_log.h"
+
 namespace sim {
 inline std::shared_mutex& GetConnectionMutex() {
     static std::shared_mutex s_connMtx;
@@ -74,7 +76,7 @@ public:
             sqlite3_stmt* rawStmt;
             int rc = sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr);
             if (rc != SQLITE_OK) {
-                fprintf(stderr, "[SqliteTable::Add] SQL prepare failed [%s]: %s (rc=%d)\n",
+                HCCL_VM_ERROR("[SqliteTable::Add] SQL prepare failed [{}]: {} (rc={})",
                         m_tableName.c_str(), sqlite3_errmsg(m_db), rc);
                 return 0;
             }
@@ -98,7 +100,7 @@ public:
             connLock.unlock();
 
             if (!isRetryable || attempt == kMaxRetries) {
-                fprintf(stderr, "[SqliteTable::Add] SQL insert failed [%s]: rc=%d, errc=%d, ext=%d, msg=%s\n",
+                HCCL_VM_ERROR("[SqliteTable::Add] SQL insert failed [{}]: rc={}, errc={}, ext={}, msg={}",
                         m_tableName.c_str(), stepRc, errc, extErrc, sqlite3_errmsg(m_db));
                 return 0;
             }
@@ -131,7 +133,7 @@ public:
             sqlite3_stmt* rawStmt;
             if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
                 sqlite3_exec(m_db, "ROLLBACK", nullptr, nullptr, nullptr);
-                fprintf(stderr, "[SqliteTable::Update] SQL prepare failed [%s]: %s\n",
+                HCCL_VM_ERROR("[SqliteTable::Update] SQL prepare failed [{}]: {}",
                         m_tableName.c_str(), sqlite3_errmsg(m_db));
                 return false;
             }
@@ -153,7 +155,7 @@ public:
                 connLock.unlock();
 
                 if (!isRetryable || attempt == kMaxRetries) {
-                    fprintf(stderr, "[SqliteTable::Update] SQL step failed [%s]: rc=%d, errc=%d, msg=%s\n",
+                    HCCL_VM_ERROR("[SqliteTable::Update] SQL step failed [{}]: rc={}, errc={}, msg={}",
                             m_tableName.c_str(), result, errc, sqlite3_errmsg(m_db));
                     return false;
                 }
@@ -176,7 +178,7 @@ public:
 
             sqlite3_stmt* rawStmt;
             if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
-                fprintf(stderr, "[SqliteTable::Delete] SQL prepare failed [%s]: %s\n",
+                HCCL_VM_ERROR("[SqliteTable::Delete] SQL prepare failed [{}]: {}",
                         m_tableName.c_str(), sqlite3_errmsg(m_db));
                 return false;
             }
@@ -190,7 +192,7 @@ public:
 
             int errc = sqlite3_errcode(m_db);
             if (errc != SQLITE_BUSY && errc != SQLITE_LOCKED) {
-                fprintf(stderr, "[SqliteTable::Delete] SQL step failed [%s]: rc=%d, errc=%d\n",
+                HCCL_VM_ERROR("[SqliteTable::Delete] SQL step failed [{}]: rc={}, errc={}",
                         m_tableName.c_str(), result, errc);
                 return false;
             }
@@ -208,7 +210,7 @@ public:
 
         std::string sql = "DELETE FROM " + m_tableName;
         if (sqlite3_exec(m_db, sql.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
-            fprintf(stderr, "[SqliteTable::DeleteAll] SQL delete all failed [%s]: %s\n",
+            HCCL_VM_ERROR("[SqliteTable::DeleteAll] SQL delete all failed [{}]: {}",
                     m_tableName.c_str(), sqlite3_errmsg(m_db));
             return false;
         }
@@ -246,7 +248,7 @@ public:
 
             sqlite3_stmt* rawStmt;
             if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
-                fprintf(stderr, "[SqliteTable::QueryList] SQL prepare failed [%s]: %s\n",
+                HCCL_VM_ERROR("[SqliteTable::QueryList] SQL prepare failed [{}]: {}",
                         m_tableName.c_str(), sqlite3_errmsg(m_db));
                 return result;
             }
@@ -283,7 +285,7 @@ public:
             connLock.lock();
         }
 
-        fprintf(stderr, "[SqliteTable::QueryList] SQLITE_BUSY after %d retries [%s]\n",
+        HCCL_VM_ERROR("[SqliteTable::QueryList] SQLITE_BUSY after {} retries [{}]",
                 kMaxRetries, m_tableName.c_str());
         return result;
      }
@@ -295,7 +297,7 @@ public:
         for (int attempt = 0; attempt <= kMaxRetries; ++attempt) {
             sqlite3_stmt* rawStmt;
             if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
-                fprintf(stderr, "[SqliteTable::Query] SQL prepare failed [%s]: %s\n",
+                HCCL_VM_ERROR("[SqliteTable::Query] SQL prepare failed [{}]: {}",
                         m_tableName.c_str(), sqlite3_errmsg(m_db));
                 return {ValueType{}, false};
             }
@@ -333,7 +335,7 @@ public:
             connLock.lock();
         }
 
-        fprintf(stderr, "[SqliteTable::Query] SQLITE_BUSY after %d retries [%s]\n",
+        HCCL_VM_ERROR("[SqliteTable::Query] SQLITE_BUSY after {} retries [{}]",
                 kMaxRetries, m_tableName.c_str());
         return {ValueType{}, false};
      }
@@ -349,7 +351,7 @@ private:
             " (id INTEGER PRIMARY KEY AUTOINCREMENT, data BLOB NOT NULL)";
 
         if (sqlite3_exec(m_db, sql.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
-            fprintf(stderr, "[SqliteTable::CreateTableIfNotExists] SQL create table failed [%s]: %s\n",
+            HCCL_VM_ERROR("[SqliteTable::CreateTableIfNotExists] SQL create table failed [{}]: {}",
                     m_tableName.c_str(), sqlite3_errmsg(m_db));
         }
     }
@@ -359,7 +361,7 @@ private:
 
         sqlite3_stmt* rawStmt;
         if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
-            fprintf(stderr, "[SqliteTable::FindInternal] SQL prepare failed [%s]: %s\n",
+            HCCL_VM_ERROR("[SqliteTable::FindInternal] SQL prepare failed [{}]: {}",
                     m_tableName.c_str(), sqlite3_errmsg(m_db));
             return false;
         }
@@ -467,7 +469,7 @@ public:
         if (sqlite3_open_v2(actualPath.c_str(), &m_db,
                             SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI,
                             nullptr) != SQLITE_OK) {
-            fprintf(stderr, "[SqliteDatabase] CRITICAL: Failed to open SQLite database: %s\n",
+            HCCL_VM_ERROR("[SqliteDatabase] CRITICAL: Failed to open SQLite database: {}",
                     sqlite3_errmsg(m_db));
         } else {
             sqlite3_exec(m_db, "PRAGMA journal_mode     = WAL",        nullptr, nullptr, nullptr);

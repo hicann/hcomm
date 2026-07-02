@@ -29,6 +29,7 @@
 #include <unistd.h>
 
 #include "cmd_base_utils.h"
+#include "sim_common_api.h"
 #include "store_dump_shm_data.h"
 #include "sim_log.h"
 #include "sim_process_syncer.h"
@@ -69,7 +70,7 @@ bool HcclPluginManager::IsMatchingPlugin(const std::string& manifestPath, const 
             if (currentPluginName == targetTag) {
                 // 如果必需字段缺失，认为是一个损坏的插件，返回 false 并记录日志
                 if (!data.contains(HcclPlugin::Manifest::pluginEntry)) {
-                    HCCL_VM_ERROR("[Plugin] [{}] '{}' missing entry field.", __func__, targetTag);
+                    HCCL_VM_ERROR("[{}] '{}' missing entry field.", __func__, targetTag);
                     return false;
                 }
                 return true;
@@ -77,11 +78,11 @@ bool HcclPluginManager::IsMatchingPlugin(const std::string& manifestPath, const 
         }
     } catch (const nlohmann::json::parse_error& e) {
         // 生产环境建议记录具体的解析错误位置
-        HCCL_VM_ERROR("[Plugin] [{}] JSON Parse Error at byte {}", __func__, e.byte);
+        HCCL_VM_ERROR("[{}] JSON Parse Error at byte {}", __func__, e.byte);
         return false;
     } catch (const std::exception& e) {
         // 处理其他可能的异常（如文件读取中途断开等）
-        HCCL_VM_ERROR("[Plugin] [{}] Error: ", __func__, e.what());
+        HCCL_VM_ERROR("[{}] Error: {}", __func__, e.what());
         return false;
     }
 
@@ -90,7 +91,7 @@ bool HcclPluginManager::IsMatchingPlugin(const std::string& manifestPath, const 
 
 bool HcclPluginManager::GetPluginFolderPath(const std::string& pluginTag, std::string& pluginFolderPath)
 {
-    std::string rootDir = GetBinLocation() + HcclPlugin::PLUGIN_PATH;
+    std::string rootDir = InstallPath::ResolveToInstallRoot(HcclPlugin::PLUGIN_PATH.substr(1));
     std::string foundPath = "";
     bool hasConflict = false;
 
@@ -115,7 +116,7 @@ bool HcclPluginManager::GetPluginFolderPath(const std::string& pluginTag, std::s
                 
                 // 冲突检查：如果之前已经找到了一个路径，且不是当前路径
                 if (!foundPath.empty() && foundPath != currentAbsPath) {
-                    HCCL_VM_ERROR("[Plugin] [{}] Conflict detected: Tag '{}' exists in both: {} and {}",
+                    HCCL_VM_ERROR("[{}] Conflict detected: Tag '{}' exists in both: {} and {}",
                         __func__, pluginTag, foundPath, currentAbsPath);
                     hasConflict = true;
                     break; 
@@ -203,7 +204,7 @@ HcclVmResult HcclPluginManager::RegisterPlugin(const std::string& pluginTag)
     
     // 防止重复注册
     if (m_plugins.find(pluginTag) != m_plugins.end()) {
-        HCCL_VM_WARN("[PluginManager] [{}] Plugin {} already registered", __func__, pluginTag);
+        HCCL_VM_WARN("[{}] Plugin {} already registered", __func__, pluginTag);
         return HcclSim::HcclVmResult::HCCL_SIM_SUCCESS;
     }
 
@@ -217,7 +218,7 @@ HcclVmResult HcclPluginManager::RegisterPlugin(const std::string& pluginTag)
         auto plugin = std::make_shared<HcclPlugin>(folderPath);
         m_plugins[pluginTag] = plugin;
     } catch (const std::exception& e) {
-        HCCL_VM_ERROR("[PluginManager] [{}] Failed to register plugin {}: {}", __func__, pluginTag, e.what());
+        HCCL_VM_ERROR("[{}] Failed to register plugin {}: {}", __func__, pluginTag, e.what());
         return HcclSim::HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
 
@@ -229,12 +230,12 @@ HcclVmResult HcclPluginManager::SendMessageToPlugin(const std::string& pluginTag
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_plugins.find(pluginTag);
     if (it == m_plugins.end()) {
-        HCCL_VM_ERROR("[PluginManager] [{}] Plugin {} not found", __func__, pluginTag);
+        HCCL_VM_ERROR("[{}] Plugin {} not found", __func__, pluginTag);
         return HcclVmResult::HCCL_SIM_E_NOT_FOUND;
     }
     HcclVmResult ret = it->second->SendMessage(PLUGIN_MESSAGE_TYPE::BROADCAST, action, payload);
     if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
-        HCCL_VM_ERROR("[PluginManager] [{}] Failed to send message to plugin {}: {}", __func__, pluginTag, static_cast<int>(ret));
+        HCCL_VM_ERROR("[{}] Failed to send message to plugin {}: {}", __func__, pluginTag, static_cast<int>(ret));
     }
     return ret;
 }
@@ -341,7 +342,7 @@ HcclSim::HcclVmResult HcclPluginManager::StopAllPlugins() {
 
 HcclPluginManager::HcclPluginManager()
 {
-    HCCL_VM_INFO("[PluginManager]HcclPluginManager");
+    HCCL_VM_INFO("HcclPluginManager");
     m_monitorThreadStop = false;
     m_monitorThread = std::thread([this]() {
         this->MonitorThread();
@@ -369,10 +370,10 @@ void HcclPluginManager::MonitorThread()
                 if (it.second->GetPid() == terminatedPid) {
                     // 解析退出原因
                     if (WIFEXITED(status)) {
-                        HCCL_VM_INFO("[PluginManager] [{}] Plugin [{}] (PID: {}) exit normally. Code {}", __func__,
+                        HCCL_VM_INFO("[{}] Plugin [{}] (PID: {}) exit normally. Code {}", __func__,
                             it.second->GetTag(), terminatedPid, WEXITSTATUS(status));
                     } else if (WIFSIGNALED(status)) {
-                        HCCL_VM_ERROR("[PluginManager] [{}] Plugin [{}] (PID: {}) exit with failure. Code {} ({})", __func__,
+                        HCCL_VM_ERROR("[{}] Plugin [{}] (PID: {}) exit with failure. Code {} ({})", __func__,
                             it.second->GetTag(), terminatedPid, WTERMSIG(status), strsignal(WTERMSIG(status)));
                     }
                     m_plugins.erase(it.first);

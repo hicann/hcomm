@@ -119,7 +119,7 @@ struct MsprofHcclInfo {
     uint32_t reserve2;
 #ifdef __cplusplus
     MsprofHcclInfo() : role(0xFFFFFFFF), srcAddr(0xFFFFFFFF), dstAddr(0xFFFFFFFF),
-        dataSize(0xFFFFFFFF), opType(0xFFFFFFFF),
+        dataSize(0), opType(0xFFFFFFFF),
         dataType(0xFFFFFFFF), linkType(0xFFFFFFFF),
         transportType(0xFFFFFFFF), rdmaType(0xFFFFFFFF)
     {
@@ -170,7 +170,7 @@ struct MsprofDpuHcclTrack {
     durationEstimated(0),
     srcAddr(0xFFFFFFFF),
     dstAddr(0xFFFFFFFF),
-    dataSize(0xFFFFFFFF),
+    dataSize(0),
     taskId(0),
     aicpu_task_id(0xFFFFFFFF),
     streamId(0),

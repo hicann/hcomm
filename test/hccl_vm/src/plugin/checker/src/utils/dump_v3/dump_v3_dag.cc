@@ -25,6 +25,7 @@
 #include "framework/task_graph_generator_v3/task_graph_reachability_v3.h"
 #include "sim_log.h"
 #include "storage_manager.h"
+#include "utils/error_codes.h"
 
 namespace HcclSim {
 namespace {
@@ -521,7 +522,9 @@ HcclResult CollectTopoNodes(const TaskGraphGeneratorV3::TaskGraphGeneratorV3 &gr
     topoNodes.clear();
     const TaskNode *mainStart = graph.GetMainStartNode();
     if (!IsMainGraphStartNode(mainStart)) {
-        HCCL_VM_ERROR("[DumpV3Dag] invalid V3 main start node.");
+        HCCL_VM_ERROR("{} Main start node of the V3 graph is invalid, mainStartNodeId={}",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED),
+            mainStart == nullptr ? MAIN_START_NODE_ID : mainStart->GetNodeId());
         return HCCL_E_PARA;
     }
 
@@ -529,7 +532,9 @@ HcclResult CollectTopoNodes(const TaskGraphGeneratorV3::TaskGraphGeneratorV3 &gr
     std::vector<NodeId> topoOrder;
     HcclResult ret = GenReachabilityClosure(mainStart, closure, &topoOrder);
     if (ret != HCCL_SUCCESS) {
-        HCCL_VM_ERROR("[DumpV3Dag] failed to build topo order, ret={}.", static_cast<uint32_t>(ret));
+        HCCL_VM_ERROR("{} Failed to build the V3 graph topological order for dump output, "
+            "mainStartNodeId={}, ret={}", MakeErrorCodeText(ErrorCode::DUMP_FAILED),
+            mainStart->GetNodeId(), static_cast<uint32_t>(ret));
         return ret;
     }
 
@@ -540,7 +545,8 @@ HcclResult CollectTopoNodes(const TaskGraphGeneratorV3::TaskGraphGeneratorV3 &gr
         }
         const TaskNode *node = graph.GetNode(nodeId);
         if (node == nullptr) {
-            HCCL_VM_ERROR("[DumpV3Dag] topo node is null, nodeId={}.", nodeId);
+            HCCL_VM_ERROR("{} One node in topological order is missing, nodeId={}, "
+                "processedTopoNodeCount={}", MakeErrorCodeText(ErrorCode::DUMP_FAILED), nodeId, topoNodes.size());
             return HCCL_E_PTR;
         }
         topoNodes.push_back(node);
@@ -616,7 +622,9 @@ HcclResult DumpV3Dag(const TaskGraphGeneratorV3::TaskGraphGeneratorV3 &graph, co
         return HCCL_SUCCESS;
     }
     if (stage.empty()) {
-        HCCL_VM_ERROR("[DumpV3Dag] stage is empty.");
+        HCCL_VM_ERROR("{} Dump stage name is empty, dataId={}, graphOutputPath={}, layoutOutputPath={}",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED), StorageManager::GetInstance().GetDataId(), kGraphPath,
+            kLayoutPath);
         return HCCL_E_PARA;
     }
 
@@ -847,8 +855,8 @@ HcclResult DumpV3Dag(const TaskGraphGeneratorV3::TaskGraphGeneratorV3 &graph, co
         MakeStageStats(graphDoc["lanes"].get<std::vector<Json>>(),
             graphDoc["nodes"].get<std::vector<Json>>(), graphDoc["edges"].get<std::vector<Json>>()));
 
-    HCCL_VM_INFO("[DumpV3Dag] dumped V3 DAG, stage={}, laneCount={}, nodeCount={}, edgeCount={}",
-        stage, laneIdByKey.size(), topoNodes.size(), edgeInfos.size());
+    HCCL_VM_INFO("V3 DAG dump finished, laneCount={}, nodeCount={}, edgeCount={}",
+        laneIdByKey.size(), topoNodes.size(), edgeInfos.size());
     return HCCL_SUCCESS;
 }
 }  // namespace HcclSim

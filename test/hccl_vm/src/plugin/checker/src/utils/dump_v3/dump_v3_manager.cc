@@ -15,6 +15,7 @@
 #include "file_utils.h"
 #include "sim_log.h"
 #include "setting_manager.h"
+#include "utils/error_codes.h"
 
 namespace {
 const std::string kDataDirName = "data";
@@ -26,14 +27,16 @@ HcclResult DumpV3Manager::Initialize(const std::string &dataId)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (dataId.empty()) {
-        HCCL_VM_ERROR("[DumpV3Manager::Initialize] dataId is empty.");
+        HCCL_VM_ERROR("{} dataId is empty, the dump output path cannot be built, outputRoot=null",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED));
         return HcclResult::HCCL_E_PARA;
     }
 
     m_dataId = dataId;
     m_pluginRootDir = HcclSim::GetCurrentPath();
     if (m_pluginRootDir.empty()) {
-        HCCL_VM_ERROR("[DumpV3Manager::Initialize] failed to get current path.");
+        HCCL_VM_ERROR("{} Failed to get the current working directory for dump output, dataId={}",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED), m_dataId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -41,7 +44,7 @@ HcclResult DumpV3Manager::Initialize(const std::string &dataId)
     m_rootDir = HcclSim::JoinPath(HcclSim::JoinPath(m_dataDir, kInsightDirName), m_dataId);
 
     if (!SettingManager::GetInstance().IsInsightDumpEnabled()) {
-        HCCL_VM_INFO("[DumpV3Manager] insight dump disabled by manifest setting.");
+        HCCL_VM_INFO("Insight dump is disabled by manifest setting");
         return HcclResult::HCCL_SUCCESS;
     }
     return PrepareDirs();
@@ -86,21 +89,23 @@ HcclResult DumpV3Manager::WriteMsgpack(const std::string &relativePath, const nl
 
     std::ofstream out(fullPath, std::ios::out | std::ios::trunc | std::ios::binary);
     if (!out.is_open()) {
-        HCCL_VM_ERROR("[DumpV3Manager::WriteMsgpack] failed to open file: {}", fullPath);
+        HCCL_VM_ERROR("{} Failed to open dump file, file={}, format=msgpack, dataId={}",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED), fullPath, m_dataId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     try {
         nlohmann::json::to_msgpack(document, nlohmann::detail::output_adapter<char>(out));
     } catch (const std::exception &ex) {
-        HCCL_VM_ERROR("[DumpV3Manager::WriteMsgpack] msgpack serialize failed: {}, file: {}", ex.what(),
-            fullPath);
+        HCCL_VM_ERROR("{} Failed to serialize dump content into msgpack, file={}, dataId={}, reason={}",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED), fullPath, m_dataId, ex.what());
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     out.flush();
     if (!out.good()) {
-        HCCL_VM_ERROR("[DumpV3Manager::WriteMsgpack] failed to flush file: {}", fullPath);
+        HCCL_VM_ERROR("{} Failed to flush dump file to disk, file={}, format=msgpack, dataId={}",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED), fullPath, m_dataId);
         return HcclResult::HCCL_E_INTERNAL;
     }
     return HcclResult::HCCL_SUCCESS;
@@ -119,19 +124,22 @@ HcclResult DumpV3Manager::WriteJson(const std::string &relativePath, const nlohm
 
     std::ofstream out(fullPath, std::ios::out | std::ios::trunc);
     if (!out.is_open()) {
-        HCCL_VM_ERROR("[DumpV3Manager::WriteJson] failed to open file: {}", fullPath);
+        HCCL_VM_ERROR("{} Failed to open dump file, file={}, format=json, dataId={}",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED), fullPath, m_dataId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     try {
         out << document.dump(2) << std::endl;
     } catch (const std::exception &ex) {
-        HCCL_VM_ERROR("[DumpV3Manager::WriteJson] json serialize failed: {}, file: {}", ex.what(), fullPath);
+        HCCL_VM_ERROR("{} Failed to serialize dump content into JSON, file={}, dataId={}, reason={}",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED), fullPath, m_dataId, ex.what());
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     if (!out.good()) {
-        HCCL_VM_ERROR("[DumpV3Manager::WriteJson] failed to write file: {}", fullPath);
+        HCCL_VM_ERROR("{} Failed to write dump file content, file={}, format=json, dataId={}",
+            MakeErrorCodeText(ErrorCode::DUMP_FAILED), fullPath, m_dataId);
         return HcclResult::HCCL_E_INTERNAL;
     }
     return HcclResult::HCCL_SUCCESS;

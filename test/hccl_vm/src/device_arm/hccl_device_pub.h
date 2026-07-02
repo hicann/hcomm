@@ -31,7 +31,9 @@ HcclSim::HcclVmResult GetPiValByJettyId(uint32_t jettyId, uint32_t *piValue);
 
 HcclSim::HcclVmResult UpdatePiValByJettyId(uint32_t jettyId, uint32_t piValue);
 
-void *GetRealPtrByDevPtr(void *devPtr);
+void *GetRealPtrByDevPtrImpl(void *devPtr, const char *file, int line);
+
+#define GetRealPtrByDevPtr(devPtr) GetRealPtrByDevPtrImpl(devPtr, __FILE__, __LINE__)
 
 uint32_t GetRankIdByDevAddr(uint64_t devAddr);
 

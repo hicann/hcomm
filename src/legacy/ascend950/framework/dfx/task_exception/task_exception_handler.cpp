@@ -290,7 +290,7 @@ void TaskExceptionHandler::PrintAivPreviousTaskException(rtExceptionInfo_t *exce
     }
 
     u32  taskId = exceptionInfo->taskid;
-    auto func   = [taskId](const shared_ptr<TaskInfo> &task) {
+    auto func   = [taskId](const unique_ptr<TaskInfo> &task) {
         return task->taskId_ == taskId;
     };
     auto taskItorPtr = queue->Find(func);
@@ -385,7 +385,7 @@ void TaskExceptionHandler::PrintTaskContextInfo(uint32_t deviceId, uint32_t stre
         return;
     }
 
-    auto func = [taskId] (const shared_ptr<TaskInfo>& task) { return task->taskId_ == taskId; };
+    auto func = [taskId] (const unique_ptr<TaskInfo>& task) { return task->taskId_ == taskId; };
     auto taskItorPtr = queue->Find(func);
     if (taskItorPtr == nullptr || *taskItorPtr == *queue->End()) {
         // 在队列中未找到异常对应的TaskInfo
@@ -394,13 +394,13 @@ void TaskExceptionHandler::PrintTaskContextInfo(uint32_t deviceId, uint32_t stre
     }
 
     // 找到当前异常task的前50个task(至多)
-    vector<shared_ptr<TaskInfo>> taskContext {};
+    vector<TaskInfo*> taskContext {};
     for (uint32_t i = 0; i < TASK_CONTEXT_SIZE && *taskItorPtr != *queue->Begin(); ++i, --(*taskItorPtr)) {
         if ((**taskItorPtr)->taskId_ > taskId) {
             break;
         }
         if ((**taskItorPtr)->taskId_ != taskId) {
-            taskContext.emplace_back(**taskItorPtr);
+            taskContext.emplace_back((**taskItorPtr).get());
         }
     }
 
@@ -798,7 +798,6 @@ void TaskExceptionHandler::PrintAicpuErrorMessage(rtExceptionInfo_t *exceptionIn
 
             std::shared_ptr<DfxOpInfo> dfxOpInfo = std::make_shared<DfxOpInfo>();
             dfxOpInfo->tag_ = std::string(errorMessage.tag);
- 	        dfxOpInfo->algType_ = errorMessage.algType;
             TaskInfo exceptionTaskInfo(streamId, errorMessage.taskId, errorMessage.remoteUserRank, taskParam, dfxOpInfo);
             auto logKeywordL2 = exceptionTaskInfo.taskParam_.taskType == TaskParamType::TASK_NOTIFY_WAIT ? LOG_KEYWORDS_TIMEOUT : LOG_KEYWORDS_RUN_FAILED;
             auto stageErrInfo = "[" + LOG_KEYWORDS_TASK_EXEC + "][" + logKeywordL2 + "][" + LOG_KEYWORDS_AICPU + "]";

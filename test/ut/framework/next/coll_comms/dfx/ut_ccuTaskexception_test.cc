@@ -1275,8 +1275,8 @@ TEST_F(CcuTaskExceptionTest, TaskExceptionHost_Process_FindTaskInfo_NotFound_Tas
     taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT;
     shared_ptr<Hccl::DfxOpInfo> dfxOpInfo = make_shared<Hccl::DfxOpInfo>();
     dfxOpInfo->isIndop_ = true;
-    shared_ptr<Hccl::TaskInfo> taskInfo = make_shared<Hccl::TaskInfo>(0, 1, 0, taskParam, dfxOpInfo);
-    globalMirrorTasks.GetQueue(0, 0)->Append(taskInfo);
+    auto taskInfo = make_unique<Hccl::TaskInfo>(0, 1, 0, taskParam, dfxOpInfo);
+    globalMirrorTasks.GetQueue(0, 0)->Append(std::move(taskInfo));
 
     rtExceptionInfo_t exceptionInfo{};
     exceptionInfo.deviceid = 0;
@@ -1294,8 +1294,8 @@ TEST_F(CcuTaskExceptionTest, TaskExceptionHost_Process_FindTaskInfo_Success_DfxO
 
     Hccl::TaskParam taskParam{};
     taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT;
-    shared_ptr<Hccl::TaskInfo> taskInfo = make_shared<Hccl::TaskInfo>(0, 0, 0, taskParam, nullptr);
-    globalMirrorTasks.GetQueue(0, 0)->Append(taskInfo);
+    auto taskInfo = make_unique<Hccl::TaskInfo>(0, 0, 0, taskParam, nullptr);
+    globalMirrorTasks.GetQueue(0, 0)->Append(std::move(taskInfo));
 
     rtExceptionInfo_t exceptionInfo{};
     exceptionInfo.deviceid = 0;
@@ -1315,8 +1315,8 @@ TEST_F(CcuTaskExceptionTest, TaskExceptionHost_Process_FindTaskInfo_Success_IsIn
     taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT;
     shared_ptr<Hccl::DfxOpInfo> dfxOpInfo = make_shared<Hccl::DfxOpInfo>();
     dfxOpInfo->isIndop_ = false;
-    shared_ptr<Hccl::TaskInfo> taskInfo = make_shared<Hccl::TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
-    globalMirrorTasks.GetQueue(0, 0)->Append(taskInfo);
+    auto taskInfo = make_unique<Hccl::TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
+    globalMirrorTasks.GetQueue(0, 0)->Append(std::move(taskInfo));
 
     rtExceptionInfo_t exceptionInfo{};
     exceptionInfo.deviceid = 0;
@@ -1336,8 +1336,8 @@ TEST_F(CcuTaskExceptionTest, TaskExceptionHost_Process_FindTaskInfo_Success_Task
     taskParam.taskType = Hccl::TaskParamType::TASK_CCU;
     shared_ptr<Hccl::DfxOpInfo> dfxOpInfo = make_shared<Hccl::DfxOpInfo>();
     dfxOpInfo->isIndop_ = true;
-    shared_ptr<Hccl::TaskInfo> taskInfo = make_shared<Hccl::TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
-    globalMirrorTasks.GetQueue(0, 0)->Append(taskInfo);
+    auto taskInfo = make_unique<Hccl::TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
+    globalMirrorTasks.GetQueue(0, 0)->Append(std::move(taskInfo));
 
     rtExceptionInfo_t exceptionInfo{};
     exceptionInfo.deviceid = 0;
@@ -1357,8 +1357,8 @@ TEST_F(CcuTaskExceptionTest, TaskExceptionHost_Process_FindTaskInfo_Success_Task
     taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT;
     shared_ptr<Hccl::DfxOpInfo> dfxOpInfo = make_shared<Hccl::DfxOpInfo>();
     dfxOpInfo->isIndop_ = true;
-    shared_ptr<Hccl::TaskInfo> taskInfo = make_shared<Hccl::TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
-    globalMirrorTasks.GetQueue(0, 0)->Append(taskInfo);
+    auto taskInfo = make_unique<Hccl::TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
+    globalMirrorTasks.GetQueue(0, 0)->Append(std::move(taskInfo));
 
     rtExceptionInfo_t exceptionInfo{};
     exceptionInfo.deviceid = 0;
@@ -1383,8 +1383,8 @@ TEST_F(CcuTaskExceptionTest, TaskExceptionHost_PrintTaskContextInfo_Task_Not_Fou
     taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT;
     shared_ptr<Hccl::DfxOpInfo> dfxOpInfo = make_shared<Hccl::DfxOpInfo>();
     dfxOpInfo->isIndop_ = true;
-    shared_ptr<Hccl::TaskInfo> taskInfo = make_shared<Hccl::TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
-    globalMirrorTasks.GetQueue(0, 0)->Append(taskInfo);
+    auto taskInfo = make_unique<Hccl::TaskInfo>(0, 0, 0, taskParam, dfxOpInfo);
+    globalMirrorTasks.GetQueue(0, 0)->Append(std::move(taskInfo));
 
     EXPECT_NO_THROW(hcomm::TaskExceptionHost::PrintTaskContextInfo(0, 0, 0));
 
@@ -1401,8 +1401,8 @@ TEST_F(CcuTaskExceptionTest, TaskExceptionHost_PrintTaskContextInfo_TaskId_Great
         taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT;
         shared_ptr<Hccl::DfxOpInfo> dfxOpInfo = make_shared<Hccl::DfxOpInfo>();
         dfxOpInfo->isIndop_ = true;
-        shared_ptr<Hccl::TaskInfo> taskInfo = make_shared<Hccl::TaskInfo>(0, i + 10, 0, taskParam, dfxOpInfo);
-        globalMirrorTasks.GetQueue(0, 0)->Append(taskInfo);
+        auto taskInfo = make_unique<Hccl::TaskInfo>(0, i + 10, 0, taskParam, dfxOpInfo);
+        globalMirrorTasks.GetQueue(0, 0)->Append(std::move(taskInfo));
     }
 
     EXPECT_NO_THROW(hcomm::TaskExceptionHost::PrintTaskContextInfo(0, 0, 5));
@@ -1420,8 +1420,8 @@ TEST_F(CcuTaskExceptionTest, TaskExceptionHost_PrintTaskContextInfo_Success)
         taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT;
         shared_ptr<Hccl::DfxOpInfo> dfxOpInfo = make_shared<Hccl::DfxOpInfo>();
         dfxOpInfo->isIndop_ = true;
-        shared_ptr<Hccl::TaskInfo> taskInfo = make_shared<Hccl::TaskInfo>(0, i, 0, taskParam, dfxOpInfo);
-        globalMirrorTasks.GetQueue(0, 0)->Append(taskInfo);
+        auto taskInfo = make_unique<Hccl::TaskInfo>(0, i, 0, taskParam, dfxOpInfo);
+        globalMirrorTasks.GetQueue(0, 0)->Append(std::move(taskInfo));
     }
 
     EXPECT_NO_THROW(hcomm::TaskExceptionHost::PrintTaskContextInfo(0, 0, 4));

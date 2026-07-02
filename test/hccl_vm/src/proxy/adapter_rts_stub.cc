@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+// 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#define HCCL_VM_MODULE "RTS_STUB"
+
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
@@ -44,14 +47,14 @@ extern "C" {
 int RaIsFirstUsed(int insId)
 {
     (void) insId;
-    HCCL_VM_ERROR("[HCCP] stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaIsLastUsed(int insId)
 {
     (void) insId;
-    HCCL_VM_ERROR("[HCCP] stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -59,8 +62,9 @@ int ibv_get_cq_event_stub(struct ibv_comp_channel *channel, struct ibv_cq **cq, 
 {
     (void) cq;
     (void) cq_context;
-    HCCL_VM_TRACE("[HCCP] Stub");
+    HCCL_VM_WARN("is empty");
     if (!channel) {
+        HCCL_VM_ERROR("channel is null");
         return -1;
     }
     return 0;
@@ -70,7 +74,7 @@ void ibv_ack_cq_events_stub(struct ibv_cq *cq, unsigned int nevents)
 {
     (void) cq;
     (void) nevents;
-    HCCL_VM_TRACE("[HCCP] Stub");
+    HCCL_VM_WARN("is empty");
     return;
 }
 
@@ -80,7 +84,7 @@ void ibv_query_qp_stub(struct ibv_qp *qp, struct ibv_qp_attr *attr, int attr_mas
     (void) attr;
     (void) attr_mask;
     (void) init_attr;
-    HCCL_VM_TRACE("[HCCP] Stub");
+    HCCL_VM_WARN("is empty");
     return;
 }
 
@@ -89,6 +93,7 @@ int32_t UtraceCreateWithAttr(int32_t tracerType, const char *objName, const Trac
     (void)(tracerType);
     (void)(objName);
     (void)(attr);
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -97,12 +102,14 @@ HcclResult UtraceSubmit(int32_t handle, const void *buffer, uint32_t bufSize)
     (void)(handle);
     (void)(buffer);
     (void)(bufSize);
+    HCCL_VM_WARN("is empty");
     return HCCL_SUCCESS;
 }
 
 int32_t UtraceSetGlobalAttr(const TraceGlobalAttr *attr)
 {
     (void)(attr);
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -110,12 +117,14 @@ int32_t UtraceSave(TracerType tracerType, bool syncFlag)
 {
     (void)(tracerType);
     (void)(syncFlag);
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 void UtraceDestroy(int32_t handle)
 {
     (void)(handle);
+    HCCL_VM_WARN("is empty");
     return;
 }
 
@@ -127,6 +136,7 @@ int ibv_exp_post_send_stub(struct ibv_qp *qp, struct ibv_send_wr *wr, struct ibv
     (void) bad_wr;
     (void) ext_attr;
     (void) ext_resp;
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -138,19 +148,20 @@ int ibv_ext_post_send_stub(struct ibv_qp *qp, struct ibv_send_wr *wr, struct ibv
     (void) bad_wr;
     (void) ext_attr;
     (void) ext_resp;
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 HcclResult hrtTsdCapabilityGet(uint32_t deviceLogicId, int32_t type, uint64_t ptr)
 {
-    printf("[STUB][hrtTsdCapabilityGet] deviceLogicId:%u type:%u ptr:%lu\n", deviceLogicId, type, ptr);
+    HCCL_VM_INFO("deviceLogicId:[{}] type:[{}]], ptr:[{}]\n", deviceLogicId, type, ptr);
     return (HcclResult)0;
 }
 
 HcclResult hrtGetDeviceInfo(u32 deviceId, HcclRtDeviceModuleType hcclModuleType, HcclRtDeviceInfoType hcclInfoType,
                             s64 &val)
 {
-    printf("[STUB][hrtGetDeviceInfo] deviceId:%u hcclModuleType:%d HcclRtDeviceInfoType:%d\n", deviceId,
+    HCCL_VM_INFO("deviceId:[{}] hcclModuleType:[{}], HcclRtDeviceInfoType:[{}]\n", deviceId,
            (int)hcclModuleType, (int)hcclInfoType);
     return (HcclResult)0;
 }
@@ -170,10 +181,9 @@ void *__HcclDlsymSub(void *handle, const char *funcName)
     (void) handle;
     void *addr = dlsym(RTLD_DEFAULT, funcName);
     if (addr == nullptr) {
-        HCCL_VM_ERROR("[HcclDlsymSub] not find {} Error: [{}]\n", funcName, dlerror());
+        HCCL_VM_ERROR("not find {} Error: [{}]\n", funcName, dlerror());
         return nullptr;
     }
-    // HCCL_VM_DEBUG("[HcclDlsymSub] [{}]\n", funcName);
     return addr;
 }
 

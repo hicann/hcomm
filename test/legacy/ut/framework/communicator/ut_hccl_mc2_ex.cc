@@ -17,6 +17,7 @@
 #include "kfc.h"
 #include "internal_exception.h"
 #include "hccl_mc2_ex.h"
+#include "aicpu_utils.h"
 #include "task_exception_func.h"
 #include "communicator_impl_lite_manager.h"
 #include "rtsq_a5.h"
@@ -126,7 +127,8 @@ TEST_F(HcclMc2ExTest, Ut_HcclGetCommHandleByCtx_When_CommIsFree_Expect_ReturnSuc
     auto* ctx = reinterpret_cast<void*>(kernelParam);
     void* comm = reinterpret_cast<void*>(communicatorImplLite);
     
-    MOCKER_CPP(&CommunicatorImplLite::CheckNeedUpdateRes).stubs().will(returnValue(false));
+    MOCKER_CPP(&AicpuUtils::Init).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CommunicatorImplLite::UpdateRes).stubs();
     MOCKER_CPP(&CommunicatorImplLiteMgr::Get).stubs().with().will(returnValue(communicatorImplLite));
     MOCKER_CPP(&CommunicatorImplLite::SetDfxOpInfo).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImplLite::UpdateHDCommnicate).stubs().will(ignoreReturnValue());

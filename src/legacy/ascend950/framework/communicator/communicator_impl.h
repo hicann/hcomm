@@ -576,12 +576,12 @@ private:
     HcclResult Init(const CommParams &commParams, std::unique_ptr<RankGraph> &inputRankGraph, DevId inputDevLogicId);
     HcclResult Init(const CommParams &commParams, std::unique_ptr<RankGraph> &inputRankGraph,
                     HcclCommConfig &subConfig, DevId inputDevLogicId);
-    void       InitCommResource(const CommParams &commParams);
+    HcclResult InitCommResource(const CommParams &commParams);
 
     void WaitReady() const;
 
     void InitMirrorTaskManager();
-    void InitProfilingReporter();
+    HcclResult InitProfilingReporter();
     void UpdateProfStat();
     void InitTaskExceptionHandler() const;
 

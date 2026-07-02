@@ -9,6 +9,7 @@
  */
 
 #include "ccu_rep_v1.h"
+#include "ccu_api_exception.h"
 #include <gtest/gtest.h>
 #include <string>
 #include <memory>
@@ -368,6 +369,25 @@ TEST_F(CcuRepControlTest, CcuRepJumpBase_Reference)
     bool result = jump.Translate(instrPtr, instrId, dep);
     EXPECT_TRUE(result);
     EXPECT_EQ(jump.Translated(), true);
+}
+
+TEST_F(CcuRepControlTest, CcuRepTranslator_CheckTypeNullptr_Throw)
+{
+    CcuRepReferenceManager funcManager(0);
+    funcManager.SetRefBlock("nullFunc", nullptr);
+
+    CcuRepFuncBlock funcBlock("outerFunc");
+    auto funcCallPtr = std::make_shared<CcuRepFuncCall>("nullFunc");
+    funcBlock.Append(funcCallPtr);
+    funcBlock.SetFuncManager(&funcManager);
+
+    CcuInstr instr[128] = {};
+    CcuInstr *instrPtr = instr;
+    uint16_t instrId = 0;
+    TransDep dep = {};
+    dep.reserveXnId = 1;
+
+    EXPECT_THROW(funcBlock.Translate(instrPtr, instrId, dep), Hccl::CcuApiException);
 }
 
 }

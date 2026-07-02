@@ -77,6 +77,7 @@ target_include_directories(ccl_kernel PRIVATE
     ${HCOMM_DIR}/src/base_comm/resources/endpoint_pairs
     ${HCOMM_DIR}/src/base_comm/resources/endpoint_pairs/sockets
     ${HCOMM_DIR}/src/base_comm/resources/endpoint_pairs/channels
+    ${HCOMM_DIR}/src/base_comm/common
     ${HCOMM_DIR}/src/base_comm/common/device
     ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_device
     ${HCOMM_DIR}/src/base_comm/primitives/api_c_adpt
