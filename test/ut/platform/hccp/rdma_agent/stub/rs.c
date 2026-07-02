@@ -176,6 +176,11 @@ int RsSocketSend(int fd, void *data, u64 size)
     return size;
 }
 
+int RsHdcSocketSend(int fd, const void *data, uint64_t size)
+{
+    return size;
+}
+
 int RsSocketRecv(int fd, void *data, u64 size)
 {
 

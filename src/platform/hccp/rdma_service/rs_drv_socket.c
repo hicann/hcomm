@@ -393,8 +393,26 @@ int RsFd2conn(int fd, struct RsConnInfo **conn)
     return -ENODEV;
 }
 
+int RsSslWriteInnerCheck(struct RsConnInfo *conn, int sslRet, uint64_t size)
+{
+    int err = ssl_adp_get_error(conn->ssl, sslRet);
+    int fd = conn->connfd;
+    int errNo = errno;
+
+    rs_ssl_err_string(fd, err);
+    CHK_PRT_RETURN((err == SSL_ERROR_WANT_WRITE) || (err == SSL_ERROR_WANT_READ),
+        hccp_info("ssl_adp_write fd:%d need to retry, err:%d errno:%d", fd, err, errNo), -EAGAIN);
+    CHK_PRT_RETURN((err == SSL_ERROR_SYSCALL) && (errNo == EAGAIN || errNo == EWOULDBLOCK || errNo == EINTR),
+        hccp_info("ssl_adp_write fd:%d need to retry, err:%d errno:%d", fd, err, errNo), -EAGAIN);
+
+    // degrade log level to prevent false alarms and log flooding in heartbeat monitor scenario
+    hccp_warn("ssl_adp_write fd:%d ret:%d, size:%llu err:%d errno:%d", fd, sslRet, size, err, errNo);
+    return sslRet;
+}
+
 int RsDrvSocketSend(int fd, const void *data, uint64_t size, int flags)
 {
+    struct RsConnInfo *conn = NULL;
     int ret = 0;
     int errNo;
 
@@ -402,18 +420,11 @@ int RsDrvSocketSend(int fd, const void *data, uint64_t size, int flags)
         fd, size), -EINVAL);
 
     if (gRsCb->sslEnable == RS_SSL_ENABLE) {
-        int err;
-        struct RsConnInfo *conn = NULL;
-
         ret = RsFd2conn(fd, &conn);
-        CHK_PRT_RETURN(ret, hccp_err("fd to conn failed, ret:%d", ret), ret);
+        CHK_PRT_RETURN(ret != 0, hccp_err("fd:%d to conn failed, ret:%d", fd, ret), ret);
         ret = ssl_adp_write(conn->ssl, data, size);
         if (ret <= 0) {
-            hccp_warn("ssl_adp_write ret:%d, size:%llu", ret, size);
-            err = ssl_adp_get_error(conn->ssl, ret);
-            rs_ssl_err_string(conn->connfd, err);
-            CHK_PRT_RETURN((err == SSL_ERROR_WANT_WRITE) || (err == SSL_ERROR_WANT_READ), hccp_info("ssl_adp_write need"
-                "to retry"), -EAGAIN);
+            ret = RsSslWriteInnerCheck(conn, ret, size);
         }
     } else {
         ret = send(fd, data, size, flags);
@@ -432,8 +443,26 @@ int RsDrvSocketSend(int fd, const void *data, uint64_t size, int flags)
     return ret;
 }
 
+int RsSslReadInnerCheck(struct RsConnInfo *conn, int sslRet, uint64_t size)
+{
+    int err = ssl_adp_get_error(conn->ssl, sslRet);
+    int fd = conn->connfd;
+    int errNo = errno;
+
+    rs_ssl_err_string(fd, err);
+    CHK_PRT_RETURN((err == SSL_ERROR_WANT_WRITE) || (err == SSL_ERROR_WANT_READ),
+        hccp_dbg("ssl_adp_read fd:%d need to retry, err:%d errno:%d", fd, err, errNo), -EAGAIN);
+    CHK_PRT_RETURN((err == SSL_ERROR_SYSCALL) && (errNo == EAGAIN || errNo == EWOULDBLOCK || errNo == EINTR),
+        hccp_dbg("ssl_adp_read fd:%d need to retry, err:%d errno:%d", fd, err, errNo), -EAGAIN);
+
+    // degrade log level to prevent false alarms and log flooding in heartbeat monitor scenario
+    hccp_warn("ssl_adp_read fd:%d ret:%d, size:%llu err:%d errno:%d", fd, sslRet, size, err, errNo);
+    return sslRet;
+}
+
 int RsDrvSocketRecv(int fd, void *data, uint64_t size, int flags)
 {
+    struct RsConnInfo *conn = NULL;
     int ret = 0;
     int errNo;
 
@@ -441,19 +470,12 @@ int RsDrvSocketRecv(int fd, void *data, uint64_t size, int flags)
         fd, size), -EINVAL);
 
     if (gRsCb->sslEnable == RS_SSL_ENABLE) {
-        int err;
-        struct RsConnInfo *conn = NULL;
-
         ret = RsFd2conn(fd, &conn);
         CHK_PRT_RETURN(ret, hccp_warn("can not find conn for fd[%d], ret:%d, the local fd may have been closed ",
             fd, ret), ret);
         ret = ssl_adp_read(conn->ssl, data, size);
         if (ret <= 0) {
-            hccp_dbg("ssl_adp_read ret:%d, size:%llu", ret, size);
-            err = ssl_adp_get_error(conn->ssl, ret);
-            rs_ssl_err_string(conn->connfd, err);
-            CHK_PRT_RETURN((err == SSL_ERROR_WANT_WRITE) || (err == SSL_ERROR_WANT_READ), hccp_dbg("ssl_adp_read"
-                "need to retry"), -EAGAIN);
+            ret = RsSslReadInnerCheck(conn, ret, size);
         }
     } else {
         ret = recv(fd, data, size, flags);
