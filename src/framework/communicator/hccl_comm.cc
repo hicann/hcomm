@@ -1044,7 +1044,7 @@ HcclResult hcclComm::GetWorkspaceMemSize(const std::string &opType, u64 count, H
     return communicator_->GetWorkspaceMemSize(opType, count, dataType, rankSize, size, deviceType_);
 }
 
-HcclResult hcclComm::GetAllReduceScratchSize(const u32 count, const HcclDataType dataType, u64 &scratchSize) const
+HcclResult hcclComm::GetAllReduceScratchSize(const u64 count, const HcclDataType dataType, u64 &scratchSize) const
 {
     return communicator_->GetAllReduceScratchSize(count, dataType, scratchSize);
 }

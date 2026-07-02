@@ -55,7 +55,7 @@ HcclDataCountType AllReduceOperator::GetCountTypeForDeterAllReduce(const u64 cou
 }
 
 // 如果逻辑有修改，需同步修改GetAllReduceScratchMemSize()
-HcclResult AllReduceOperator::GetScratchSizeForDeterAllReduce(const u32 count, const HcclDataType dataType,
+HcclResult AllReduceOperator::GetScratchSizeForDeterAllReduce(const u64 count, const HcclDataType dataType,
     const u32 rankSize, u64 &outScratchSize)
 {
     // 两卡不需要申请额外内存
@@ -94,7 +94,7 @@ HcclResult AllReduceOperator::GetScratchSizeForDeterAllReduce(const u32 count, c
     return HCCL_SUCCESS;
 }
 
-HcclResult AllReduceOperator::GetAllReduceScratchSize(const u32 count, const HcclDataType dataType, u64 &scratchSize)
+HcclResult AllReduceOperator::GetAllReduceScratchSize(const u64 count, const HcclDataType dataType, u64 &scratchSize)
 {
     // 针对 单机、910B、确定性计算、图模式 的特殊优化
     if (algConfigurator_->SupportDeterministicOptim()) {

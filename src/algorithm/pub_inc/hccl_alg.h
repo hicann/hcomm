@@ -47,7 +47,7 @@ public:
     // legacy code
     HcclResult GetAlltoAllStagedWorkSpaceMemSize(std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo,
         u64 &memSize);
-    HcclResult GetAllReduceScratchSize(const u32 count, const HcclDataType dataType, u64 &scratchSize);
+    HcclResult GetAllReduceScratchSize(const u64 count, const HcclDataType dataType, u64 &scratchSize);
     HcclResult ClearOpResource(const std::string &tag);
     HcclResult CreateMutiStreamRes(const std::string &tag, Stream &stream, level1StreamInfo_t &streamInfo,
         AlgType algType, bool isAicpuModeEn = false);

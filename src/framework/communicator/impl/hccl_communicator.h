@@ -250,7 +250,7 @@ public:
     virtual HcclResult GetAlltoAllStagedWorkSpaceMemSize(std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo,
         u64 &memSize);
 
-    virtual HcclResult GetAllReduceScratchSize(const u32 count, const HcclDataType dataType, u64 &scratchSize) const;
+    virtual HcclResult GetAllReduceScratchSize(const u64 count, const HcclDataType dataType, u64 &scratchSize) const;
 
     virtual bool IsStandardCard();
 

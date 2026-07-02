@@ -63,7 +63,7 @@ HcclResult HcclCommGraphGetAlltoAllStagedWorkSpaceMemSize(s64 opBaseHcom, u64 *s
     HcclDataType sendType, u64 *recvCounts, u64 *rdispls, HcclDataType recvType, u64 &memSize);
 HcclResult HcclCommGraphSetWorkspaceResource(const std::string &tag, s64 opBaseHcom, std::vector<rtStream_t> stream,
     void *memPtr, u64 maxSize);
-HcclResult HcclCommGraphGetAllReduceScratchSize(s64 opBaseHcom, const u32 count, const HcclDataType dataType,
+HcclResult HcclCommGraphGetAllReduceScratchSize(s64 opBaseHcom, const u64 count, const HcclDataType dataType,
     u64 &outScratchSize);
 HcclResult HcclCommGraphGetRankSize(s64 opBaseHcom, u32 *rankSize);
 HcclResult HcclCommGraphGetRankId(s64 opBaseHcom, u32 *rankId);
@@ -82,7 +82,7 @@ HcclResult HcomGetAlltoAllStagedWorkSpaceMemSize(const char *group, u64 *sendCou
     HcclDataType sendType, u64 *recvCounts, u64 *rdispls, HcclDataType recvType, u64 &memSize);
 HcclResult HcomGetAlltoAllvcStagedWorkSpaceMemSize(const char *group,
     std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, u64 &memSize);
-HcclResult HcomGetAllReduceScratchSize(const char *group, const u32 count, const HcclDataType dataType,
+HcclResult HcomGetAllReduceScratchSize(const char *group, const u64 count, const HcclDataType dataType,
     u64 &outScratchSize);
 HcclResult HcclCommSetAttachedStream(s64 opBaseHcom, u32 graphId, const std::vector<rtStream_t> &stream);
 HcclResult HcomSetExecTimeOut(const char *execTimeOut);

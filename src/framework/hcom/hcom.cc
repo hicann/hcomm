@@ -1289,7 +1289,7 @@ HcclResult HcclCommGraphGetWorkspaceSubStreamNum(u64 count, HcclDataType dataTyp
     return hcclComm->GetWorkspaceSubStreamNum(count, dataType, op, algName, streamNum, dataSize, ifAiv, opType);
 }
 
-HcclResult HcclCommGraphGetAllReduceScratchSize(s64 opBaseHcom, const u32 count, const HcclDataType dataType,
+HcclResult HcclCommGraphGetAllReduceScratchSize(s64 opBaseHcom, const u64 count, const HcclDataType dataType,
     u64 &outScratchSize)
 {
     hccl::hcclComm* hcclComm = reinterpret_cast<hccl::hcclComm*>(opBaseHcom);
@@ -1912,7 +1912,7 @@ HcclResult HcomGetAlltoAllvcStagedWorkSpaceMemSize(const char *group,
     return HCCL_SUCCESS;
 }
 
-HcclResult HcomGetAllReduceScratchSize(const char *group, const u32 count, const HcclDataType dataType,
+HcclResult HcomGetAllReduceScratchSize(const char *group, const u64 count, const HcclDataType dataType,
     u64 &outScratchSize)
 {
     std::shared_ptr<hccl::hcclComm> hcclComm;

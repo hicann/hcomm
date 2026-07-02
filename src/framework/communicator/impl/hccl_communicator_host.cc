@@ -8117,7 +8117,7 @@ namespace hccl
     }
 
     HcclResult HcclCommunicator::GetAllReduceScratchSize(
-        const u32 count, const HcclDataType dataType, u64 &scratchSize) const
+        const u64 count, const HcclDataType dataType, u64 &scratchSize) const
     {
         CHK_SMART_PTR_NULL(implAlg_);
         return implAlg_->GetAllReduceScratchSize(count, dataType, scratchSize);

@@ -62,7 +62,7 @@ namespace hccl
         return HCCL_SUCCESS;
     }
 
-    HcclResult HcclAlg::GetAllReduceScratchSize(const u32 count, const HcclDataType dataType, u64 &scratchSize)
+    HcclResult HcclAlg::GetAllReduceScratchSize(const u64 count, const HcclDataType dataType, u64 &scratchSize)
     {
         (void) count;
         (void) dataType;

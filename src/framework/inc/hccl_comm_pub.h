@@ -262,7 +262,7 @@ public:
         HcclCMDType optype = HcclCMDType::HCCL_CMD_INVALID) const;
     HcclResult GetWorkspaceMemSize(const std::string &opType, u64 count, HcclDataType dataType,
                                    u32 &rankSize, u64 &size);
-    HcclResult GetAllReduceScratchSize(const u32 count, const HcclDataType dataType, u64 &scratchSize) const;
+    HcclResult GetAllReduceScratchSize(const u64 count, const HcclDataType dataType, u64 &scratchSize) const;
     HcclResult SetWorkspaceResource(const std::string &tag, void *memPtr, u64 maxSize,
                                     std::vector<rtStream_t> &stream);
     HcclResult CreateOpBasedResources(const HcclCMDType &opType, const std::string &tag,

@@ -128,7 +128,7 @@ HcclResult HcclAlg::GetAlltoAllStagedWorkSpaceMemSize(
     return operation.GetAlltoAllStagedWorkSpaceMemSize(allMeshAggregationSendRecvInfo, memSize);
 }
 
-HcclResult HcclAlg::GetAllReduceScratchSize(const u32 count, const HcclDataType dataType, u64 &scratchSize)
+HcclResult HcclAlg::GetAllReduceScratchSize(const u64 count, const HcclDataType dataType, u64 &scratchSize)
 {
     AllReduceOperator operation(algConfigurator_.get(), cclBufferManager_, dispatcher_, topoMatcher_);
     return operation.GetAllReduceScratchSize(count, dataType, scratchSize);
