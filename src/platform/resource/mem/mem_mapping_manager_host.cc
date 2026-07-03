@@ -23,9 +23,10 @@ HcclResult MemMappingManager::MapMem(s32 deviceLogicID, void *addr, u64 size, vo
         drvRegisterTpye registerTpye = HOST_MEM_MAP_DEV;
         if ((devType == DevType::DEV_TYPE_910B) || (devType == DevType::DEV_TYPE_910_93)) {
             // 910B环境传参要特殊处理
-            HCCL_INFO("[MemMappingManager][MapMem]aclrtHostRegister addr[%p], size[%llu], flag[%u]",
+            HCCL_INFO("[MemMappingManager][MapMem]aclrtHostRegister begin, addr[%p], size[%llu], flag[%u]",
                 addr, size, ACL_HOST_REGISTER_MAPPED);
             aclError aclRet = aclrtHostRegister(addr, size, ACL_HOST_REGISTER_MAPPED, &devVA);
+            HCCL_INFO("[MemMappingManager][MapMem]aclrtHostRegister end, ret[%d]", aclRet);
             CHK_PRT_RET(aclRet != ACL_SUCCESS,
                 HCCL_ERROR("[MemMappingManager][MapMem]aclrtHostRegister failed, ret[%d]", aclRet), HCCL_E_RUNTIME);
         } else {

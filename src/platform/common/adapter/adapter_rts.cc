@@ -1510,8 +1510,9 @@ HcclResult hrtNotifyDestroy(rtNotify_t notify)
     REPLACE_NOTIFY_WITH_EVENT(aclrtGetNotifyId(notify, &notifyId), aclrtGetEventId(notify, &notifyId));
     s32 deviceId = GetDeviceLogicalId();
     PLF_CONFIG_INFO(PLF_RES, "Destroy Notify para: deviceId[%d] notifyId[%u]", deviceId, notifyId);
-
+    HCCL_INFO("Destroy Notify begin, para: deviceId[%d] notifyId[%u]", deviceId, notifyId);
     REPLACE_NOTIFY_WITH_EVENT(aclrtDestroyNotify(notify), aclrtDestroyEvent(notify));
+    HCCL_INFO("Destroy Notify end, para: deviceId[%d] notifyId[%u]", deviceId, notifyId);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtNotifyDestroy]Does not support this interface.");
@@ -1930,9 +1931,9 @@ HcclResult hrtStreamDestroy(rtStream_t stream)
     CHK_RET(hrtGetStreamId(stream, streamId));
     s32 deviceId = GetDeviceLogicalId();
     PLF_CONFIG_DEBUG(PLF_RES, "Destroy Stream para: deviceId[%d] streamId[%d]", deviceId, streamId);
-
+    HCCL_INFO("Destroy Stream begin, para: deviceId[%d] streamId[%d]", deviceId, streamId);
     aclError ret = aclrtDestroyStreamForce(stream);
-    HCCL_DEBUG("Call aclrtDestroyStreamForce, return value[%d].", ret);
+    HCCL_INFO("Call aclrtDestroyStreamForce, return value[%d].", ret);
     CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Stream][Destroy]errNo[0x%016llx] rt stream Destroy fail, "
         "return[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
     return HCCL_SUCCESS;

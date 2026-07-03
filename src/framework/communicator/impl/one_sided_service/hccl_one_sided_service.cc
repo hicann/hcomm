@@ -617,6 +617,7 @@ HcclResult HcclOneSidedService::RunFuncWithTimeout(std::function<HcclResult()> f
 
 HcclResult HcclOneSidedService::PrepareFullMesh(const std::string &commIdentifier, s32 timeoutSec)
 {
+    HcclUs startut = TIME_NOW();
     // 创建连接
     CHK_RET(CreateLinkFullmesh(commIdentifier, timeoutSec));
     // 注册内存
@@ -626,7 +627,7 @@ HcclResult HcclOneSidedService::PrepareFullMesh(const std::string &commIdentifie
     // 使能访问
     CHK_RET(RunFuncWithTimeout([this]() -> HcclResult {return this->EnableMemAccessByThread(); }, commIdentifier, timeoutSec, "EnableMemAccessByThread"));
 
-    HCCL_INFO("[HcclOneSidedService][PrepareFullMesh] Prepare finished. comm[%s].", commIdentifier.c_str());
+    HCCL_INFO("[HcclOneSidedService][PrepareFullMesh] Prepare finished. comm[%s], take time [%lld us].", commIdentifier.c_str(), DURATION_US(TIME_NOW() - startut));
     return HCCL_SUCCESS;
 }
 

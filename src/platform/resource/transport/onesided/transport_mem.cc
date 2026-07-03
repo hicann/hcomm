@@ -100,7 +100,7 @@ HcclResult TransportMem::SetDataSocket(const std::shared_ptr<HcclSocket> &socket
 HcclResult TransportMem::DoExchangeMemDesc(
     const RmaMemDescs &localMemDescs, RmaMemDescs &remoteMemDescs, u32 &actualNumOfRemote)
 {
-    HCCL_DEBUG("[HcclOneSidedConn][ExchangeMemDesc]localRank[%u] exchange memDesc begin", localRankId_);
+    HCCL_INFO("[HcclOneSidedConn][ExchangeMemDesc]localRank[%u] exchange memDesc begin, role[%u]", localRankId_, dataSocket_->GetLocalRole());
 
     if (dataSocket_->GetLocalRole() == HcclSocketRole::SOCKET_ROLE_CLIENT) {
         // 先收后发
@@ -111,7 +111,7 @@ HcclResult TransportMem::DoExchangeMemDesc(
         CHK_RET(SendLocalMemDesc(localMemDescs));
         CHK_RET(ReceiveRemoteMemDesc(remoteMemDescs, actualNumOfRemote));
     }
-
+    HCCL_INFO("[HcclOneSidedConn][ExchangeMemDesc]get actualNumOfRemote[%u]", actualNumOfRemote);
     // 校验remoteDescs中的remoteRankId和conn对象中保存的localRankId是否一样
     for (u32 i = 0; i < actualNumOfRemote; i++) {
         CHK_PTR_NULL((remoteMemDescs.array) + i);
