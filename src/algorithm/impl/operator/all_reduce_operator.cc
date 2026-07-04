@@ -560,8 +560,13 @@ HcclResult AllReduceOperator::DeterministicSelector(const OpParam& param, std::s
         IsSupportSDMAReduce(param.inputPtr, param.outputPtr, param.DataDes.dataType, param.reduceType);
 
     if (isOpbase && algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_PIPELINE && deviceNumPerAggregation_ > DEVICE_TWO) {
-        algName = "AllReduceDeterPipelineExecutor";
-    } else if (SingleMeshInlineReduce(param.inputPtr, param.outputPtr, param.DataDes.dataType, param.reduceType)) {
+        u64 dataSize = param.DataDes.count * SIZE_TABLE[param.DataDes.dataType];
+        if (dataSize >= deviceNumPerAggregation_ * HCCL_MIN_SLICE_ALIGN) {
+            algName = "AllReduceDeterPipelineExecutor";
+            return HCCL_SUCCESS;
+        }
+    }
+    if (SingleMeshInlineReduce(param.inputPtr, param.outputPtr, param.DataDes.dataType, param.reduceType)) {
         if (countType == HcclDataCountType::HCCL_COUNT_SMALL) {
             algName = "AllReduceMeshSmallCountExecutor";
         } else if (countType == HcclDataCountType::HCCL_COUNT_MEDIUM) {
