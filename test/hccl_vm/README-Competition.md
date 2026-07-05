@@ -15,7 +15,7 @@ HCCL-VM是面向华为昇腾NPU卡的高性能集合通信的虚拟执行环境�
 
 ### 2.1 CANN包安装
 
-安装最新版本CANN Toolkit开发套件包和CANN ops算子包 [下载链接](https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/master/)
+安装最新版本CANN Toolkit开发套件包和CANN ops算子包 [下载链接](https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/master/20260701000328953/)
 
 ```bash
 # 确保安装包具有可执行权限
@@ -26,7 +26,6 @@ chmod +x Ascend-cann-950-ops_9.1.0_linux-x86_64.run
 ./Ascend-cann-950-ops_9.1.0_linux-x86_64.run --install --install-path=/home/workspace/Ascend
 ```
 
-
 ### 2.2 hccl_test编译
 
 hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测试工具](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910beta1/devaids/hccltool/HCCLpertest_16_0001.html)，HCCL-VM支持在虚拟环境中运行hccl_test用例。请先参照[hccl_test用例构建](#42-hccl-test用例构建)章节进行用例二进制程序的编译。
@@ -35,11 +34,20 @@ hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测�
 
 ---
 
-## 一键安装
+## 3. 快速上手
 
-一行完成依赖安装、配套源码拉取、CANN 检测与编译（默认 `campus-2026` 配套方案）：
+### 3.1 工具构建&安装
+
+#### 3.1.1 自动构建
+
+一行完成依赖安装、配套源码拉取、CANN 检测与编译（默认 `competition/campus-2026` 分支方案）：
 
 ```bash
+# 1. 创建工作目录
+mkdir -p /home/workspace
+cd /home/workspace
+
+# 2.下载自动构建&安装脚本
 curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_install.sh | bash
 ```
 
@@ -53,11 +61,7 @@ curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test
 
 如需先审阅脚本，可下载后阅读再运行：`curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_install.sh -o hccl_vm_install.sh`。移除方式：删除工作目录即可清理本工具产物（脚本经 apt 安装的系统依赖如需卸载请自行 `apt remove`），本工具不改动 CANN。
 
----
-
-## 3. 快速上手
-
-### 3.1 工具构建&安装
+#### 3.1.2 手动构建
 
 ```bash
 # 1. 创建工作目录
@@ -65,8 +69,8 @@ mkdir -p /home/workspace
 cd /home/workspace
 
 # 2. 下载依赖源码
-git clone https://gitcode.com/cann/hccl.git
-git clone https://gitcode.com/cann/hcomm.git
+git clone -b competition/campus-2026 https://gitcode.com/cann/hccl.git
+git clone -b competition/campus-2026 https://gitcode.com/cann/hcomm.git
 
 # 3. 安装第三方依赖
 sudo apt-get update
@@ -78,15 +82,34 @@ source /home/workspace/Ascend/cann/set_env.sh
 export HCCL_CODE_HOME=/home/workspace/hccl
 export HCOMM_CODE_HOME=/home/workspace/hcomm
 bash ./build.sh --full
+
+# 5. 编译AI_CPU展开模式所需设备侧符号(不运行AI_CPU展开模式可跳过)
+bash ./build_pkg.sh
 ```
 
-### 3.2 使用示例
+### 3.2 alltoall示例算子编译和产物拷贝
 
-#### 3.2.1 环境配置
+```bash
+# 1.进入alltoall示例算子目录
+cd /home/workspace/hccl/hccl-campus-alltoall
+
+# 2.编译alltoall示例算子
+source /home/workspace/Ascend/cann/set_env.sh
+bash build.sh
+
+# 3.编译产物(hccl.h libhccl.so libhccl_device.so)拷贝
+cp ./build/include/hccl.h /home/workspace/Ascend/cann/x86_64-linux/include/hccl/
+cp ./build/lib64/libhccl.so /home/workspace/Ascend/cann/x86_64-linux/lib64/
+cp ./build/lib64/libhccl_device.so /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/lib/aarch64/
+```
+
+### 3.3 使用示例
+
+#### 3.3.1 环境配置
 
 请参照[hccl_rootinfo文件内容](#47-hccl_rootinfojson文件)，创建并配置hccl_rootinfo.json文件。
 
-#### 3.2.2 CCU模式
+#### 3.3.2 CCU模式
 
 1. 环境变量配置。
 
@@ -101,7 +124,6 @@ export HCCL_OP_EXPANSION_MODE="CCU_SCHED"
 
 2. 执行
 
-
 ```bash
 # 需要进入到新的bin文件目录下执行hccl-vm
 cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
@@ -109,12 +131,9 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
 ./hccl-vm start ascend950_cluster_32_server_normal.yaml
 
-# 如需启用runner插件（可选）
-(hvm)$> hccl-vm plugin install @runner
-
 # 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 0 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -123,24 +142,17 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 (hvm)$> exit
 ```
 
-3. 验证hccl_test用例运行结果
-[Runner结果查看](#491-runner插件结果) 
-[Checker结果查看](#492-checker插件结果)
+3. 验证hccl_test用例运行结果 [Checker结果查看](#492-checker插件结果)
 
-#### 3.2.3 AICPU模式
+#### 3.3.3 AICPU模式
 
 AICPU展开模式需要将算法展开步骤放到设备侧执行，因此hccl-vm工具需要将HCCL的设备侧的符号编译并模拟执行。由于设备侧符号是ARM架构的，因此在X86环境上编译时需要借助交叉编译器，运行时需要借助QEMU实现AICPU模式的模拟运行。
 
 设备侧符号使用hccl和hcomm的源码编译，为了保证Host与Device通信协议正确，需要同时编译Host侧的安装包并进行替换安装。
 
-1. HCCL设备侧符号编译、安装、拷贝等。
+-备注：已在3.1章节通过执行`bash ./build_pkg.sh`完成。
 
-```bash
-cd /home/workspace/hcomm/test/hccl_vm/
-bash ./build_pkg.sh
-```
-
-2. 环境变量配置。
+1. 环境变量配置。
 
 ```bash
 # 进入工具安装目录
@@ -151,7 +163,7 @@ export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
 export HCCL_OP_EXPANSION_MODE="AI_CPU"
 ```
 
-3. 执行
+2. 执行
 
 ```bash
 # 需要进入到新的bin文件目录下执行hccl-vm
@@ -160,12 +172,9 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
 ./hccl-vm start ascend950_cluster_32_server_normal.yaml
 
-# 如需启用runner插件（可选）
-(hvm)$> hccl-vm plugin install @runner
-
 # 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 0 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -174,9 +183,9 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 (hvm)$> exit
 ```
 
-4. 验证hccl_test用例运行结果 [Runner结果查看](#491-runner插件结果) [Checker结果查看](#492-checker插件结果)
+4. 验证hccl_test用例运行结果 [Checker结果查看](#492-checker插件结果)
 
-#### 3.2.4 AIV模式
+#### 3.3.4 AIV模式
 
 1. 环境变量配置。
 
@@ -214,26 +223,13 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 3. 验证hccl_test用例运行结果 [Runner结果查看](#491-runner插件结果) [Checker结果查看](#492-checker插件结果)
 
-### 3.3 Pytorch用例示例
+### 3.4 Pytorch用例示例
 
 暂不支持。
 
-### 3.4 hccl代码修改验证示例
+### 3.5 hccl代码修改验证示例
 
-若您修改了CANN的算子包代码，如新增了算法类型，为保证您的修改生效，需要按照如下步骤操作执行。build_pkg.sh脚本帮助用户执行编包、装包、拷贝Device侧依赖符号，执行前需设置环境变量:
-
-```bash
-# 假设您的CANN安装目录为：/home/workspace/Ascend
-source /home/workspace/Ascend/cann/set_env.sh
-# 配置hccl代码仓路径
-export HCCL_CODE_HOME=/home/workspace/hccl
-# 配置hcomm代码仓路径
-export HCOMM_CODE_HOME=/home/workspace/hcomm
-```
-
-1. 若您修改了CANN hccl仓代码，请执行bash build_pkg.sh --install hccl。
-2. 若您修改了CANN hcomm仓代码，请执行bash build_pkg.sh --install hcomm。
-3. 参考[使用示例](#32-使用示例)步骤，重新运行用例。
+修改alltoall示例算子代码后，需先执行[算子编译](#32-alltoall示例算子编译和产物拷贝)，然后参照[使用示例](#33-使用示例)中对应算子展开模式的指导执行用例。
 
 ---
 
@@ -279,8 +275,11 @@ if ! grep -q '\-lmpi_cxx' Makefile; then
     sed -i 's/-lmpi/-lmpi -lmpi_cxx/g' Makefile
 fi
 
-# 编译hccl_test用例
+# 编译hccl_test用例(默认编译所有算子用例)
 MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi make ASCEND_DIR=${ASCEND_HOME_PATH}
+
+# 编译hccl_test指定算子用例
+# MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi make ASCEND_DIR=${ASCEND_HOME_PATH} alltoall_test
 ```
 
 #### 4.2.2 MPICH环境编译

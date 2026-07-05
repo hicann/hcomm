@@ -55,13 +55,15 @@ HCCL_REF_SRC=""
 PROFILE=""
 PROFILE_CUSTOM=false
 VERBOSE=false
-STEP_TOTAL=7
+STEP_TOTAL=8
 LOG_DIR=""
 RUN_TS=""
 
 # 版本标识（发布时更新；SCRIPT_COMMIT 可由同步流程回填，未知则保持 unknown）
 SCRIPT_VERSION="1.0.0"
 SCRIPT_COMMIT="unknown"
+
+
 
 # 显示信息
 info() {
@@ -95,13 +97,15 @@ version_line() {
 banner() {
     info "HCCL-VM 一键安装 $(version_line)"
     info "配套方案: ${PROFILE}"
-    info "预计耗时约 5~15 分钟（拉源码 + 编译，视网络与机器），请保持网络畅通、勿中断。"
+    info "预计耗时约 10~25 分钟（拉源码 + 编译 HCCL-VM + 编译子包，视网络与机器），请保持网络畅通、勿中断。"
 }
 # 成功总结：产物 + 可复制的下一步
 success_summary() {
     local bin="${CHECKER_PATH}/hccl_vm_install/bin/hccl-vm"
     info "HCCL-VM 安装完成！"
-    info "产物: ${bin}"
+    info "HCCL-VM 产物: ${bin}"
+    info "HCCL/HCOMM 子包已编译安装到: ${ASCEND_HOME_PATH}"
+    info "驱动依赖库已拷贝到: ${CHECKER_PATH}/hccl_vm_install/lib/aarch64/"
     if [ -f "${CHECKER_PATH}/README.md" ]; then
         info "用法: 参考 ${CHECKER_PATH}/README.md（快速上手一节）"
     fi
@@ -162,8 +166,14 @@ show_help() {
     echo "HCCL-VM 一键安装脚本 $(version_line)"
     echo ""
     echo "新手直接运行，无需任何参数（全程非交互，自动安装依赖）:"
-    echo "  curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_install.sh | bash"
+    echo "  curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_install.sh -o hccl_vm_install.sh && bash hccl_vm_install.sh && rm -f hccl_vm_install.sh"
     echo "  （或下载后本地运行: bash hccl_vm_install.sh）"
+    echo ""
+    echo "脚本将自动完成以下 8 步："
+    echo "  1-3. 检查环境、磁盘、安装依赖"
+    echo "  4-6. 拉取 hcomm/hccl 源码、检测 CANN"
+    echo "  7.   编译 HCCL-VM 工具"
+    echo "  8.   编译安装 HCCL/HCOMM 子包（自动下载 build_pkg.sh 执行）"
     echo ""
     echo "用法:"
     echo "  bash hccl_vm_install.sh [选项]"
@@ -704,6 +714,45 @@ build_hccl_vm() {
     fi
 }
 
+# 编译安装 HCCL/HCOMM 子包（使用 hcomm 仓库自带的 build_pkg.sh）
+# build_pkg.sh 位于 CHECKER_PATH（即 hcomm/test/hccl_vm/）下，步骤 4 已 clone 完成
+# 需要以下环境变量：
+#   ASCEND_HOME_PATH  - CANN 安装目录（ensure_cann 已导出）
+#   HCCL_CODE_HOME    - hccl 源码目录（build_hccl_vm 已导出）
+#   HCOMM_CODE_HOME   - hcomm 源码目录（build_hccl_vm 已导出）
+# 通过 --tool_path 传入 checker 安装路径（即 CHECKER_PATH）
+build_hcomm_hccl_pkg() {
+    info "编译安装 HCCL/HCOMM 子包..."
+    local pkg_script="${CHECKER_PATH}/build_pkg.sh"
+    local pkg_log="${LOG_DIR}/build-pkg-${RUN_TS}.log"
+
+    # build_pkg.sh 随 hcomm 仓库一起下发（步骤 4 clone），直接使用本地副本
+    if [ ! -f "${pkg_script}" ]; then
+        error "未找到 build_pkg.sh: ${pkg_script}。请确认 hcomm 源码（分支 ${HCOMM_REF}）中包含 test/hccl_vm/build_pkg.sh。"
+    fi
+
+    # 执行 build_pkg.sh：编译 hccl + hcomm 子包并安装到 CANN 目录
+    info "编译日志: ${pkg_log}"
+    local rc=0
+    if [ "${VERBOSE}" = true ]; then
+        bash "${pkg_script}" --tool_path "${CHECKER_PATH}" 2>&1 | tee "${pkg_log}" || rc=${PIPESTATUS[0]}
+    else
+        info "开始编译子包，预计数分钟。实时日志: tail -f ${pkg_log}"
+        bash "${pkg_script}" --tool_path "${CHECKER_PATH}" > "${pkg_log}" 2>&1 &
+        local pkg_pid=$!
+        spin_on_pid "${pkg_pid}" "编译子包中"
+        wait "${pkg_pid}" || rc=$?
+    fi
+    if [ "${rc}" -ne 0 ]; then
+        warn "HCCL/HCOMM 子包编译失败，末尾日志："
+        tail -n 20 "${pkg_log}" >&2
+        echo "  完整日志: ${pkg_log}" >&2
+        echo "  也可手动执行: bash ${pkg_script} --tool_path ${CHECKER_PATH}" >&2
+        error "子包编译未通过，请检查日志后重试。"
+    fi
+    info "HCCL/HCOMM 子包编译安装完成！"
+}
+
 # 中断(Ctrl-C/kill)时清理正在克隆的半成品目录
 cleanup_on_interrupt() {
     if [ -n "${CURRENT_CLONE_DIR:-}" ] && [ -d "${CURRENT_CLONE_DIR}" ]; then
@@ -740,6 +789,8 @@ main() {
     clone_repo "hccl" "https://gitcode.com/cann/hccl.git" "${HCCL_REF}" "${HCCL_PATH}"
     step 7 "${STEP_TOTAL}" "编译 HCCL-VM"
     build_hccl_vm
+    step 8 "${STEP_TOTAL}" "编译安装 HCCL/HCOMM 子包"
+    build_hcomm_hccl_pkg
 
     success_summary
 }

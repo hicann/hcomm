@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
         std::atomic_thread_fence(std::memory_order_acquire);
         std::string kernelName(aicpuData->task[rankId].kernelName);
-        if (kernelName == "HcclLaunchAicpuKernel") {
+        if (kernelName == "HcclAICPUKernel") {
             uint32_t opDetailId = 0;
             int ret = sim::QueryNewestOpDeatailIdByPid(getppid(), opDetailId);
             if (ret != 0) {

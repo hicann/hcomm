@@ -15,13 +15,11 @@
 #include <dlfcn.h>
 
 #include "aicpu_args_stub.h"
-#include "alg_param.h"
+#include "alg_param_stub.h"
 #include "hccl_device_pub.h"
 #include "sim_common_api.h"
 #include "sim_log.h"
 #include "store_sim_memory_manager.h"
-
-using namespace ops_hccl;
 
 bool gLibsLoaded = false;
 void *gCsecHandle = nullptr;
@@ -96,7 +94,7 @@ void ExecuteAicpuKernel(uint32_t rankId, const std::string &kernelName, uint64_t
         }
         runAicpuIndOpChannelInitV2Ptr(realPtr);
     } else if (kernelName == "RunAicpuDfxOpInfoInitV2") {
-    } else if (kernelName == "HcclLaunchAicpuKernel") {
+    } else if (kernelName == "HcclAICPUKernel") {
         OpParam *opParam = reinterpret_cast<OpParam *>(realPtr);
         opParam->resCtx = GetRealPtrByDevPtr(opParam->resCtx);
         hcclLaunchAicpuKernelPtr(opParam);
@@ -130,7 +128,7 @@ bool InitKernelFuncHandle()
     std::string libDir = InstallPath::ResolveToInstallRoot("lib/" + GetArchStr()) + "/";
     gSlogHandle = LoadLibrary(libDir, "libslog.so");
     gCsecHandle = LoadLibrary(libDir, "libc_sec.so");
-    gHcclKerHandle = LoadLibrary(libDir, "libscatter_aicpu_kernel.so");
+    gHcclKerHandle = LoadLibrary(libDir, "libhccl_device.so");
     gHcommHandle = LoadLibrary(libDir, "libccl_kernel.so");
     if (gHcclKerHandle == nullptr || gHcommHandle == nullptr || gSlogHandle == nullptr || gCsecHandle == nullptr) {
         HCCL_VM_ERROR("Failed to load kernel libs.");
@@ -140,10 +138,15 @@ bool InitKernelFuncHandle()
     runAicpuIndOpThreadInitPtr = reinterpret_cast<uint32_t (*)(void *)>(dlsym(gHcommHandle, "RunAicpuIndOpThreadInit"));
     runAicpuIndOpChannelInitV2Ptr = reinterpret_cast<uint32_t (*)(void *)>(dlsym(gHcommHandle, "RunAicpuIndOpChannelInitV2"));
     runAicpuDfxOpInfoInitV2Ptr = reinterpret_cast<uint32_t (*)(void *)>(dlsym(gHcommHandle, "RunAicpuDfxOpInfoInitV2"));
-    hcclLaunchAicpuKernelPtr = reinterpret_cast<unsigned int (*)(OpParam *)>(dlsym(gHcclKerHandle, "HcclLaunchAicpuKernel"));
+    hcclLaunchAicpuKernelPtr = reinterpret_cast<unsigned int (*)(OpParam *)>(dlsym(gHcclKerHandle, "HcclAICPUKernel"));
     if (runAicpuIndOpCommInitPtr == nullptr || runAicpuIndOpThreadInitPtr == nullptr || runAicpuIndOpChannelInitV2Ptr == nullptr ||
-        runAicpuDfxOpInfoInitV2Ptr == nullptr || hcclLaunchAicpuKernelPtr == nullptr) {
-        HCCL_VM_ERROR("Failed to get kernel func handle.");
+        runAicpuDfxOpInfoInitV2Ptr == nullptr) {
+        HCCL_VM_ERROR("Failed to get kernel func handle in gHcommHandle.");
+        return false;
+    }
+
+    if (hcclLaunchAicpuKernelPtr == nullptr) {
+        HCCL_VM_ERROR("[InitKernelFuncHandle] Failed to get kernel func handle in gHcclKerHandle.");
         return false;
     }
     HCCL_VM_INFO("Load kernel libs and get func handles successfully.");
