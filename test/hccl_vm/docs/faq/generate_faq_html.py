@@ -79,20 +79,40 @@ def find_context(md_content: str, block: str) -> tuple:
 
 def parse_faq_block(faq_id: str, block: str) -> Dict:
     """解析单个FAQ块"""
+    # 错误码和错误函数现在使用代码块格式
+    error_code_blocks = extract_code_block(block, '错误码')
+    error_code = '\n'.join(error_code_blocks) if error_code_blocks else extract_field(block, '错误码')
+
+    error_func_blocks = extract_code_block(block, '错误函数')
+    if error_func_blocks:
+        # 将多行合并为逗号分隔的列表
+        error_functions = []
+        for b in error_func_blocks:
+            for line in b.split('\n'):
+                line = line.strip()
+                if line:
+                    # 去掉括号内的中文描述
+                    line = re.sub(r'（.*?）', '', line)
+                    # 按逗号、顿号、中文逗号拆分
+                    for item in re.split(r'[、,，]', line):
+                        item = item.strip()
+                        if item:
+                            error_functions.append(item)
+    else:
+        error_functions = extract_list_field(block, '错误函数')
+
     faq_item = {
         'id': f'FAQ-{faq_id}',
         'module': '',
         'submodule': '',
         'errorCodeGroup': '',
         'title': extract_field(block, '标题'),
-        'errorCode': extract_field(block, '错误码'),
-        'errorFunctions': extract_list_field(block, '错误函数'),
+        'errorCode': error_code,
+        'errorFunctions': error_functions,
         'keywords': [],
         'logPatterns': extract_code_block(block, '关键日志'),
         'symptom': extract_field(block, '问题现象'),
-        'reasons': extract_numbered_list(block, '可能原因'),
-        'steps': extract_code_block(block, '排查步骤'),
-        'solution': extract_code_block(block, '解决方案'),
+        'guidance': extract_guidance(block),
         'diagram': '',
         'diagramType': ''
     }
@@ -157,6 +177,15 @@ def extract_keywords_from_log(log_content: str) -> List[str]:
     keywords.extend([v for v in env_vars if 'HCCL' in v or 'RANK' in v])
 
     return keywords[:5]
+
+
+def extract_guidance(block: str) -> str:
+    """提取定位指导部分内容（从 **定位指导:** 后的代码块中）"""
+    pattern = r'\*\*定位指导:\*\*\s*\n```\s*\n(.*?)```'
+    match = re.search(pattern, block, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return ''
 
 
 def extract_diagram(block: str) -> Dict:
@@ -409,7 +438,7 @@ def get_html_template() -> str:
                     const searchFields = [
                         item.title, item.errorCode, item.errorCodeGroup, ...item.errorFunctions,
                         ...item.keywords, ...item.logPatterns, item.symptom,
-                        ...item.reasons, item.solution, item.id, item.module, item.submodule
+                        item.guidance, item.id, item.module, item.submodule
                     ].join(' ').toLowerCase();
                     return searchFields.includes(keyword);
                 }
@@ -493,17 +522,13 @@ def get_html_template() -> str:
 
         function renderFAQContent(item) {
             let html = '';
-            if (item.module) html += `<div class="faq-section"><h4>所属模块</h4><p><strong>${item.module}</strong>${item.submodule ? ' → ' + item.submodule : ''}</p></div>`;
             if (item.errorCode) html += `<div class="faq-section"><h4>错误码</h4><p>${item.errorCode}</p></div>`;
             if (item.errorFunctions && item.errorFunctions.length > 0)
                 html += `<div class="faq-section"><h4>错误函数</h4><ul>${item.errorFunctions.map(f => `<li>${f}</li>`).join('')}</ul></div>`;
             if (item.logPatterns && item.logPatterns.length > 0)
                 html += `<div class="faq-section"><h4>关键日志</h4><div class="code-block">${highlightText(item.logPatterns[0])}</div></div>`;
             if (item.symptom) html += `<div class="faq-section"><h4>问题现象</h4><p>${highlightText(item.symptom)}</p></div>`;
-            if (item.reasons && item.reasons.length > 0)
-                html += `<div class="faq-section"><h4>可能原因</h4><ul>${item.reasons.map(r => `<li>${highlightText(r)}</li>`).join('')}</ul></div>`;
-            if (item.steps) html += `<div class="faq-section"><h4>排查步骤</h4><div class="code-block">${item.steps}</div></div>`;
-            if (item.solution) html += `<div class="faq-section"><h4>解决方案</h4><div class="code-block">${item.solution}</div></div>`;
+            if (item.guidance) html += `<div class="faq-section"><h4>定位指导</h4><div class="code-block">${highlightText(item.guidance)}</div></div>`;
             if (item.diagram)
                 html += `<div class="faq-section"><h4>图示说明</h4><div class="diagram-container">${item.diagramType === 'mermaid' ? `<pre class="mermaid">${item.diagram}</pre>` : `<img src="${item.diagram}" alt="示意图">`}</div></div>`;
             return html;

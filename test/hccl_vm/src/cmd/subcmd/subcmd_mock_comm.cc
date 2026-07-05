@@ -37,6 +37,13 @@ void MockCommCommand::Execute() {
         return;
     }
 
+    // 拷贝topo.json文件到执行目录
+    ret = CopyFile(g_configClusterDir);
+    if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
+        HCCL_VM_ERROR("copy topo.json file failed");
+        return;
+    }
+
     // 重置通信域
     ret = HcclVmResetCommDomain();
     if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) {

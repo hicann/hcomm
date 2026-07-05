@@ -18,8 +18,8 @@
 #include <sys/mman.h>
 #include <sys/shm.h>
 #include <sys/stat.h>
-#include <sys/stat.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "sim_log.h"
 
@@ -98,24 +98,25 @@ void* ShmCreate(const char* name, size_t size) {
 
     int shmFd = shm_open(name, O_CREAT | O_RDWR | O_EXCL, 0666);
     if (shmFd == -1) {
-        HCCL_VM_ERROR("create: shm_open failed, name: {}", name);
+        HCCL_VM_ERROR("create: shm_open failed, name: {} errno:{}", name, errno);
         return nullptr;
     }
 
     size_t totalSize = GetShmTotalSize(size);
     if (ftruncate(shmFd, totalSize) == -1) {
+        HCCL_VM_ERROR("create: ftruncate failed, name: {} errno:{}", name, errno);
         close(shmFd);
         shm_unlink(name);
-        HCCL_VM_ERROR("create: ftruncate failed, name: {}", name);
         return nullptr;
     }
 
     void* addr = mmap(nullptr, totalSize, PROT_READ | PROT_WRITE, MAP_SHARED, shmFd, 0);
+    int err = errno;
     close(shmFd);
 
     if (addr == MAP_FAILED) {
         shm_unlink(name);
-        HCCL_VM_ERROR("create: mmap failed, name: {}", name);
+        HCCL_VM_ERROR("create: mmap failed, name: {} errno:{}", name, err);
         return nullptr;
     }
 
@@ -139,22 +140,23 @@ void* ShmOpen(const char* name, size_t* size) {
 
     int shmFd = shm_open(name, O_RDWR, 0666);
     if (shmFd == -1) {
-        HCCL_VM_ERROR("open: shm_open failed, name: {}", name);
+        HCCL_VM_ERROR("open: shm_open failed, name: {} errno:{}", name, errno);
         return nullptr;
     }
 
     struct stat statBuf;
     if (fstat(shmFd, &statBuf) == -1) {
-        HCCL_VM_ERROR("open: fstat failed, name: {}", name);
+        HCCL_VM_ERROR("open: fstat failed, name: {} errno:{}", name, errno);
         close(shmFd);
         return nullptr;
     }
 
     void* addr = mmap(nullptr, statBuf.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, shmFd, 0);
+    int err = errno;
     close(shmFd);
 
     if (addr == MAP_FAILED) {   
-        HCCL_VM_ERROR("open: mmap failed, name: {}", name);
+        HCCL_VM_ERROR("open: mmap failed, name: {} errno:{}", name, err);
         return nullptr;
     }
 

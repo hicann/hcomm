@@ -26,11 +26,11 @@ template <typename T>
 static void PrintTable(const std::string &header, const std::vector<T> &rows,
                     std::function<std::string(const T &)> formatter)
 {
-    HCCL_VM_INFO("{}", header);
+    std::cout << header << std::endl;
     for (const auto &row : rows) {
-        HCCL_VM_INFO("{}", formatter(row));
+        std::cout << formatter(row) << std::endl;
     }
-    return;
+    std::cout << std::endl;
 }
 
 void CmdTableShow(std::string &tableName)
@@ -265,9 +265,9 @@ void CmdTableShow(std::string &tableName)
             });
     } else if (tableName == "IpcMemRecord") {
         auto tables = RunnerDB::GetByPred<sim::IpcMemRecord>([](const sim::IpcMemRecord &) { return true; });
-        PrintTable<sim::IpcMemRecord>("| id | vir_mem_id | create_pid |", tables, [](const sim::IpcMemRecord &tmp) {
+        PrintTable<sim::IpcMemRecord>("| id | vir_mem_id | offset | create_pid |", tables, [](const sim::IpcMemRecord &tmp) {
             return "| " + std::to_string(tmp.id) + " | " + std::to_string(tmp.vir_mem_id) + " | " +
-                std::to_string(tmp.create_pid) + " |";
+                std::to_string(tmp.offset) + " | " + std::to_string(tmp.create_pid) + " |";
         });
     } else if (tableName == "IpcMemWhiteList") {
         auto tables = RunnerDB::GetByPred<sim::IpcMemWhiteList>([](const sim::IpcMemWhiteList &) { return true; });

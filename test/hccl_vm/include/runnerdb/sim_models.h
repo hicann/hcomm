@@ -284,6 +284,7 @@ typedef struct {
 typedef struct {
     uint64_t id;
     uint64_t vir_mem_id;
+    uint64_t offset;
     uint8_t create_pid;
 } IpcMemRecord;
 

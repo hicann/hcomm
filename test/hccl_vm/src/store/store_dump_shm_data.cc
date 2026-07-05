@@ -253,7 +253,6 @@ HcclVmResult CreateJettyInfo(HcclVmSynData &hvmSynData)
 {
     HCCL_VM_INFO("Enter into create jetty info...");
     auto endpointPairs = RunnerDB::GetByPred<sim::EndPointPair>([](auto &&) { return true; });
-    hvmSynData.channel_info.count = endpointPairs.size();
     for (auto &endpoint : endpointPairs) {
         uint64_t localEndPointId = endpoint.local_enpoint_id;
         uint64_t rmtEndPointId = endpoint.remote_enpoint_id;
@@ -303,6 +302,7 @@ HcclVmResult CreateJettyInfo(HcclVmSynData &hvmSynData)
 
         hvmSynData.channel_info.data.push_back(channelData);
     }
+    hvmSynData.channel_info.count = hvmSynData.channel_info.data.size();
     
     // 打印测试-JettyInfo
     std::stringstream chDataStr;

@@ -14,9 +14,15 @@
 
 **标题:** 未配置通信域
 
-**错误码:** `NA` (4)
+**错误码:**
+```
+NA (4)
+```
 
-**错误函数:** `db_sim_runner_common.cc::GetDeviceByRankId()`
+**错误函数:**
+```
+db_sim_runner_common.cc::GetDeviceByRankId()
+```
 
 **关键日志:**
 ```
@@ -28,8 +34,11 @@ This is an error in device_init.
 
 **问题现象:** 执行业务用例，报找不到rank id为0的设备。
 
-**可能原因:**
-  在执行业务用例前，需要用户自行判断本次算子所使用的通信域规模，并通过hccl-vm mock-comm aa命令配置通信域。其中aa.yaml文件所在路径为$HCCL_VM_INSTALL_DIR/config/topo_meta/aa.yaml。
+**定位指导:**
+```
+【可能原因】
+在执行业务用例前，需要用户自行判断本次算子所使用的通信域规模，并通过hccl-vm mock-comm aa命令配置通信域。其中aa.yaml文件所在路径为$HCCL_VM_INSTALL_DIR/config/topo_meta/aa.yaml。
+```
 
 ---
 
@@ -37,9 +46,15 @@ This is an error in device_init.
 
 **标题:** RANK_TABLE_FILE 未设置
 
-**错误码:** `HCCL_SIM_E_PARA` (1)
+**错误码:**
+```
+HCCL_SIM_E_PARA (1)
+```
 
-**错误函数:** `hccl_comm_stub.cc::HcclCommInitRootInfo()`
+**错误函数:**
+```
+hccl_comm_stub.cc::HcclCommInitRootInfo()
+```
 
 **关键日志:**
 ```
@@ -48,12 +63,13 @@ RANK_TABLE_FILE env not set, please check your config.
 
 **问题现象:** 通信域初始化时找不到 rank table 配置文件。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 环境变量未设置
 2. 文件路径错误
 
-**解决方案:**
-```bash
+【解决方案】
 export RANK_TABLE_FILE=/path/to/rank_table.json
 ```
 
@@ -63,9 +79,15 @@ export RANK_TABLE_FILE=/path/to/rank_table.json
 
 **标题:** HCCL_VM_INSTALL_DIR 未设置
 
-**错误码:** `HCCL_SIM_E_INTERNAL` (4)
+**错误码:**
+```
+HCCL_SIM_E_INTERNAL (4)
+```
 
-**错误函数:** `hccl_op_stub.cc::VirtualExecuteAivKernel()`
+**错误函数:**
+```
+hccl_op_stub.cc::VirtualExecuteAivKernel()
+```
 
 **关键日志:**
 ```
@@ -74,8 +96,9 @@ export RANK_TABLE_FILE=/path/to/rank_table.json
 
 **问题现象:** AIV kernel 虚拟执行失败，找不到对应的 .so 文件。
 
-**解决方案:**
-```bash
+**定位指导:**
+```
+【解决方案】
 export HCCL_VM_INSTALL_DIR=/path/to/hccl_vm/install/dir
 ```
 
@@ -85,9 +108,15 @@ export HCCL_VM_INSTALL_DIR=/path/to/hccl_vm/install/dir
 
 **标题:** 在子shell中重复执行start命令
 
-**错误码:** `NA` (无错误码，仅WARNING)
+**错误码:**
+```
+NA (无错误码，仅WARNING)
+```
 
-**错误函数:** `subcmd_start.cc::StartCommand::Execute()`
+**错误函数:**
+```
+subcmd_start.cc::StartCommand::Execute()
+```
 
 **关键日志:**
 ```
@@ -96,10 +125,14 @@ export HCCL_VM_INSTALL_DIR=/path/to/hccl_vm/install/dir
 
 **问题现象:** 在hvm子shell环境中再次执行`hccl-vm start`命令，系统提示已启动并忽略本次操作。
 
-**可能原因:** `hccl-vm start`会fork一个子bash进程，用户在该子bash（提示符为`(hvm)$>`）内再次输入`hccl-vm start`时，系统拒绝重复启动。
+**定位指导:**
+```
+【可能原因】
+`hccl-vm start`会fork一个子bash进程，用户在该子bash（提示符为`(hvm)$>`）内再次输入`hccl-vm start`时，系统拒绝重复启动。
 
-**解决方法:**
-  不要在子shell内重复执行`hccl-vm start`。如需重新启动仿真环境，先退出当前子shell（输入`exit`），再重新执行`hccl-vm start`。
+【解决方案】
+不要在子shell内重复执行`hccl-vm start`。如需重新启动仿真环境，先退出当前子shell（输入`exit`），再重新执行`hccl-vm start`。
+```
 
 ---
 
@@ -107,9 +140,15 @@ export HCCL_VM_INSTALL_DIR=/path/to/hccl_vm/install/dir
 
 **标题:** fork子进程失败
 
-**错误码:** `HCCL_SIM_HOST_ERROR_CMD` (无标准错误码)
+**错误码:**
+```
+HCCL_SIM_HOST_ERROR_CMD (无标准错误码)
+```
 
-**错误函数:** `cmd_base_utils.cc::StartHvmCmd()`
+**错误函数:**
+```
+cmd_base_utils.cc::StartHvmCmd()
+```
 
 **关键日志:**
 ```
@@ -118,23 +157,24 @@ fork failed: Resource temporarily unavailable
 
 **问题现象:** 执行`hccl-vm start`命令后，系统无法创建子shell进程，仿真环境启动失败。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 系统用户进程数已达上限（ulimit -u）
 2. 系统内存不足，无法为新进程分配资源
 3. PID资源耗尽（/proc/sys/kernel/pid_max）
 
-**排查步骤:**
-```bash
+【排查步骤】
 ulimit -u
 cat /proc/sys/kernel/pid_max
 free -m
 ps -eLf | wc -l
-```
 
-**解决方法:**
+【解决方案】
 1. 增大用户进程数限制：`ulimit -u <更大的值>`
 2. 清理系统中残留的僵尸进程
 3. 检查是否有其他程序占用过多系统资源
+```
 
 ---
 
@@ -142,9 +182,15 @@ ps -eLf | wc -l
 
 **标题:** 插件名称格式错误
 
-**错误码:** `NA` (CLI参数校验)
+**错误码:**
+```
+NA (CLI参数校验)
+```
 
-**错误函数:** `subcmd_plugin.cc::PluginCommand::Setup()`
+**错误函数:**
+```
+subcmd_plugin.cc::PluginCommand::Setup()
+```
 
 **关键日志:**
 ```
@@ -155,11 +201,13 @@ ps -eLf | wc -l
 
 **问题现象:** 执行`hccl-vm plugin install/run/uninstall`命令时，CLI参数校验失败，拒绝执行。
 
-**可能原因:** 插件名称未以`@`符号开头。例如输入`hccl-vm plugin install runner`而非`hccl-vm plugin install @runner`。
+**定位指导:**
+```
+【可能原因】
+插件名称未以`@`符号开头。例如输入`hccl-vm plugin install runner`而非`hccl-vm plugin install @runner`。
 
-**解决方法:**
-  确保插件名称以`@`开头，例如：
-```bash
+【解决方案】
+确保插件名称以`@`开头，例如：
 hccl-vm plugin install @runner
 hccl-vm plugin install @checker
 hccl-vm plugin uninstall @runner
@@ -171,9 +219,15 @@ hccl-vm plugin uninstall @runner
 
 **标题:** 拓扑配置文件不存在
 
-**错误码:** `NA` (CLI参数校验)
+**错误码:**
+```
+NA (CLI参数校验)
+```
 
-**错误函数:** `cmd_base_utils.cc::FileInModelDir()`
+**错误函数:**
+```
+cmd_base_utils.cc::FileInModelDir()
+```
 
 **关键日志:**
 ```
@@ -182,18 +236,19 @@ hccl-vm plugin uninstall @runner
 
 **问题现象:** 执行`hccl-vm mock-comm <name>`命令时，指定的拓扑yaml配置文件不存在，CLI参数校验直接拒绝。通信域配置文件是用于描述算子执行通信域的规模（如通信域包含几个超节点，几个server，以及每个server内取哪几张卡，具体详见文件描述）。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 指定的拓扑名称拼写错误
 2. 对应的yaml文件未放置在`$HCCL_VM_INSTALL_DIR/config/topo_meta/`目录下
 3. 文件扩展名错误（应为`.yaml`）
 
-**排查步骤:**
-```bash
+【排查步骤】
 ls $HCCL_VM_INSTALL_DIR/config/topo_meta/
-```
 
-**解决方法:**
-  确认拓扑yaml文件已放置在正确目录中，且文件名与命令参数一致。例如执行`hccl-vm mock-comm 121`需要`config/topo_meta/121.yaml`文件存在。
+【解决方案】
+确认拓扑yaml文件已放置在正确目录中，且文件名与命令参数一致。例如执行`hccl-vm mock-comm 121`需要`config/topo_meta/121.yaml`文件存在。
+```
 
 ---
 
@@ -201,9 +256,15 @@ ls $HCCL_VM_INSTALL_DIR/config/topo_meta/
 
 **标题:** YAML拓扑文件格式解析异常
 
-**错误码:** `NA` (运行时解析错误)
+**错误码:**
+```
+NA (运行时解析错误)
+```
 
-**错误函数:** `cmd_cluster_model_utils.cc::ParseYamlTopoImpl()`
+**错误函数:**
+```
+cmd_cluster_model_utils.cc::ParseYamlTopoImpl()
+```
 
 **关键日志:**
 ```
@@ -212,22 +273,23 @@ ls $HCCL_VM_INSTALL_DIR/config/topo_meta/
 
 **问题现象:** 执行`hccl-vm mock-comm <name>`命令时，YAML拓扑配置文件解析失败，通信域初始化中断。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. YAML文件存在语法错误（如缩进不正确、冒号后缺少空格、非法字符等）
 2. YAML文件中包含不支持的字段类型或格式
 3. YAML文件编码非UTF-8
 
-**排查步骤:**
-```bash
+【排查步骤】
 # 使用python验证yaml格式
 python3 -c "import yaml; yaml.safe_load(open('$HCCL_VM_INSTALL_DIR/config/topo_meta/<name>.yaml'))"
-```
 
-**解决方法:**
-  根据日志中的`<detail>`信息修正YAML文件的语法错误。常见问题包括：
+【解决方案】
+根据日志中的`<detail>`信息修正YAML文件的语法错误。常见问题包括：
 1. 缩进必须使用空格，不能使用Tab
 2. 键值对的冒号后需要有空格
 3. 列表项（`-`）的缩进需要与所在层级一致
+```
 
 ---
 
@@ -239,9 +301,15 @@ python3 -c "import yaml; yaml.safe_load(open('$HCCL_VM_INSTALL_DIR/config/topo_m
 
 **标题:** 设备内存分配超限
 
-**错误码:** `HCCL_SIM_E_MEMORY` (3)
+**错误码:**
+```
+HCCL_SIM_E_MEMORY (3)
+```
 
-**错误函数:** `store_sim_device_memory_manager.cc::AllocPhyMem()`
+**错误函数:**
+```
+store_sim_device_memory_manager.cc::AllocPhyMem()
+```
 
 **关键日志:**
 ```
@@ -265,9 +333,15 @@ graph LR
 
 **标题:** 共享内存创建失败
 
-**错误码:** `HCCL_SIM_E_SYSCALL` (8)
+**错误码:**
+```
+HCCL_SIM_E_SYSCALL (8)
+```
 
-**错误函数:** `store_sim_shm_ops.cc::ShmCreate()`
+**错误函数:**
+```
+store_sim_shm_ops.cc::ShmCreate()
+```
 
 **关键日志:**
 ```
@@ -278,13 +352,14 @@ graph LR
 
 **问题现象:** 无法创建共享内存段。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. `/dev/shm` 空间不足
 2. 权限不足
 3. 同名共享内存已存在且冲突
 
-**排查步骤:**
-```bash
+【排查步骤】
 df -h /dev/shm
 ls /dev/shm/ | grep hccl
 ```
@@ -295,9 +370,15 @@ ls /dev/shm/ | grep hccl
 
 **标题:** 通信内存分配失败
 
-**错误码:** `HCCL_SIM_E_NOT_FOUND` (6)
+**错误码:**
+```
+HCCL_SIM_E_NOT_FOUND (6)
+```
 
-**错误函数:** `store_sim_comm_memory_manager.cc`
+**错误函数:**
+```
+store_sim_comm_memory_manager.cc
+```
 
 **关键日志:**
 ```
@@ -318,9 +399,15 @@ ls /dev/shm/ | grep hccl
 
 **标题:** AIV Kernel虚拟执行失败
 
-**错误码:** `HCCL_SIM_E_INTERNAL` (4)
+**错误码:**
+```
+HCCL_SIM_E_INTERNAL (4)
+```
 
-**错误函数:** `hccl_op_stub.cc::VirtualExecuteAivKernel()`
+**错误函数:**
+```
+hccl_op_stub.cc::VirtualExecuteAivKernel()
+```
 
 **关键日志:**
 ```
@@ -332,8 +419,9 @@ ls /dev/shm/ | grep hccl
 
 **问题现象:** AIV kernel在虚拟环境中执行失败。
 
-**排查步骤:**
-```bash
+**定位指导:**
+```
+【排查步骤】
 echo $HCCL_VM_INSTALL_DIR
 ls -la $HCCL_VM_INSTALL_DIR/lib/aiv/
 nm -D $HCCL_VM_INSTALL_DIR/lib/aiv/<kernel>.so | grep <symbol>
@@ -345,9 +433,15 @@ nm -D $HCCL_VM_INSTALL_DIR/lib/aiv/<kernel>.so | grep <symbol>
 
 **标题:** 算子数据库记录失败
 
-**错误码:** `HCCL_SIM_E_INTERNAL` (4)
+**错误码:**
+```
+HCCL_SIM_E_INTERNAL (4)
+```
 
-**错误函数:** `hccl_op_stub.cc::RecordOpDbInfo()`
+**错误函数:**
+```
+hccl_op_stub.cc::RecordOpDbInfo()
+```
 
 **关键日志:**
 ```
@@ -365,9 +459,15 @@ nm -D $HCCL_VM_INSTALL_DIR/lib/aiv/<kernel>.so | grep <symbol>
 
 **标题:** QP未找到或状态错误
 
-**错误码:** `HCCL_SIM_E_NOT_FOUND` (6)
+**错误码:**
+```
+HCCL_SIM_E_NOT_FOUND (6)
+```
 
-**错误函数:** `hccp_stub.cc::RaSendWr()`
+**错误函数:**
+```
+hccp_stub.cc::RaSendWr()
+```
 
 **关键日志:**
 ```
@@ -394,9 +494,15 @@ stateDiagram-v2
 
 **标题:** EndPoint查找失败
 
-**错误码:** `HCCL_SIM_E_NOT_FOUND` (6)
+**错误码:**
+```
+HCCL_SIM_E_NOT_FOUND (6)
+```
 
-**错误函数:** `hccp_stub.cc::RaCtxQpImport()`
+**错误函数:**
+```
+hccp_stub.cc::RaCtxQpImport()
+```
 
 **关键日志:**
 ```
@@ -406,7 +512,11 @@ Get remote endpoint failed. ip:<IP>, eid:<EID>
 
 **问题现象:** 网络端点查找失败。
 
-**可能原因:** IP地址不在rank table配置的端点列表中。
+**定位指导:**
+```
+【可能原因】
+IP地址不在rank table配置的端点列表中。
+```
 
 ---
 
@@ -414,9 +524,15 @@ Get remote endpoint failed. ip:<IP>, eid:<EID>
 
 **标题:** CCU微码加载失败
 
-**错误码:** `HCCL_SIM_E_INTERNAL` (4)
+**错误码:**
+```
+HCCL_SIM_E_INTERNAL (4)
+```
 
-**错误函数:** `hccp_ccu_stub.cc::LoadMicrocodeInstruction()`
+**错误函数:**
+```
+hccp_ccu_stub.cc::LoadMicrocodeInstruction()
+```
 
 **关键日志:**
 ```
@@ -433,9 +549,15 @@ Get remote endpoint failed. ip:<IP>, eid:<EID>
 
 **标题:** 无法获取当前Context
 
-**错误码:** `HCCL_SIM_E_NOT_FOUND` (6)
+**错误码:**
+```
+HCCL_SIM_E_NOT_FOUND (6)
+```
 
-**错误函数:** `hccp_stub.cc::RaRdevInit()`
+**错误函数:**
+```
+hccp_stub.cc::RaRdevInit()
+```
 
 **关键日志:**
 ```
@@ -444,22 +566,23 @@ Get remote endpoint failed. ip:<IP>, eid:<EID>
 
 **问题现象:** 在RDMA设备初始化时，无法通过当前Runner获取活跃的Context，导致RDMA设备创建失败。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 应用层未调用`aclrtSetDevice`/`aclrtCreateContext`初始化设备和上下文
 2. Context已被提前销毁
 3. Runner的TLS（线程局部存储）中current_ctx_id无效
 4. 应用层在调用`aclrtSetDevice`初始化设备上下文前，调用了其他runtime接口获取了上下文
 
-**排查步骤:**
-```bash
+【排查步骤】
 # 检查Context表
 hccl-vm table show Context
 # 检查Runner表中的current_ctx_id
 hccl-vm table show Runner
-```
 
-**解决方法:**
-  确认应用层在调用RDMA操作前已正确调用`aclrtSetDevice`和`aclrtCreateContext`，且Context未被提前销毁。
+【解决方案】
+确认应用层在调用RDMA操作前已正确调用`aclrtSetDevice`和`aclrtCreateContext`，且Context未被提前销毁。
+```
 
 ---
 
@@ -467,9 +590,15 @@ hccl-vm table show Runner
 
 **标题:** 找不到AICPU二进制文件
 
-**错误码:** `ACL_ERROR_RT_FEATURE_NOT_SUPPORT`
+**错误码:**
+```
+ACL_ERROR_RT_FEATURE_NOT_SUPPORT
+```
 
-**错误函数:** `aclrt_kernel_stub.cc::aclrtDestroyBinary()`
+**错误函数:**
+```
+aclrt_kernel_stub.cc::aclrtDestroyBinary()
+```
 
 **关键日志:**
 ```
@@ -478,19 +607,20 @@ hccl-vm table show Runner
 
 **问题现象:** 销毁AICPU二进制对象时，在全局kernel binary注册表中找不到对应的二进制句柄。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 该二进制文件未被正确加载（`aclrtLoadBinary`未执行或失败）
 2. 二进制句柄已被重复销毁（double-free）
 3. 二进制对象在多线程环境下被并发操作导致状态不一致
 
-**排查步骤:**
-```bash
+【排查步骤】
 # 检查是否存在重复的destroy调用
 # 确认aclrtLoadBinary的返回值
-```
 
-**解决方法:**
-  确保`aclrtLoadBinary`成功返回后再调用`aclrtDestroyBinary`，且不要对同一二进制对象重复销毁。
+【解决方案】
+确保`aclrtLoadBinary`成功返回后再调用`aclrtDestroyBinary`，且不要对同一二进制对象重复销毁。
+```
 
 ---
 
@@ -498,9 +628,15 @@ hccl-vm table show Runner
 
 **标题:** AICPU设备进程异常退出
 
-**错误码:** `NA` (进程级错误)
+**错误码:**
+```
+NA (进程级错误)
+```
 
-**错误函数:** `aclrt_kernel_stub.cc::WaitAicpuProcess()`
+**错误函数:**
+```
+aclrt_kernel_stub.cc::WaitAicpuProcess()
+```
 
 **关键日志:**
 ```
@@ -510,14 +646,15 @@ hccl-vm table show Runner
 
 **问题现象:** AICPU设备子进程异常退出或被信号杀死，导致主进程随后也退出（`exit(EXIT_FAILURE)`）。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. AICPU进程内部发生未捕获异常或段错误
 2. 系统资源不足（内存、文件描述符等）导致子进程被OOM killer杀死
 3. AICPU二进制文件本身存在bug
 4. 子进程依赖的共享库缺失
 
-**排查步骤:**
-```bash
+【排查步骤】
 # 检查系统日志是否有OOM记录
 dmesg | grep -i "oom\|killed"
 # 确认AICPU二进制文件是否完整
@@ -525,12 +662,12 @@ ls -la $HCCL_VM_INSTALL_DIR/bin/
 # 检查系统资源
 ulimit -a
 free -m
-```
 
-**解决方法:**
+【解决方案】
 1. 检查AICPU二进制文件是否正确编译和部署
 2. 确认系统资源充足（内存、文件描述符限制等）
 3. 如为信号杀死，根据信号编号（如11=SIGSEGV, 9=SIGKILL）进一步定位原因
+```
 
 ---
 
@@ -538,9 +675,15 @@ free -m
 
 **标题:** CCU加载微码时找不到任何rank
 
-**错误码:** `HCCL_SIM_E_NOT_FOUND` (6)
+**错误码:**
+```
+HCCL_SIM_E_NOT_FOUND (6)
+```
 
-**错误函数:** `hccp_ccu_stub.cc::LoadMicrocodeInstruction()`
+**错误函数:**
+```
+hccp_ccu_stub.cc::LoadMicrocodeInstruction()
+```
 
 **关键日志:**
 ```
@@ -549,20 +692,21 @@ free -m
 
 **问题现象:** CCU微码指令加载过程中，无法在当前设备对应的Rank表中找到任何rank记录。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 通信域未通过`mock-comm`命令初始化，Rank表为空
 2. 当前设备ID在通信域配置中不存在
 
-**排查步骤:**
-```bash
+【排查步骤】
 # 检查Rank表是否有数据
 hccl-vm table show Rank
 # 检查设备表
 hccl-vm table show Device
-```
 
-**解决方法:**
-  确保在执行CCU相关操作前，已通过`hccl-vm mock-comm`命令正确初始化通信域，且通信域配置覆盖当前设备。
+【解决方案】
+确保在执行CCU相关操作前，已通过`hccl-vm mock-comm`命令正确初始化通信域，且通信域配置覆盖当前设备。
+```
 
 ---
 
@@ -570,9 +714,15 @@ hccl-vm table show Device
 
 **标题:** 按rankId查找设备失败
 
-**错误码:** `HCCL_E_NOT_FOUND`
+**错误码:**
+```
+HCCL_E_NOT_FOUND
+```
 
-**错误函数:** `aclrt_device_stub.cc::hrtSetDevice()`
+cc
+```
+aclrt_device_stub.cc::hrtSetDevice()
+```
 
 **关键日志:**
 ```
@@ -581,19 +731,20 @@ hccl-vm table show Device
 
 **问题现象:** 调用`aclrtSetDevice`设置当前设备时，根据rankId查找对应的设备失败。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. rankId超出了通信域中实际存在的rank范围  —— 如通信域配置4个NPU，但实际mpirun起了6个NPU进程，导致rankid 4, 5都报找不到device。
 2. 通信域未初始化（未执行`mock-comm`命令） —— 【大概率】初始化通信域后，工具内部才会初始化Rank表
 3. ranktable配置与实际使用的rank数量不匹配 —— 可能是`RANK_TABLE_FILE`配置了错误的文件路径
 
-**排查步骤:**
-```bash
+【排查步骤】
 # 检查rankId是否在有效范围内
 hccl-vm table show Rank
-```
 
-**解决方法:**
-  确认rankId在通信域配置的合法范围内（0 到 rank_count-1），且`RANK_TABLE_FILE`环境变量指向正确的ranktable.json文件。
+【解决方案】
+确认rankId在通信域配置的合法范围内（0 到 rank_count-1），且`RANK_TABLE_FILE`环境变量指向正确的ranktable.json文件。
+```
 
 ---
 
@@ -601,9 +752,15 @@ hccl-vm table show Rank
 
 **标题:** 桩接口暂未实现
 
-**错误码:** `HCCL_SIM_E_INTERNAL` (4) 或 `NA`
+**错误码:**
+```
+HCCL_SIM_E_INTERNAL (4) 或 NA
+```
 
-**错误函数:** 多个桩函数文件（`hccp_stub.cc`、`ascend_hal_stub.cc`、`aclrt_kernel_stub.cc`等）
+**错误函数:**
+```
+多个桩函数文件（hccp_stub.cc、ascend_hal_stub.cc、aclrt_kernel_stub.cc等）
+```
 
 **关键日志:**
 ```
@@ -615,20 +772,23 @@ hccl-vm table show Rank
 
 **问题现象:** 应用层调用了仿真器尚未实现的底层驱动或运行时接口，日志中出现`[STUB] is empty`或`Not support yet`告警/错误。此类桩函数直接返回默认值（通常为0或成功），不进行任何实际操作。
 
-**可能原因:**
-  仿真器当前版本仅实现了HCCL集合通信所需的核心接口子集。部分底层驱动接口（如drvGetDeviceCapability、RaCtxGetAuxInfo、drvMemPrefetch等）不在HCCL通信的核心路径上，因此桩函数体为空或标记为不支持。
+**定位指导:**
+```
+【可能原因】
+仿真器当前版本仅实现了HCCL集合通信所需的核心接口子集。部分底层驱动接口（如drvGetDeviceCapability、RaCtxGetAuxInfo、drvMemPrefetch等）不在HCCL通信的核心路径上，因此桩函数体为空或标记为不支持。
   一般情况下，对于HCCL-VM工具支持的流程不会调用这些接口，因此不会出现此类告警。若用户调用错误应用层接口，或进入了错误的HCCL业务流程，可能会出现此类告警。
+
+【解决方案】
+1. 此类告警通常不影响HCCL算子的正确性仿真，可安全忽略
+2. 如果该告警伴随功能异常，说明应用依赖了未实现的接口，请反馈给仿真器开发团队
+3. 如需特定接口的桩实现，可联系开发团队优先适配
+```
 
 **涉及的主要接口类型:**
 1. **驱动层接口**（`ascend_hal_stub.cc`）：drvGetDeviceCapability、drvMemPrefetch、drvStreamQuery等约315个接口
 2. **RDMA接口**（`hccp_stub.cc`）：RaRestoreSnapshot、RaRdevInitWithBackup、RaCtxGetAuxInfo等约44个接口
 3. **Runtime适配层**（`adapter_rts_stub.cc`）：部分aclrt扩展接口
 4. **TSD客户端**（`tsd_client_stub.cc`）：TSD相关接口
-
-**解决方法:**
-1. 此类告警通常不影响HCCL算子的正确性仿真，可安全忽略
-2. 如果该告警伴随功能异常，说明应用依赖了未实现的接口，请反馈给仿真器开发团队
-3. 如需特定接口的桩实现，可联系开发团队优先适配
 
 ---
 
@@ -640,9 +800,15 @@ hccl-vm table show Rank
 
 **标题:** Ranktable环境变量配置错误
 
-**错误码:** `NA` (1)
+**错误码:**
+```
+NA (1)
+```
 
-**错误函数:** `param_check_v2.cc::RanktableRealPath`
+**错误函数:**
+```
+param_check_v2.cc::RanktableRealPath
+```
 
 **关键日志:**
 ```
@@ -659,16 +825,17 @@ hccl-vm table show Rank
 
 **问题现象:** 运行用例，初始化通信域失败。
 
-**可能原因:** ranktable.json文件路径配置错误，请查看RANK_TABLE_FILE环境变量的配置。ranktable.json由工具生成，其路径为$HCCL_VM_INSTALL_DIR/data/ranktable.json。
-
-**排查步骤:**
-
-```bash
-echo $RANK_TABLE_FILE
+**定位指导:**
 ```
+【可能原因】
+ranktable.json文件路径配置错误，请查看RANK_TABLE_FILE环境变量的配置。ranktable.json由工具生成，其路径为$HCCL_VM_INSTALL_DIR/data/ranktable.json。
 
-**解决方法:**
-  确认RANK_TABLE_FILE环境变量配置正确，指向ranktable.json文件的路径。
+【排查步骤】
+echo $RANK_TABLE_FILE
+
+【解决方案】
+确认RANK_TABLE_FILE环境变量配置正确，指向ranktable.json文件的路径。
+```
 
 ---
 
@@ -676,9 +843,15 @@ echo $RANK_TABLE_FILE
 
 **标题:** topo.json路径配置错误
 
-**错误码:** `NA` (1)
+**错误码:**
+```
+NA (1)
+```
 
-**错误函数:** `communicator_impl.cc::GetTopoFilePath`
+**错误函数:**
+```
+communicator_impl.cc::GetTopoFilePath
+```
 
 **关键日志:**
 ```
@@ -687,16 +860,17 @@ echo $RANK_TABLE_FILE
 
 **问题现象:** 运行用例，初始化通信域失败。
 
-**可能原因:** topo.json文件路径在/etc/hccl_rootinfo.json文件中配置错误，请查看topo_file_path字段。topo.json由工具生成，其路径为$HCCL_VM_INSTALL_DIR/data/topo.json。
-
-**排查步骤:**
-
-```bash
-echo $TOPO_FILE_PATH
+**定位指导:**
 ```
+【可能原因】
+topo.json文件路径在/etc/hccl_rootinfo.json文件中配置错误，请查看topo_file_path字段。topo.json由工具生成，其路径为$HCCL_VM_INSTALL_DIR/data/topo.json。
 
-**解决方法:**
-  确认TOPO_FILE_PATH环境变量配置正确，指向topo.json文件的路径。
+【排查步骤】
+echo $TOPO_FILE_PATH
+
+【解决方案】
+确认TOPO_FILE_PATH环境变量配置正确，指向topo.json文件的路径。
+```
 
 ---
 
@@ -704,9 +878,15 @@ echo $TOPO_FILE_PATH
 
 **标题:** mock-comm命令报错
 
-**错误码:** `NA` (6)
+**错误码:**
+```
+NA
+```
 
-**错误函数:** `db_sim_runner_ops.cc::GetServerKeyById`
+**错误函数:**
+```
+db_sim_runner_ops.cc::GetServerKeyById
+```
 
 **关键日志:**
 ```
@@ -719,16 +899,18 @@ echo $TOPO_FILE_PATH
 
 **问题现象:** 运行用例前，通过mock-comm命令配置通信域失败。
 
-**可能原因:** mock-comm命令配置的通信域144配置，超过了工具启动的集群配置。比如工具启动的集群，一个超节点只有2个server，但通信域144表示该超节点下有4个server。
+**定位指导:**
+```
+【可能原因】
+mock-comm命令配置的通信域144配置，超过了工具启动的集群配置。比如工具启动的集群，一个超节点只有2个server，但通信域144表示该超节点下有4个server。
 
-**解决方法:**
-  检查工具启动的集群配置，确认每个超节点下的server数量。若确实需要配置144通信域，则确保工具启动时选择一个更大的集群组网配置。
+【排查步骤】
+确认工具启动时的集群配置文件和mock-comm命令配置的通信域配置文件。
 
-**排查步骤:**
-  确认工具启动时的集群配置文件和mock-comm命令配置的通信域配置文件。
-
-**解决方法:**
-  确保mock-comm命令配置的通信域，不超过工具启动的集群配置。
+【解决方案】
+检查工具启动的集群配置，确认每个超节点下的server数量。若确实需要配置144通信域，则确保工具启动时选择一个更大的集群组网配置。
+确保mock-comm命令配置的通信域，不超过工具启动的集群配置。
+```
 
 ---
 
@@ -736,9 +918,15 @@ echo $TOPO_FILE_PATH
 
 **标题:** EndPoint IP 查找失败
 
-**错误码:** `HCCL_SIM_E_NOT_FOUND` (6)
+**错误码:**
+```
+HCCL_SIM_E_NOT_FOUND (6)
+```
 
-**错误函数:** `topo_ascend_cluster_parser.cc::AddLinkInfo()`
+**错误函数:**
+```
+topo_ascend_cluster_parser.cc::AddLinkInfo()
+```
 
 **关键日志:**
 ```
@@ -746,6 +934,114 @@ cannot find endPoint by ip <IP_ADDR>
 ```
 
 **问题现象:** 网络链路配置中引用的 IP 地址在拓扑中不存在。
+
+---
+
+#### FAQ-N005
+
+**标题:** superpod索引越界
+
+**错误码:**
+```
+HCCL_SIM_E_NOT_FOUND (6)
+```
+
+**错误函数:**
+```
+topo_ascend_cluster_parser.cc::InitDynamicModelData()
+```
+
+**关键日志:**
+```
+[InitDynamicModelData] superpod index <N> out of range
+```
+
+**问题现象:** 解析ranktable生成ranktable.json时，引用的superpod索引超出集群实际的superpod数量，导致初始化失败。
+
+**定位指导:**
+```
+【可能原因】
+ranktable中配置的设备所属superpod数量，超过了工具启动的集群组网配置。例如集群只有1个superpod，但ranktable中引用了第2个superpod。
+
+【排查步骤】
+1. 检查工具启动时的集群组网配置（topo_meta/*.yaml），确认superpod数量。
+2. 检查ranktable配置（$HCCL_VM_INSTALL_DIR/data/ranktable.json），确认其中引用的superpod索引是否超出范围。
+
+【解决方案】
+确保mock-comm命令配置的通信域所引用的superpod数量不超过集群组网配置。若需要更多superpod，请选择更大的集群组网配置启动工具。
+```
+
+---
+
+#### FAQ-N006
+
+**标题:** server索引越界
+
+**错误码:**
+```
+HCCL_SIM_E_NOT_FOUND (6)
+```
+
+**错误函数:**
+```
+topo_ascend_cluster_parser.cc::InitDynamicModelData()
+```
+
+**关键日志:**
+```
+[InitDynamicModelData] server index <N> out of range in superpod <M>
+```
+
+**问题现象:** 解析ranktable生成ranktable.json时，引用的server索引超出superpod内实际的server数量，导致初始化失败。
+
+**定位指导:**
+```
+【可能原因】
+ranktable中配置的某个superpod下的server数量，超过了工具启动的集群组网配置中该superpod的server数量。例如集群组网中每个superpod有2个server，但ranktable中引用了第3个server。
+
+【排查步骤】
+1. 检查工具启动时的集群组网配置（topo_meta/*.yaml），确认每个superpod下的server数量。
+2. 检查ranktable配置（$HCCL_VM_INSTALL_DIR/data/ranktable.json），确认其中引用的server索引是否超出范围。
+
+【解决方案】
+确保mock-comm命令配置的通信域中每个superpod下的server数量不超过集群组网配置。若需要更多server，请选择更大的集群组网配置启动工具。
+```
+
+---
+
+#### FAQ-N007
+
+**标题:** 按物理ID查找设备失败
+
+**错误码:**
+```
+HCCL_SIM_E_NOT_FOUND (6)
+```
+
+**错误函数:**
+```
+topo_ascend_cluster_parser.cc::InitDynamicModelData()
+```
+
+**关键日志:**
+```
+[InitDynamicModelData] cannot find device by physical id <N>
+```
+
+**问题现象:** 解析ranktable时，按物理设备ID查找设备失败，通常发生在mock-comm配置通信域时。
+
+**定位指导:**
+```
+【可能原因】
+mock-comm命令配置的通信域中引用的物理设备ID（physical id），超出了集群组网中实际的设备范围。例如集群只有2个设备（physical id 0和1），但通信域配置引用了physical id 2。
+
+【排查步骤】
+1. 检查工具启动时的集群组网配置（topo_meta/*.yaml），确认每个server下的设备数量。
+2. 检查ranktable配置（$HCCL_VM_INSTALL_DIR/data/ranktable.json），确认其中引用的device_id是否超出范围。
+
+【解决方案】
+确保mock-comm命令配置的通信域中引用的物理设备ID不超过集群组网配置中的设备范围。若需要更多设备，请选择更大的集群组网配置启动工具。
+```
 
 ---
 
@@ -757,9 +1053,15 @@ cannot find endPoint by ip <IP_ADDR>
 
 **标题:** SQLite 数据库连接失败
 
-**错误码:** `HCCL_SIM_E_OPEN_FILE_FAILURE` (10)
+**错误码:**
+```
+HCCL_SIM_E_OPEN_FILE_FAILURE (10)
+```
 
-**错误函数:** `db_hccl_db_sqlite.cc::Connect()`
+**错误函数:**
+```
+db_hccl_db_sqlite.cc::Connect()
+```
 
 **关键日志:**
 ```
@@ -769,10 +1071,13 @@ Connect database:<path> failed
 
 **问题现象:** 无法连接到 SQLite 数据库文件。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 数据库文件不存在
 2. 文件权限不足
 3. 文件被其他进程锁定
+```
 
 ---
 
@@ -780,9 +1085,15 @@ Connect database:<path> failed
 
 **标题:** 数据库备份文件未找到
 
-**错误码:** `HCCL_SIM_E_OPEN_FILE_FAILURE` (10)
+**错误码:**
+```
+HCCL_SIM_E_OPEN_FILE_FAILURE (10)
+```
 
-**错误函数:** `sim_loader.cc::BackupDatabase()`
+**错误函数:**
+```
+sim_loader.cc::BackupDatabase()
+```
 
 **关键日志:**
 ```
@@ -791,13 +1102,14 @@ Connect database:<path> failed
 
 **问题现象:** Loader 无法找到仿真数据库文件。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 仿真数据文件路径配置错误
 2. 仿真数据尚未生成
 3. 文件权限不足
 
-**排查步骤:**
-```bash
+【排查步骤】
 ls -la <dbPath>
 ```
 
@@ -807,9 +1119,15 @@ ls -la <dbPath>
 
 **标题:** SQLite 查询失败
 
-**错误码:** `HCCL_SIM_E_INTERNAL` (4)
+**错误码:**
+```
+HCCL_SIM_E_INTERNAL (4)
+```
 
-**错误函数:** `db_hccl_db_sqlite.cc`
+**错误函数:**
+```
+db_hccl_db_sqlite.cc
+```
 
 **关键日志:**
 ```
@@ -819,10 +1137,13 @@ Step failed: <error>, sql:<SQL>
 
 **问题现象:** SQL 查询执行失败。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 数据库表结构不匹配（版本不兼容）
 2. 数据库文件损坏
 3. 磁盘空间不足
+```
 
 ---
 
@@ -840,7 +1161,10 @@ Step failed: <error>, sql:<SQL>
 
 **标题:** 内存切片溢出
 
-**错误函数:** `task_graph_single_task_check_v3.cc::CheckMemorySlice()`
+**错误函数:**
+```
+task_graph_single_task_check_v3.cc::CheckMemorySlice()
+```
 
 **关键日志:**
 ```
@@ -850,9 +1174,12 @@ Step failed: <error>, sql:<SQL>
 
 **问题现象:** 单个任务的内存切片覆盖范围超出了目标buffer的总大小。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. HCCL算法层计算的内存偏移量有误（HCCL业务问题）
 2. 仿真数据中内存布局信息与任务参数不匹配（工具数据问题）
+```
 
 **图示说明:**
 ```mermaid
@@ -868,7 +1195,10 @@ graph LR
 
 **标题:** 缓冲区语义不完整
 
-**错误函数:** `task_graph_semantic_check_v3.cc::CheckBufferContinuity()`
+**错误函数:**
+```
+task_graph_semantic_check_v3.cc::CheckBufferContinuity()
+```
 
 **关键日志:**
 ```
@@ -879,9 +1209,12 @@ graph LR
 
 **问题现象:** 目标buffer的数据语义覆盖存在空洞。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. HCCL算法遗漏了部分数据区域
 2. Checker未能正确追踪传输路径
+```
 
 **图示说明:**
 ```mermaid
@@ -901,7 +1234,10 @@ graph TB
 
 **标题:** Reduce语义错误
 
-**错误函数:** `task_graph_semantic_check_v3.cc::CheckReduceSemantics()`
+**错误函数:**
+```
+task_graph_semantic_check_v3.cc::CheckReduceSemantics()
+```
 
 **关键日志:**
 ```
@@ -912,10 +1248,13 @@ graph TB
 
 **问题现象:** Reduce操作的数据语义校验失败。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. Reduce操作的数据类型不匹配
 2. 存在重复的reduce源
 3. 目标buffer未被所有reduce源完全覆盖
+```
 
 ---
 
@@ -927,7 +1266,10 @@ graph TB
 
 **标题:** rankSize 为零
 
-**错误函数:** `task_graph_semantic_check_v3.cc`
+**错误函数:**
+```
+task_graph_semantic_check_v3.cc
+```
 
 **关键日志:**
 ```
@@ -936,7 +1278,11 @@ graph TB
 
 **问题现象:** 语义检查时参与通信的rank数量为0。
 
-**可能原因:** 通信域未正确初始化，或rank table解析失败。
+**定位指导:**
+```
+【可能原因】
+通信域未正确初始化，或rank table解析失败。
+```
 
 ---
 
@@ -944,7 +1290,10 @@ graph TB
 
 **标题:** Batch Trans 配对大小不匹配
 
-**错误函数:** `task_graph_single_task_check_v3.cc::CheckBatchTrans()`
+**错误函数:**
+```
+task_graph_single_task_check_v3.cc::CheckBatchTrans()
+```
 
 **关键日志:**
 ```
@@ -954,7 +1303,11 @@ graph TB
 
 **问题现象:** 批量传输操作中，切片长度或配对数量不匹配。
 
-**可能原因:** AlltoAll等算子的rank间数据分布不均等。
+**定位指导:**
+```
+【可能原因】
+AlltoAll等算子的rank间数据分布不均等。
+```
 
 ---
 
@@ -966,7 +1319,10 @@ graph TB
 
 **标题:** 不支持的内存类型
 
-**错误函数:** `task_graph_single_task_check_v3.cc`
+**错误函数:**
+```
+task_graph_single_task_check_v3.cc
+```
 
 **关键日志:**
 ```
@@ -986,7 +1342,10 @@ graph TB
 
 **标题:** Dump文件写入失败
 
-**错误函数:** `dump_manager.cc`, `dump_v3_manager.cc`
+**错误函数:**
+```
+dump_manager.cc, dump_v3_manager.cc
+```
 
 **关键日志:**
 ```
@@ -997,9 +1356,12 @@ graph TB
 
 **问题现象:** Checker的中间结果dump文件写入失败。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 磁盘空间不足
 2. 目录不存在或无写权限
+```
 
 ---
 
@@ -1007,7 +1369,10 @@ graph TB
 
 **标题:** 二进制文件magic number不匹配
 
-**错误函数:** `binary_data_operator.cc::FileHeaderRead()`
+**错误函数:**
+```
+binary_data_operator.cc::FileHeaderRead()
+```
 
 **关键日志:**
 ```
@@ -1016,200 +1381,12 @@ graph TB
 
 **问题现象:** 读取仿真数据文件时，文件头中的magic number不匹配。
 
-**可能原因:**
+**定位指导:**
+```
+【可能原因】
 1. 数据文件版本与工具版本不兼容
 2. 文件损坏
-
----
-
-### 子模块：runner
-
----
-
-#### FAQ-R001
-
-**标题:** CCU版本不支持
-
-**错误码:** `HCCL_SIM_E_NOT_SUPPORT` (5)
-
-**错误函数:** `ccu_resource_manager.cc::Init()`
-
-**关键日志:**
 ```
-[CcuResourceManager][Init] ccu version <N> not supported
-Invalid ccu version:<version>
-```
-
-**问题现象:** CCU执行器不支持当前设备的CCU版本。
-
-**可能原因:** 仿真数据中的CCU版本与工具支持的版本不匹配。
-
-**图示说明:**
-```mermaid
-graph TD
-    A[加载CCU微码] --> B{版本检查}
-    B -->|CCU_V1| C[执行V1指令集]
-    B -->|CCU_V2| D[执行V2指令集]
-    B -->|其他版本| E[报错:版本不支持]
-```
-
----
-
-#### FAQ-R002
-
-**标题:** 数据传输大小为0
-
-**错误码:** `HCCL_SIM_E_PARA` (1)
-
-**错误函数:** `trans_loc_ms_to_loc_mem_executor.cc::Run()`
-
-**关键日志:**
-```
-[TransLocMSToLocMemExecutor] The size of data transfer is 0.
-```
-
-**问题现象:** 数据传输操作的数据量为0。
-
-**可能原因:**
-1. 源地址和目的地址相同
-2. CCU指令参数计算错误
-
----
-
-#### FAQ-R003
-
-**标题:** AIV初始化失败
-
-**错误码:** `HCCL_SIM_E_INTERNAL` (4)
-
-**错误函数:** `hccl_task_thread.cc`
-
-**关键日志:**
-```
-Failed to init AivGraphExecutor, rankId=<N>, streamId=<N>, launchIndex=<N>
-AivGraphExecutor failed, rankId=<N>, streamId=<N>, launchIndex=<N>, ret=<N>
-```
-
-**问题现象:** AIV图执行器初始化或执行失败。
-
----
-
-#### FAQ-R004
-
-**标题:** CCU指令执行失败
-
-**错误码:** `HCCL_SIM_E_INTERNAL` (4)
-
-**错误函数:** `ccu_simulator.cc::ExecuteInstr()`
-
-**关键日志:**
-```
-[CcuSimulator][ExecuteInstr] locCcu[<rank>:<die>], Invalid curInstrId_[<N>], endInstrId[<M>]
-```
-
-**问题现象:** CCU微码指令执行时，当前指令ID无效。
-
----
-
-#### FAQ-R005
-
-**标题:** CCU资源地址越界
-
-**错误码:** `HCCL_SIM_E_PARA` (1)
-
-**错误函数:** `ccu_resource_manager.cc`
-
-**关键日志:**
-```
-dieId is out of range, dieId=[<N>]
-msAddr is out of range, msAddr=[<N>],addr=[<N>]
-```
-
-**问题现象:** CCU资源访问时地址或ID越界。
-
----
-
-#### FAQ-R006
-
-**标题:** 内存搬运地址无效
-
-**错误码:** `HCCL_SIM_E_MEMORY` (3)
-
-**错误函数:** `ccu_resource_manager.cc`
-
-**关键日志:**
-```
-[TransMemToMem] 无法获取srcBuf的设备地址(addr= 0x<ADDR>)！
-[TransMemToMem] 无法获取dstBuf的设备地址(addr= 0x<ADDR>)！
-```
-
-**问题现象:** CCU执行内存搬运时，源或目标地址无法在设备内存表中找到。
-
----
-
-### 子模块：insight
-
----
-
-#### FAQ-I001
-
-**标题:** Insight前端页面打不开
-
-**关键日志:**
-```
-[Insight] Failed to start web server on port <N>
-[Insight] Address already in use
-```
-
-**问题现象:** Insight可视化界面无法访问。
-
-**可能原因:**
-1. 端口被占用
-2. 网络配置问题
-3. Python依赖未安装
-
-**排查步骤:**
-```bash
-netstat -tlnp | grep <port>
-```
-
----
-
-#### FAQ-I002
-
-**标题:** Insight数据加载异常
-
-**关键日志:**
-```
-[Insight] Failed to load data from SQLite
-[Insight] JSON parse error: <error>
-```
-
-**问题现象:** Insight面板中数据无法正常显示。
-
-**可能原因:**
-1. 数据库连接失败
-2. 数据文件损坏
-3. JSON格式错误
-
----
-
-#### FAQ-I003
-
-**标题:** DAG图渲染问题
-
-**关键日志:**
-```
-[Insight] DAG render failed: <error>
-[Insight] Node count exceeds limit: <N>
-```
-
-**问题现象:** 任务图无法正常渲染或显示不全。
-
-**可能原因:**
-1. 任务节点数量过多
-2. 图布局算法超时
-3. 浏览器内存不足
 
 ---
 

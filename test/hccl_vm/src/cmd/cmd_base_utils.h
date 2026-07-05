@@ -30,6 +30,7 @@
 
 extern const std::string HVM_BASH_ENV_KEY;
 extern bool g_hcclVmBashFlag;
+extern std::string g_configClusterDir;
 extern std::uint32_t g_hcclVmLevel;
 
 class CstyleCmd {
@@ -67,6 +68,7 @@ private:
 std::string GetBinLocation();
 std::string ArgvToString(int argc, char *argv[]);
 std::string FileInModelDir(const std::string& fileName);
+std::string CheckClusterConfigFile(const std::string& topoFileName);
 std::string GenerateClusterTopo(const std::string& topoFileName);
 void RemoveFromLDPreload(const std::string& targetValue);
 void ShowModel();

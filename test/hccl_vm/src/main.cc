@@ -54,8 +54,7 @@ void envInit()
     std::string dbPrefix = InstallPath::ResolveToInstallRoot("data/hccl_vm_data.db");
     int ret3 = system(("sudo rm -fr " + dbPrefix + " " + dbPrefix + "-wal " + dbPrefix + "-shm 2>/dev/null").c_str());
     int ret1 = system("sudo rm -fr /dev/shm/* 2>/dev/null");
-    int ret2 = system("sudo rm -fr /tmp/hccl_sim.db* 2>/dev/null");
-    if (ret1 != 0 || ret2 != 0) {
+    if (ret1 != 0) {
         HCCL_VM_ERROR("envInit failed");
     }
     sim::InitOpDataDb();
@@ -72,7 +71,6 @@ int main(int argc, char *argv[])
         LogConfig config = LoadLogConfig("hccl_vm");
         InitLogger(config);
         envInit();
-        std::atexit(ArchiveLogsAndData);
         std::string cmd = ArgvToString(argc, argv);
         if (argc == 1) {
             cmd += " --help";

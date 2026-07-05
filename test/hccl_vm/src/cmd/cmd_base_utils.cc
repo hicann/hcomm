@@ -73,6 +73,7 @@ static const int HOST_CLIENT_RESP_TIMEOUT_MS = 5000;
 
 bool g_hcclVmBashFlag{false}; 
 std::uint32_t g_hcclVmLevel{2}; 
+std::string g_configClusterDir{""};
 
 static std::string ToPosixMqName(const char *name) 
 { 
@@ -413,31 +414,40 @@ std::string FileInModelDir(const std::string& fileName) {
     } 
 } 
 
-std::string GenerateClusterTopo(const std::string& topoFileName) { 
+std::string CheckClusterConfigFile(const std::string& topoFileName) {
+    if (topoFileName.empty()) {
+        return "[HVM] topoFileName is empty";
+    }
     // 检查topoFileName是否带.yaml后缀, 有则删除 
     auto topoName = topoFileName; 
     if (topoName.find(".yaml") != std::string::npos) { 
-        topoName.erase(topoName.find(".yaml"), 5); 
-    } 
+        topoName.erase(topoName.find(".yaml"), 5);
+    }
 
     std::string generateShellPath = InstallPath::ResolveToInstallRoot("script/generate_cluster_topo.sh"); 
     if (!fs::exists(generateShellPath)) { 
         HCCL_VM_ERROR("generate_cluster_topo.sh not found: {}", generateShellPath); 
         return "[HVM] generate_cluster_topo.sh not found: " + generateShellPath; 
-    } 
+    }
     std::string clusterConfigFilePath = InstallPath::ResolveToInstallRoot("config/cluster/" + topoName + ".yaml"); 
     if (!fs::exists(clusterConfigFilePath)) { 
         HCCL_VM_ERROR("cluster config file not found: {}", clusterConfigFilePath); 
         return "[HVM] cluster config file not found: " + clusterConfigFilePath; 
-    } 
+    }
+    return ""; 
+}
+
+std::string GenerateClusterTopo(const std::string& topoFileName) { 
+    std::string generateShellPath = InstallPath::ResolveToInstallRoot("script/generate_cluster_topo.sh"); 
+    std::string clusterConfigFilePath = InstallPath::ResolveToInstallRoot("config/cluster/" + topoFileName + ".yaml"); 
     // 执行generate_cluster_topo.sh脚本（默认路径），生成集群组网 
     std::string cmd = "bash " + generateShellPath + " " + clusterConfigFilePath; 
     if (std::system(cmd.c_str()) != 0) { 
         HCCL_VM_ERROR("generate_cluster_topo.sh failed: {}", cmd); 
         return "[HVM] generate_cluster_topo.sh failed: " + cmd; 
-    } 
+    }
     return ""; 
-} 
+}
 
 void ShowModel() { 
     std::string modelPath = InstallPath::ResolveToInstallRoot("cluster_model"); 
@@ -562,7 +572,6 @@ HcclVmResult HcclVmExit()
         sim::MemoryManager::GetInstance().FreeMemByName(sim::CommPoolPolicy::kPoolName);
     }
     int ret1 = system("sudo rm -fr /dev/shm/* 2>/dev/null");
-    ret1 |= system("sudo rm -fr /tmp/hccl_sim.db* 2>/dev/null"); 
 
     return ret; 
 } 

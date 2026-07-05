@@ -952,6 +952,7 @@ aclError aclrtPointerGetAttributes(const void *ptr, aclrtPtrAttributes *attribut
 
     attributes->location.id = devRes->logic_id;
     attributes->location.type = (aclrtMemLocationType)(virMemRes.first.src_type);
+    attributes->pageSize = 0;
     return ACL_SUCCESS;
 }
 
@@ -1007,7 +1008,10 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
     (void) flags;
     uint64_t startPtr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(devPtr));
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [startPtr](const sim::VirtualMemBlock &virMem) { return virMem.start_ptr == startPtr; });
+        [startPtr](const sim::VirtualMemBlock &virMem) {
+            return startPtr >= virMem.start_ptr &&
+                   startPtr < virMem.start_ptr + virMem.size;
+        });
     if (!virMemRes.second) {
         HCCL_VM_ERROR("can not find this buff offset ptr: 0x{:x}", startPtr);
         return ACL_ERROR_INVALID_PARAM;
@@ -1025,6 +1029,7 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
     }
     sim::IpcMemRecord memRecord{};
     memRecord.vir_mem_id = virMemRes.first.id;
+    memRecord.offset = startPtr - virMemRes.first.start_ptr;
     memRecord.create_pid = runner.pid;
     auto recordIdx = RunnerDB::Add<sim::IpcMemRecord>(memRecord);
 
@@ -1064,7 +1069,12 @@ aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)
         HCCL_VM_ERROR("cannot find vir mem: {:d}", recordRes->vir_mem_id);
         return ACL_ERROR_INVALID_PARAM;
     }
-    *devPtr = (void *)virMemRes->start_ptr;
+    if (recordRes->offset >= virMemRes->size) {
+        HCCL_VM_ERROR("ipc mem offset out of range, ipc record: {:d}, vir mem: {:d}, offset: {:d}, size: {:d}",
+            ipcRecordIdx, recordRes->vir_mem_id, recordRes->offset, virMemRes->size);
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    *devPtr = reinterpret_cast<void *>(virMemRes->start_ptr + recordRes->offset);
 
     return ACL_SUCCESS;
 }

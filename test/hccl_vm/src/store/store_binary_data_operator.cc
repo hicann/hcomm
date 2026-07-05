@@ -110,7 +110,7 @@ HcclVmResult HcclVmSynDataWrite(FILE *fp, const HcclVmSynData &synData)
     if (isCcuMode) {
         ret = ChannelInfoWrite(fp, synData.channel_info);
     } else if(isAivMode) {
-        HCCL_VM_ERROR("AIV mode do not write channel or jetty. ");
+        HCCL_VM_WARN("AIV mode do not write channel or jetty. ");
     } else {
         ret = ChannelInfoWrite(fp, synData.channel_info);
     }

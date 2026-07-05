@@ -35,6 +35,26 @@ hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测�
 
 ---
 
+## 一键安装
+
+一行完成依赖安装、配套源码拉取、CANN 检测与编译（默认 `campus-2026` 配套方案）：
+
+```bash
+curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_install.sh | bash
+```
+
+也可下载后本地运行（便于先审阅、离线或竞赛直接分发脚本）：`bash hccl_vm_install.sh`。
+
+**前提**：x86_64、Ubuntu 22.04 及以上；CANN 需预先安装（脚本自动探测 `/usr/local/Ascend`、`/home/workspace/Ascend`、`~/Ascend` 等常见路径，未检测到会打印安装步骤）。
+
+**常用参数**：`--profile <名>`（默认 `campus-2026`，`--list-profiles` 列全部配套方案）、`--ascend-path <路径>`（CANN 非默认位置时指定）、`--workspace <路径>`、`-h`。
+
+完成后工具位于 `<工作目录>/hcomm/test/hccl_vm/hccl_vm_install/bin/hccl-vm`。
+
+如需先审阅脚本，可下载后阅读再运行：`curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_install.sh -o hccl_vm_install.sh`。移除方式：删除工作目录即可清理本工具产物（脚本经 apt 安装的系统依赖如需卸载请自行 `apt remove`），本工具不改动 CANN。
+
+---
+
 ## 3. 快速上手
 
 ### 3.1 工具构建&安装
@@ -158,8 +178,6 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 #### 3.2.4 AIV模式
 
-**当前仅支持Runner插件**。
-
 1. 环境变量配置。
 
 ```bash
@@ -187,11 +205,14 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 (hvm)$> hccl-vm mock-comm 112
 (hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
 
+# 执行checker校验
+(hvm)$> hccl-vm plugin run @checker
+
 # 退出工具终端
 (hvm)$> exit
 ```
 
-3. 验证hccl_test用例运行结果 [Runner结果查看](#491-runner插件结果)
+3. 验证hccl_test用例运行结果 [Runner结果查看](#491-runner插件结果) [Checker结果查看](#492-checker插件结果)
 
 ### 3.3 Pytorch用例示例
 

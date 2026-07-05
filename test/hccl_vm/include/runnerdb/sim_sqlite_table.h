@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "sim_log.h"
+#include "sim_common_api.h"
 
 namespace sim {
 inline std::shared_mutex& GetConnectionMutex() {
@@ -465,7 +466,7 @@ public:
     static std::string s_dbPath;
 
     SqliteDatabase() : m_db(nullptr) {
-        std::string actualPath = s_dbPath.empty() ? "/tmp/hccl_sim.db" : s_dbPath;
+        std::string actualPath = s_dbPath.empty() ? InstallPath::ResolveToInstallRoot("data/hccl_sim.db") : s_dbPath;
         if (sqlite3_open_v2(actualPath.c_str(), &m_db,
                             SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI,
                             nullptr) != SQLITE_OK) {
