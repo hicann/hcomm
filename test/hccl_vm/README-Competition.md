@@ -131,9 +131,9 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
 ./hccl-vm start ascend950_cluster_32_server_normal.yaml
 
-# 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
+# 选择本次算子执行的通信域配置文件（详见4.3章节，在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 0 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 0 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -172,9 +172,9 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
 ./hccl-vm start ascend950_cluster_32_server_normal.yaml
 
-# 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
+# 选择本次算子执行的通信域配置文件（详见4.3章节，在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 0 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 0 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -210,9 +210,9 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 # 如需启用runner插件（可选）
 (hvm)$> hccl-vm plugin install @runner
 
-# 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
+# 选择本次算子执行的通信域配置文件（详见4.3章节，在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -302,112 +302,41 @@ make MPI_HOME=/usr/lib/mpich/ ASCEND_DIR=${ASCEND_HOME_PATH}
 
 ### 4.3 昇腾集群拓扑配置文件说明
 
-#### 4.3.1 Server/Pod拓扑配置文件说明
+工具提供了`hccl-vm mock-comm`命令读取和配置算子通信域配置文件。通信域配置文件格式为yaml，路径为hccl_vm_install/config/topo_meta。若目录中没有对应的通信域配置文件，则用户需要先创建一个。
 
-昇腾集群拓扑是由一个或多个Server/Pod形态的子拓扑，按照CLOS分层网络规则组合而成的。因此用户在生成集群拓扑前，需要确认每个Server/Pod的拓扑类型。
-用户既可以选择HCCL-VM工具提供的预定义拓扑类型，也可以根据配置文件格式要求，自定义Server/Pod的拓扑类型。
-
-描述一个Server/Pod的拓扑网络关系，主要包括以下方面：
-
- - **端口配置表**: 描述一个NPU卡的物理端口配置信息，如NPU与NPU直连端口（P2P），NPU出框端口（P2NET）等。
- - **链路配置表**: 描述一个Server/Pod内的所有NPU卡之间的连接关系，如全连接（Full Mesh）等。
- - **PortBound**: 描述一个NPU卡的某些端口的绑定关系，即多个端口绑定成一个PortGroup。
+- 对称拓扑场景：每个Server内包含相同数据的NPU设备
 
 ```yaml
-type: "server_intra_links"
-name: "ascend950_links_topo_demo"
-description: "ascend950芯片普通拓扑连接关系描述文件"
+# 124.yaml配置详情
+# 1. 全局统计信息 podNum, serNum, rankNum 都小于 1024
+meta:
+  podNum: 1  # 总的超节点数
+  serNum: 2  # 总的server数
+  rankNum: 8 # 总的rank数
 
-soc_version: "Ascend950"
-device_num: 16
-
-device_ports_allocate_map:
- # port分配表: 0: 不使用, 1: device直连, 2: device连交换机, 3: d2h端口
- #                 portId:  0  1  2  3  4  5  6  7  8
-    - {die_id: 0, pin_map: [1, 1, 1, 0, 2, 2, 2, 2, 3]} # die0
-    - {die_id: 1, pin_map: [0, 0, 0, 0, 0, 0, 0, 0, 0]} # die1
-
-# port_group: 描述哪些port合并为一个portGroup，相同portGroup的port对于IP地址相同
-port_group:
-    - {layer: 0, ports: ["0/4", "0/5", "0/6", "0/7"]}
-
-links:
-  # ── 描述法：每行8个device组成全互联 ──
-  - link_mode: "fullmesh"
-    connections:
-      # 如下示例表示：die0的device 0, 1, 2, 3都通过die0的port进行全连接
-      - {die_id: 0, devices_range: [0, 3]}
-      - {die_id: 0, devices_range: [4, 7]}
-      - {die_id: 0, devices_range: [8, 11]}
-      - {die_id: 0, devices_range: [12, 15]}
-  
-  #- link_mode: "enum"
-  #  device_to_device_links:
-  #    如下示例表示：device 0和1都通过die0的port，分别与device 1, 3, 5, 7的die1的port进行连接
-  #            即：device0与device1, device3, device5, device7进行连接，device1与device3, device5, device7进行连接
-  #    - {src_die_id: 1, src_local_id_range: [0, 2], dst_die_id: 1, dst_local_id_range: [1, 3, 5, 7]}
-
-  - link_mode: "enum"
-    device_to_switch_links:
-      # 如下示例表示：device0到device15都通过die0的port连接到交换机。结合portGroup可知，device0到device15都通过portGroup[0/4, 0/5, 0/6, 0/7]连接到交换机。
-      - {die_id: 0, devices_range: [0, 15]}
-
+# 2. 详细拓扑结构 
+topology:
+  - podId: 0
+    servers:
+      - serId: 0
+        # 每个server实际跑的rank的local id
+        ranks: [0, 1, 2, 3]
+      - serId: 1
+        # 每个server实际跑的rank的local id
+        ranks: [0, 1, 2, 3]
 ```
 
-**字段说明**：
-
- - **soc_version**: 芯片型号，如 `Ascend950`。
- - **device_num**: 设备总数，根据芯片型号和拓扑类型确定。
- - **device_ports_allocate_map**: 端口分配表，描述每个die的端口配置。1表示device直连端口，2表示device连交换机端口，3表示d2h端口。
- - **port_group**: 描述哪些port合并为一个portGroup，相同portGroup的port对应IP地址相同。没有配置的port，则默认每个port为一个portGroup。
- - **links**: 链路配置表，描述Server/Pod内的所有NPU卡之间，以及NPU与交换机之间的连接关系。
-   - **NPU直连关系**: 工具提供了两种方式配置NPU直连关系：
-    - **link_mode == "fullmesh"**: 表示所有Device基于一个Die的Port进行全连接。后续有新增典型的连接方式，可以新增link_mode类型，如"ring"。
-    - **link_mode == "enum"**: 枚举法。当Server/Pod内的NPU连接方式比较复杂时，可以通过枚举所有的链路关系来描述。
-   - **NPU与交换机连接关系**: 用户可以通过枚举法配置NPU与交换机之间的连接关系。
- - **device_to_device_links**: 描述NPU与NPU之间的连接关系。
- - **device_to_switch_links**: 描述NPU与交换机之间的连接关系。
-
-#### 4.3.2 集群拓扑配置文件说明
-
-昇腾集群网络是由一个或多个Server/Pod形态的子拓扑，按照CLOS分层网络规则组合而成的。用户可根据集群规模和需求，选择不同的Server/Pod拓扑类型。
-
-用户可按照如下配置文件格式，自定义集群拓扑配置文件：
-
-```yaml
-name: "ascend950_cluster_32_server_normal"
-description: "昇腾950 normal组网：32个超级节点，每个超级节点1个服务器"
-
-# 超节点总数量
-super_node_num: 4
-# sever/pod总数量
-server_num: 32
-server_list:
-  # 0-7 server: 均采用ascend950_server_topo_normal拓扑类型
-  - {super_pod_id: 0, id_range: [0, 7], soc_version: "Ascend950", server_topo: "ascend950_server_topo_normal.yaml"}
-  - {super_pod_id: 1, id_range: [0, 7], soc_version: "Ascend950", server_topo: "ascend950_server_topo_normal.yaml"}
-  - {super_pod_id: 2, id_range: [0, 7], soc_version: "Ascend950", server_topo: "ascend950_server_topo_normal.yaml"}
-  - {super_pod_id: 3, id_range: [0, 7], soc_version: "Ascend950", server_topo: "ascend950_server_topo_normal.yaml"}
-
+```bash
+# 选择使用124.yaml代表两个Server，每个Server内4个NPU设备
+(hvm)$> hccl-vm mock-comm 124
+# mpirun启动参数-np需要对应上述总共8个NPU设备
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 8 
 ```
 
-上述配置文件描述了一个包含4个超节点，32个Server，共128个NPU卡的集群拓扑。其中，每个Server/Pod采用ascend950_server_topo_normal拓扑类型。
-
-**字段说明**：
-
- - **super_node_num**: 超节点总数量。
- - **server_num**: sever/pod总数量。
- - **server_list**: 每个Server/Pod的配置信息，包括超节点ID、设备ID范围、芯片型号、Server/Pod拓扑配置文件路径。
-
-#### 4.3.3 通信域配置文件说明
-
-用户在昇腾集群环境中，需要根据待执行算子所需的通信域不同，选择不同的通信域配置文件。
-
-工具提供了hccl-vm mock-comm命令读取和配置算子通信域配置文件。通信域配置文件格式为yaml，路径为hccl_vm_install/config/topo_meta。若目录中没有对应的通信域配置文件，则用户需要先创建一个。
-
-hccl-vm工具支持非对称拓扑通信域配置。如下所示：
+- 非对称拓扑场景：每个Server内包含不同数据的NPU设备
 
 ```yaml
+# 12_2_4.yaml配置详情
 # 1. 全局统计信息 podNum, serNum, rankNum 都小于 1024
 meta:
   podNum: 1  # 总的超节点数
@@ -420,121 +349,18 @@ topology:
     servers:
       - serId: 0
         # 每个server实际跑的rank的local id
-        ranks: [0, 2]
+        ranks: [0, 1]
       - serId: 1
         # 每个server实际跑的rank的local id
-        ranks: [1, 3, 5, 7]
+        ranks: [0, 1, 2, 3]
 ```
 
-**注意事项**：
-
-- 配置通信域时，工具会根据指定的通信域配置编号重新生成topo.json和ranktable.json文件。
-- 上述通信域配置yaml文件中，ranks字段表示每个server实际跑的rank的local id（即device的物理ID）列表。
-
-#### 4.3.4 topo和ranktable.json文件说明
-
-`topo.json` 和 `ranktable.json` 文件不需要手动创建，工具会根据以下信息自动生成：
-
-- **拓扑配置编号**：用户在启动时指定的编号（如 112、113 等）
-- **芯片类型**：根据运行环境自动识别的芯片类型。
-
-虽然配置文件由工具自动生成，但了解其结构有助于理解拓扑配置。
-
-**topo.json 结构**：
-
-`topo.json` 描述了一个 server 内所有设备的连接关系：
-
-```json
-{
-  "server": {
-    "device_count": 8,
-    "groups": [
-      {
-        "group_id": 0,
-        "device_start": 0,
-        "device_count": 8,
-        "topo_layout": "1D"
-      }
-    ]
-  },
-  "ports": [
-    {
-      "ccu": "die0",
-      "port_pattern": "0/{0-6}",
-      "protocol": "HCCS",
-      "func_id": 2,
-      "usage": "peer2peer",
-      "ip_binding": "independent"
-    },
-    {
-      "ccu": "die0",
-      "port_pattern": "0/7,0/8",
-      "protocol": "ROCE",
-      "func_id": 3,
-      "usage": "peer2net",
-      "ip_binding": "independent"
-    }
-  ],
-  "links": [
-    {
-      "net_layer": 0,
-      "link_type": "PEER2PEER",
-      "topo_type": "1DMESH",
-      "ccu": "die0",
-      "port_pattern": "0/{0-6}",
-      "connect_pattern": "full_mesh",
-      "group_id": 0
-    },
-    {
-      "net_layer": 1,
-      "link_type": "PEER2NET",
-      "topo_type": "CLOS",
-      "ccu": "die0",
-      "port_pattern": "0/7,0/8",
-      "connect_pattern": "all_to_net",
-      "group_id": 0
-    }
-  ]
-}
+```bash
+# 选择使用12_2_4.yaml代表两个Server，第一个Server内2个NPU设备，第二个Server内4个NPU设备
+(hvm)$> hccl-vm mock-comm 12_2_4
+# mpirun启动参数-np需要对应上述总共6个NPU设备
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 6 
 ```
-
-**字段说明**：
-
-- `server.device_count`：设备总数。
-- `server.groups`：设备分组信息。
-- `ports`：端口配置。
-  - `usage`：端口用途（`peer2peer` 表示设备间连接，`peer2net` 表示与外部连接）
-- `links`：链路配置。
-  - `link_type`：链路类型（`PEER2PEER` 或 `PEER2NET`）
-  - `topo_type`：拓扑类型（`1DMESH`、`CLOS` 等）
-
-**ranktable.json 结构**：
-
-`ranktable.json` 描述了本次运行使用的设备和 IP 映射：
-
-```json
-{
-  "version": "1.0",
-  "server_count": 1,
-  "device_count": 8,
-  "server_list": [
-    {
-      "server_id": 0,
-      "device_id": 0,
-      "device_ip": "192.168.1.10",
-      "port": "2222"
-    }
-  ]
-}
-```
-
-**字段说明**：
-
-- `server_count`：服务器数量。
-- `device_count`：设备总数。
-- `server_list`：服务器和设备列表。
-  - `device_ip`：设备 IP 地址。
-  - `port`：设备端口号。
 
 ### 4.4 hccl\_config.sh文件说明
 
