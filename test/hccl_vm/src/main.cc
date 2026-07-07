@@ -56,11 +56,13 @@ void envInit()
     int ret1 = system("sudo rm -fr /dev/shm/* 2>/dev/null");
     std::string dataDir = InstallPath::ResolveToInstallRoot("data") + "/";
     int ret2 = system(("sudo rm -fr " + dataDir + "* 2>/dev/null").c_str());
-    if (ret1 != 0 || ret2 != 0) {
-        HCCL_VM_ERROR("envInit failed");
+    std::string logsDir = InstallPath::ResolveToInstallRoot("logs") + "/";
+    int ret4 = system(("sudo rm -fr " + logsDir + "* 2>/dev/null").c_str());
+
+    if (ret1 != 0 || ret2 != 0 || ret4 != 0) {
+        printf("envInit failed\n");
     }
-    sim::InitOpDataDb();
-    HCCL_VM_INFO("envInit success");
+    printf("envInit success\n");
 }
 
 int main(int argc, char *argv[])
@@ -70,9 +72,10 @@ int main(int argc, char *argv[])
     if (envCheck != nullptr) {
         StartHostClient(argc, argv);
     } else {
+        envInit();
         LogConfig config = LoadLogConfig("hccl_vm");
         InitLogger(config);
-        envInit();
+        sim::InitOpDataDb();
         std::string cmd = ArgvToString(argc, argv);
         if (argc == 1) {
             cmd += " --help";
