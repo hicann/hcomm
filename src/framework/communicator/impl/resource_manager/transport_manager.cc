@@ -161,7 +161,7 @@ HcclResult TransportManager::GetRemoteRankList(OpCommTransport &opTransportRespo
 
 HcclResult TransportManager::createSubCommLinkThreads(const std::string &tag, const TransportIOMem &transMem,
     struct SubCommLinkPara &subCommLinkPara, bool isAicpuModeEn, bool isBackup, u32 subCommIndex, bool isCapture,
-    const HcclCMDType &opType, bool isIndOp)
+    const HcclCMDType &opType, bool isIndOp, bool isNpuDirectRoce)
 {
     u32 num = subCommLinkPara.remoteRankIdNum;
     struct SingleSubCommTransport &singleSubCommTransport = subCommLinkPara.singleSubCommTransport;
@@ -224,7 +224,7 @@ HcclResult TransportManager::createSubCommLinkThreads(const std::string &tag, co
                 connectSockets, inputMem, outputMem, transportRequest.isUsedRdma, 
                 std::ref(link), isAicpuModeEn, std::ref(subCommLinkPara.linkResult[i]), netDevCtx,
                 transportRequest.notifyNum, chooseBackup, isCapture, expMem, transportRequest.linkType,
-                isIndOp, indOpMem, opType, false));
+                isIndOp, indOpMem, opType, isNpuDirectRoce));
         CHK_SMART_PTR_NULL(subCommLinkPara.linkThreads[i]); // 异常时其他线程待处理
         singleSubCommTransport.status[index] = TransportStatus::READY; // 建链后 transport设置为ready状态
     }
@@ -286,7 +286,7 @@ HcclResult TransportManager::checkSubCommLinkThreadsStatus(const std::string &ta
 
 HcclResult TransportManager::AllocSubCommLinks(const std::string &tag, const TransportIOMem &transMem,
     struct SingleSubCommTransport &singleSubCommTransport, bool isAicpuModeEn, bool isBackup, u32 subCommIndex,
-    bool isCapture, const HcclCMDType &opType, bool isIndOp)
+    bool isCapture, const HcclCMDType &opType, bool isIndOp, bool isNpuDirectRoce)
 {
     const u32 offset = 8;
     std::vector<std::pair<u32, u32>> remoteRankMap;
@@ -355,9 +355,9 @@ HcclResult TransportManager::AllocSubCommLinks(const std::string &tag, const Tra
         }
 
         CHK_RET(createSubCommLinkThreads(tag, transMem, nextSubCommLinkPara, isAicpuModeEn, isBackup, subCommIndex,
-            isCapture, opType, isIndOp));
+            isCapture, opType, isIndOp, isNpuDirectRoce));
         CHK_RET(createSubCommLinkThreads(tag, transMem, prevSubCommLinkPara, isAicpuModeEn, isBackup, subCommIndex,
-            isCapture, opType, isIndOp));
+            isCapture, opType, isIndOp, isNpuDirectRoce));
         CHK_RET(waitSubCommLinkThreadsComplete(nextSubCommLinkPara));
         CHK_RET(waitSubCommLinkThreadsComplete(prevSubCommLinkPara));
         CHK_RET(checkSubCommLinkThreadsStatus(tag, nextSubCommLinkPara, isBackup));
@@ -681,7 +681,7 @@ HcclResult TransportManager::Alloc(const std::string &tag, const TransportIOMem 
                         tag, transMem, singleSubCommTransport, isAicpuModeEn, isBackup, subCommIndex, isCapture, opType, isIndOp));
                 } else {
                     CHK_RET(AllocSubCommLinks(tag, transMem, singleSubCommTransport, isAicpuModeEn, isBackup, subCommIndex,
-                        isCapture, opType, isIndOp));
+                        isCapture, opType, isIndOp, isNpuDirectRoce));
                 }
                 continue;
             }

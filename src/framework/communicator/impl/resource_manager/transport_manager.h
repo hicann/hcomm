@@ -288,12 +288,12 @@ private:
     HcclResult ExceptionHandle(const std::string &tag, OpCommTransport &opTransportResponse);
     HcclResult createSubCommLinkThreads(const std::string &tag, const TransportIOMem &transMem,
         struct SubCommLinkPara &subCommLinkPara, bool isAicpuModeEn, bool isBackup, u32 subCommIndex,
-        bool isCapture = false, const HcclCMDType &opType = HcclCMDType::HCCL_CMD_INVALID, bool isIndOp = false);
+        bool isCapture = false, const HcclCMDType &opType = HcclCMDType::HCCL_CMD_INVALID, bool isIndOp = false, bool isNpuDirectRoce = false);
     HcclResult waitSubCommLinkThreadsComplete(struct SubCommLinkPara &subCommLinkPara);
     HcclResult checkSubCommLinkThreadsStatus(const std::string &tag, struct SubCommLinkPara &subCommLinkPara, bool isBackup);
     HcclResult AllocSubCommLinks(const std::string &tag, const TransportIOMem &transMem,
         struct SingleSubCommTransport &singleSubCommTransport, bool isAicpuModeEn, bool isBackup, u32 subCommIndex,
-        bool isCapture = false, const HcclCMDType &opType = HcclCMDType::HCCL_CMD_INVALID, bool isIndOp = false);
+        bool isCapture = false, const HcclCMDType &opType = HcclCMDType::HCCL_CMD_INVALID, bool isIndOp = false, bool isNpuDirectRoce = false);
     HcclResult IsInterServer(const u32 dstRank, bool& isInterServer);
     HcclResult PrintErrorInfo(NicType nicType);
     HcclResult CreateBatchSendRecvLinks(const std::string &tag, const TransportIOMem &transMem,

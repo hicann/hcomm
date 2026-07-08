@@ -6774,6 +6774,9 @@ namespace hccl
         string algName, newTag;
         OpParam &opParam = *static_cast<OpParam *>(param);
         CHK_RET(GetAlgInfo(algConfig, opParam.tag, opParam.opType, algName, newTag));
+        if (algName == "RunAlltoAllAivDirect") {
+            opParam.isNpuDirectRoce = true;
+        }
         CHK_RET(CreateAndGetAiCpuNotifyWithNotifyRes(combinOparaPtr->signalInfo.aicpuNotify));
         HCCL_INFO("Create aicpu notify %p.", localAiCpuNotifyRes_[0]->ptr());
 
