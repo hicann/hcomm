@@ -10,19 +10,14 @@
 
 #include "checker.h"
 
-#include <algorithm>
 #include <chrono>
 #include <cstdint>
-#include <fstream>
-#include <functional>
-#include <limits>
 #include <map>
 #include <memory>
 #include <queue>
 #include <set>
 #include <sstream>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -30,6 +25,7 @@
 #include "check_rank_mem.h"
 #include "check_utils.h"
 #include "checker_def.h"
+#include "dag_graphviz_dump.h"
 #include "dump/dump_graph.h"
 #include "dump/validation_issue_recorder.h"
 #include "dump_v3/dump_v3_dag.h"
@@ -59,9 +55,7 @@ using namespace std;
 namespace HcclSim {
 namespace {
 using V3TaskNode = TaskGraphGeneratorV3::TaskNode;
-using V3NodeStreamPosMap = std::map<const V3TaskNode *, uint32_t>;
 using V3StageClock = std::chrono::steady_clock;
-constexpr uint32_t INVALID_GRAPH_STREAM_POS = std::numeric_limits<uint32_t>::max();
 constexpr uint64_t V3_NS_PER_MS = 1000000ULL;
 
 uint64_t ElapsedV3Ns(V3StageClock::time_point start, V3StageClock::time_point end)
@@ -105,19 +99,6 @@ private:
     std::string extraInfo_;
 };
 
-struct V3StreamKey {
-    uint32_t rankId{TaskGraphGeneratorV3::INVALID_RANK_ID};
-    uint32_t streamId{TaskGraphGeneratorV3::INVALID_STREAM_ID};
-
-    bool operator<(const V3StreamKey &rhs) const
-    {
-        if (rankId != rhs.rankId) {
-            return rankId < rhs.rankId;
-        }
-        return streamId < rhs.streamId;
-    }
-};
-
 bool IsV3Boundary(const V3TaskNode *node, TaskGraphGeneratorV3::BoundaryType boundaryType)
 {
     if (node == nullptr) {
@@ -132,18 +113,6 @@ bool IsV3Boundary(const V3TaskNode *node, TaskGraphGeneratorV3::BoundaryType bou
         return end != nullptr && end->GetBoundaryType() == boundaryType;
     }
     return false;
-}
-
-bool IsV3StreamPosHiddenNode(const V3TaskNode *node)
-{
-    if (node == nullptr) {
-        return false;
-    }
-    if (node->GetPosition().queueId != TaskGraphGeneratorV3::INVALID_QUEUE_ID) {
-        return true;
-    }
-    return IsV3Boundary(node, TaskGraphGeneratorV3::BoundaryType::CCU_SUB_GRAPH) ||
-        IsV3Boundary(node, TaskGraphGeneratorV3::BoundaryType::AIV_SUB_GRAPH);
 }
 
 bool IsAivTaskType(TaskGraphGeneratorV3::TaskType type)
@@ -192,38 +161,6 @@ bool IsAivDagLogNode(const V3TaskNode *node)
     }
     return IsAivTaskType(node->GetType()) || IsAivSyntheticDataNode(node) ||
         IsV3Boundary(node, TaskGraphGeneratorV3::BoundaryType::AIV_SUB_GRAPH);
-}
-
-std::string EscapeGraphvizLabel(const std::string &label)
-{
-    std::string escaped;
-    escaped.reserve(label.size());
-    for (char ch : label) {
-        switch (ch) {
-            case '\\':
-                escaped += "\\\\";
-                break;
-            case '"':
-                escaped += "\\\"";
-                break;
-            case '\n':
-                escaped += "\\n";
-                break;
-            case '\r':
-                break;
-            default:
-                escaped += ch;
-                break;
-        }
-    }
-    return escaped;
-}
-
-std::string FormatGraphvizLabelText(const std::string &text)
-{
-    std::string label = text;
-    std::replace(label.begin(), label.end(), '|', '\n');
-    return label;
 }
 
 std::unique_ptr<TaskGraphGeneratorV3::TaskGraphGeneratorV3> GenGraphV3FromTaskMeta()
@@ -306,41 +243,6 @@ std::vector<const V3TaskNode *> BfsGraphV3(const V3TaskNode *start)
     return result;
 }
 
-V3NodeStreamPosMap BuildV3StreamPosMap(const std::vector<const V3TaskNode *> &bfsNodes)
-{
-    std::map<V3StreamKey, std::vector<const V3TaskNode *>> nodesByStream;
-    for (const V3TaskNode *node : bfsNodes) {
-        if (node == nullptr || node->GetType() == TaskGraphGeneratorV3::TaskType::START ||
-            IsV3StreamPosHiddenNode(node)) {
-            continue;
-        }
-        const auto &loc = node->GetPosition();
-        V3StreamKey key;
-        key.rankId = loc.rankId;
-        key.streamId = loc.streamId;
-        nodesByStream[key].push_back(node);
-    }
-
-    V3NodeStreamPosMap streamPosByNode;
-    for (auto &streamItem : nodesByStream) {
-        auto &streamNodes = streamItem.second;
-        std::sort(streamNodes.begin(), streamNodes.end(), [](const V3TaskNode *lhs, const V3TaskNode *rhs) {
-            if (lhs == rhs) {
-                return false;
-            }
-            if (lhs->GetNodeId() != rhs->GetNodeId()) {
-                return lhs->GetNodeId() < rhs->GetNodeId();
-            }
-            return std::less<const V3TaskNode *>()(lhs, rhs);
-        });
-
-        for (size_t pos = 0; pos < streamNodes.size(); ++pos) {
-            streamPosByNode[streamNodes[pos]] = static_cast<uint32_t>(pos);
-        }
-    }
-    return streamPosByNode;
-}
-
 const char *TaskTypeKeyName(TaskGraphGeneratorV3::TaskType type)
 {
     switch (type) {
@@ -379,263 +281,6 @@ const char *TaskTypeKeyName(TaskGraphGeneratorV3::TaskType type)
         default:
             return "INVALID";
     }
-}
-
-std::string MakePositionKey(uint32_t rankId, uint32_t streamId, uint32_t streamPos)
-{
-    std::ostringstream os;
-    os << "pos={rank=" << rankId << ",stream=" << streamId << ",index=" << streamPos << "}";
-    return os.str();
-}
-
-std::string MakeProtocolKey(TaskGraphGeneratorV3::ProtocolType protocol)
-{
-    std::ostringstream os;
-    os << "protocol=" << static_cast<uint32_t>(protocol);
-    return os.str();
-}
-
-std::string MakeMemSliceKey(RankId rankId, TaskGraphGeneratorV3::MemType memType, uint64_t offset, uint64_t len)
-{
-    std::ostringstream os;
-    os << "{rank=" << rankId << ",mem=" << static_cast<uint32_t>(memType)
-       << ",offset=0x" << std::hex << offset << ",len=0x" << len << std::dec << "}";
-    return os.str();
-}
-
-std::string MakeMemSliceKey(const TaskGraphGeneratorV3::MemSlice &slice)
-{
-    return MakeMemSliceKey(slice.rankId, slice.memType, slice.offset, slice.len);
-}
-
-std::string MakeNotifyKey(const TaskGraphGeneratorV3::AicpuNotify &notify)
-{
-    std::ostringstream os;
-    os << "{recordRank=" << notify.recordRankId << ",waitRank=" << notify.waitRankId
-       << ",notifyId=" << notify.notifyId  << "}";
-    return os.str();
-}
-
-std::string MakeNotifyKey(RankId recordRankId, RankId waitRankId, uint64_t notifyId)
-{
-    TaskGraphGeneratorV3::AicpuNotify notify;
-    notify.recordRankId = recordRankId;
-    notify.waitRankId = waitRankId;
-    notify.notifyId = static_cast<uint32_t>(notifyId);
-    return MakeNotifyKey(notify);
-}
-
-bool MakeV3NodeSemanticKey(const V3TaskNode *newNode, const V3NodeStreamPosMap &streamPosByNode,
-    std::string &key)
-{
-    if (newNode == nullptr) {
-        return false;
-    }
-
-    if (newNode->GetType() == TaskGraphGeneratorV3::TaskType::START) {
-        auto *start = dynamic_cast<const TaskGraphGeneratorV3::TaskStart *>(newNode);
-        if (start == nullptr || start->GetBoundaryType() != TaskGraphGeneratorV3::BoundaryType::MAIN_GRAPH) {
-            return false;
-        }
-        key = "type=START|boundary=MAIN_GRAPH";
-        return true;
-    }
-
-    const auto &loc = newNode->GetPosition();
-    const auto posIter = streamPosByNode.find(newNode);
-    const uint32_t streamPos = (posIter == streamPosByNode.end()) ? INVALID_GRAPH_STREAM_POS : posIter->second;
-    if (IsAivSyntheticDataNode(newNode)) {
-        return false;
-    }
-
-    std::ostringstream os;
-    os << "type=" << TaskTypeKeyName(newNode->GetType()) << "|"
-       << MakePositionKey(loc.rankId, loc.streamId, streamPos);
-    if (newNode->HasCcuTrace()) {
-        const auto &trace = newNode->GetCcuTrace();
-        os << "|instrId=" << trace.instrId
-           << "|queueId=" << trace.queueId
-           << "|op=" << trace.opName
-           << "|role=" << trace.nodeRole;
-    }
-
-    switch (newNode->GetType()) {
-        case TaskGraphGeneratorV3::TaskType::TRANS_MEM: {
-            auto *transMem = dynamic_cast<const TaskGraphGeneratorV3::TaskTransMem *>(newNode);
-            if (transMem == nullptr) {
-                return false;
-            }
-            os << "|src=" << MakeMemSliceKey(transMem->GetSrc())
-               << "|dst=" << MakeMemSliceKey(transMem->GetDst())
-               << "|" << MakeProtocolKey(transMem->GetProtocol());
-            break;
-        }
-        case TaskGraphGeneratorV3::TaskType::BATCH_TRANS_MEM: {
-            auto *batchTransMem = dynamic_cast<const TaskGraphGeneratorV3::TaskBatchTransMem *>(newNode);
-            if (batchTransMem == nullptr) {
-                return false;
-            }
-            const auto &srcs = batchTransMem->GetSrcs();
-            const auto &dsts = batchTransMem->GetDsts();
-            os << "|pairCount=" << std::min(srcs.size(), dsts.size());
-            if (!srcs.empty()) {
-                os << "|src0=" << MakeMemSliceKey(srcs.front());
-            }
-            if (!dsts.empty()) {
-                os << "|dst0=" << MakeMemSliceKey(dsts.front());
-            }
-            os << "|mergedPairCount=" << std::min(batchTransMem->GetMergedSrcs().size(),
-                batchTransMem->GetMergedDsts().size())
-               << "|" << MakeProtocolKey(batchTransMem->GetProtocol());
-            break;
-        }
-        case TaskGraphGeneratorV3::TaskType::REDUCE: {
-            auto *reduce = dynamic_cast<const TaskGraphGeneratorV3::TaskReduce *>(newNode);
-            if (reduce == nullptr) {
-                return false;
-            }
-            os << "|src=" << MakeMemSliceKey(reduce->GetSrc())
-               << "|dst=" << MakeMemSliceKey(reduce->GetDst())
-               << "|dataType=" << static_cast<uint32_t>(reduce->GetDataType())
-               << "|reduceOp=" << static_cast<uint32_t>(reduce->GetReduceOp())
-               << "|" << MakeProtocolKey(reduce->GetProtocol());
-            break;
-        }
-        case TaskGraphGeneratorV3::TaskType::BATCH_REDUCE: {
-            auto *batchReduce = dynamic_cast<const TaskGraphGeneratorV3::TaskBatchReduce *>(newNode);
-            if (batchReduce == nullptr) {
-                return false;
-            }
-            const auto &srcGroups = batchReduce->GetSrcs();
-            const auto &dsts = batchReduce->GetDsts();
-            os << "|groupCount=" << std::min(srcGroups.size(), dsts.size())
-               << "|dataType=" << static_cast<uint32_t>(batchReduce->GetDataType())
-               << "|reduceOp=" << static_cast<uint32_t>(batchReduce->GetReduceOp());
-            if (!srcGroups.empty() && !srcGroups.front().empty()) {
-                os << "|src0=" << MakeMemSliceKey(srcGroups.front().front());
-            }
-            if (!dsts.empty()) {
-                os << "|dst0=" << MakeMemSliceKey(dsts.front());
-            }
-            os << "|mergedGroupCount=" << std::min(batchReduce->GetMergedSrcs().size(),
-                batchReduce->GetMergedDsts().size())
-               << "|" << MakeProtocolKey(batchReduce->GetProtocol());
-            break;
-        }
-        case TaskGraphGeneratorV3::TaskType::RECORD: {
-            if (auto *record = dynamic_cast<const TaskGraphGeneratorV3::TaskRecordAICPU *>(newNode)) {
-                os << "|notify=" << MakeNotifyKey(record->GetNotify())
-                   << "|" << MakeProtocolKey(record->GetProtocol());
-                break;
-            }
-            if (auto *record = dynamic_cast<const TaskGraphGeneratorV3::TaskRecordCCU *>(newNode)) {
-                os << "|notify=" << MakeNotifyKey(record->GetNotify().recordRankId,
-                    record->GetNotify().waitRankId, record->GetNotify().ckeId)
-                   << "|ckeMask=" << record->GetNotify().ckeMask
-                   << "|" << MakeProtocolKey(record->GetProtocol());
-                break;
-            }
-            return false;
-        }
-        case TaskGraphGeneratorV3::TaskType::WAIT: {
-            if (auto *wait = dynamic_cast<const TaskGraphGeneratorV3::TaskWaitAICPU *>(newNode)) {
-                os << "|notify=" << MakeNotifyKey(wait->GetNotify())
-                   << "|" << MakeProtocolKey(wait->GetProtocol());
-                break;
-            }
-            if (auto *wait = dynamic_cast<const TaskGraphGeneratorV3::TaskWaitCCU *>(newNode)) {
-                os << "|notify=" << MakeNotifyKey(wait->GetNotify().recordRankId,
-                    wait->GetNotify().waitRankId, wait->GetNotify().ckeId)
-                   << "|ckeMask=" << wait->GetNotify().ckeMask
-                   << "|" << MakeProtocolKey(wait->GetProtocol());
-                break;
-            }
-            return false;
-        }
-        case TaskGraphGeneratorV3::TaskType::CCU_GRAPH:
-            break;
-        default:
-            return false;
-    }
-
-    key = os.str();
-    return true;
-}
-
-std::string MakeV3GraphvizNodeLabel(const V3TaskNode *node, const V3NodeStreamPosMap &streamPosByNode,
-    size_t bfsIndex)
-{
-    std::ostringstream os;
-    const TaskGraphGeneratorV3::NodeId nodeId =
-        (node == nullptr) ? TaskGraphGeneratorV3::INVALID_NODE_ID : node->GetNodeId();
-    os << "v3_" << bfsIndex << "\nbfs=" << bfsIndex << "\nnodeId=" << nodeId;
-
-    if (node != nullptr) {
-        const auto &loc = node->GetPosition();
-        const auto posIter = streamPosByNode.find(node);
-        const uint32_t streamPos =
-            (posIter == streamPosByNode.end()) ? INVALID_GRAPH_STREAM_POS : posIter->second;
-        os << "\nrank=" << loc.rankId << ", stream=" << loc.streamId << ", index=" << streamPos;
-    }
-
-    std::string semanticKey;
-    if (MakeV3NodeSemanticKey(node, streamPosByNode, semanticKey)) {
-        os << "\n" << FormatGraphvizLabelText(semanticKey);
-    } else if (node != nullptr) {
-        os << "\n" << FormatGraphvizLabelText(node->Describe());
-    } else {
-        os << "\n<invalid v3 node>";
-    }
-    return os.str();
-}
-
-std::string BuildV3GraphvizDot(const std::vector<const V3TaskNode *> &newBfsNodes)
-{
-    const V3NodeStreamPosMap streamPosByNode = BuildV3StreamPosMap(newBfsNodes);
-    std::map<const V3TaskNode *, size_t> nodeIndexByPtr;
-    for (size_t i = 0; i < newBfsNodes.size(); ++i) {
-        nodeIndexByPtr[newBfsNodes[i]] = i;
-    }
-
-    std::set<std::pair<size_t, size_t>> edgeIndexes;
-    for (const V3TaskNode *node : newBfsNodes) {
-        const auto parentIter = nodeIndexByPtr.find(node);
-        if (parentIter == nodeIndexByPtr.end() || node == nullptr) {
-            continue;
-        }
-
-        for (const V3TaskNode *childNode : node->GetChildren()) {
-            const auto childIter = nodeIndexByPtr.find(childNode);
-            if (childIter == nodeIndexByPtr.end()) {
-                continue;
-            }
-            edgeIndexes.insert(std::make_pair(parentIter->second, childIter->second));
-        }
-    }
-
-    std::ostringstream os;
-    os << "digraph v3_task_graph {\n";
-    os << "  graph [rankdir=LR, label=\"v3 graph BFS DAG\", labelloc=t, fontsize=20];\n";
-    os << "  node [shape=box, style=\"rounded,filled\", fillcolor=\"#eef7ff\", fontname=\"Courier\"];\n";
-    os << "  edge [fontname=\"Courier\"];\n\n";
-    for (size_t i = 0; i < newBfsNodes.size(); ++i) {
-        os << "  v3_" << i << " [label=\""
-           << EscapeGraphvizLabel(MakeV3GraphvizNodeLabel(newBfsNodes[i], streamPosByNode, i))
-           << "\"];\n";
-    }
-
-    os << "\n";
-    for (const auto &edge : edgeIndexes) {
-        os << "  v3_" << edge.first << " -> v3_" << edge.second << ";\n";
-    }
-    os << "}\n";
-    return os.str();
-}
-
-void LogGraphvizDot(const std::string &graphName, const std::string &dot)
-{
-    HCCL_VM_INFO("Graphviz DOT dump begin, graphName={}{}", graphName, dot);
-    HCCL_VM_INFO("Graphviz DOT dump end, graphName={}", graphName);
 }
 
 std::string FormatV3NodeIdList(const std::vector<V3TaskNode *> &nodes)
@@ -700,27 +345,57 @@ void LogGraphV3Dag(const V3TaskNode *start)
     }
 
     const auto v3BfsNodes = BfsGraphV3(start);
-    HCCL_VM_INFO("Dumping the V3 DAG as Graphviz DOT text, nodeCount={}", v3BfsNodes.size());
-    LogGraphvizDot("v3", BuildV3GraphvizDot(v3BfsNodes));
+    std::string dumpPath;
+    const HcclResult dumpRet = DumpDagGraphvizDot(start, &dumpPath);
+    if (dumpRet != HCCL_SUCCESS) {
+        HCCL_VM_WARN("[TaskGraphGeneratorV3][GraphvizDot][v3] Failed to dump DAG dot file, ret={}",
+            static_cast<uint32_t>(dumpRet));
+    } else {
+        HCCL_VM_INFO("[TaskGraphGeneratorV3][GraphvizDot][v3] Dump V3 DAG dot file, path={}, nodeCount={}",
+            dumpPath, v3BfsNodes.size());
+    }
     LogAivExpandedDagTasks(v3BfsNodes);
 }
 
-void DumpGraphV3DotToFile(const V3TaskNode *start, const std::string &path)
+void LogGraphV3Sqe(const TaskGraphGeneratorV3::TaskGraphGeneratorV3 &graph)
 {
-    if (start == nullptr) {
-        HCCL_VM_WARN("Skip file dump because the graph start node is null, path={}", path);
-        return;
+    const auto &translatedTaskQueues = graph.GetTaskQueues();
+    const auto &translatedNodes = graph.GetNodes();
+
+    u32 rankIdx = 0;
+    uint32_t rankNum = 0;
+    for (const auto &iter : translatedTaskQueues) {
+        rankIdx = iter.first;
+        ++rankNum;
+        HCCL_VM_INFO("=======================================================");
+        HCCL_VM_INFO("rankId is : {:d}", rankIdx);
+        const TaskGraphGeneratorV3::RankNodeQueues &taskQueue = iter.second;
+        for (size_t i = 0; i < taskQueue.size(); ++i) {
+            if (taskQueue[i].empty()) {
+                continue;
+            }
+
+            u32 taskIdx = 0;
+            HCCL_VM_INFO("streamIdx : {:d}, taskNum : {:d}", static_cast<uint32_t>(i),
+                static_cast<uint32_t>(taskQueue[i].size()));
+            HCCL_VM_INFO("-------------------------------------------------------");
+            for (const auto &nodeId : taskQueue[i]) {
+                if (nodeId < 0 || static_cast<size_t>(nodeId) >= translatedNodes.size() ||
+                    translatedNodes[static_cast<size_t>(nodeId)] == nullptr) {
+                    HCCL_VM_WARN("rankIdx:{:d}, taskIdx:{:d}, invalid nodeId:{:d}", rankIdx, taskIdx, nodeId);
+                    ++taskIdx;
+                    continue;
+                }
+
+                const std::unique_ptr<TaskGraphGeneratorV3::TaskNode> &task =
+                    translatedNodes[static_cast<size_t>(nodeId)];
+                const std::string tempStr = task->Describe();
+                HCCL_VM_INFO("rankIdx:{:d}, taskIdx:{:d}, {:s}", rankIdx, taskIdx, tempStr);
+                ++taskIdx;
+            }
+        }
     }
-    const auto v3BfsNodes = BfsGraphV3(start);
-    std::ofstream out(path, std::ios::out | std::ios::trunc);
-    if (!out.is_open()) {
-        HCCL_VM_WARN("Failed to open the graph output file, path={}", path);
-        return;
-    }
-    out << BuildV3GraphvizDot(v3BfsNodes);
-    out.close();
-    HCCL_VM_INFO("Wrote V3 DAG DOT file, path={}, nodeCount={}",
-        path, v3BfsNodes.size());
+    HCCL_VM_INFO("Finished logging V3 SQE task queues, rankNum={:d}", rankNum);
 }
 
 HcclResult CheckGraphV3TaskMem(const V3TaskNode *start)
@@ -832,8 +507,10 @@ HcclResult GenAndCheckGraphV3()
             static_cast<uint32_t>(dumpRet));
     }
     const V3TaskNode *dummyStartV3 = graphGeneratorV3->GetMainStartNode();
+    // 打印sqe
+    LogGraphV3Sqe(*graphGeneratorV3);
     // 打印dag task任务
-    // LogGraphV3Dag(dummyStartV3);
+    LogGraphV3Dag(dummyStartV3);
 
     // V3 检查顺序与日志阶段保持一致：
     // 成图 -> 单 task 内存校验 -> 内存冲突校验 -> 语义校验。

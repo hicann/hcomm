@@ -35,12 +35,10 @@
 #include <sys/wait.h>
 #include <thread>
 #include <unistd.h>
-#include <unordered_set>
 #include <vector>
 
 #include "topo_ascend_cluster_parser.h"
 #include "cmd_base.h"
-#include "cmd_base_utils_internal.h"
 #include "store_dump_shm_data.h"
 #include "store_sim_comm_pool_policy.h"
 #include "store_sim_run_mode.h"
@@ -194,133 +192,15 @@ private:
     mqd_t mq_ {static_cast<mqd_t>(-1)}; 
 }; 
 
-template <typename Mutex> 
-class ScopedMutexLock { 
-public: 
-    explicit ScopedMutexLock(Mutex &mutex) : mutex_(mutex) 
-    { 
-        mutex_.lock(); 
-    } 
-
-    ~ScopedMutexLock() 
-    { 
-        mutex_.unlock(); 
-    } 
-
-    ScopedMutexLock(const ScopedMutexLock &) = delete; 
-    ScopedMutexLock &operator=(const ScopedMutexLock &) = delete; 
-
-private: 
-    Mutex &mutex_; 
-}; 
-
-bool IsAivExpansionModeEnabled() 
-{ 
-    const char *expansionMode = std::getenv("HCCL_OP_EXPANSION_MODE"); 
-    return expansionMode != nullptr && std::string(expansionMode) == "AIV"; 
-} 
-
-bool IsBinDumpDisabled() 
+static bool IsBinDumpDisabled() 
 { 
     const char *env = std::getenv("HCCL_VM_SKIP_BIN_DUMP"); 
     return env != nullptr && std::string(env) == "1"; 
 } 
 
-bool StartsWith(const std::string &value, const std::string &prefix) 
+static bool StartsWith(const std::string &value, const std::string &prefix) 
 { 
     return value.rfind(prefix, 0) == 0; 
-} 
-
-bool EndsWith(const std::string &value, const std::string &suffix) 
-{ 
-    if (value.size() < suffix.size()) { 
-        return false; 
-    } 
-    return value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0; 
-} 
-
-bool TryParseAivRankIdFromTaskFileName(const std::string &fileName, uint32_t &rankId) 
-{ 
-    static const std::string prefix = "hcclvm_aiv_rank"; 
-    static const std::string suffix = "_task.json"; 
-    static const std::string launchMarker = "_launch"; 
-
-    if (!StartsWith(fileName, prefix) || !EndsWith(fileName, suffix)) { 
-        return false; 
-    } 
-
-    const size_t rankBegin = prefix.size(); 
-    const size_t rankEnd = fileName.size() - suffix.size(); 
-    if (rankBegin >= rankEnd) { 
-        return false; 
-    } 
-
-    const std::string middleText = fileName.substr(rankBegin, rankEnd - rankBegin); 
-    const size_t launchPos = middleText.find(launchMarker); 
-    if (launchPos == std::string::npos) { 
-        return false; 
-    } 
-
-    const std::string rankIdText = middleText.substr(0, launchPos); 
-    const std::string launchIndexText = middleText.substr(launchPos + launchMarker.size()); 
-    if (rankIdText.empty() || launchIndexText.empty()) { 
-        return false; 
-    } 
-
-    for (char ch : rankIdText) { 
-        if (ch < '0' || ch > '9') { 
-            return false; 
-        } 
-    } 
-    for (char ch : launchIndexText) { 
-        if (ch < '0' || ch > '9') { 
-            return false; 
-        } 
-    } 
-
-    rankId = static_cast<uint32_t>(std::stoul(rankIdText)); 
-    return true; 
-} 
-
-HcclVmResult ValidateAivTaskJsonByRank(const std::vector<sim::Rank> &allRank) 
-{ 
-    const std::string &installDir = InstallPath::GetHcclVmInstallAbsPath();
-
-    if (allRank.empty()) { 
-        return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD; 
-    } 
-
-    const fs::path dataDir = fs::path(InstallPath::ResolveToInstallRoot("data")); 
-    std::error_code ec; 
-    if (!fs::exists(dataDir, ec) || ec || !fs::is_directory(dataDir, ec)) { 
-        HCCL_VM_ERROR("AIV data directory is missing: {}", dataDir.string()); 
-        return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD; 
-    } 
-
-    std::unordered_set<uint32_t> existingRanks; 
-    for (const auto &entry : fs::directory_iterator(dataDir, ec)) { 
-        if (ec) { 
-            HCCL_VM_ERROR("failed to iterate AIV data directory: {}", dataDir.string()); 
-            return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD; 
-        } 
-        if (!entry.is_regular_file()) { 
-            continue; 
-        } 
-
-        uint32_t rankId = 0; 
-        if (TryParseAivRankIdFromTaskFileName(entry.path().filename().string(), rankId)) { 
-            existingRanks.insert(rankId); 
-        } 
-    } 
-
-    for (const auto &rank : allRank) { 
-        if (existingRanks.find(rank.rank_id) == existingRanks.end()) { 
-            HCCL_VM_ERROR("missing AIV task json file for rank {}", rank.rank_id); 
-            return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD; 
-        } 
-    } 
-
-    return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD; 
 } 
 
 std::string GetBinLocation() { 
@@ -877,16 +757,8 @@ void RunnerListen() {
         }
 
         HCCL_VM_INFO("{:d} rank ready, start runner...", allStatus.size()); 
-        // 2. AIV 模式校验各 rank task json，其他模式保持原 runner dump 流程 
-        if (IsAivExpansionModeEnabled()) { 
-            ret = ValidateAivTaskJsonByRank(allRank); 
-            if (ret != HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) { 
-                HCCL_VM_ERROR("validate aiv task json failed. ret: {:d}", static_cast<int>(ret)); 
-                return; 
-            } 
-        } 
         
-        // 3. 清除DeviceStatus表项 
+        // 2. 清除DeviceStatus表项 
         for (auto &ds : allStatus) { 
             auto dsId = ds.id; 
             RunnerDB::Update<sim::DeviceStatus>(dsId, [](sim::DeviceStatus &ds) { ds.synchronize_strategy = 0;}); 

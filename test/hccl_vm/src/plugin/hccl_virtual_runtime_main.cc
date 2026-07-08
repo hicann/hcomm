@@ -23,9 +23,9 @@
 #include <thread>
 #include <unistd.h>
 
-#include "aiv_task_snapshot_loader.h"
 #include "ccu_resource_manager.h"
 #include "device_resource_manager.h"
+#include "sim_models.h"
 #include "store_dump_shm_data.h"
 #include "sim_common_defs.h"
 #include "sim_common_macro.h"
@@ -90,6 +90,11 @@ void DumpRunVirtualRuntimeTimeStats(const RunVirtualRuntimeTimeStats& stats)
     }
     HCCL_VM_INFO("RunVirtualRuntime summary, runCount={}, totalCostMs={}, lastCostMs={}, "
         "maxCostMs={}", stats.runCount, stats.totalCostMs, stats.lastCostMs, stats.maxCostMs);
+}
+
+bool IsAivOpExpansionMode(uint32_t opExpansionMode)
+{
+    return opExpansionMode == static_cast<uint32_t>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AIV);
 }
 }
 
@@ -163,11 +168,6 @@ void ProcessCommand(const std::string& line) {
 
 // --- 业务函数 ---
 void RunVirtualRuntime(HcclSim::StorageManager& storage) {
-    const bool aivExpansionModeEnabled = IsAivExpansionModeEnabled();
-    if (aivExpansionModeEnabled) {
-        storage.ResetAivResource();
-    }
-
     std::vector<sim::CcuChannelTab> channels;
     g_loader.GetCcuChannelInfo(channels);
 
@@ -184,6 +184,7 @@ void RunVirtualRuntime(HcclSim::StorageManager& storage) {
     // 清理CCU资源管理器状态，防止跨sync iter状态污染（KN/XN/MS/simulators）
     // 注意：instrSpace_ 也会被清理，但会在后续的 InitCcuResource 中重新设置
     CcuResourceManager::GetInstance().Reset();
+    storage.ResetAivResource();
 
     auto opTasks = TransposeCompositeOpMap(compositeDataMap);
     for (auto& rankTask : opTasks) {
@@ -191,7 +192,7 @@ void RunVirtualRuntime(HcclSim::StorageManager& storage) {
             auto& opDetail = it.second;
             storage.LoadHcclVmSynthesisData(opDetail.detail, channels);
             storage.LoadHcclVmTaskMetaData(opDetail.tasks);
-            if (aivExpansionModeEnabled) {
+            if (IsAivOpExpansionMode(opDetail.detail.opExpansionMode)) {
                 auto ret = storage.InitAivResourceFromCompositeOpDetail(opDetail);
                 if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
                     storage.ResetAivResource();

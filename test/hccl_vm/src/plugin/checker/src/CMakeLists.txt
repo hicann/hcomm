@@ -9,6 +9,7 @@
 # -----------------------------------------------------------------------------------------------------------
 
 add_subdirectory(checker)
+add_subdirectory(dfx)
 add_subdirectory(framework)
 add_subdirectory(utils)
 add_subdirectory(log)

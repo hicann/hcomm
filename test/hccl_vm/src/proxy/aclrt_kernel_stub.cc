@@ -492,11 +492,13 @@ void LaunchAICPUKernelFunc(std::string kernelName, aclrtArgsHandle argsHandle)
         aicpuData->task[rankId].devState = DEVICE_RUN;
         ForkAndStartAicpuProcess(rankId, &aicpuData->task[rankId].devState);
 
-        // CCU退化为AICPU模式时，更新模型中展开模式为AICPU
+        // CCU/AIV退化为AICPU模式时，更新模型中展开模式为AICPU
         const char *expanEnv = std::getenv("HCCL_OP_EXPANSION_MODE");
-        bool ccuEnabled = expanEnv && (std::string(expanEnv) == "CCU_SCHED" || std::string(expanEnv) == "CCU_MS");
-        if (ccuEnabled) {
-            HCCL_VM_INFO("Switch the expansion mode[CCU -> AICPU].");
+        std::string expanMode = expanEnv == nullptr ? "" : std::string(expanEnv);
+        bool ccuEnabled = expanMode == "CCU_SCHED" || expanMode == "CCU_MS";
+        bool aivEnabled = expanMode == "AIV";
+        if (ccuEnabled || aivEnabled) {
+            HCCL_VM_INFO("Switch the expansion mode[{} -> AICPU].", aivEnabled ? "AIV" : "CCU");
             constexpr uint8_t kAicpuMode = static_cast<uint8_t>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AICPU);
             sim::UpdateOpExpansionMode(kAicpuMode);
         }

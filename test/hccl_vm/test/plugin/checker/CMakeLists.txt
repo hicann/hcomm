@@ -36,6 +36,7 @@ include_directories(BEFORE
 add_executable(test_checker checker_test.cc main.cc)
 target_sources(test_checker PRIVATE
     ${CHECKER_SRC}/checker/checker.cc
+    ${CHECKER_SRC}/dfx/dag_graphviz_dump.cc
     ${CHECKER_SRC}/log/log_stub.cc
     ${CHECKER_SRC}/utils/check_utils.cc
     ${CHECKER_SRC}/utils/sim_task.cc

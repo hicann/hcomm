@@ -8,21 +8,19 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef HCCL_CMD_BASE_UTILS_INTERNAL_H
-#define HCCL_CMD_BASE_UTILS_INTERNAL_H
+#ifndef CHECKER_DFX_DAG_GRAPHVIZ_DUMP_H
+#define CHECKER_DFX_DAG_GRAPHVIZ_DUMP_H
 
-#include <cstdint>
 #include <string>
-#include <vector>
 
-#include "sim_common_defs.h"
-#include "sim_models.h"
+#include "hccl_types.h"
+#include "framework/task_graph_generator_v3/task_graph_generator_v3.h"
+#include "framework/task_graph_generator_v3/task_def_v3.h"
 
-bool IsAivExpansionModeEnabled();
-bool IsBinDumpDisabled();
-bool StartsWith(const std::string &value, const std::string &prefix);
-bool EndsWith(const std::string &value, const std::string &suffix);
-bool TryParseAivRankIdFromTaskFileName(const std::string &fileName, uint32_t &rankId);
-HcclVmResult ValidateAivTaskJsonByRank(const std::vector<sim::Rank> &allRank);
+namespace HcclSim {
 
-#endif
+HcclResult DumpDagGraphvizDot(const TaskGraphGeneratorV3::TaskNode *start, std::string *dumpPath);
+
+}  // namespace HcclSim
+
+#endif  // CHECKER_DFX_DAG_GRAPHVIZ_DUMP_H
