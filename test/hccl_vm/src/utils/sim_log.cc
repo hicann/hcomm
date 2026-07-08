@@ -12,7 +12,9 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <cstdio>
 #include <fstream>
+#include <cstring>
 #include <map>
 #include <string>
 #include <unistd.h>
@@ -41,11 +43,14 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> InitFileSink(const LogConf
     // after close handler
     spdlog::file_event_handlers handlers;
     handlers.after_close = [config](const std::string& filePath) {
+        // 注意: after_close 由 rotating_file_sink_mt 在轮转关闭文件时回调, 此刻该 sink 的
+        // mutex_ 仍被持有。若在此处调用 HCCL_VM_*(经 g_logger 回到同一个 file_sink)会重入
+        // 同一把非递归 std::mutex, 造成自死锁。因此这里只能直写 stderr, 不得使用日志宏。
         // rename
         static std::atomic<uint32_t> g_log_file_index{0};
         if (filePath.size() < config.fileSuffix.size() ||
             filePath.substr(filePath.size() - config.fileSuffix.size()) != config.fileSuffix) {
-            HCCL_VM_ERROR("Log file name error!");
+            fprintf(stderr, "[HCCL-VM][ERROR] Log file name error: %s\n", filePath.c_str());
             return;
         }
         std::ostringstream oss;
@@ -54,7 +59,8 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> InitFileSink(const LogConf
             << config.fileSuffix;
         const std::string newPath = oss.str();
         if (spdlog::details::os::rename(filePath, newPath) != 0) {
-            HCCL_VM_ERROR("Fail to rename rotating log file: {} -> {} current pid {} errno: {}", filePath, newPath, getpid(), errno);
+            fprintf(stderr, "[HCCL-VM][ERROR] Fail to rename rotating log file: %s -> %s pid %d errno %d: %s\n",
+ 	                 filePath.c_str(), newPath.c_str(), getpid(), errno, strerror(errno));
             return;
         }
     };
@@ -155,7 +161,9 @@ void InitLogger(const LogConfig& config)
 
         std::atexit([] (){ DeInitLogger(); });
     } catch (...) {
-        HCCL_VM_ERROR("Logger init failed");
+        // 此处 g_logger 可能尚未成功构造(为 null), 且报告的正是"日志初始化失败";
+        // 再用日志宏会被宏内的 null 守卫吞掉, 导致失败完全不可见。故直写 stderr。
+        std::fprintf(stderr, "[HCCL-VM][ERROR] Logger init failed\n");
     }
 }
 

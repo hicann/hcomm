@@ -9,6 +9,7 @@
  */
 
 // 日志染色: 模块 tag (须在 include sim_log.h 之前)
+#undef  HCCL_VM_MODULE
 #define HCCL_VM_MODULE "HCCL_LOG"
 
 #include <cstdarg>

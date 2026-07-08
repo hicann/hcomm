@@ -40,7 +40,7 @@ hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测�
 
 #### 3.1.1 自动构建
 
-一行完成依赖安装、配套源码拉取、CANN 检测与编译（默认 `competition/campus-2026` 分支方案）：
+一行完成依赖安装、源码拉取、CANN 检测与编译（默认 `campus-2026` 配套方案）：
 
 ```bash
 # 1. 创建工作目录
@@ -48,18 +48,27 @@ mkdir -p /home/workspace
 cd /home/workspace
 
 # 2.下载自动构建&安装脚本
-curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_install.sh | bash
+curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_installer | bash
 ```
 
-也可下载后本地运行（便于先审阅、离线或竞赛直接分发脚本）：`bash hccl_vm_install.sh`。
+也可下载后本地运行（便于先审阅或离线分发）：`bash hccl_vm_installer`；追加参数用 `... | bash -s -- --workspace /root/hvm`。
 
-**前提**：x86_64、Ubuntu 22.04 及以上；CANN 需预先安装（脚本自动探测 `/usr/local/Ascend`、`/home/workspace/Ascend`、`~/Ascend` 等常见路径，未检测到会打印安装步骤）。
+**前提**：x86_64 Linux；工具链需满足 hcomm build.md 要求——gcc/g++ 7.3.0–13.3.x、cmake ≥ 3.16.0（同时约束宿主与 aarch64 交叉编译器）。Ubuntu 22.04 / 24.04 开箱即用；更高版本默认 gcc（14/15）超范围，脚本会告警并继续尝试，建议在满足范围的环境编译。
 
-**常用参数**：`--profile <名>`（默认 `campus-2026`，`--list-profiles` 列全部配套方案）、`--ascend-path <路径>`（CANN 非默认位置时指定）、`--workspace <路径>`、`-h`。
+**CANN**：脚本只在工作目录 `<workspace>/Ascend`（或 `--ascend-path` 指定的路径）探测 CANN；未找到即自动下载配套版本并安装到该处，root 与普通用户行为一致。`--offline` 只检测、从不下载；内网无公网时自动回退为打印自备 CANN 引导。
 
-完成后工具位于 `<工作目录>/hcomm/test/hccl_vm/hccl_vm_install/bin/hccl-vm`。
+**hccl_test**：默认一并编译 OpenMPI 与 hccl_test 性能测试工具，`--skip-hccl-test` 可关闭。
 
-如需先审阅脚本，可下载后阅读再运行：`curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_install.sh -o hccl_vm_install.sh`。移除方式：删除工作目录即可清理本工具产物（脚本经 apt 安装的系统依赖如需卸载请自行 `apt remove`），本工具不改动 CANN。
+**常用参数**：
+- `--profile <名>`：配套方案（默认 `campus-2026`，`--list-profiles` 列全部）
+- `--workspace <路径>`：工作目录，源码／编译／产物所在（默认当前目录）
+- `--ascend-path <路径>`：指定 CANN 目录，有则复用、无则装到此处
+- `--reinstall-cann`：重新下载覆盖现有 CANN（版本不匹配时用；默认保留）
+- `--offline`：只用现有 CANN、从不下载
+- `--skip-hccl-test`：跳过 hccl_test 编译
+- `-h`：完整帮助
+
+完成后工具位于 `<工作目录>/hcomm/test/hccl_vm/hccl_vm_install/bin/hccl-vm`。删除工作目录即可清理本工具产物（apt 安装的系统依赖如需卸载请自行 `apt remove`），本工具不改动 CANN。
 
 #### 3.1.2 手动构建
 
