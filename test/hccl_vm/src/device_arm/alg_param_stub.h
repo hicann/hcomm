@@ -74,7 +74,6 @@ struct AlgResourceCtx {
 
 struct OpParam {
     char tag[TAG_LENGTH];
-    char commName[COMM_INDENTIFIER_MAX_LENGTH];
     void *inputPtr = nullptr;
     void *outputPtr = nullptr;
     uint64_t count = 0;

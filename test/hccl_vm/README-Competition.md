@@ -30,7 +30,7 @@ chmod +x Ascend-cann-950-ops_9.1.0_linux-x86_64.run
 
 hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测试工具](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910beta1/devaids/hccltool/HCCLpertest_16_0001.html)，HCCL-VM支持在虚拟环境中运行hccl_test用例。请先参照[hccl_test用例构建](#42-hccl-test用例构建)章节进行用例二进制程序的编译。
 
-备注：可选，未来支持Pytorch用例。
+备注：未来支持Pytorch用例。
 
 ---
 
@@ -129,11 +129,11 @@ export HCCL_OP_EXPANSION_MODE="CCU_SCHED"
 cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
-./hccl-vm start ascend950_cluster_32_server_normal.yaml
+./hccl-vm start ascend950_cluster_32_server_normal.yaml --check-only
 
 # 选择本次算子执行的通信域配置文件（详见4.3章节，在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 0 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -r 0 -w 0 -n 1 -c 0 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -170,11 +170,11 @@ export HCCL_OP_EXPANSION_MODE="AI_CPU"
 cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
-./hccl-vm start ascend950_cluster_32_server_normal.yaml
+./hccl-vm start ascend950_cluster_32_server_normal.yaml --check-only
 
 # 选择本次算子执行的通信域配置文件（详见4.3章节，在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 0 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -r 0 -w 0 -n 1 -c 0 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -212,7 +212,7 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 # 选择本次算子执行的通信域配置文件（详见4.3章节，在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -r 0 -w 0 -n 1 -c 1 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
