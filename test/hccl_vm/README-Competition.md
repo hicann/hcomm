@@ -142,7 +142,7 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 # 选择本次算子执行的通信域配置文件（详见4.3章节，在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -r 0 -w 0 -n 1 -c 0 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d fp32 -o sum -r 0 -w 0 -n 1 -c 0 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -183,7 +183,7 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 # 选择本次算子执行的通信域配置文件（详见4.3章节，在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -r 0 -w 0 -n 1 -c 0 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d fp32 -o sum -r 0 -w 0 -n 1 -c 0 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -221,7 +221,7 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 # 选择本次算子执行的通信域配置文件（详见4.3章节，在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
 (hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d int32 -o sum -r 0 -w 0 -n 1 -c 1 > log.txt
+(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/alltoall_test -b 64 -e 64 -d fp32 -o sum -r 0 -w 0 -n 1 -c 1 > log.txt
 
 # 执行checker校验
 (hvm)$> hccl-vm plugin run @checker
@@ -555,7 +555,7 @@ OpenMPI环境，用户按照如下命令运行hccl_test用例：
 
 ```bash
 export HCCL_TEST_PATH=/home/workspace/Ascend/cann/tools/hccl_test
-mpirun --allow-run-as-root --oversubscribe -np 2 ${HCCL_TEST_PATH}/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1
+mpirun --allow-run-as-root --oversubscribe -np 2 ${HCCL_TEST_PATH}/bin/reduce_scatter_test -b 64 -e 64 -d fp32 -o sum -w 0 -n 1 -c 1
 ```
 
 **参数说明**：
@@ -568,7 +568,7 @@ MPICH环境，用户按照如下命令运行hccl_test用例：
 
 ```bash
 export HCCL_TEST_PATH=/home/workspace/Ascend/cann/tools/hccl_test
-mpirun -np 2 ${HCCL_TEST_PATH}/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1
+mpirun -np 2 ${HCCL_TEST_PATH}/bin/reduce_scatter_test -b 64 -e 64 -d fp32 -o sum -w 0 -n 1 -c 1
 ```
 
 **参数说明**：
