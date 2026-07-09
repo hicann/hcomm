@@ -1,12 +1,10 @@
 # Checker 错误码 FAQ
 
-> 本文基于当前分支 `hvrm/0701/CheckerL2/src/plugin/checker` 的实际代码整理。
-
 ---
 
 ## 模块：Checker
 
-### 子模块：成图阶段错误
+### 子模块：成图阶段
 
 ---
 
@@ -21,7 +19,7 @@ GRAPH_TRANSLATE_FAILED (101)
 
 **关键日志:**
 ```
-[GenGraph] [ErrorCode: 101] Failed to convert one task into a graph node, taskIndex=128, taskType=0, rankId=3, streamId=7, ret=1, taskMeta={taskType=0, rankId=3, streamId=7, srcRankId=3, dstRankId=4, srcOffset=0, dstOffset=4096, len=1024, protocol=1}
+[GenGraph] [ErrorCode: 101] Failed to convert one task into a graph node, taskIndex=128, ret=1, taskMeta=taskType=0, rankId=3, streamId=7, srcRankId=3, dstRankId=4, src=[0x0,0x400), dst=[0x1000,0x1400), protocol=1
 ```
 
 **问题现象:** 成图阶段无法将输入 task meta 翻译为内部图节点，常见于任务类型不支持或字段组合不满足翻译条件。
@@ -35,7 +33,6 @@ GRAPH_TRANSLATE_FAILED (101)
 
 【排查步骤】
 典型报错点:
-- `src/framework/task_graph_generator_v3/task_meta_translator_v3.cc`
 1. 普通 task meta 无法翻译成图节点: 先按 `taskIndex` 在原始 task 列表里定位是哪一条任务；再根据具体任务信息，确认问题根因。
 ```
 ---
@@ -68,14 +65,6 @@ GRAPH_DEADLOCK (102)
 2. 查询同 rank 或对应的对端 rank 上是否存在匹配的 Record；如果存在，再继续看两者能否正确配对。
 ```
 
-**图示说明:**
-```mermaid
-flowchart TD
-    START["观察 firstBlockedWaitNode"] --> GG1["获取对应 notifyId / recordRank / waitRank"]
-    GG1 --> GG2{"存在匹配 Record?"}
-    GG2 -- 否 --> GG3["缺 Record：算法编排问题"]
-    GG2 -- 是 --> GG4["检查 notify 和前驱依赖\n确认 Wait 为什么无法完成配对"]
-```
 ---
 
 #### FAQ-CHK103
@@ -129,7 +118,7 @@ GRAPH_STRUCTURE_INVALID (105)
 
 **关键日志:**
 ```
-[GenGraph] [ErrorCode: 105] Failed to remove one graph edge because the parent or child node does not exist, parentNodeId=91, childNodeId=123, parentNode=[TaskTransMem] node=91, rank=2, stream=0, protocol=SDMA, src={rank=2, mem=INPUT, offset=0x0, len=0x400}, dst={rank=2, mem=CCL, offset=0x1000, len=0x400}, childNode=null
+[GenGraph] [ErrorCode: 105] Failed to remove one graph edge because the parent or child node does not exist, parentNodeId=91, childNodeId=123, parentNode=[TaskTransMem] node=91, rank=2, stream=0, protocol=SDMA, src=rank 2 INPUT [0x0,0x400), dst=rank 2 CCL [0x1000,0x1400), childNode=null
 ```
 
 **问题现象:** 图边关系不满足建图前提，例如删边或重连时父节点、子节点不存在。
@@ -277,7 +266,7 @@ GRAPH_UNSUPPORTED (111)
 
 **关键日志:**
 ```
-[GenGraph] [ErrorCode: 111] This task type is not supported for CheckerV3 graph generation, taskIndex=128, taskType=9, rankId=3, streamId=7, taskMeta={taskType=9, rankId=3, streamId=7}
+[GenGraph] [ErrorCode: 111] This task type is not supported for CheckerV3 graph generation, taskIndex=128, taskMeta=taskType=9, rankId=3, streamId=7
 
 [GenGraphCCU] [ErrorCode: 111] This CCU instruction type is not supported by CheckerV3 graph expansion, rankId=2, queueId=1, instructionHeader=0xf431
 ```
@@ -352,7 +341,7 @@ GRAPH_LOOP_MERGE_ERROR (113)
 ```
 ---
 
-### 子模块：单任务与从流校验错误
+### 子模块：单任务与从流校验
 
 ---
 
@@ -375,10 +364,10 @@ task_graph_semantic_check_v3.cc
 
 **关键日志:**
 ```
-[MemConflict] [ErrorCode: 201] One memory slice is missing a valid rank or memory type, task=[TaskTransMem] node=42, rank=0, stream=2, protocol=SDMA, src={rank=0, mem=INPUT, offset=0x0, len=0x400}, dst={rank=0, mem=CCL, offset=0x1000, len=0x400}, rankId=invalid, memType=invalid, offset=0x0, length=0x400
+[MemConflict] [ErrorCode: 201] One memory slice is missing a valid rank or memory type, task=[TaskTransMem] node=42, rank=0, stream=2, protocol=SDMA, src=rank 0 INPUT [0x0,0x400), dst=rank 0 CCL [0x1000,0x1400), rankId=invalid, memType=invalid, offset=0x0, length=0x400
     
 
-[SingleTaskCheck] [ErrorCode: 201] One memory slice is invalid because its end address overflows while total coverage is being calculated, task=[TaskBatchTransMem] node=108, rank=1, stream=5, protocol=CCU, pairCount=2, mergedPairCount=2, src0={rank=1, mem=CCL, offset=0xfffffffffffffff0, len=0x40}, dst0={rank=1, mem=OUTPUT, offset=0x0, len=0x40}, memorySlice={rankId=1, memType=CCL, offset=0xfffffffffffffff0, length=0x40}, offset=0xfffffffffffffff0, length=0x40
+[SingleTaskCheck] [ErrorCode: 201] One memory slice is invalid because its end address overflows while total coverage is being calculated, task=[TaskBatchTransMem] node=108, rank=1, stream=5, protocol=CCU, pairCount=2, mergedPairCount=2, src0=rank 1 CCL [0xfffffffffffffff0,0xffffffffffffff30), dst0=rank 1 OUTPUT [0x0,0x40), memorySlice={rankId=1, memType=CCL, offset=0xfffffffffffffff0, length=0x40}
     
 
 [SingleTaskCheck] [ErrorCode: 201] Batch trans slice length mismatch, node=[TaskBatchTransMem] node=108, rank=1, stream=5, protocol=CCU, label=src, index=2, expectedLen=0x400, actualLen=0x200
@@ -417,7 +406,7 @@ SINGLETASK_SLICE_CONFLICT (202)
 
 **关键日志:**
 ```
-[SingleTaskCheck] [ErrorCode: 202] Two memory slices overlap inside the same task, task=[TaskReduce] node=57, rank=0, stream=4, protocol=CCU, dataType=0, reduceOp=0, srcs=[{rank=0, mem=CCL, offset=0x1000, len=0x400}, {rank=0, mem=CCL, offset=0x1200, len=0x400}], dst={rank=0, mem=OUTPUT, offset=0x0, len=0x400}, memorySlice1={rankId=0, memType=CCL, offset=0x1000, length=0x400}, memorySlice2={rankId=0, memType=CCL, offset=0x1200, length=0x400}, position=rankId=0, streamId=4
+[SingleTaskCheck] [ErrorCode: 202] Two memory slices overlap inside the same task, task=[TaskReduce] node=57, rank=0, stream=4, protocol=CCU, dataType=0, reduceOp=0, srcs=[rank 0 CCL [0x1000,0x1400), rank 0 CCL [0x1200,0x1600)], dst=rank 0 OUTPUT [0x0,0x400), memorySlice1={rankId=0, memType=CCL, offset=0x1000, length=0x400}, memorySlice2={rankId=0, memType=CCL, offset=0x1200, length=0x400}, position=rankId=0, streamId=4
 ```
 
 **问题现象:** 同一条任务内部存在重叠的 memory slice，导致同一 buffer 的地址区间发生交叉。
@@ -450,7 +439,7 @@ SINGLETASK_SLAVE_STREAM_INVALID (203)
 [StreamCheck] [ErrorCode: 203] This slave stream is missing its start node or end node, rankId=0, streamId=6, taskCount=4, startNode=null, endNode=[TaskRecordAICPU] node=241, rank=0, stream=6, protocol=SDMA, notify={recordRank=0, waitRank=0, notifyId=32}
     
 
-[StreamCheck] [ErrorCode: 203] The first task in this slave stream is not a local WAIT task, rankId=0, streamId=6, actualFirstTaskType=TRANS_MEM, firstTask=[TaskTransMem] node=214, rank=0, stream=6, protocol=SDMA, src={rank=0, mem=INPUT, offset=0x0, len=0x400}, dst={rank=0, mem=CCL, offset=0x4000, len=0x400}
+[StreamCheck] [ErrorCode: 203] The first task in this slave stream is not a local WAIT task, rankId=0, streamId=6, actualFirstTaskType=TRANS_MEM, firstTask=[TaskTransMem] node=214, rank=0, stream=6, protocol=SDMA, src=rank 0 INPUT [0x0,0x400), dst=rank 0 CCL [0x4000,0x4400)
     
 
 [StreamCheck] [ErrorCode: 203] The last task in this slave stream is not a local RECORD task, rankId=0, streamId=6, actualLastTaskType=WAIT, lastTask=[TaskWaitAICPU] node=245, rank=0, stream=6, protocol=SDMA, notify={recordRank=0, waitRank=0, notifyId=32}
@@ -472,7 +461,7 @@ SINGLETASK_SLAVE_STREAM_INVALID (203)
 
 ---
 
-### 子模块：内存冲突与可达性错误
+### 子模块：内存冲突校验
 
 ---
 
@@ -487,10 +476,10 @@ MEMCONFLICT_DAG_INVALID (301)
 
 **关键日志:**
 ```
-[MemConflict] [ErrorCode: 301] Reachability analysis cannot start because the main start node is invalid, mainStartNode=[TaskTransMem] node=42, rank=0, stream=2, protocol=SDMA, src={rank=0, mem=INPUT, offset=0x0, len=0x400}, dst={rank=0, mem=CCL, offset=0x1000, len=0x400}
+[MemConflict] [ErrorCode: 301] Reachability analysis cannot start because the main start node is invalid, mainStartNode=[TaskTransMem] node=42, rank=0, stream=2, protocol=SDMA, src=rank 0 INPUT [0x0,0x400), dst=rank 0 CCL [0x1000,0x1400)
     
 
-[MemConflict] [ErrorCode: 301] This data-move node is missing its reachability index, node=[TaskBatchTransMem] node=318, rank=3, stream=2, protocol=CCU, pairCount=4, mergedPairCount=2, src0={rank=3, mem=CCL, offset=0x8000, len=0x400}, dst0={rank=3, mem=OUTPUT, offset=0x0, len=0x400}
+[MemConflict] [ErrorCode: 301] This data-move node is missing its reachability index, node=[TaskBatchTransMem] node=318, rank=3, stream=2, protocol=CCU, pairCount=4, mergedPairCount=2, src0=rank 3 CCL [0x8000,0x8400), dst0=rank 3 OUTPUT [0x0,0x400)
     
 
 [MemConflict] [ErrorCode: 301] This V3 graph is not a complete DAG from the main start node, topoSize=412, expectedTopoSize=415, reachableTaskCount=411, taskNodeCount=414, mainStartNodeId=-1
@@ -522,7 +511,17 @@ MEMCONFLICT_DETECTED (302)
 
 **关键日志:**
 ```
-[MemConflict] [ErrorCode: 302] Memory conflict detected, memory={rankId=0, memoryType=OUTPUT}, overlap=[0x1000,0x1400), conflictTask1={taskNodeId=214, taskAction=write, memory={rankId=0, memoryType=OUTPUT}, byteRange=[0x1000,0x1800), task=[TaskTransMem] node=214, rank=0, stream=6, protocol=SDMA, src={rank=0, mem=CCL, offset=0x4000, len=0x800}, dst={rank=0, mem=OUTPUT, offset=0x1000, len=0x800}}, conflictTask2={taskNodeId=233, taskAction=write, memory={rankId=0, memoryType=OUTPUT}, byteRange=[0x1000,0x1400), task=[TaskReduce] node=233, rank=0, stream=8, protocol=CCU, dataType=0, reduceOp=0, srcs=[{rank=0, mem=CCL, offset=0x5000, len=0x400}, {rank=3, mem=CCL, offset=0x5000, len=0x400}], dst={rank=0, mem=OUTPUT, offset=0x1000, len=0x400}}
+[MemConflict] [ErrorCode: 302] Two tasks may access the same memory range in parallel, and at least one access is a write.
+  Conflict memory : rank 0 OUTPUT
+  Overlap range    : [0x1000,0x1400)
+  Conflict task 1:
+    node 214, action=write
+    access range : [0x1000,0x1800)
+    task         : [TaskTransMem] node=214, rank=0, stream=6, protocol=SDMA, src=rank 0 CCL [0x4000,0x4800), dst=rank 0 OUTPUT [0x1000,0x1800)
+  Conflict task 2:
+    node 233, action=write
+    access range : [0x1000,0x1400)
+    task         : [TaskReduce] node=233, rank=0, stream=8, protocol=CCU, dataType=0, reduceOp=0, srcs=[rank 0 CCL [0x5000,0x5400), rank 3 CCL [0x5000,0x5400)], dst=rank 0 OUTPUT [0x1000,0x1400)
 ```
 
 **问题现象:** 检测到了真实的内存并发冲突，两条任务访问同一内存区间，且至少一方是写。
@@ -541,7 +540,7 @@ MEMCONFLICT_DETECTED (302)
 
 ---
 
-### 子模块：语义模拟与最终输出校验错误
+### 子模块：语义校验
 
 ---
 
@@ -666,8 +665,6 @@ SEMANTIC_REDUCE_ERROR (403)
     
 
 [SemanticCheck] [ErrorCode: 403] Source data needed by this reduce is missing, dataMapping={operation=reduce, sourceMemorySlice={rankId=5, memoryType=INPUT, offset=0x400, length=0x400}, targetMemorySlice={rankId=0, memoryType=OUTPUT, offset=0x400, length=0x400}, launchIdx=18446744073709551615, blockId=4294967295, pipeId=4294967295, taskId=4294967295, reduceType=HCCL_REDUCE_SUM}
-    
-
 ```
 
 **问题现象:** reduce 语义链路不完整或不一致，常见表现为目标区间覆盖不完全就继续 reduce、reduce 类型不一致，或 reduce 源数据缺失。
@@ -756,17 +753,17 @@ SEMANTIC_FINAL_MISSING (406)
 
 **关键日志:**
 ```
-[SemanticCheck] [ErrorCode: 406] AllGatherV produced no result data for rank 3, but this rank is expected to receive data from all ranks, expectedSourceRankCount=8, expectedResultSize=0x1c00
+[SemanticCheck] [ErrorCode: 406] AllGatherV produced no result data for rank 3, but this rank is expected to receive data from all 8 participating ranks with an expected total result size of 0x1c00 bytes.
     
 
-[SemanticCheck] [ErrorCode: 406] Send/Recv result data does not start from the expected address, rankId=5, expectedStartAddr=0x0, actualStartAddr=0x400, actualBufferRange=[0x400,0x800)
+[SemanticCheck] [ErrorCode: 406] Send/Recv output for rank 5 should continue at 0x0, but the next actual range starts at 0x400 (actual range: [0x400,0x800)).
     Current result range detail:
       range=[0x400,0x800), size=0x400, sourceCount=1
       sources:
         - sourceRank=1, sourceBufferType=INPUT, sourceAddr=0x0
     
 
-[SemanticCheck] [ErrorCode: 406] ReduceScatter result data ends before the expected total size is reached, rankId=6, checkedSize=0x1800, expectedSize=0x1c00
+[SemanticCheck] [ErrorCode: 406] ReduceScatter output for rank 6 ends too early: the checker validated 0x1800 bytes in total, but the expected result size is 0x1c00.
 ```
 
 **问题现象:** 最终输出存在缺失，常见表现为某个 rank 完全没有结果、结果起始地址不对，或结果尾部未写满。
@@ -796,14 +793,14 @@ SEMANTIC_FINAL_SRC_ERROR (407)
 
 **关键日志:**
 ```
-[SemanticCheck] [ErrorCode: 407] This AllGatherV result range comes from the wrong source rank, rankId=3, actualSourceRank=5, expectedSourceRank=4, actualBufferRange=[0x1000,0x1400)
+[SemanticCheck] [ErrorCode: 407] AllGatherV output range [0x1000,0x1400) for rank 3 should come from rank 4, but it actually comes from rank 5.
     Current result range detail:
       range=[0x1000,0x1400), size=0x400, sourceCount=1
       sources:
         - sourceRank=5, sourceBufferType=INPUT, sourceAddr=0x0
     
 
-[SemanticCheck] [ErrorCode: 407] This AllReduce result range comes from a non-INPUT buffer, but it should come from INPUT, rankId=0, actualSourceRank=3, actualSourceBufferType=CCL, actualBufferRange=[0x0,0x400)
+[SemanticCheck] [ErrorCode: 407] AllReduce result range [0x0,0x400) for rank 0 should come from INPUT, but source rank 3 actually provides buffer type CCL.
     Current result range detail:
       range=[0x0,0x400), size=0x400, reduce=HCCL_REDUCE_SUM, sourceCount=8
       sources:
@@ -817,7 +814,7 @@ SEMANTIC_FINAL_SRC_ERROR (407)
         - sourceRank=7, sourceBufferType=INPUT, sourceAddr=0x0
     
 
-[SemanticCheck] [ErrorCode: 407] Source address for this Send/Recv result range does not match the expected input address, rankId=5, sourceRank=1, expectedAddr=0x400, actualAddr=0x0, actualBufferRange=[0x400,0x800)
+[SemanticCheck] [ErrorCode: 407] Send/Recv output range [0x400,0x800) for rank 5 should take data from source rank 1 at input address 0x400, but it actually takes data from source rank 1 at input address 0x0.
     Current result range detail:
       range=[0x400,0x800), size=0x400, sourceCount=1
       sources:
@@ -851,7 +848,7 @@ SEMANTIC_FINAL_SIZE_ERROR (408)
 
 **关键日志:**
 ```
-[SemanticCheck] [ErrorCode: 408] Data taken from one source rank is larger than expected in AllGatherV, rankId=3, sourceRank=4, actualSize=0x600, expectedSize=0x400, actualBufferRange=[0x1000,0x1600)
+[SemanticCheck] [ErrorCode: 408] AllGatherV data collected from rank 4 for rank 3 becomes larger than expected after outputRange [0x1000,0x1600). The accumulated size is 0x600, but the expected size from this source rank is 0x400.
     Current result range detail:
       range=[0x1000,0x1600), size=0x600, sourceCount=1
       sources:
@@ -883,7 +880,7 @@ SEMANTIC_FINAL_REDUCE_ERROR (409)
 
 **关键日志:**
 ```
-[SemanticCheck] [ErrorCode: 409] This Send/Recv result range combines multiple sources, but this operator expects exactly one source, rankId=5, actualSourceCount=2, expectedSourceCount=1, outputRange=[0x0,0x400)
+[SemanticCheck] [ErrorCode: 409] Send/Recv output range [0x0,0x400) for rank 5 should come from exactly one source, but it actually comes from 2 sources.
     Current result range detail:
       range=[0x0,0x400), size=0x400, sourceCount=2
       sources:
@@ -891,7 +888,7 @@ SEMANTIC_FINAL_REDUCE_ERROR (409)
         - sourceRank=2, sourceBufferType=INPUT, sourceAddr=0x0
     
 
-[SemanticCheck] [ErrorCode: 409] Reduce mode of this AllReduce result range does not match the operator setting, rankId=0, actualReduceType=HCCL_REDUCE_MAX, expectedReduceType=HCCL_REDUCE_SUM, outputRange=[0x0,0x400)
+[SemanticCheck] [ErrorCode: 409] AllReduce result range [0x0,0x400) for rank 0 was reduced with mode HCCL_REDUCE_MAX, but the operator expects reduce mode HCCL_REDUCE_SUM.
     Current result range detail:
       range=[0x0,0x400), size=0x400, reduce=HCCL_REDUCE_MAX, sourceCount=8
       sources:
@@ -905,7 +902,7 @@ SEMANTIC_FINAL_REDUCE_ERROR (409)
         - sourceRank=7, sourceBufferType=INPUT, sourceAddr=0x0
     
 
-[SemanticCheck] [ErrorCode: 409] This ReduceScatter result range does not include the expected number of source ranks, rankId=6, actualSourceRankCount=6, expectedRankSize=8, outputRange=[0x0,0x400)
+[SemanticCheck] [ErrorCode: 409] ReduceScatter output range [0x0,0x400) for rank 6 expected 8 source ranks but got 6.
     Current result range detail:
       range=[0x0,0x400), size=0x400, reduce=HCCL_REDUCE_SUM, sourceCount=6
       sources:
@@ -931,28 +928,9 @@ SEMANTIC_FINAL_REDUCE_ERROR (409)
 2. 再查看对应内存搬运和 Reduce 类任务，确认各处内存操作是否符合预期。
 ```
 
-**图示说明:**
-```mermaid
-flowchart TD
-    START["观察 Current result range detail"] --> Q1{"sourceCount > 1\n且算子应为单源?"}
-    Q1 -- 是 --> S1["子场景 1：多源污染\nSend/Recv/AllGather 等出现多个 source"]
-    Q1 -- 否 --> Q2{"reduce 字段存在\n且 actualReduceType\n与预期不符?"}
-    Q2 -- 是 --> S2["子场景 2：reduceType 不匹配\n追查最早写入该区间的 reduce 任务"]
-    Q2 -- 否 --> S3["子场景 3：来源个数不足\nactualSourceRankCount < expectedRankSize"]
-
-    S1 --> S1A["看 sources 列表\n找出不该出现的 sourceRank"]
-    S1A --> S1B["向前查该 rank 的写入任务\n是否与当前算子有关联"]
-
-    S2 --> S2A["看 actualReduceType\n与算子参数中的 reduceOp 对比"]
-    S2A --> S2B["找出第一条写入该区间的 reduce 任务\n确认其 reduceOp 是否正确"]
-
-    S3 --> S3A["sources 列表中列出了哪些 rank\n对比 expectedRankSize 找出缺失的 rank"]
-    S3A --> S3B["向前查缺失 rank 的写入任务\n是否存在且在正确位置执行"]
-```
-
 ---
 
-### 子模块：Dump 输出错误
+### 子模块：Dump 输出
 
 ---
 
@@ -981,7 +959,7 @@ DUMP_FAILED (501)
 
 ---
 
-### 子模块：主流程与配置错误
+### 子模块：主流程与配置
 
 ---
 
@@ -1005,7 +983,7 @@ CHECKER_RUNTIME_ERROR (901)
 [SemanticCheck] [ErrorCode: 901] Semantic check initialization failed because the rank count is 0, collectiveType=AllReduce, dataType=FLOAT, elementCount=1024, reduceType=SUM
     
 
-[SemanticCheck] [ErrorCode: 901] Output simulation stopped because some tasks still have unresolved dependencies, handledNodeCount=410, totalNodeCount=415, firstRemainingNode=[TaskReduce] node=233, rank=2, stream=5, protocol=CCU, dataType=0, reduceOp=0, srcs=[{rank=2, mem=CCL, offset=0x2000, len=0x400}], dst={rank=2, mem=OUTPUT, offset=0x0, len=0x400}
+[SemanticCheck] [ErrorCode: 901] Output simulation stopped because some tasks still have unresolved dependencies, handledNodeCount=410, totalNodeCount=415, firstRemainingNode=[TaskReduce] node=233, rank=2, stream=5, protocol=CCU, dataType=0, reduceOp=0, srcs=[rank 2 CCL [0x2000,0x2400)], dst=rank 2 OUTPUT [0x0,0x400)
 ```
 
 **问题现象:** 主流程运行时发生通用异常。
@@ -1045,5 +1023,3 @@ SETTING_WARNING (902)
 【排查步骤】
 1. 优先检查开关配置，确认至少启动一个 Checker。
 ```
-
----

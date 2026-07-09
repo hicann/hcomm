@@ -718,8 +718,7 @@ void RunnerListen() {
                 if (ret == HcclVmResult::HCCL_SIM_E_SKIP) { 
                     HCCL_VM_INFO("skip dumping data (multi-op scenario)"); 
                 } else if (ret != HcclVmResult::HCCL_SIM_SUCCESS) { 
-                    HCCL_VM_ERROR("dump data to file failed. ret: {:d}", static_cast<int>(ret)); 
-                    return; 
+                    HCCL_VM_WARN("dump data to file failed. ret: {:d}", static_cast<int>(ret));
                 } 
             } 
         } else if(syncer.getCurrentRound() >= 1){ 

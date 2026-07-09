@@ -178,29 +178,24 @@ std::map<uint16_t, uint16_t> AllRankParamRecorder::GetCKESnapshot(uint32_t rankI
 HcclResult AllRankParamRecorder::CheckAllPostMatch()
 {
     for (const auto& rankPair : seenPost) {
-        RankId rank = rankPair.first;
         for (const auto& diePair : rankPair.second) {
-            uint32_t dieId = diePair.first;
             for (const auto& regPair: diePair.second) {
-                uint16_t regId = regPair.first;
                 for (const auto *post : regPair.second) {
                     const auto *meta = GetPostNodeMeta(post);
                     if (meta != nullptr) {
                         HCCL_VM_WARN("{} Found CCU post/local-post tasks that were never consumed by "
-                            "any Wait task, firstUnconsumedPostNode={}, unconsumedPostCount={}, waitRankId={}, "
-                            "dieId={}, "
-                            "ckeId={}, recordRankId={}, remainingCkeMask=0x{:x}, isLocal={}",
+                            "any Wait task:\n  unconsumedPostCount={}, remainingCkeMask=0x{:x}, isLocal={}\n"
+                            "  firstUnconsumedPostNode={}",
                             MakeErrorCodeText(ErrorCode::GRAPH_UNMATCHED).c_str(),
-                            post == nullptr ? "node=null" : post->Describe().c_str(), regPair.second.size(),
-                            meta->waitRankId, meta->dieId, meta->ckeId,
-                            meta->recordRankId, meta->remainingCkeMask, meta->isLocal);
+                            regPair.second.size(), meta->remainingCkeMask, meta->isLocal,
+                            post == nullptr ? "node=null" : post->Describe().c_str());
                         continue;
                     }
                     HCCL_VM_WARN("{} Found CCU post/local-post tasks that were never consumed by any "
-                        "Wait task, firstUnconsumedPostNode={}, unconsumedPostCount={}, waitRankId={}, dieId={}, "
-                        "ckeId={}", MakeErrorCodeText(ErrorCode::GRAPH_UNMATCHED).c_str(),
-                        post == nullptr ? "node=null" : post->Describe().c_str(), regPair.second.size(), rank,
-                        dieId, regId);
+                        "Wait task:\n  unconsumedPostCount={}\n  firstUnconsumedPostNode={}",
+                        MakeErrorCodeText(ErrorCode::GRAPH_UNMATCHED).c_str(),
+                        regPair.second.size(),
+                        post == nullptr ? "node=null" : post->Describe().c_str());
                 }
             }
         }

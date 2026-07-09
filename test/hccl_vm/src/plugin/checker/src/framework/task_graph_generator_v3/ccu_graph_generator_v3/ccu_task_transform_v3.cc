@@ -149,12 +149,13 @@ HcclResult TransformInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *curCcu
             curCcuTask == nullptr ? std::string("null") : std::to_string(curCcuTask->GetRankId()), queId);
         return HCCL_E_INTERNAL;
     }
-    if (!g_instrMap->IsSupported(instr->header.header)) {
+    const uint16_t instructionHeader = static_cast<uint16_t>(instr->header.header);
+    if (!g_instrMap->IsSupported(instructionHeader)) {
         HCCL_VM_ERROR("{} This CCU instruction type is not supported by CheckerV3 graph expansion, "
             "rankId={}, queueId={}, instructionHeader=0x{:04x}",
             MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(),
             curCcuTask == nullptr ? std::string("null") : std::to_string(curCcuTask->GetRankId()), queId,
-            instr->header.header);
+            instructionHeader);
         return HCCL_E_INTERNAL;
     }
     return g_instrMap.get()->Transform(instr, curCcuTask, queId, isContinue, nullptr);
@@ -166,6 +167,10 @@ CcuInstrVersion GetCcuInstrVersion()
     DevType devType = AllRankParamRecorder::Global()->GetDevType();
     if (devType == DevType::DEV_TYPE_950) {
         return CcuInstrVersion::VERSION_A5;
+#ifdef BUILD_A6_CCU_INSTR
+    } else if (devType == DevType::DEV_TYPE_960) {
+        return CcuInstrVersion::VERSION_A6;
+#endif
     }
     return CcuInstrVersion::VERSION_A5;
 }
@@ -186,15 +191,16 @@ HcclResult TransformInstrQue(TaskNode *node, CcuGraphStateV3 *curCcuTask, uint32
     while (pos < endInstrId) {
         u32 prePos = pos;
         const uint32_t instrId = curCcuTask->startInstrIdInQue[queId] + pos;
+        const uint16_t instructionHeader = static_cast<uint16_t>(microCodeQue.instrVec[pos].header.header);
         HCCL_VM_DEBUG("Translating one CCU instruction, graph={}, instructionId={}, "
             "instructionHeader=0x{:04x}",
-            curCcuTask->Describe(), instrId, microCodeQue.instrVec[pos].header.header);
+            curCcuTask->Describe(), instrId, instructionHeader);
         HcclResult ret = TransformInstr(&microCodeQue.instrVec[pos], curCcuTask, queId, isContinue);
         if (ret != HCCL_SUCCESS) {
             HCCL_VM_ERROR("{} Failed to translate one CCU instruction, rankId={}, queueId={}, "
                 "instructionId={}, instructionHeader=0x{:04x}, ret={}, graph={}",
                 MakeErrorCodeText(ErrorCode::GRAPH_TRANSLATE_FAILED).c_str(), curCcuTask->GetRankId(), queId,
-                instrId, microCodeQue.instrVec[pos].header.header, static_cast<uint32_t>(ret),
+                instrId, instructionHeader, static_cast<uint32_t>(ret),
                 curCcuTask->Describe().c_str());
             return ret;
         }

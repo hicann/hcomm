@@ -417,15 +417,17 @@ HcclResult TransformTransLocMemToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMemToRmtMem, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMemToRmtMem:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
     }
     if (len > UB_MAX_SIZE) {
-        HCCL_VM_ERROR("{} Transfer size exceeds the UB upper limit, instruction=TransLocMemToRmtMem, "
-            "transferSize={}, ubLimit={}, rankId={}, dieId={}, queueId={}, instrId={}",
+        HCCL_VM_ERROR("{} Transfer size exceeds the UB upper limit, instruction=TransLocMemToRmtMem:\n"
+            "  size: transferSize={}, ubLimit={}\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<unsigned long long>(len),
             static_cast<unsigned long long>(UB_MAX_SIZE), static_cast<uint32_t>(rankId), dieId, queId, instrId);
         return HCCL_E_INTERNAL;
@@ -444,8 +446,10 @@ HcclResult TransformTransLocMemToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuG
     // 说明transportId写错了
     if (rId != rmtRankId) {
         HCCL_VM_ERROR("{} Remote address resolves to a different rank than the selected channel, "
-            "instruction=TransLocMemToRmtMem, rankId={}, dieId={}, queueId={}, instrId={}, channelId={}, "
-            "expectedRemoteRankId={}, actualRemoteRankId={}, remoteAddr={}",
+            "instruction=TransLocMemToRmtMem:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}, channelId={}\n"
+            "  rank: expectedRemoteRankId={}, actualRemoteRankId={}\n"
+            "  addr: remoteAddr={}",
             MakeErrorCodeText(ErrorCode::GRAPH_REMOTE_RANK_MISMATCH).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, channelId, static_cast<uint32_t>(rmtRankId), static_cast<uint32_t>(rId),
             static_cast<unsigned long long>(rmtAddr));
@@ -477,10 +481,13 @@ HcclResult TransformTransLocMemToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask));
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local-memory to remote-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcGsaId={}, srcOffsetXnId={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}, reduceEnabled={}, reduceDataType={}, "
-        "reduceOpCode={}",
+    HCCL_VM_DEBUG("Completed local-memory to remote-memory transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcGsaId={}, srcOffsetXnId={}\n"
+        "  dst: dstGsaId={}, dstOffsetXnId={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}, reduceEnabled={}, reduceDataType={}, reduceOpCode={}",
         waitCKEId, waitCKEMask, locGSAId, locXnId, rmtGSAId, rmtXnId, lengthXnId, channelId, setCKEId, setCKEMask,
         clearType, lengthEn, reduceEn, reduceDataType, reduceOpCode);
     return HCCL_SUCCESS;
@@ -520,15 +527,17 @@ HcclResult TransformTransLocMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMemToLocMem, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMemToLocMem:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
     }
     if (len > UB_MAX_SIZE) {
-        HCCL_VM_ERROR("{} Transfer size exceeds the UB upper limit, instruction=TransLocMemToLocMem, "
-            "transferSize={}, ubLimit={}, rankId={}, dieId={}, queueId={}, instrId={}",
+        HCCL_VM_ERROR("{} Transfer size exceeds the UB upper limit, instruction=TransLocMemToLocMem:\n"
+            "  size: transferSize={}, ubLimit={}\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<unsigned long long>(len),
             static_cast<unsigned long long>(UB_MAX_SIZE), static_cast<uint32_t>(rankId), dieId, queId, instrId);
         return HCCL_E_INTERNAL;
@@ -549,9 +558,13 @@ HcclResult TransformTransLocMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local-memory to local-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcGsaId={}, srcOffsetXnId={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+    HCCL_VM_DEBUG("Completed local-memory to local-memory transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcGsaId={}, srcOffsetXnId={}\n"
+        "  dst: dstGsaId={}, dstOffsetXnId={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, srcGSAId, srcXnId, dstGSAId, dstXnId, lengthXnId, channelId, setCKEId, setCKEMask,
         clearType, lengthEn);
     return HCCL_SUCCESS;
@@ -613,8 +626,10 @@ HcclResult TransformSyncCKEInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}], Sync LocCKE[{}:{:04x}] To rmtCKE[{}:{:04x}] Use Channel[{}], Set "
-        "CKE[{}:0x{:04x}], clearType[{}]",
+    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}]:\n"
+        "  sync: Sync LocCKE[{}:{:04x}] To rmtCKE[{}:{:04x}] Use Channel[{}]\n"
+        "  set: Set CKE[{}:0x{:04x}]\n"
+        "  ctrl: clearType[{}]",
         waitCKEId, waitCKEMask, locCKEId, locCKEMask, rmtCKEId, locCKEMask, channelId, setCKEId, setCKEMask,
         clearType);
     return HCCL_SUCCESS;
@@ -673,8 +688,10 @@ HcclResult TransformSyncXnInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}], Sync Xn[{}]({}) To rmtXn[{}] Use Channel[{}], Set rmtCKE[{}:0x{:04x}], "
-        "Set CKE[{}:0x{:04x}], clearType[{}]",
+    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}]:\n"
+        "  sync: Sync Xn[{}]({}) To rmtXn[{}] Use Channel[{}]\n"
+        "  set: Set rmtCKE[{}:0x{:04x}], Set CKE[{}:0x{:04x}]\n"
+        "  ctrl: clearType[{}]",
         waitCKEId, waitCKEMask, locXnId, localXnValue, rmtXnId, channelId, setRmtCKEId, setRmtCKEMask,
         setCKEId, setCKEMask, clearType);
     return HCCL_SUCCESS;
@@ -736,8 +753,9 @@ HcclResult TransformTransLocMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMemToLocMS, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMemToLocMS:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
@@ -755,9 +773,13 @@ HcclResult TransformTransLocMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local-memory to local-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcGsaId={}, srcOffsetXnId={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+    HCCL_VM_DEBUG("Completed local-memory to local-MS transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcGsaId={}, srcOffsetXnId={}\n"
+        "  dst: dstMsPage={}, dstMsOffset={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, locGSAId, locXnId, locMSId / 0x8000, locMSId % 0x8000, lengthXnId, channelId,
         setCKEId, setCKEMask, clearType, lengthEn);
 
@@ -792,8 +814,9 @@ HcclResult TransformTransLocMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToLocMem, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToLocMem:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
@@ -813,9 +836,13 @@ HcclResult TransformTransLocMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local-MS to local-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcMsPage={}, srcMsOffset={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+    HCCL_VM_DEBUG("Completed local-MS to local-memory transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcMsPage={}, srcMsOffset={}\n"
+        "  dst: dstGsaId={}, dstOffsetXnId={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, locMSId / 0x8000, locMSId % 0x8000, locGSAId, locXnId, lengthXnId, channelId,
         setCKEId, setCKEMask, clearType, lengthEn);
 
@@ -849,8 +876,9 @@ HcclResult TransformTransLocMSToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGra
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToLocMS, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToLocMS:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
@@ -866,9 +894,13 @@ HcclResult TransformTransLocMSToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGra
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local-MS to local-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcMsPage={}, srcMsOffset={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+    HCCL_VM_DEBUG("Completed local-MS to local-MS transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcMsPage={}, srcMsOffset={}\n"
+        "  dst: dstMsPage={}, dstMsOffset={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, srcMSId / 0x8000, srcMSId % 0x8000, dstMSId / 0x8000, dstMSId % 0x8000,
         lengthXnId, channelId, setCKEId, setCKEMask, clearType, lengthEn);
 
@@ -903,8 +935,9 @@ HcclResult TransformTransLocMSToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuGr
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToRmtMem, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToRmtMem:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
@@ -926,9 +959,13 @@ HcclResult TransformTransLocMSToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local-MS to remote-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcMsPage={}, srcMsOffset={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+    HCCL_VM_DEBUG("Completed local-MS to remote-memory transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcMsPage={}, srcMsOffset={}\n"
+        "  dst: dstGsaId={}, dstOffsetXnId={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, locMSId / 0x8000, locMSId % 0x8000, rmtGSAId, rmtXnId, lengthXnId, channelId,
         setCKEId, setCKEMask, clearType, lengthEn);
 
@@ -965,8 +1002,9 @@ HcclResult TransformTransLocMSToRmtMSInstr(const CcuRep::CcuInstr *instr, CcuGra
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToRmtMS, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransLocMSToRmtMS:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
@@ -995,10 +1033,13 @@ HcclResult TransformTransLocMSToRmtMSInstr(const CcuRep::CcuInstr *instr, CcuGra
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local-MS to remote-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcMsPage={}, srcMsOffset={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
-        "remoteSetCkeId={}, remoteSetMask=0x{:04x}, localSetCkeId={}, localSetMask=0x{:04x}, clearType={}, "
-        "lengthEnabled={}",
+    HCCL_VM_DEBUG("Completed local-MS to remote-MS transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcMsPage={}, srcMsOffset={}\n"
+        "  dst: dstMsPage={}, dstMsOffset={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: remoteSetCkeId={}, remoteSetMask=0x{:04x}, localSetCkeId={}, localSetMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, locMSId / 0x8000, locMSId % 0x8000, rmtMSId / 0x8000, rmtMSId % 0x8000,
         lengthXnId, channelId, setRmtCKEId, setRmtCKEMask, setCKEId, setCKEMask, clearType, lengthEn);
     return HCCL_SUCCESS;
@@ -1035,8 +1076,9 @@ HcclResult TransformTransRmtMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMemToLocMS, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMemToLocMS:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
@@ -1064,9 +1106,13 @@ HcclResult TransformTransRmtMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed remote-memory to local-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcGsaId={}, srcOffsetXnId={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+    HCCL_VM_DEBUG("Completed remote-memory to local-MS transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcGsaId={}, srcOffsetXnId={}\n"
+        "  dst: dstMsPage={}, dstMsOffset={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, rmtGSAId, rmtXnId, locMSId / 0x8000, locMSId % 0x8000, lengthXnId, channelId,
         setCKEId, setCKEMask, clearType, lengthEn);
     return HCCL_SUCCESS;
@@ -1100,8 +1146,9 @@ HcclResult TransformTransRmtMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMSToLocMem, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMSToLocMem:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
@@ -1123,9 +1170,13 @@ HcclResult TransformTransRmtMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed remote-MS to local-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcMsPage={}, srcMsOffset={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+    HCCL_VM_DEBUG("Completed remote-MS to local-memory transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcMsPage={}, srcMsOffset={}\n"
+        "  dst: dstGsaId={}, dstOffsetXnId={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, rmtMSId / 0x8000, rmtMSId % 0x8000, locGSAId, locXnId, lengthXnId, channelId,
         setCKEId, setCKEMask, clearType, lengthEn);
     return HCCL_SUCCESS;
@@ -1158,8 +1209,9 @@ HcclResult TransformTransRmtMSToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGra
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMSToLocMS, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMSToLocMS:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
@@ -1177,9 +1229,13 @@ HcclResult TransformTransRmtMSToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGra
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed remote-MS to local-MS transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcMsPage={}, srcMsOffset={}, dstMsPage={}, dstMsOffset={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}",
+    HCCL_VM_DEBUG("Completed remote-MS to local-MS transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcMsPage={}, srcMsOffset={}\n"
+        "  dst: dstMsPage={}, dstMsOffset={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}",
         waitCKEId, waitCKEMask, rmtMSId / 0x8000, rmtMSId % 0x8000, locMSId / 0x8000, locMSId % 0x8000,
         lengthXnId, channelId, setCKEId, setCKEMask, clearType, lengthEn);
     return HCCL_SUCCESS;
@@ -1219,15 +1275,17 @@ HcclResult TransformTransRmtMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_GET_XN_V3(curCcuTask, queId, lengthXnId, len);
     const uint32_t instrId = curCcuTask->microCodePosInQue[queId] + curCcuTask->startInstrIdInQue[queId];
     if (len == 0) {
-        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMemToLocMem, rankId={}, dieId={}, "
-            "queueId={}, instrId={}, transferSize={}",
+        HCCL_VM_ERROR("{} Transfer size is 0, instruction=TransRmtMemToLocMem:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}\n"
+            "  size: transferSize={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, static_cast<unsigned long long>(len));
         return HCCL_E_INTERNAL;
     }
     if (len > UB_MAX_SIZE) {
-        HCCL_VM_ERROR("{} Transfer size exceeds the UB upper limit, instruction=TransRmtMemToLocMem, "
-            "transferSize={}, ubLimit={}, rankId={}, dieId={}, queueId={}, instrId={}",
+        HCCL_VM_ERROR("{} Transfer size exceeds the UB upper limit, instruction=TransRmtMemToLocMem:\n"
+            "  size: transferSize={}, ubLimit={}\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}",
             MakeErrorCodeText(ErrorCode::GRAPH_STRUCTURE_INVALID).c_str(), static_cast<unsigned long long>(len),
             static_cast<unsigned long long>(UB_MAX_SIZE), static_cast<uint32_t>(rankId), dieId, queId, instrId);
         return HCCL_E_INTERNAL;
@@ -1250,8 +1308,10 @@ HcclResult TransformTransRmtMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
     // 说明transportId写错了
     if (rId != rmtRankId) {
         HCCL_VM_ERROR("{} Remote address resolves to a different rank than the selected channel, "
-            "instruction=TransRmtMemToLocMem, rankId={}, dieId={}, queueId={}, instrId={}, channelId={}, "
-            "expectedRemoteRankId={}, actualRemoteRankId={}, remoteAddr={}",
+            "instruction=TransRmtMemToLocMem:\n"
+            "  ctx: rankId={}, dieId={}, queueId={}, instrId={}, channelId={}\n"
+            "  rank: expectedRemoteRankId={}, actualRemoteRankId={}\n"
+            "  addr: remoteAddr={}",
             MakeErrorCodeText(ErrorCode::GRAPH_REMOTE_RANK_MISMATCH).c_str(), static_cast<uint32_t>(rankId), dieId,
             queId, instrId, channelId, static_cast<uint32_t>(rmtRankId), static_cast<uint32_t>(rId),
             static_cast<unsigned long long>(rmtAddr));
@@ -1284,10 +1344,13 @@ HcclResult TransformTransRmtMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask));
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed remote-memory to local-memory transfer, waitCkeId={}, waitMask=0x{:04x}, "
-        "srcGsaId={}, srcOffsetXnId={}, dstGsaId={}, dstOffsetXnId={}, lengthXnId={}, channelId={}, "
-        "setCkeId={}, setMask=0x{:04x}, clearType={}, lengthEnabled={}, reduceEnabled={}, reduceDataType={}, "
-        "reduceOpCode={}",
+    HCCL_VM_DEBUG("Completed remote-memory to local-memory transfer:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: srcGsaId={}, srcOffsetXnId={}\n"
+        "  dst: dstGsaId={}, dstOffsetXnId={}\n"
+        "  xfer: lengthXnId={}, channelId={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}, lengthEnabled={}, reduceEnabled={}, reduceDataType={}, reduceOpCode={}",
         waitCKEId, waitCKEMask, rmtGSAId, rmtXnId, locGSAId, locXnId, lengthXnId, channelId, setCKEId, setCKEMask,
         clearType, lengthEn, reduceEn, reduceDataType, reduceOpCode);
 
@@ -1835,8 +1898,9 @@ static HcclResult TryProcessMergedLoopA5(const CcuRep::CcuInstr *loopInstr, CcuG
     if (loopEnd == nullptr) {
         return HCCL_E_INTERNAL;
     }
+    const uint16_t loopInstructionId = static_cast<uint16_t>(loopInstr->v1.loop.startInstrId);
     HCCL_VM_INFO("Merged LoopGroup body successfully, loopInstructionId={}, loopCount={}, "
-        "expandTimes={}, mergedInstructionCount={}", loopInstr->v1.loop.startInstrId, mergedLoopCnt, expandTimes,
+        "expandTimes={}, mergedInstructionCount={}", loopInstructionId, mergedLoopCnt, expandTimes,
         mergedLoop.loopExpands.front().instrs.size());
     merged = true;
     return HCCL_SUCCESS;
@@ -2000,8 +2064,10 @@ HcclResult TransformSyncGSAInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}], Sync GSA[{}]({}) To rmtGSA[{}] Use Channel[{}], Set rmtCKE[{}:0x{:04x}], "
-        "Set CKE[{}:0x{:04x}], clearType[{}]",
+    HCCL_VM_DEBUG("Wait CKE[{}:0x{:04x}]:\n"
+        "  sync: Sync GSA[{}]({}) To rmtGSA[{}] Use Channel[{}]\n"
+        "  set: Set rmtCKE[{}:0x{:04x}], Set CKE[{}:0x{:04x}]\n"
+        "  ctrl: clearType[{}]",
         waitCKEId, waitCKEMask, locGSAId, localGSAValue, rmtGSAId, channelId, setRmtCKEId, setRmtCKEMask,
         setCKEId, setCKEMask, clearType);
 
@@ -2092,8 +2158,11 @@ HcclResult TransformAddInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cur
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local SUM reduce, waitCkeId={}, waitMask=0x{:04x}, msList={}, "
-        "sourceCount={}, dataType={}, castEnabled={}, setCkeId={}, setMask=0x{:04x}, clearType={}",
+    HCCL_VM_DEBUG("Completed local SUM reduce:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: msList={}, sourceCount={}, dataType={}, castEnabled={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}",
         waitCKEId, waitCKEMask, ParseMSList(instr), count, dataType, castEn, setCKEId, setCKEMask, clearType);
 
     return HCCL_SUCCESS;
@@ -2146,8 +2215,11 @@ HcclResult TransformMaxInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cur
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local MAX reduce, waitCkeId={}, waitMask=0x{:04x}, msList={}, "
-        "sourceCount={}, dataType={}, setCkeId={}, setMask=0x{:04x}, clearType={}",
+    HCCL_VM_DEBUG("Completed local MAX reduce:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: msList={}, sourceCount={}, dataType={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}",
         waitCKEId, waitCKEMask, ParseMSList(instr), count, dataType, setCKEId, setCKEMask, clearType);
 
     return HCCL_SUCCESS;
@@ -2200,8 +2272,11 @@ HcclResult TransformMinInstr(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *cur
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_VM_DEBUG("Completed local MIN reduce, waitCkeId={}, waitMask=0x{:04x}, msList={}, "
-        "sourceCount={}, dataType={}, setCkeId={}, setMask=0x{:04x}, clearType={}",
+    HCCL_VM_DEBUG("Completed local MIN reduce:\n"
+        "  wait: waitCkeId={}, waitMask=0x{:04x}\n"
+        "  src: msList={}, sourceCount={}, dataType={}\n"
+        "  set: setCkeId={}, setMask=0x{:04x}\n"
+        "  ctrl: clearType={}",
         waitCKEId, waitCKEMask, ParseMSList(instr), count, dataType, setCKEId, setCKEMask, clearType);
     return HCCL_SUCCESS;
 }
@@ -2416,16 +2491,17 @@ HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, CcuGraphStateV3 *curCcu
             pos = insId - curCcuTask->startInstrIdInQue[queId];
             // 获取当前要处理的指令
             const CcuRep::CcuInstr* instr = &microCodeQue.instrVec[pos];
+            const uint16_t instructionHeader = static_cast<uint16_t>(instr->header.header);
             HCCL_VM_DEBUG("Expanding loop instruction, instructionId={}", insId);
-            if (transformA5InstrSqeMap.count(instr->header.header) == 0) {
+            if (transformA5InstrSqeMap.count(instructionHeader) == 0) {
                 HCCL_VM_ERROR("{} This A5 CCU instruction type is not supported during loop expansion, "
                     "rankId={}, queueId={}, instructionId={}, instructionHeader=0x{:04x}",
                     MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(), curCcuTask->GetRankId(), queId, insId,
-                    instr->header.header);
+                    instructionHeader);
                 pos = savedPos;
                 return HCCL_E_INTERNAL;
             }
-            CHK_RET(transformA5InstrSqeMap[instr->header.header](instr, curCcuTask, queId, isContinue, loopGroupParam));
+            CHK_RET(transformA5InstrSqeMap[instructionHeader](instr, curCcuTask, queId, isContinue, loopGroupParam));
         }
     }
     pos = savedPos;
@@ -2442,13 +2518,14 @@ InstructMapA5::InstructMapA5() {
 
 HcclResult InstructMapA5::Transform(const CcuRep::CcuInstr* instr, CcuGraphStateV3 * curCcuTask, uint32_t queId,
         bool& isContinue, void* loopParam) {
-    auto it = transformInstrSqeMap.find(instr->header.header);
+    const uint16_t instructionHeader = static_cast<uint16_t>(instr->header.header);
+    auto it = transformInstrSqeMap.find(instructionHeader);
     if (it == transformInstrSqeMap.end()) {
         HCCL_VM_ERROR("{} This A5 CCU instruction type is not supported by CheckerV3 graph expansion, "
             "rankId={}, queueId={}, instructionHeader=0x{:04x}",
             MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED).c_str(),
             curCcuTask == nullptr ? std::string("null") : std::to_string(curCcuTask->GetRankId()), queId,
-            instr->header.header);
+            instructionHeader);
         return HCCL_E_INTERNAL;
     }
     auto* param = static_cast<LoopGroupParam*>(loopParam);

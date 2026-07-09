@@ -494,12 +494,14 @@ HcclResult TaskGraphGeneratorV3::ExpandAivSubGraphs()
     stats.cpGmInactiveNodeCount = result.cpGmInactiveNodeCount;
     stats.totalExpandNs = result.expandNs;
     aivExpandStats_ = stats;
-    HCCL_VM_INFO("Finished expanding AIV Graph nodes, aivGraphCount={}, internalNodeCount={}, "
-        "setWaitEdgeCount={}, pipeBarrierMergeCount={}, syncAllMergeCount={}, sendRecvEdgeCount={}, "
-        "taskJsonTotalTaskCount={}, dagNodeCountBeforeCpGmMerge={}, dagNodeCountAfterCpGmMerge={}, "
-        "cpGmLoopMergeCount={}, cpGmMergedIterationCount={}, cpGmMergedOriginalNodeCount={}, "
-        "cpGmGeneratedNodeCount={}, cpGmInactiveNodeCount={}, ubBufferSize={}, flagBufferSize={}, "
-        "expandTotalMs={}", stats.graphCount, stats.internalNodeCount,
+    HCCL_VM_INFO("Finished expanding AIV Graph nodes:\n"
+        "  graph: aivGraphCount={}, internalNodeCount={}\n"
+        "  edges: setWaitEdgeCount={}, pipeBarrierMergeCount={}, syncAllMergeCount={}, sendRecvEdgeCount={}\n"
+        "  tasks: taskJsonTotalTaskCount={}, dagNodeCountBeforeCpGmMerge={}, dagNodeCountAfterCpGmMerge={}\n"
+        "  merge: cpGmLoopMergeCount={}, cpGmMergedIterationCount={}, cpGmMergedOriginalNodeCount={}\n"
+        "  nodes: cpGmGeneratedNodeCount={}, cpGmInactiveNodeCount={}\n"
+        "  buf: ubBufferSize={}, flagBufferSize={}\n"
+        "  time: expandTotalMs={}", stats.graphCount, stats.internalNodeCount,
         stats.setWaitEdgeCount, stats.pipeBarrierMergeCount, stats.syncAllMergeCount, stats.sendRecvEdgeCount,
         stats.taskJsonTotalTaskCount, stats.dagNodeCountBeforeCpGmMerge, stats.dagNodeCountAfterCpGmMerge,
         stats.cpGmLoopMergeCount, stats.cpGmMergedIterationCount, stats.cpGmMergedOriginalNodeCount,

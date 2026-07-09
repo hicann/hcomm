@@ -44,8 +44,8 @@ HcclResult TaskCheckAll2AllSemantics(std::map<RankId, RankMemorySemantics> &allR
     for (RankId rankId = 0; rankId < rankSize; rankId++) {
         // 对应的rank不存在需要报错
         if (allRankMemSemantics.count(rankId) == 0) {
-            HCCL_VM_ERROR("{} AllToAll produced no result data for rank {}, but this rank is "
-                "expected to receive data from peer ranks, expectedSourceRankCount={}",
+            HCCL_VM_ERROR("{} AllToAll produced no output data for rank {}, but it should receive data "
+                "from all {} participating ranks.",
                 MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), rankId, rankSize);
             return HcclResult::HCCL_E_PARA;
         }
@@ -56,66 +56,76 @@ HcclResult TaskCheckAll2AllSemantics(std::map<RankId, RankMemorySemantics> &allR
         u64    totalSize   = 0;
         RankId curRankId   = 0;
         u64    curDataSize = 0;
- 
+
         // curRankId向rankId发送的数据量是0 直接跳过
         while (curRankId < rankSize && all2AllDataDes.sendCountMatrix[curRankId * rankSize + rankId] == 0) {
             curRankId++;
         }
- 
+
         for (auto &ele : allRankMemSemantics[rankId][BufferType::OUTPUT]) {
             const u64 rangeEnd = ele.startAddr + ele.size;
             if (ele.startAddr != totalSize) {
-                HCCL_VM_ERROR("{} AllToAll result data does not start from the expected address, "
-                    "rankId={}, expectedStartAddr=0x{:x}, actualStartAddr=0x{:x}, actualBufferRange=[0x{:x},0x{:x})"
+                HCCL_VM_ERROR("{} AllToAll output for rank {} should continue at 0x{:x}, "
+                    "but the next actual range starts at 0x{:x} (actual range: [0x{:x},0x{:x}))."
                     "\nCurrent result range detail:\n{}",
-                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), rankId, totalSize, ele.startAddr,
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING),
+                    rankId, totalSize, ele.startAddr,
                     ele.startAddr, rangeEnd, ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
 
             if (ele.srcBufs.size() != 1) {
-                HCCL_VM_ERROR("{} This AllToAll result range combines multiple sources, but this "
-                    "operator expects exactly one source, rankId={}, actualSourceCount={}, expectedSourceCount=1, "
-                    "outputRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
-                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_REDUCE_ERROR), rankId, ele.srcBufs.size(),
-                    ele.startAddr, rangeEnd, ele.Describe());
+                HCCL_VM_ERROR("{} AllToAll output range [0x{:x},0x{:x}) for rank {} should "
+                    "come from exactly one source, but it actually comes from {} sources."
+                    "\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_REDUCE_ERROR),
+                    ele.startAddr, rangeEnd, rankId, ele.srcBufs.size(), ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
 
             if (curRankId >= rankSize) {
-                HCCL_VM_ERROR("{} Extra output data exists after the expected AllToAll result "
-                    "range, rankId={}, extraBufferRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
-                    MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR), rankId, ele.startAddr, rangeEnd,
+                HCCL_VM_ERROR("{} AllToAll expected output for rank {} has already ended, "
+                    "but outputRange [0x{:x},0x{:x}) is still present.\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR),
+                    rankId, ele.startAddr, rangeEnd, ele.Describe());
+                return HcclResult::HCCL_E_PARA;
+            }
+
+            const auto &srcBuf = *ele.srcBufs.begin();
+            const u64 expectedSrcAddr = sendOffsets[curRankId] + curDataSize;
+            const u64 expectedSrcEnd = expectedSrcAddr + ele.size;
+            const u64 actualSrcAddr = srcBuf.srcAddr;
+            const u64 actualSrcEnd = actualSrcAddr + ele.size;
+
+            if (srcBuf.rankId != curRankId) {
+                HCCL_VM_ERROR("{} AllToAll output range [0x{:x},0x{:x}) should come from "
+                    "rank{}.INPUT[0x{:x},0x{:x}), but it actually comes from rank{}.{}[0x{:x},0x{:x})."
+                    "\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR),
+                    ele.startAddr, rangeEnd, curRankId, expectedSrcAddr, expectedSrcEnd,
+                    srcBuf.rankId, BufferTypeToString(srcBuf.bufType), actualSrcAddr, actualSrcEnd,
                     ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
- 
-            if (ele.srcBufs.begin()->rankId != curRankId) {
-                HCCL_VM_ERROR("{} This AllToAll result range comes from the wrong source rank, "
-                    "rankId={}, actualSourceRank={}, expectedSourceRank={}, actualBufferRange=[0x{:x},0x{:x})"
+
+            if (srcBuf.bufType != BufferType::INPUT) {
+                HCCL_VM_ERROR("{} AllToAll output range [0x{:x},0x{:x}) should come from "
+                    "rank{}.INPUT[0x{:x},0x{:x}), but it actually comes from rank{}.{}[0x{:x},0x{:x})."
                     "\nCurrent result range detail:\n{}",
-                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR), rankId,
-                    ele.srcBufs.begin()->rankId, curRankId, ele.startAddr, rangeEnd, ele.Describe());
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR),
+                    ele.startAddr, rangeEnd, curRankId, expectedSrcAddr, expectedSrcEnd,
+                    srcBuf.rankId, BufferTypeToString(srcBuf.bufType), actualSrcAddr, actualSrcEnd,
+                    ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
 
-            if (ele.srcBufs.begin()->bufType != BufferType::INPUT) {
-                HCCL_VM_ERROR("{} This AllToAll result range comes from a non-INPUT buffer, but it "
-                    "should come from INPUT, rankId={}, actualSourceRank={}, actualSourceBufferType={}, "
-                    "actualBufferRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
-                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR), rankId,
-                    ele.srcBufs.begin()->rankId, BufferTypeToString(ele.srcBufs.begin()->bufType),
-                    ele.startAddr, rangeEnd, ele.Describe());
-                return HcclResult::HCCL_E_PARA;
-            }
-
-            if (ele.srcBufs.begin()->srcAddr != sendOffsets[curRankId] + curDataSize) {
-                HCCL_VM_ERROR("{} Source address for this AllToAll result range does not match the "
-                    "expected input address, rankId={}, sourceRank={}, expectedAddr=0x{:x}, actualAddr=0x{:x}, "
-                    "actualBufferRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
-                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR), rankId,
-                    ele.srcBufs.begin()->rankId, sendOffsets[curRankId] + curDataSize,
-                    ele.srcBufs.begin()->srcAddr, ele.startAddr, rangeEnd, ele.Describe());
+            if (srcBuf.srcAddr != expectedSrcAddr) {
+                HCCL_VM_ERROR("{} AllToAll output range [0x{:x},0x{:x}) should come from "
+                    "rank{}.INPUT[0x{:x},0x{:x}), but it actually comes from rank{}.INPUT[0x{:x},0x{:x})."
+                    "\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR),
+                    ele.startAddr, rangeEnd, curRankId, expectedSrcAddr, expectedSrcEnd, srcBuf.rankId,
+                    actualSrcAddr, actualSrcEnd, ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
 
@@ -130,20 +140,26 @@ HcclResult TaskCheckAll2AllSemantics(std::map<RankId, RankMemorySemantics> &allR
                     curRankId++;
                 }
             } else if (curDataSize > recvDataSizeFromCurRank) {
-                HCCL_VM_ERROR("{} Data taken from one source rank is larger than expected in "
-                    "AllToAll, rankId={}, sourceRank={}, actualSize=0x{:x}, expectedSize=0x{:x}, "
-                    "actualBufferRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
-                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SIZE_ERROR), rankId, curRankId, curDataSize,
-                    recvDataSizeFromCurRank, ele.startAddr, rangeEnd, ele.Describe());
+                HCCL_VM_ERROR("{} AllToAll data collected from rank{}.INPUT for rank {} becomes larger "
+                    "than expected after outputRange [0x{:x},0x{:x}). The accumulated size is 0x{:x}, "
+                    "but the expected size from this source rank is 0x{:x}.\nCurrent result range detail:\n{}",
+                    MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SIZE_ERROR),
+                    curRankId, rankId, ele.startAddr, rangeEnd, curDataSize,
+                    recvDataSizeFromCurRank, ele.Describe());
                 return HcclResult::HCCL_E_PARA;
             }
             totalSize += ele.size;
         }
         // 如果curRankId等于rankSize，表示已经接受到其他所有rank的数据
         if (curRankId != rankSize) {
-            HCCL_VM_ERROR("{} AllToAll result data ends before the expected total size is reached, "
-                "rankId={}, checkedSize=0x{:x}, remainingSourceRank={}, remainingSizeFromThatRank=0x{:x}",
-                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), rankId, totalSize, curRankId, curDataSize);
+            const u64 expectedDataSizeFromCurRank =
+                all2AllDataDes.sendCountMatrix[curRankId * rankSize + rankId] * CHECK_SIZE_TABLE[all2AllDataDes.recvType];
+            const u64 missingSizeFromCurRank = expectedDataSizeFromCurRank - curDataSize;
+            HCCL_VM_ERROR("{} AllToAll output for rank {} ends too early. The checker has "
+                "validated 0x{:x} bytes in total, but data from rank{} is still incomplete: "
+                "0x{:x} bytes are missing (received 0x{:x}, expected 0x{:x}).",
+                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING),
+                rankId, totalSize, curRankId, missingSizeFromCurRank, curDataSize, expectedDataSizeFromCurRank);
             return HcclResult::HCCL_E_PARA;
         }
     }

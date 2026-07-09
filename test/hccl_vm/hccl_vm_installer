@@ -652,12 +652,12 @@ source_cann_env() {
     set -eu
 }
 
-# 从 build.md 提取 CANN 推荐快照号（cann-run-mirror/software/master/<10位以上数字>）。
+# 从 build.md 提取 CANN 推荐快照号（cann-run-mirror/software/legacy/<10位以上数字>）。
 # 命中 echo 数字 + rc0；未固定/无匹配/文件缺失 echo 空 + rc1。
 extract_cann_snapshot() {
     local buildmd="$1" snap
     [ -f "${buildmd}" ] || return 1
-    snap="$(grep -oE 'cann-run-mirror/software/master/[0-9]{10,}' "${buildmd}" 2>/dev/null | head -n 1 | grep -oE '[0-9]{10,}' || true)"
+    snap="$(grep -oE 'cann-run-mirror/software/legacy/[0-9]{10,}' "${buildmd}" 2>/dev/null | head -n 1 | grep -oE '[0-9]{10,}' || true)"
     [ -n "${snap}" ] || return 1
     echo "${snap}"
 }

@@ -26,8 +26,8 @@ HcclResult TaskCheckSendRecvSemantics(std::map<RankId, RankMemorySemantics> &all
 
     // 对应的rank不存在需要报错
     if (allRankMemSemantics.size() != 2) {
-        HCCL_VM_ERROR("{} Send/Recv final output validation supports exactly 2 ranks, but got "
-            "expectedRankSize=2, actualRankSize={}, sourceRank={}, targetRank={}",
+        HCCL_VM_ERROR("{} Send/Recv final output validation supports exactly 2 ranks, but got {} "
+            "(sourceRank={}, targetRank={}).",
             MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_CHECK_FAILED), rankSize, srcRank, dstRank);
         return HcclResult::HCCL_E_PARA;
     }
@@ -36,54 +36,58 @@ HcclResult TaskCheckSendRecvSemantics(std::map<RankId, RankMemorySemantics> &all
     for (auto &ele : allRankMemSemantics[dstRank][BufferType::OUTPUT]) {
         const u64 rangeEnd = ele.startAddr + ele.size;
         if (ele.startAddr != totalSize) {
-            HCCL_VM_ERROR("{} Send/Recv result data does not start from the expected address, "
-                "rankId={}, expectedStartAddr=0x{:x}, actualStartAddr=0x{:x}, actualBufferRange=[0x{:x},0x{:x})"
+            HCCL_VM_ERROR("{} Send/Recv output for rank {} should continue at 0x{:x}, "
+                "but the next actual range starts at 0x{:x} (actual range: [0x{:x},0x{:x}))."
                 "\nCurrent result range detail:\n{}",
-                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), dstRank, totalSize, ele.startAddr,
+                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING),
+                dstRank, totalSize, ele.startAddr,
                 ele.startAddr, rangeEnd, ele.Describe());
             return HcclResult::HCCL_E_PARA;
         }
 
         if (ele.srcBufs.size() != 1) {
-            HCCL_VM_ERROR("{} This Send/Recv result range combines multiple sources, but this "
-                "operator expects exactly one source, rankId={}, actualSourceCount={}, expectedSourceCount=1, "
-                "outputRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
-                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_REDUCE_ERROR), dstRank, ele.srcBufs.size(),
-                ele.startAddr, rangeEnd, ele.Describe());
-            return HcclResult::HCCL_E_PARA;
-        }
-
-        if (ele.srcBufs.begin()->rankId != srcRank) {
-            HCCL_VM_ERROR("{} This Send/Recv result range comes from the wrong source rank, "
-                "rankId={}, actualSourceRank={}, expectedSourceRank={}, actualBufferRange=[0x{:x},0x{:x})"
+            HCCL_VM_ERROR("{} Send/Recv output range [0x{:x},0x{:x}) for rank {} should come from "
+                "exactly one source, but it actually comes from {} sources."
                 "\nCurrent result range detail:\n{}",
-                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR), dstRank,
-                ele.srcBufs.begin()->rankId, srcRank, ele.startAddr, rangeEnd, ele.Describe());
+                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_REDUCE_ERROR),
+                ele.startAddr, rangeEnd, dstRank, ele.srcBufs.size(), ele.Describe());
             return HcclResult::HCCL_E_PARA;
         }
 
-        if (ele.srcBufs.begin()->bufType != BufferType::INPUT) {
-            HCCL_VM_ERROR("{} This Send/Recv result range comes from a non-INPUT buffer, but it "
-                "should come from INPUT, rankId={}, actualSourceRank={}, actualSourceBufferType={}, "
-                "actualBufferRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
-                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR), dstRank,
-                ele.srcBufs.begin()->rankId, BufferTypeToString(ele.srcBufs.begin()->bufType),
-                ele.startAddr, rangeEnd, ele.Describe());
+        const auto &srcBuf = *ele.srcBufs.begin();
+        if (srcBuf.rankId != srcRank) {
+            HCCL_VM_ERROR("{} Send/Recv output range [0x{:x},0x{:x}) for rank {} should come from "
+                "rank {}, but it actually comes from rank {}."
+                "\nCurrent result range detail:\n{}",
+                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR),
+                ele.startAddr, rangeEnd, dstRank, srcRank, srcBuf.rankId, ele.Describe());
             return HcclResult::HCCL_E_PARA;
         }
-        if (ele.srcBufs.begin()->srcAddr != totalSize) {
-            HCCL_VM_ERROR("{} Source address for this Send/Recv result range does not match the "
-                "expected input address, rankId={}, sourceRank={}, expectedAddr=0x{:x}, actualAddr=0x{:x}, "
-                "actualBufferRange=[0x{:x},0x{:x})\nCurrent result range detail:\n{}",
-                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR), dstRank, ele.srcBufs.begin()->rankId,
-                totalSize, ele.srcBufs.begin()->srcAddr, ele.startAddr, rangeEnd, ele.Describe());
+
+        if (srcBuf.bufType != BufferType::INPUT) {
+            HCCL_VM_ERROR("{} Send/Recv output range [0x{:x},0x{:x}) for rank {} should come from "
+                "rank{}.INPUT, but it actually comes from rank{}.{}."
+                "\nCurrent result range detail:\n{}",
+                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR),
+                ele.startAddr, rangeEnd, dstRank, srcRank, srcBuf.rankId,
+                BufferTypeToString(srcBuf.bufType), ele.Describe());
+            return HcclResult::HCCL_E_PARA;
+        }
+        if (srcBuf.srcAddr != totalSize) {
+            HCCL_VM_ERROR("{} Send/Recv output range [0x{:x},0x{:x}) for rank {} should take data "
+                "from source rank {} at input address 0x{:x}, but it actually takes data from "
+                "source rank {} at input address 0x{:x}."
+                "\nCurrent result range detail:\n{}",
+                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_SRC_ERROR),
+                ele.startAddr, rangeEnd, dstRank, srcRank, totalSize,
+                srcBuf.rankId, srcBuf.srcAddr, ele.Describe());
             return HcclResult::HCCL_E_PARA;
         }
         totalSize += ele.size;
     }
     if (totalSize != dataSize) {
-        HCCL_VM_ERROR("{} Send/Recv result data ends before the expected total size is reached, "
-            "rankId={}, checkedSize=0x{:x}, expectedSize=0x{:x}",
+        HCCL_VM_ERROR("{} Send/Recv output for rank {} ends too early. The checker has "
+            "validated 0x{:x} bytes in total, but the expected total size is 0x{:x}.",
             MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), dstRank, totalSize, dataSize);
         return HcclResult::HCCL_E_PARA;
     }

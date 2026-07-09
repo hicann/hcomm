@@ -751,7 +751,7 @@ HcclResult LoadSliceOpPairSrcSemantics(const SliceOpPairV3 &pair, const Semantic
         // 老语义实现对 override 的不完整源语义是放行但告警；
         // 这里保持同样语义，至少把“并非完整 memcpy 语义”的风险显式打出来。
         HCCL_VM_WARN("{} Source data needed by this overwrite is missing, dataMapping={}",
-            MakeErrorCodeText(ErrorCode::SEMANTIC_REDUCE_ERROR), pair.Describe());
+            MakeErrorCodeText(ErrorCode::SEMANTIC_SIMULATE_FAILED), pair.Describe());
     }
 
     srcSemantics.reserve(srcViews.size());

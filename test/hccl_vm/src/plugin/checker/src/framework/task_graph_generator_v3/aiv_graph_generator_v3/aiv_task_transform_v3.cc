@@ -1592,10 +1592,11 @@ HcclResult MergeCpGM2GMLoops(AivLaunchContext &ctx)
         }
     }
     ctx.dagNodeCountAfterCpGmMerge = CountReachableActiveInternalNodes(ctx);
-    HCCL_VM_INFO("Finished CpGM-to-GM merge analysis, rankId={}, launchId={}, "
-        "taskJsonTotalTaskCount={}, dagNodeCountBeforeMerge={}, dagNodeCountAfterMerge={}, "
-        "cpGmLoopMergeCount={}, cpGmMergedIterationCount={}, cpGmMergedOriginalNodeCount={}, "
-        "cpGmGeneratedNodeCount={}, cpGmInactiveNodeCount={}", ctx.placeholder->GetRankId(),
+    HCCL_VM_INFO("Finished CpGM-to-GM merge analysis:\n"
+        "  ctx: rankId={}, launchId={}\n"
+        "  tasks: taskJsonTotalTaskCount={}, dagNodeCountBeforeMerge={}, dagNodeCountAfterMerge={}\n"
+        "  merge: cpGmLoopMergeCount={}, cpGmMergedIterationCount={}, cpGmMergedOriginalNodeCount={}\n"
+        "  nodes: cpGmGeneratedNodeCount={}, cpGmInactiveNodeCount={}", ctx.placeholder->GetRankId(),
         ctx.placeholder->GetLaunchIdx(),
         ctx.taskJsonTotalTaskCount, ctx.dagNodeCountBeforeCpGmMerge, ctx.dagNodeCountAfterCpGmMerge,
         ctx.cpGmLoopMergeCount, ctx.cpGmMergedIterationCount, ctx.cpGmMergedOriginalNodeCount,

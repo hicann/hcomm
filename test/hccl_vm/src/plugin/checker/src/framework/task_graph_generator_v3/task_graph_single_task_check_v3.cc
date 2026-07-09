@@ -244,9 +244,9 @@ HcclResult AccumulateCoveredSizeByKey(const TaskNode *node, const std::vector<Me
         }
         if (slice.len > std::numeric_limits<uint64_t>::max() - slice.offset) {
             HCCL_VM_ERROR("{} One memory slice is invalid because its end address overflows "
-                "while total coverage is being calculated, task={}, memorySlice={}, offset=0x{:x}, length=0x{:x}",
+                "while total coverage is being calculated, task={}, memorySlice={}",
                 MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
-                DescribeMemSlice(slice), slice.offset, slice.len);
+                DescribeMemSlice(slice));
             return HCCL_E_PARA;
         }
         const MemoryKey key{slice.rankId, slice.memType};
@@ -504,17 +504,16 @@ HcclResult CheckSingleSlice(const TaskNode *node, const MemSlice &slice)
     }
     if (slice.rankId == INVALID_RANK_ID || slice.memType == MemType::INVALID) {
         HCCL_VM_ERROR("{} One memory slice is missing a valid rank or memory type, task={}, "
-            "memorySlice={}, rankId={}, memType={}",
+            "memorySlice={}",
             MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
-            DescribeMemSlice(slice), slice.rankId == INVALID_RANK_ID ? "invalid" : std::to_string(slice.rankId),
-            DescribeMemType(slice.memType));
+            DescribeMemSlice(slice));
         return HCCL_E_PARA;
     }
     if (slice.len > std::numeric_limits<uint64_t>::max() - slice.offset) {
         HCCL_VM_ERROR("{} One memory slice is invalid because offset + length exceeds the "
-            "numeric limit, task={}, memorySlice={}, offset=0x{:x}, length=0x{:x}",
+            "numeric limit, task={}, memorySlice={}",
             MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
-            DescribeMemSlice(slice), slice.offset, slice.len);
+            DescribeMemSlice(slice));
         return HCCL_E_PARA;
     }
 
@@ -522,9 +521,9 @@ HcclResult CheckSingleSlice(const TaskNode *node, const MemSlice &slice)
         const uint64_t boundSize = GetAivSliceBoundSize(slice.memType);
         if (boundSize != 0 && slice.offset + slice.len > boundSize) {
             HCCL_VM_ERROR("{} One AIV memory slice goes past the valid AIV buffer boundary, "
-                "task={}, memorySlice={}, bufferLimit={}, memType={}",
+                "task={}, memorySlice={}, bufferLimit={}",
                 MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
-                DescribeMemSlice(slice), boundSize, DescribeMemType(slice.memType));
+                DescribeMemSlice(slice), boundSize);
             return HCCL_E_INTERNAL;
         }
         return HCCL_SUCCESS;
@@ -533,9 +532,9 @@ HcclResult CheckSingleSlice(const TaskNode *node, const MemSlice &slice)
     const BufferType storageType = ConvertMemTypeToBufferType(slice.memType);
     if (storageType == BufferType::RESERVED) {
         HCCL_VM_ERROR("{} This task uses a memory type that the checker does not support, "
-            "task={}, memorySlice={}, memType={}",
+            "task={}, memorySlice={}",
             MakeErrorCodeText(ErrorCode::SINGLETASK_SLICE_INVALID), node->Describe(),
-            DescribeMemSlice(slice), DescribeMemType(slice.memType));
+            DescribeMemSlice(slice));
         return HCCL_E_NOT_SUPPORT;
     }
 

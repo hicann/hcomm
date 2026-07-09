@@ -51,6 +51,8 @@ Insight V3 当前前端源码位于：
 
 在安装 Insight 插件前，请先完成前端编译，再执行 HCCL VM 的构建安装流程。
 
+注意：编译 Insight 可视化前端需要依赖 `Node.js` 和 `npm`。建议使用 `Node.js 20.19.0` 或以上 与 `npm 10.x` 或以上。
+
 推荐步骤如下：
 
 1. 进入前端目录：
@@ -122,6 +124,19 @@ hccl_vm_install/plugin/visualization/insight/manifest.json
 | `setting.port` | Insight 服务端口，默认 `8080` |
 
 若需要修改端口或数据目录，可直接编辑该 `manifest.json` 中的 `setting` 字段。
+
+> 警告：Insight 默认通过 `python3 server.py` 绑定在 `127.0.0.1`。如需监听指定 IP，而不是默认的 `localhost(127.0.0.1)`，请进入 `hccl_vm_install/plugin/visualization/insight` 目录，手动执行：
+>
+> ```bash
+> python3 server.py --host <ip> --port <port>
+> ```
+>
+> 例如：
+>
+> ```bash
+> cd hccl_vm_install/plugin/visualization/insight
+> python3 server.py --host 0.0.0.0 --port 8080
+> ```
 
 插件安装与卸载命令如下：
 

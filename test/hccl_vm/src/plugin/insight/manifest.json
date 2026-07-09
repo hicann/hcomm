@@ -7,7 +7,7 @@
     },
     "setting": {
         "dist_path": "./dist",
-        "data_path": "../../validate/checker/data/insight",
+        "data_path": "../../checker/data/insight",
         "topo_config_path": "../../../../asset/cluster_model/config/cluster",
         "port": 8080
     }

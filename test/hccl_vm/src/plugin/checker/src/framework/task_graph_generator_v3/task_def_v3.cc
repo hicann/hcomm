@@ -95,8 +95,8 @@ std::string DescribePosition(const TaskPosition &position)
 std::string DescribeMemSlice(const MemSlice &slice)
 {
     std::ostringstream os;
-    os << "{rank=" << slice.rankId << ", mem=" << ToString(slice.memType) << ", offset=0x" << std::hex
-       << slice.offset << ", len=0x" << slice.len << std::dec << "}";
+    os << "rank " << slice.rankId << ", " << ToString(slice.memType) << ", [0x" << std::hex
+       << slice.offset << ",0x" << (slice.offset + slice.len) << ")" << std::dec;
     return os.str();
 }
 
@@ -133,18 +133,15 @@ std::string DescribeAicpuNotify(const AicpuNotify &notify)
 std::string DescribeCcuTrace(const CcuTraceInfo &trace)
 {
     std::ostringstream os;
-    os << ", ccuTrace={valid=" << trace.valid
-       << ", op=" << trace.opName
+    os << ", ccuTrace={op=" << trace.opName
        << ", role=" << trace.nodeRole
-       << ", instrId=" << trace.instrId
-       << ", queueId=" << trace.queueId;
+       << ", instrId=" << trace.instrId;
     if (trace.dieId != INVALID_DIE_ID) {
         os << ", dieId=" << trace.dieId;
     }
     if (trace.missionId != INVALID_MISSION_ID) {
         os << ", missionId=" << trace.missionId;
     }
-    os << ", position=" << DescribePosition(trace.position);
     os << "}";
     return os.str();
 }

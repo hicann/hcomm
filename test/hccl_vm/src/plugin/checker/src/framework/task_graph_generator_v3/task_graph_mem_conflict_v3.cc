@@ -211,31 +211,29 @@ bool IsDataMoveTaskNode(const TaskNode *node)
 std::string DescribeKey(const MemoryKey &key)
 {
     std::ostringstream os;
-    os << "{rankId=";
+    os << "rank ";
     if (key.rankId == INVALID_RANK_ID) {
         os << "invalid";
     } else {
         os << key.rankId;
     }
-    os << ", memoryType=" << DescribeMemType(key.memType);
+    os << ", " << DescribeMemType(key.memType);
     if (key.memType == MemType::UB_AIV) {
-        os << ", aivBlockIndex=" << key.aivUbIdx;
+        os << ",(aivBlockIndex=" << key.aivUbIdx << ")";
     }
-    os << "}";
     return os.str();
 }
 
 std::string DescribeAccess(const MemoryAccess &access)
 {
     std::ostringstream os;
-    os << "{taskNodeId=" << access.nodeId << ", taskAction="
+    os << "    node " << access.nodeId << ", action="
        << (access.kind == MemoryAccessKind::WRITE ? "write" : "read")
-       << ", memory=" << DescribeKey(access.key)
-       << ", byteRange=[0x" << std::hex << access.start << ",0x" << access.end << ")" << std::dec;
+       << "\n    access range : [0x" << std::hex << access.start << ",0x" << access.end << ")"
+       << std::dec;
     if (access.node != nullptr) {
-        os << ", task=" << access.node->Describe();
+        os << "\n    task         : " << access.node->Describe();
     }
-    os << "}";
     return os.str();
 }
 
@@ -636,7 +634,7 @@ HcclResult CheckCollectedConflictCandidates(const ConflictCandidates &candidates
         ++stats.parallelCandidatePairCount;
         const uint64_t overlapStart = std::max(candidate.current->start, candidate.history->start);
         const uint64_t overlapEnd = std::min(candidate.current->end, candidate.history->end);
-        HCCL_VM_ERROR("{} Memory conflict detected, memory={}, overlap=[0x{:x},0x{:x}), "
+        HCCL_VM_ERROR("[MemConflict] {} Memory conflict detected, memory={}, overlap=[0x{:x},0x{:x}), "
             "conflictTask1={}, conflictTask2={}", MakeErrorCodeText(ErrorCode::MEMCONFLICT_DETECTED),
             DescribeKey(candidate.current->key), overlapStart, overlapEnd, DescribeAccess(*candidate.current),
             DescribeAccess(*candidate.history));

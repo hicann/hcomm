@@ -117,24 +117,29 @@ CcuSqeParam MakeCcuSqeParam(const CcuTask &ccuTask)
 std::string DescribeTaskMetaForLog(const HcclTaskMetaData &taskMeta)
 {
     std::ostringstream os;
-    os << "{taskType=" << static_cast<int32_t>(taskMeta.taskType)
+    os << "taskType=" << static_cast<int32_t>(taskMeta.taskType)
        << ", rankId=" << taskMeta.rankId
        << ", streamId=" << taskMeta.streamId;
     switch (taskMeta.taskType) {
         case HccLTaskMetaType::MEM_CPY:
             os << ", srcRankId=" << taskMeta.taskData.transMem.srcRankId
                << ", dstRankId=" << taskMeta.taskData.transMem.dstRankId
-               << ", srcOffset=" << taskMeta.taskData.transMem.srcOffset
-               << ", dstOffset=" << taskMeta.taskData.transMem.dstOffset
-               << ", len=" << taskMeta.taskData.transMem.len
+               << ", src=[0x" << std::hex << taskMeta.taskData.transMem.srcOffset
+               << ",0x" << (taskMeta.taskData.transMem.srcOffset + taskMeta.taskData.transMem.len) << ")"
+               << ", dst=[0x" << taskMeta.taskData.transMem.dstOffset
+               << ",0x" << (taskMeta.taskData.transMem.dstOffset + taskMeta.taskData.transMem.len) << ")"
+               << std::dec
                << ", protocol=" << static_cast<uint32_t>(taskMeta.taskData.transMem.protocol);
             break;
         case HccLTaskMetaType::REDUCE:
+            // 此处的 datacount 实际为 size
             os << ", srcRankId=" << taskMeta.taskData.reduce.srcRankId
                << ", dstRankId=" << taskMeta.taskData.reduce.dstRankId
-               << ", srcOffset=" << taskMeta.taskData.reduce.srcOffset
-               << ", dstOffset=" << taskMeta.taskData.reduce.dstOffset
-               << ", dataCount=" << taskMeta.taskData.reduce.dataCount
+               << ", src=[0x" << std::hex << taskMeta.taskData.reduce.srcOffset
+               << ",0x" << (taskMeta.taskData.reduce.srcOffset + taskMeta.taskData.reduce.dataCount) << ")"
+               << ", dst=[0x" << taskMeta.taskData.reduce.dstOffset
+               << ",0x" << (taskMeta.taskData.reduce.dstOffset + taskMeta.taskData.reduce.dataCount) << ")"
+               << std::dec
                << ", dataType=" << static_cast<uint32_t>(taskMeta.taskData.reduce.dataType)
                << ", reduceOp=" << static_cast<uint32_t>(taskMeta.taskData.reduce.reduceOp);
             break;
@@ -160,7 +165,6 @@ std::string DescribeTaskMetaForLog(const HcclTaskMetaData &taskMeta)
         default:
             break;
     }
-    os << "}";
     return os.str();
 }
 
@@ -219,9 +223,8 @@ HcclResult TaskMetaTranslatorV3::Translate(StorageManager &storage)
         const HcclResult ret = TranslateOneTaskMeta(taskMetaVec[i], storage, i, nodeId);
         if (ret != HCCL_SUCCESS) {
             HCCL_VM_ERROR("{} Failed to convert one task into a graph node, taskIndex={}, "
-                "taskType={}, rankId={}, streamId={}, ret={}, taskMeta={}",
+                "ret={}, taskMeta={}",
                 MakeErrorCodeText(ErrorCode::GRAPH_TRANSLATE_FAILED), i,
-                static_cast<int32_t>(taskMetaVec[i].taskType), taskMetaVec[i].rankId, taskMetaVec[i].streamId,
                 static_cast<uint32_t>(ret), DescribeTaskMetaForLog(taskMetaVec[i]));
             return ret;
         }
@@ -289,11 +292,9 @@ HcclResult TaskMetaTranslatorV3::TranslateOneTaskMeta(const HcclTaskMetaData &ta
             const auto &reduce = taskMeta.taskData.reduce;
             const RankId srcRank = reduce.srcRankId;
             const RankId dstRank = reduce.dstRankId;
+            // 此处的 datacount 实际为 size
             const DataSlice srcSlice = storage.GetDataSlice(srcRank, reduce.srcOffset, reduce.dataCount);
             const DataSlice dstSlice = storage.GetDataSlice(dstRank, reduce.dstOffset, reduce.dataCount);
-
-            // Keep V3 graph compatible with the old ConvertTask REDUCE path, which reads transMem.protocol from the
-            // taskData union for remote reduce tasks.
             const ProtocolType protocol = (srcRank == dstRank) ? ProtocolType::SDMA :
                 ConvertProtocol(taskMeta.taskData.transMem.protocol);
             auto node = std::make_unique<TaskReduce>(MakeMemSlice(srcRank, srcSlice),
@@ -378,9 +379,8 @@ HcclResult TaskMetaTranslatorV3::TranslateOneTaskMeta(const HcclTaskMetaData &ta
         case HccLTaskMetaType::EVENT_RECORD:
         default:
             HCCL_VM_WARN("{} This task type is not supported for CheckerV3 graph generation, "
-                "taskIndex={}, taskType={}, rankId={}, streamId={}, taskMeta={}",
-                MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED), taskIndex, static_cast<int32_t>(taskMeta.taskType),
-                taskMeta.rankId, taskMeta.streamId, DescribeTaskMetaForLog(taskMeta));
+                "taskIndex={}, taskMeta={}",
+                MakeErrorCodeText(ErrorCode::GRAPH_UNSUPPORTED), taskIndex, DescribeTaskMetaForLog(taskMeta));
             return HCCL_E_NOT_SUPPORT;
     }
 }
