@@ -60,10 +60,11 @@ ASCEND_PATH_EXPLICIT=false  # --ascend-path 是否由用户显式传入
 SKIP_HCCL_TEST=false        # --skip-hccl-test
 WILL_DL=false               # 阶段①决策结果：稍后是否下载 CANN
 CANN_INSTALLED=""           # detect_cann 写入：已探测到的现有 CANN 根目录（空=未探测到）
-CANN_SETENV=""              # detect_cann 写入：对应的 set_env.sh 全路径（空=env 已 source 无需再 source）
+CANN_SETENV=""              # detect_cann 写入：对应的 set_env.sh 全路径（空=未探测到）
 CANN_TARGET=""              # 解析出的安装目标目录（决定下载/覆盖时由 resolve_cann_target 赋值）
 CANN_CACHE=""               # 下载缓存目录，apply_defaults 里赋 ${WORKSPACE}/.cann-download
 CANN_RUN_FILE=""            # 实际下载到的 .run 文件全路径（收尾展示用）
+CANN_CHANNEL="master"       # CANN 镜像下载通道，apply_defaults 按 profile 落定（campus=legacy / main=master）
 HCCL_TEST_RESULT=""         # build_hccl_test 写入：built | skipped | failed:<原因>
 HCCL_TEST_BIN_DIR=""        # build_hccl_test 写入：hccl_test 可执行文件所在目录（原地编译）
 SUDO_PREFIX=""              # setup_sudo 解析：root 为空；非 root 有 sudo 为 "sudo"
@@ -108,7 +109,7 @@ version_line() {
 }
 # 起始信息块（非 ASCII art）
 banner() {
-    info "HCCL-VM 一键安装 $(version_line)"
+    info "HCCL-VM 一键安装 $(version_line)（工作目录: ${WORKSPACE}）"
     info "配套方案: ${PROFILE}"
     info "将分 ${STEP_TOTAL} 步自动完成依赖安装、源码拉取、CANN 配置与编译；总耗时取决于网络与机器性能。"
 }
@@ -174,11 +175,11 @@ normalize_arch() {
 profile_all_names() {
     printf '%s\n' "campus-2026" "main"
 }
-# 每行格式：hcomm_ref|hccl_ref|说明|是否允许 weekly（CANN Toolkit 取包时是否可用 weekly 测试构建）
+# 每行格式：hcomm_ref|hccl_ref|说明|是否允许 weekly|CANN 下载通道（master=滚动最新 / legacy=归档）
 profile_row() {
     case "$1" in
-        campus-2026) echo "competition/campus-2026|competition/campus-2026|竞赛固定，CANN 从 build.md 提取|false" ;;
-        main)        echo "master|master|主线最新，随官方更新|true" ;;
+        campus-2026) echo "competition/campus-2026|competition/campus-2026|竞赛固定，CANN 从 build.md 提取|false|legacy" ;;
+        main)        echo "master|master|主线最新，随官方更新|true|master" ;;
         *) return 1 ;;
     esac
 }
@@ -188,6 +189,7 @@ profile_hcomm_ref()    { profile_row "$1" | cut -d'|' -f1; }
 profile_hccl_ref()     { profile_row "$1" | cut -d'|' -f2; }
 profile_desc()         { profile_row "$1" | cut -d'|' -f3; }
 profile_allow_weekly() { profile_row "$1" | cut -d'|' -f4; }   # 空/false 均视为不允许
+profile_cann_channel() { profile_row "$1" | cut -d'|' -f5; }   # CANN 下载通道；空则由 apply_defaults 兜底 master
 
 # 显示帮助信息
 show_help() {
@@ -219,7 +221,7 @@ show_help() {
     echo "  --skip-hccl-test       不编译 hccl_test，也不安装 OpenMPI（默认会编译）"
     echo "  --version              显示版本"
     echo "  -h, --help             显示此帮助"
-    echo "  提示: CANN 若装在工作目录之外，请用 --ascend-path 指定或先 source set_env.sh，避免重复下载。"
+    echo "  提示: CANN 若装在工作目录之外，请用 --ascend-path 指定，避免重复下载（不再自动采用已 source 的环境变量）。"
     echo ""
     echo "高级选项（自定义分支组合，可能与 CANN 不配套）:"
     echo "  --hcomm-ref <分支/标签>  覆盖 profile 的 hcomm 分支（仅支持分支/标签名，非 commit）"
@@ -346,6 +348,9 @@ parse_args() {
     done
 }
 
+# 相对路径转绝对（基于当前工作目录）；已是绝对路径则原样返回。
+to_abs() { case "$1" in /*) printf '%s\n' "$1" ;; *) printf '%s\n' "$(pwd)/$1" ;; esac; }
+
 # 统一设置依赖其他变量的默认值（parse_args 之后调用）
 apply_defaults() {
     WORKSPACE=${WORKSPACE:-$(pwd)}
@@ -353,12 +358,20 @@ apply_defaults() {
     HCOMM_PATH=${HCOMM_PATH:-${WORKSPACE}/hcomm}
     HCCL_PATH=${HCCL_PATH:-${WORKSPACE}/hccl}
     CHECKER_PATH=${CHECKER_PATH:-${HCOMM_PATH}/test/hccl_vm}
+    # 路径统一绝对化：相对路径会在后续 cd 与 precheck_cann_path 的 dirname 回溯中出错
+    WORKSPACE="$(to_abs "${WORKSPACE}")"
+    ASCEND_PATH="$(to_abs "${ASCEND_PATH}")"
+    HCOMM_PATH="$(to_abs "${HCOMM_PATH}")"
+    HCCL_PATH="$(to_abs "${HCCL_PATH}")"
+    CHECKER_PATH="$(to_abs "${CHECKER_PATH}")"
 
     # profile 落定（默认=注册表首行）
     PROFILE="${PROFILE:-$(profile_default)}"
     if ! profile_exists "${PROFILE}"; then
         error "未知 profile: ${PROFILE}。运行 --list-profiles 查看可选方案，或去掉 --profile 使用默认。"
     fi
+    # CANN 下载通道按 profile 落定：campus=legacy（版本已归档）、main=master（滚动最新）；未定则兜底 master
+    CANN_CHANNEL="$(profile_cann_channel "${PROFILE}")"; CANN_CHANNEL="${CANN_CHANNEL:-master}"
     # 分支优先级：CLI --*-ref > 环境变量 HCOMM_REF/HCCL_REF > profile 映射
     if [ -n "${CLI_HCOMM_REF}" ]; then
         HCOMM_REF="${CLI_HCOMM_REF}"; HCOMM_REF_SRC="--hcomm-ref"; PROFILE_CUSTOM=true
@@ -652,12 +665,13 @@ source_cann_env() {
     set -eu
 }
 
-# 从 build.md 提取 CANN 推荐快照号（cann-run-mirror/software/legacy/<10位以上数字>）。
+# 从 build.md 提取 CANN 推荐快照号（cann-run-mirror/software/<通道>/<10位以上数字>）。
+# 通道无关：build.md 写 master 或 legacy 都能抠出快照号（实际下载通道由 profile 的 CANN_CHANNEL 决定）。
 # 命中 echo 数字 + rc0；未固定/无匹配/文件缺失 echo 空 + rc1。
 extract_cann_snapshot() {
     local buildmd="$1" snap
     [ -f "${buildmd}" ] || return 1
-    snap="$(grep -oE 'cann-run-mirror/software/legacy/[0-9]{10,}' "${buildmd}" 2>/dev/null | head -n 1 | grep -oE '[0-9]{10,}' || true)"
+    snap="$(grep -oE 'cann-run-mirror/software/[a-z]+/[0-9]{10,}' "${buildmd}" 2>/dev/null | head -n 1 | grep -oE '[0-9]{10,}' || true)"
     [ -n "${snap}" ] || return 1
     echo "${snap}"
 }
@@ -692,28 +706,43 @@ resolve_cann_target() {
     fi
 }
 
-# CANN 安装路径权限预检（官方要求：安装路径各级父目录需 755，即 group/other 均可读可执行）。
-# 仅 root 安装受此限制（非 root 装进自有目录不受限，owner 有权即可）。不满足则在第 1 步即报错，
-# 让用户改好再重跑，避免跑到第 5 步装 CANN 才失败、白费前面的下载与编译。
-precheck_cann_path() {
-    [ "${WILL_DL}" = true ] || return 0        # 不下载安装 CANN 则无需检查
-    [ "$(id -u)" -eq 0 ] || return 0           # 仅 root 安装受 755 父目录限制
-    local d perm
-    d="$(dirname "${CANN_TARGET}")"
+# 校验以 root 安装 CANN 到 <target> 时各级父目录是否合规：CANN 的 ge-executor 对 root 安装要求
+# 每一级父目录 ① 权限 755（group/other 可读可执行）② 属主为 root。任一不满足都会被拒绝安装。
+# 非 root 不受此限制（装进自有目录，owner 有权即可）。stat -L 跟随软链按真实目录判定。
+check_cann_parent_perms() {
+    local target="$1" d perm owner ownername
+    [ "$(id -u)" -eq 0 ] || return 0           # 仅 root 安装受父目录 755 + 属主 root 限制
+    d="$(dirname "${target}")"
     while :; do
         if [ -d "${d}" ]; then
-            perm="$(stat -c %a "${d}" 2>/dev/null || echo 000)"
-            # 要求 group 和 other 都有 r-x，即 (perm & 055) == 055；否则 CANN 的 ge-executor 会拒绝安装
+            perm="$(stat -L -c %a "${d}" 2>/dev/null || echo 000)"
+            owner="$(stat -L -c %u "${d}" 2>/dev/null || echo -1)"
+            # 属主必须是 root（uid 0）；否则 ge-executor 报 "permission isn't right, it should belong to root"
+            if [ "${owner}" != 0 ]; then
+                ownername="$(stat -L -c %U "${d}" 2>/dev/null || echo "${owner}")"
+                error "以 root 安装 CANN 到 ${target}，但父目录 ${d} 的属主是 ${ownername}（非 root），不满足 CANN 官方要求（root 安装时各级父目录须归 root 所有）。
+  请改用 root 拥有的安装路径（如 --workspace /opt/hvm），或改以该目录属主身份（非 root）运行本脚本。"
+            fi
+            # 权限：group 和 other 都要 r-x，即 (perm & 055) == 055；否则 ge-executor 报 permission invalid
             if [ "$(( 8#${perm} & 8#55 ))" -ne "$(( 8#55 ))" ]; then
-                error "以 root 安装 CANN 到 ${CANN_TARGET}，但父目录 ${d} 权限为 ${perm}，不满足 CANN 官方要求（安装路径各级父目录需 755，即 group/other 可读可执行）。
+                error "以 root 安装 CANN 到 ${target}，但父目录 ${d} 权限为 ${perm}，不满足 CANN 官方要求（安装路径各级父目录需 755，即 group/other 可读可执行）。
   请执行后重跑：  chmod 755 ${d}
   或用 --workspace / --ascend-path 指向各级父目录均为 755 的路径（如 /opt/hvm）。"
             fi
         fi
-        [ "${d}" = "/" ] && break
+        # 到根即止；对 "." 或空也止（防相对路径 dirname 收敛到 "." 永不到 "/" 的死循环兜底）
+        case "${d}" in /|.|"") break ;; esac
         d="$(dirname "${d}")"
     done
     return 0
+}
+
+# 第 1 步早期预检：将要下载安装 CANN（WILL_DL）时，提前校验目标父目录权限，
+# 不满足即在开头报错，避免跑到第 5 步装 CANN 才失败、白费前面的下载与编译。
+# 覆盖不到的场景（探测到旧 CANN、第 5 步才决定覆盖重装）由 download_and_install_cann 内的同一校验兜底。
+precheck_cann_path() {
+    [ "${WILL_DL}" = true ] || return 0        # 不下载安装 CANN 则无需检查
+    check_cann_parent_perms "${CANN_TARGET}"
 }
 
 cann_setenv_under() {
@@ -722,18 +751,18 @@ cann_setenv_under() {
 }
 
 pick_cann_snapshot() {
-    local fixed="$1" snap mirror="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/master"
+    local fixed="$1" snap mirror="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/${CANN_CHANNEL}"
     if [ -n "${fixed}" ]; then echo "${fixed}"; return 0; fi
     snap="$(curl -fsSL "${mirror}/" 2>/dev/null | grep -oE '[0-9]{17}' | sort -n | tail -1)" || true
     [ -n "${snap}" ] || return 1
-    warn "本 profile 未固定 CANN 版本，将下载 master 通道最新快照 ${snap}（未经固定配套校验，可能与代码不配套；如需可复现，请用 --ascend-path 复用一次装好的 CANN）。"
+    warn "本 profile 未固定 CANN 版本，将下载 ${CANN_CHANNEL} 通道最新快照 ${snap}（未经固定配套校验，可能与代码不配套；如需可复现，请用 --ascend-path 复用一次装好的 CANN）。"
     echo "${snap}"
 }
 
 # $1=快照号 $2=是否允许 weekly（true=主线 profile；否则只取正式发布版）
 pick_toolkit_file() {
     local snap="$1" allow_weekly="${2:-false}" base all file
-    base="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/master/${snap}"
+    base="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/${CANN_CHANNEL}/${snap}"
     all="$(curl -fsSL "${base}/" 2>/dev/null | grep -oE 'Ascend-cann-toolkit_[^"< ]*linux-x86_64\.run' | sort -u)" || true
     if [ "${allow_weekly}" = true ]; then
         # 主线 profile（随官方更新）：允许 weekly，优先 weekly（最新），无则退回正式版。
@@ -758,15 +787,16 @@ detect_cann() {
         [ -n "${se}" ] && { CANN_INSTALLED="${ASCEND_PATH}"; CANN_SETENV="${se}"; return 0; }
         return 1
     fi
-    local root=""
-    [ -n "${ASCEND_HOME_PATH:-}" ]    && root="${ASCEND_HOME_PATH%/ascend-toolkit*}"
-    [ -z "${root}" ] && [ -n "${ASCEND_TOOLKIT_HOME:-}" ] && root="${ASCEND_TOOLKIT_HOME%/ascend-toolkit*}"
-    if [ -n "${root}" ]; then
-        CANN_INSTALLED="${root}"; CANN_SETENV="$(cann_setenv_under "${root}" || true)"; return 0
-    fi
+    # 只按 workspace 候选探测（显式 --ascend-path 已在上面处理），不信任继承的
+    # ASCEND_HOME_PATH/ASCEND_TOOLKIT_HOME——避免用户 source 的外部/旧 CANN 污染 workspace 自包含。
     while IFS= read -r cand; do
         [ -f "${cand}" ] && { CANN_SETENV="${cand}"; CANN_INSTALLED="${cand%/*/*}"; return 0; }
     done < <(cann_setenv_candidates)
+    # workspace 未找到 CANN；若环境里 source 了外部 CANN，提示可用 --ascend-path 复用（否则将下载到 workspace）
+    local sourced=""
+    [ -n "${ASCEND_HOME_PATH:-}" ] && sourced="${ASCEND_HOME_PATH%/ascend-toolkit*}"
+    [ -z "${sourced}" ] && [ -n "${ASCEND_TOOLKIT_HOME:-}" ] && sourced="${ASCEND_TOOLKIT_HOME%/ascend-toolkit*}"
+    [ -n "${sourced}" ] && warn "检测到已 source 的 CANN（${sourced}）；如需复用请加 --ascend-path ${sourced}，否则将下载配套版到 workspace。"
     return 1
 }
 
@@ -775,12 +805,12 @@ print_cann_guidance() {
     local buildmd="${HCOMM_PATH}/docs/zh/build/build.md" arch section dlpage
     arch="$(normalize_arch "$(uname -m)" 2>/dev/null || echo x86_64)"
     echo -e "${RED}[ERROR]${NC} 未检测到 CANN（编译必需）" >&2
-    echo "  说明: 按下方官方步骤装好 CANN，再在“同一终端”重跑本脚本（换终端需重新 source）" >&2
+    echo "  说明: 按下方步骤装好 CANN 后，重跑本脚本时用 --ascend-path 指向其安装目录即可复用（不再自动采用已 source 的环境变量）" >&2
     if [ -f "${buildmd}" ]; then
         # 抠“### 安装CANN软件包”到下一个 ## / ### 标题之前（先判后印，避免多打下一节标题；用 ###? 规避 mawk 区间语法）
         section="$(awk '/^###? /{if(f)exit} /^###? *安装.*CANN/{f=1} f{print}' "${buildmd}" 2>/dev/null)"
         # 提取下载页 URL，用于回退步骤拼真实命令
-        dlpage="$(grep -oE 'https://[^ )]*cann-run-mirror/software/master/[0-9]*/?' "${buildmd}" 2>/dev/null | head -n 1 || true)"
+        dlpage="$(grep -oE 'https://[^ )]*cann-run-mirror/software/[a-z]+/[0-9]*/?' "${buildmd}" 2>/dev/null | head -n 1 || true)"
     fi
     if [ -n "${section:-}" ]; then
         echo "  ── 摘自 build.md（本机架构 ${arch}）──" >&2
@@ -788,11 +818,10 @@ print_cann_guidance() {
         echo "  ──" >&2
     else
         echo "  按 4 步安装（本机架构 ${arch}）：" >&2
-        echo "   1) wget ${dlpage:-https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/master/}Ascend-cann-toolkit_<版本>_linux-${arch}.run" >&2
+        echo "   1) wget ${dlpage:-https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/${CANN_CHANNEL}/}Ascend-cann-toolkit_<版本>_linux-${arch}.run" >&2
         echo "      （下载页里认准带 weekly 日期、结尾 linux-${arch}.run 的 Toolkit 包）" >&2
-        echo "   2) chmod +x 上述文件 && ./上述文件 --install" >&2
-        echo "   3) source /usr/local/Ascend/ascend-toolkit/set_env.sh   # 非 root 改 ~/Ascend/..." >&2
-        echo "   4) 同一终端重跑本脚本" >&2
+        echo "   2) chmod +x 上述文件 && ./上述文件 --install --install-path=<目录>   # root 默认 /usr/local/Ascend，非 root 用 ~/Ascend" >&2
+        echo "   3) 重跑本脚本时加 --ascend-path <上面的安装目录> 复用" >&2
     fi
     echo "  提示: ① 只需 Toolkit 包（驱动/固件/ops 编译不用装） ② .run 自解压，无需手动解压" >&2
     echo "        ③ CANN 已装在别处 → 用 --ascend-path <含 set_env.sh 的目录> 指定，无需重装" >&2
@@ -801,6 +830,8 @@ print_cann_guidance() {
 
 # 正在克隆的目标目录；中断时由 trap 清理半成品
 CURRENT_CLONE_DIR=""
+# 当前正在等待的后台子进程 PID（apt/clone/编译/下载均经 spin_on_pid* 记录）；中断时由 trap 结束它，避免孤儿占锁
+CURRENT_BG_PID=""
 
 # 克隆或复用一个仓库：$1=名称 $2=git地址 $3=分支/标签 $4=目标目录
 clone_repo() {
@@ -850,12 +881,14 @@ clone_repo() {
 installed_cann_version_id() {
     local f
     # 拼接所有可能含版本/日期的 info（install.info 有 version/innerversion；version.info 常含快照日期）
+    # ${ASCEND_HOME_PATH:-} 兜底：某些 CANN 布局只导出 ASCEND_TOOLKIT_HOME，此处在其兜底赋值前被调用，
+    # 不加 :- 会在 set -u 下把"ASCEND_HOME_PATH: unbound variable"漏到用户终端（虽被 || true 吞但仍刺眼）。
     for f in \
-        "${ASCEND_HOME_PATH}"/ascend-toolkit/latest/*/ascend_toolkit_install.info \
-        "${ASCEND_HOME_PATH}"/ascend-toolkit/latest/*/version.info \
-        "${ASCEND_HOME_PATH}"/*/ascend_toolkit_install.info \
-        "${ASCEND_HOME_PATH}"/*/version.info \
-        "${ASCEND_HOME_PATH}"/ascend_toolkit_install.info; do
+        "${ASCEND_HOME_PATH:-}"/ascend-toolkit/latest/*/ascend_toolkit_install.info \
+        "${ASCEND_HOME_PATH:-}"/ascend-toolkit/latest/*/version.info \
+        "${ASCEND_HOME_PATH:-}"/*/ascend_toolkit_install.info \
+        "${ASCEND_HOME_PATH:-}"/*/version.info \
+        "${ASCEND_HOME_PATH:-}"/ascend_toolkit_install.info; do
         [ -f "${f}" ] && cat "${f}" 2>/dev/null || true
     done
     return 0
@@ -870,28 +903,6 @@ cann_match_status() {
     [ -n "${info}" ] || return 2
     date8="${snapshot:0:8}"
     if grep -q "${date8}" <<<"${info}"; then return 0; else return 1; fi
-}
-
-# best-effort 软校验：按建议快照前 8 位日期在已装信息里查；不阻断。
-soft_verify_cann() {
-    local snapshot="$1" date8 cann_info
-    if [ -z "${snapshot}" ]; then
-        info "本 profile 未固定具体 CANN 快照，跳过版本校验（如编译报类型未声明再换配套 CANN）。"
-        return 0
-    fi
-    date8="${snapshot:0:8}"
-    cann_info="$(installed_cann_version_id)"
-    if [ -z "${cann_info}" ]; then
-        info "建议 CANN 快照: master/${snapshot}（未能读取已装 CANN 版本，跳过比对）"
-        return 0
-    fi
-    if grep -q "${date8}" <<<"${cann_info}"; then
-        info "CANN 与建议快照匹配（${date8}）"
-    elif [ "${PROFILE_CUSTOM}" = true ]; then
-        warn "已装 CANN 未匹配到建议快照 master/${snapshot}（自定义分支组合）；若编译报类型未声明(如 ThreadType)请换配套 CANN。"
-    else
-        info "未能自动确认 CANN 与建议快照(${date8})一致；非竞赛环境常见，可忽略；仅当编译报类型未声明(如 ThreadType)再换配套 CANN。"
-    fi
 }
 
 # $1=提示语  $2=默认(Y|N)  →  0=继续 / 1=拒绝
@@ -913,6 +924,7 @@ prompt_yn() {
 # 不 wait，调用方 wait 取退出码。
 spin_on_pid() {
     local pid="$1" label="$2" start=${SECONDS} elapsed
+    CURRENT_BG_PID="${pid}"    # 记录在途子进程，供中断 trap 结束它
     local tty=false; color_enabled && tty=true
     local frames='|/-\' i=0 tick=0
     while kill -0 "${pid}" 2>/dev/null; do
@@ -932,6 +944,7 @@ spin_on_pid() {
         fi
     done
     ${tty} && printf '\r\033[K'
+    CURRENT_BG_PID=""
     return 0
 }
 
@@ -939,6 +952,7 @@ spin_on_pid() {
 # 不 wait，调用方 wait 取退出码。
 spin_on_pid_pct() {
     local pid="$1" label="$2" total="$3" file="$4"
+    CURRENT_BG_PID="${pid}"    # 记录在途子进程，供中断 trap 结束它
     local tty=false; color_enabled && tty=true
     local frames='|/-\' i=0 start=${SECONDS} cur pct rate eta line prev=0 prevt=${SECONDS}
     while kill -0 "${pid}" 2>/dev/null; do
@@ -961,6 +975,7 @@ spin_on_pid_pct() {
         fi
     done
     ${tty} && printf '\r\033[K'
+    CURRENT_BG_PID=""
     return 0
 }
 
@@ -975,6 +990,8 @@ download_and_install_cann() {
             return 0
         fi
     fi
+    # 0.5 权限预检（root 装 CANN 要求各级父目录 755）：兜底第 5 步才决定覆盖重装的路径（第 1 步预检未覆盖），失败即报错不白装
+    check_cann_parent_perms "${target}"
     # 1. 磁盘（阻断）
     check_cann_disk "${target}" "${CANN_CACHE}"
     # 2. 快照
@@ -985,27 +1002,34 @@ download_and_install_cann() {
     local file; file="$(pick_toolkit_file "${snap}" "${aw}")" || true
     [ -n "${file}" ] || { warn "快照目录 ${snap} 未找到可用的 x86_64 Toolkit 包（当前 profile=${PROFILE}$([ "${aw}" = true ] || echo '，仅取正式发布版、不取 weekly')）。"; print_cann_guidance; exit 1; }
     # 4. 下载
-    local base="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/master/${snap}"
+    local base="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/${CANN_CHANNEL}/${snap}"
     local url="${base}/${file}" total
     local inst_log="${LOG_DIR}/cann-install-${RUN_TS}.log" dl_log="${LOG_DIR}/cann-download-${RUN_TS}.log"
     mkdir -p "${CANN_CACHE}" "${LOG_DIR}" || { warn "无法创建缓存/日志目录"; print_cann_guidance; exit 1; }
     total="$(curl -fsSI "${url}" 2>/dev/null | tr -d '\r' | awk 'tolower($1)=="content-length:"{print $2}' | tail -1)" || true
-    local attempt=1
-    while :; do
-        wget -q -O "${CANN_CACHE}/${file}" "${url}" </dev/null 2>>"${dl_log}" &
-        local dpid=$!
-        spin_on_pid_pct "${dpid}" "下载 CANN" "${total:-0}" "${CANN_CACHE}/${file}"
-        if wait "${dpid}" && { [ -z "${total}" ] || [ "$(stat -c%s "${CANN_CACHE}/${file}" 2>/dev/null || echo 0)" = "${total}" ]; }; then
-            break
-        fi
-        rm -f "${CANN_CACHE}/${file}" || true
-        if [ "${attempt}" -ge 2 ]; then
-            warn "CANN 下载失败，末尾日志："; tail -n 20 "${dl_log}" >&2
-            echo "  请检查网络/代理/防火墙；持续失败可带日志到 https://gitcode.com/cann/hcomm/issues 反馈。" >&2
-            print_cann_guidance; exit 1
-        fi
-        warn "CANN 下载失败，3 秒后重试一次……"; attempt=2; sleep 3 || true
-    done
+    # 缓存复用：上次已下完整包（按 content-length 校验大小一致）则跳过下载，避免装失败重跑又重下 ~1.5G。
+    # 拿不到 total（HEAD 无 content-length）时无法判定完整性，稳妥起见仍重新下载。
+    if [ -f "${CANN_CACHE}/${file}" ] && [ -n "${total}" ] \
+        && [ "$(stat -c%s "${CANN_CACHE}/${file}" 2>/dev/null || echo 0)" = "${total}" ]; then
+        info "复用已下载的 CANN 安装包（${CANN_CACHE}/${file}，$(( total / 1024 / 1024 ))M），跳过下载"
+    else
+        local attempt=1
+        while :; do
+            wget -q -O "${CANN_CACHE}/${file}" "${url}" </dev/null 2>>"${dl_log}" &
+            local dpid=$!
+            spin_on_pid_pct "${dpid}" "下载 CANN" "${total:-0}" "${CANN_CACHE}/${file}"
+            if wait "${dpid}" && { [ -z "${total}" ] || [ "$(stat -c%s "${CANN_CACHE}/${file}" 2>/dev/null || echo 0)" = "${total}" ]; }; then
+                break
+            fi
+            rm -f "${CANN_CACHE}/${file}" || true
+            if [ "${attempt}" -ge 2 ]; then
+                warn "CANN 下载失败，末尾日志："; tail -n 20 "${dl_log}" >&2
+                echo "  请检查网络/代理/防火墙；持续失败可带日志到 https://gitcode.com/cann/hcomm/issues 反馈。" >&2
+                print_cann_guidance; exit 1
+            fi
+            warn "CANN 下载失败，3 秒后重试一次……"; attempt=2; sleep 3 || true
+        done
+    fi
     # 5. 备份（覆盖场景）
     if [ -e "${target}" ]; then
         if ! mv "${target}" "${target}.bak-${RUN_TS}"; then warn "备份原 CANN 失败：${target}"; print_cann_guidance; exit 1; fi
@@ -1212,7 +1236,11 @@ build_hccl_test() {
     fi
     mkdir -p "${LOG_DIR}"
     local ht_log="${LOG_DIR}/hccl_test-build-${RUN_TS}.log" rc=0
-    ( cd "${work}" && MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi make ASCEND_DIR="${ASCEND_HOME_PATH}" ) > "${ht_log}" 2>&1 &
+    # OpenMPI 按架构安装在 /usr/lib/<triplet>/openmpi（x86_64-linux-gnu / aarch64-linux-gnu）；
+    # 取当前架构 triplet，避免在 aarch64 上写死 x86_64 路径导致必编译失败。目录不存在则回退传统 x86_64 路径。
+    local mpi_home="/usr/lib/$(gcc -dumpmachine 2>/dev/null)/openmpi"
+    [ -d "${mpi_home}" ] || mpi_home="/usr/lib/x86_64-linux-gnu/openmpi"
+    ( cd "${work}" && MPI_HOME="${mpi_home}" make ASCEND_DIR="${ASCEND_HOME_PATH}" ) > "${ht_log}" 2>&1 &
     local bpid=$!
     spin_on_pid "${bpid}" "编译 hccl_test 中"
     wait "${bpid}" || rc=$?
@@ -1228,8 +1256,24 @@ build_hccl_test() {
     setup_hccl_rootinfo
 }
 
-# 中断(Ctrl-C/kill)时清理正在克隆的半成品目录
+# 结束进程及其所有子孙：apt/编译经包装子 shell 启动（{ apt-get …; } / bash build.sh / ( … make )），
+# 真正占 dpkg 锁、耗 CPU 的是孙子进程（dpkg/make/cc1plus），只杀直接子进程杀不到。优先用 pgrep 递归；
+# 无 pgrep 时退化为只结束直接子进程。
+kill_process_tree() {
+    local pid="$1" child
+    if command -v pgrep >/dev/null 2>&1; then
+        for child in $(pgrep -P "${pid}" 2>/dev/null); do
+            kill_process_tree "${child}"
+        done
+    fi
+    kill "${pid}" 2>/dev/null || true
+}
+
+# 中断(Ctrl-C/kill)时结束在途后台子进程树并清理正在克隆的半成品目录。
+# 收到仅发给本脚本的 SIGTERM（如 kill <pid>）时，前台进程组不会自动收到信号，
+# 需主动结束 apt/clone/编译/下载子进程（连同其子孙），避免其成为孤儿继续占用 dpkg 锁。
 cleanup_on_interrupt() {
+    [ -n "${CURRENT_BG_PID:-}" ] && kill_process_tree "${CURRENT_BG_PID}"
     if [ -n "${CURRENT_CLONE_DIR:-}" ] && [ -d "${CURRENT_CLONE_DIR}" ]; then
         rm -rf "${CURRENT_CLONE_DIR}"
     fi
@@ -1312,6 +1356,12 @@ cleanup_sudo() {
     command -v sudo >/dev/null 2>&1 && sudo -k 2>/dev/null || true
 }
 
+# 退出时统一清理（trap EXIT）：注销 sudo + 删除 setup_git_safe_directory 建的临时 git 配置文件，不留残留。
+cleanup_on_exit() {
+    cleanup_sudo
+    [ -n "${GIT_SAFE_TMP:-}" ] && rm -f "${GIT_SAFE_TMP}" 2>/dev/null || true
+}
+
 # 清理上次被 kill 的半成品，保证失败后重跑干净：不完整的 clone 目录 + 被中断的 dpkg。
 # 安全约束：只清理脚本默认 clone 位置（${WORKSPACE}/hcomm|hccl）且用户未用 --hcomm-path/--hccl-path 覆盖；
 # 再要求“有 .git 但仓库不完整（疑似中断的 clone）或空目录”，避免误删用户自备的非 git 源码。
@@ -1335,7 +1385,7 @@ cleanup_residue() {
 # 主函数
 main() {
     trap cleanup_on_interrupt INT TERM
-    trap cleanup_sudo EXIT
+    trap cleanup_on_exit EXIT
 
     parse_args "$@"
     apply_defaults

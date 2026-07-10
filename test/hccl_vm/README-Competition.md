@@ -70,6 +70,8 @@ curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test
 
 完成后工具位于 `<工作目录>/hcomm/test/hccl_vm/hccl_vm_install/bin/hccl-vm`。删除工作目录即可清理本工具产物（apt 安装的系统依赖如需卸载请自行 `apt remove`），本工具不改动 CANN。
 
+**备注**：一键安装完成后，请跳转到[alltoall算子编译](#32-alltoall示例算子编译和产物拷贝)步骤继续执行。
+
 #### 3.1.2 手动构建
 
 ```bash
@@ -117,6 +119,7 @@ cp ./build/lib64/libhccl_device.so /home/workspace/hcomm/test/hccl_vm/hccl_vm_in
 #### 3.3.1 环境配置
 
 请参照[hccl_rootinfo文件内容](#47-hccl_rootinfojson文件)，创建并配置hccl_rootinfo.json文件。
+**备注**：如使用3.1.1 自动构建编译，可跳过此步骤。
 
 #### 3.3.2 CCU模式
 
