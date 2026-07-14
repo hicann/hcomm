@@ -351,7 +351,7 @@ static HcclResult ImportJetty(const CtxHandle ctxHandle, u8 *key,
         HCCL_ERROR("[%s] failed, ctxHandle[%p] loc tp handle[%llx] "
             "rmt tp handle[%llx] loc tag[%llu] loc psn[%u] rmt psn[%u]"
             "protocol[%s].", __func__, ctxHandle, cfg.tpHandle, cfg.peerTpHandle,
-            cfg.tag, cfg.txPsn, cfg.rxPsn);
+            cfg.tag, cfg.txPsn, cfg.rxPsn, protocol.Describe().c_str());
         return HcclResult::HCCL_E_NETWORK;
     }
 
@@ -416,7 +416,7 @@ static HcclResult ImportJettyAsync(CtxHandle ctxHandle, const HccpUbJettyImporte
     info->in.ub.expImportCfg = cfg;
 
     if (protocol != TpProtocol::RTP && protocol != TpProtocol::CTP) {
-        HCCL_ERROR("[%s] failed, tp protocol[%s] is not expected, %s.",
+        HCCL_ERROR("[%s] failed, tp protocol[%s] is not expected.",
         __func__, protocol.Describe().c_str());
         return HcclResult::HCCL_E_PARA;
     }

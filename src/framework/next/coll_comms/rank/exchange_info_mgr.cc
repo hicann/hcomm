@@ -78,6 +78,9 @@ HcclResult ExchangeInfoMgr::ExchangeUserInfo(
     // SERVER先Recv/CLIENT先Send
     for (u32 i = 0; i < sockets.size(); i++) {
         if (roles[i] == HCOMM_SOCKET_ROLE_SERVER) {
+            CHK_PRT_RET(remoteExchangeInfoLens[i] > HCCL_EXCHANGE_INFO_LEN,
+                HCCL_ERROR("[ExchangeUserInfo] remoteExchangeInfoLen[%u] exceeds limit.", HCCL_EXCHANGE_INFO_LEN),
+                HCCL_E_PARA);
             remoteUserDatas[i].resize(remoteExchangeInfoLens[i], 0);
             sockets[i]->RecvAsync(remoteUserDatas[i].data(), remoteExchangeInfoLens[i]);
         } else {
@@ -96,6 +99,9 @@ HcclResult ExchangeInfoMgr::ExchangeUserInfo(
             collCommConfigConsistency.GetExchangeInfoBuf(exchangeBuf);
             sockets[i]->SendAsync(exchangeBuf.data(), localExchangeInfoLen);
         } else {
+            CHK_PRT_RET(remoteExchangeInfoLens[i] > HCCL_EXCHANGE_INFO_LEN,
+                HCCL_ERROR("[ExchangeUserInfo] remoteExchangeInfoLen[%u] exceeds limit.", HCCL_EXCHANGE_INFO_LEN),
+                HCCL_E_PARA);
             remoteUserDatas[i].resize(remoteExchangeInfoLens[i], 0);
             sockets[i]->RecvAsync(remoteUserDatas[i].data(), remoteExchangeInfoLens[i]);
         }

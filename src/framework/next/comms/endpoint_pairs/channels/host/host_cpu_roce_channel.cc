@@ -846,9 +846,9 @@ HcclResult HostCpuRoceChannel::NotifyWait(const uint32_t localNotifyIdx, const u
     auto startTime = std::chrono::steady_clock::now();
     auto waitTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeout));
     for (uint32_t i = 0; i < qpInfo.size(); i++) {
-        CHK_PRT_RET(qpInfo[i].recvCq == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] recvCq[%u] is null", i, __func__), HCCL_E_INTERNAL);
-        CHK_PRT_RET(qpInfo[i].qp == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] is null", i, __func__), HCCL_E_INTERNAL);
-        CHK_PRT_RET(qpInfo[i].recvCq->context == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] recvCq[%u]->context is null", i, __func__), HCCL_E_INTERNAL);
+        CHK_PRT_RET(qpInfo[i].recvCq == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] recvCq[%u] is null", __func__, i), HCCL_E_INTERNAL);
+        CHK_PRT_RET(qpInfo[i].qp == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] is null", __func__, i), HCCL_E_INTERNAL);
+        CHK_PRT_RET(qpInfo[i].recvCq->context == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] recvCq[%u]->context is null", __func__, i), HCCL_E_INTERNAL);
 
         while (true) {
             auto actualNum = ibv_poll_cq(qpInfo[i].recvCq, 1, &wc);
