@@ -146,6 +146,7 @@ typedef struct {
     uint64_t local_enpoint_id;
     uint64_t remote_enpoint_id;
     uint8_t tp_type;
+    uint64_t remote_rajetty_id;
 } EndPointPair;
 
 typedef struct {

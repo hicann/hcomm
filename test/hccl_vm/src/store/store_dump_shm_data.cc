@@ -257,6 +257,16 @@ HcclVmResult CreateJettyInfo(HcclVmSynData &hvmSynData)
         uint64_t localEndPointId = endpoint.local_enpoint_id;
         uint64_t rmtEndPointId = endpoint.remote_enpoint_id;
         uint8_t protocol = endpoint.tp_type;
+        // 查找与0->8对应的8->0的EndPointPair
+        auto reverseIt = std::find_if(endpointPairs.begin(), endpointPairs.end(),
+            [localEndPointId, rmtEndPointId](const sim::EndPointPair &ep) {
+                return ep.remote_enpoint_id == localEndPointId && ep.local_enpoint_id == rmtEndPointId;
+            });
+        if (reverseIt == endpointPairs.end()) {
+            continue;
+        }
+
+        uint64_t rmtRaJettyId = reverseIt->remote_rajetty_id;
 
         // 根据enpoint_id查找本端和对端的EndPoint信息
         auto localEndPointOpt = RunnerDB::GetById<sim::EndPoint>(localEndPointId);
@@ -284,14 +294,7 @@ HcclVmResult CreateJettyInfo(HcclVmSynData &hvmSynData)
         channelData.dstRank = sim::GetRankIdByDeviceId(rmtEndPointOpt->device_id);
 
         // 查表查询JettyNum和JettyId
-        auto raCtx = RunnerDB::GetOneByPred<sim::RaContext>([localEndPointId](const sim::RaContext &ctx) { return ctx.endpoint_id == localEndPointId; });
-        if (!raCtx.second) {
-            HCCL_VM_ERROR("Get RaContext failed handle = {}", localEndPointId);
-            continue;
-        }
-
-        uint64_t raCtxHandle = raCtx.first.id;
-        auto raJettys = RunnerDB::GetByPred<sim::RaJetty>([raCtxHandle](const sim::RaJetty& jetty) { return jetty.ctx_handle == raCtxHandle && jetty.mode == 3; });
+        auto raJettys = RunnerDB::GetByPred<sim::RaJetty>([rmtRaJettyId](const sim::RaJetty& jetty) { return jetty.id == rmtRaJettyId && jetty.mode == 3; });
         if (raJettys.empty()) {
             continue;
         }

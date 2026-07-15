@@ -1070,6 +1070,7 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
         endpointPair.local_enpoint_id   = localEndpointId;
         endpointPair.remote_enpoint_id  = remoteEndpointId;
         endpointPair.tp_type = qpInfo->in.ub.tpType;
+        endpointPair.remote_rajetty_id = remoteQpId;
         auto id = RunnerDB::Add<sim::EndPointPair>(endpointPair);
     }
 #if 0
