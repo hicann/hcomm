@@ -114,6 +114,19 @@ CcuResult HcommCcuKernelRegisterStart(CcuInsHandle insHandle)
     return CcuResult::CCU_SUCCESS;
 }
 
+static CcuResult CcuKernelTryRegister(hcomm::CcuInstance *ccuIns, hcomm::CcuResPack *resPack,
+    uint32_t devLogicId, const char *kernelFuncName, const void *kernelFunc,
+    const void **kernelArgs, uint32_t argNum, CcuKernelHandle &newHandle)
+{
+    CCU_EXCEPTION_HANDLE_BEGIN
+    auto &kernelMgr = hcomm::CcuKernelMgr::GetInstance(devLogicId);
+    CCU_CHK_RET(kernelMgr.Register(*resPack, kernelFuncName,
+        kernelFunc, kernelArgs, argNum, newHandle));
+    CCU_CHK_RET(ccuIns->SaveKernel(newHandle));
+    CCU_EXCEPTION_HANDLE_END
+    return CcuResult::CCU_SUCCESS;
+}
+
 CcuResult HcommCcuKernelRegister(CcuInsHandle insHandle, uint32_t dieId,
     const char *kernelFuncName, const void *kernelFunc,
     const void **kernelArgs, uint32_t argNum,
@@ -141,12 +154,20 @@ CcuResult HcommCcuKernelRegister(CcuInsHandle insHandle, uint32_t dieId,
     CCU_CHK_PTR_NULL(resPack);
 
     CcuKernelHandle newHandle{0};
-    CCU_EXCEPTION_HANDLE_BEGIN
-    auto &kernelMgr = hcomm::CcuKernelMgr::GetInstance(devLogicId);
-    CCU_CHK_RET(kernelMgr.Register(*resPack, kernelFuncName,
-        kernelFunc, kernelArgs, argNum, newHandle));
-    CCU_CHK_RET(ccuIns->SaveKernel(newHandle));
-    CCU_EXCEPTION_HANDLE_END
+    CcuResult ret = CcuKernelTryRegister(ccuIns, resPack, devLogicId, kernelFuncName,
+        kernelFunc, kernelArgs, argNum, newHandle);
+    if (ret != CcuResult::CCU_SUCCESS) {
+        ccuIns->AbortRegister();
+        if (CCU_CHK_RES_UNAVAIL(ret)) {
+            HCCL_WARNING("[%s] register kernel resource unavailable[%d], current register round aborted.",
+                __func__, ret);
+            return CcuResult::CCU_E_UNAVAIL;
+        } else {
+            HCCL_ERROR("[%s] failed, register kernel failed[%d], current register round aborted.",
+                __func__, ret);
+            return ret;
+        }
+    }
 
     *kernelHandle = newHandle;
     HCCL_INFO("[%s] success, take time [%lld]us.",

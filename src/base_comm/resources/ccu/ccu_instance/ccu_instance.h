@@ -37,9 +37,10 @@ public:
     CcuResult BeginRegister();
     CcuResult CheckRegistering() const;
     CcuResult EndRegister();
+    void AbortRegister();
 
 private:
-    enum class RegisterState { IDLE, REGISTERING };
+    enum class RegisterState { IDLE, REGISTERING, REGISTER_ABORTED };
     RegisterState registerState_{RegisterState::IDLE};
     CcuInstanceType insType_{CcuInstanceType::CCU_UNUSED};
     int32_t devLogicId_{INT32_MAX};
