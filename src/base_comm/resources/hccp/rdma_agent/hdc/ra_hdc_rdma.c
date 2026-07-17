@@ -261,7 +261,7 @@ int RaHdcQpCreateWithCQWithAttrs(struct RaRdmaHandle *rdmaHandle, struct QpExtAt
     cap.max_send_sge = extAttrs->qpAttr.cap.max_send_sge;
     cap.max_recv_sge = extAttrs->qpAttr.cap.max_recv_sge;
     ret = RaHdcLiteQpCreateWithCQ(rdmaHandle, qpHdc, &cap,
-        RaHdcLiteFindTypicalCq(phyId, sendCqn), RaHdcLiteFindTypicalCq(phyId, recvCqn),
+        RaHdcLiteFindTypicalCq(rdmaHandle, sendCqn), RaHdcLiteFindTypicalCq(rdmaHandle, recvCqn),
         sendCqn, recvCqn);
     if (ret) {
         (void)RaHdcCmdQpDestroyWithoutCQ(qpHdc);
@@ -506,7 +506,7 @@ int RaHdcTypicalCqDestroy(struct RaRdmaHandle *rdmaHandle, unsigned int cqn, voi
     }
 
     if (cqHdc->liteCq != NULL) {
-        RaHdcLiteRemoveTypicalCq(cqHdc->phyId, cqHdc->cqn);
+        RaHdcLiteRemoveTypicalCq(rdmaHandle, cqHdc->cqn);
         (void)RaRdmaLiteDestroyCq(cqHdc->liteCq);
         cqHdc->liteCq = NULL;
     }
@@ -1402,7 +1402,7 @@ int RaHdcPollCq(struct RaQpHandle *qpHdc, bool isSendCq, unsigned int numEntries
 int RaHdcPollTypicalCq(struct RaTypicalCqHandle *cqHdc, unsigned int numEntries, void *wc)
 {
     struct rdma_lite_wc_v2 *liteWc = (struct rdma_lite_wc_v2 *)wc;
-    struct rdma_lite_cq *liteCq = RaHdcLiteFindTypicalCq(cqHdc->phyId, cqHdc->cqn);
+    struct rdma_lite_cq *liteCq = RaHdcLiteFindTypicalCq(cqHdc->rdmaHandle, cqHdc->cqn);
     if (liteCq == NULL) {
         hccp_warn("cqn:%u liteCq not found in table", cqHdc->cqn);
         return -ENOTSUPP;

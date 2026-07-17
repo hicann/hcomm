@@ -160,12 +160,12 @@ int RaHdcLitePollCq(struct RaQpHandle *qpHdc, bool isSendCq, unsigned int numEnt
     struct rdma_lite_wc_v2 *liteWc);
 int RaHdcLiteCqCreate(struct RaRdmaHandle *rdmaHandle, unsigned int cqDepth,
     union OpTypicalCqCreateData *cqData, struct rdma_lite_cq **liteCq);
-void RaHdcLiteStoreTypicalCq(unsigned int phyId, unsigned int cqn, struct rdma_lite_cq *liteCq,
+void RaHdcLiteStoreTypicalCq(struct RaRdmaHandle *rdmaHandle, unsigned int cqn, struct rdma_lite_cq *liteCq,
     struct rdma_lite_device_cq_attr *deviceCqAttr);
-struct rdma_lite_cq *RaHdcLiteFindTypicalCq(unsigned int phyId, unsigned int cqn);
-int RaHdcLiteFindTypicalCqAttr(unsigned int phyId, unsigned int cqn,
+struct rdma_lite_cq *RaHdcLiteFindTypicalCq(struct RaRdmaHandle *rdmaHandle, unsigned int cqn);
+int RaHdcLiteFindTypicalCqAttr(struct RaRdmaHandle *rdmaHandle, unsigned int cqn,
     struct rdma_lite_device_cq_attr **deviceCqAttr);
-void RaHdcLiteRemoveTypicalCq(unsigned int phyId, unsigned int cqn);
+void RaHdcLiteRemoveTypicalCq(struct RaRdmaHandle *rdmaHandle, unsigned int cqn);
 int RaHdcLiteGetCqAttr(struct RaRdmaHandle *rdmaHandle, unsigned int cqn,
     struct rdma_lite_device_cq_attr *deviceCqAttr);
 int RaHdcLiteQpCreateWithCQ(struct RaRdmaHandle *rdmaHandle, struct RaQpHandle *qpHdc,

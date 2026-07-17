@@ -2884,10 +2884,10 @@ RS_ATTRI_VISI_DEF int RsTypicalCqCreate(unsigned int phyId, unsigned int rdevInd
         }
     }
 
-    entry = malloc(sizeof(struct RsTypicalCqEntry));
+    entry = calloc(1, sizeof(struct RsTypicalCqEntry));
     if (entry == NULL) {
         pthread_mutex_unlock(&gRsTypicalCqMutex);
-        hccp_err("RsTypicalCqCreate malloc failed, cqn[%u]", *cqn);
+        hccp_err("RsTypicalCqCreate calloc failed, cqn[%u]", *cqn);
         return -ENOMEM;
     }
     entry->phyId = phyId;

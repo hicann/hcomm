@@ -146,6 +146,8 @@ struct RaRdmaHandle {
     uint8_t gid[HCCP_GID_RAW_LEN];
     uint64_t notifyVa;
     uint64_t notifySize;
+    struct RaListHead typicalLiteCqList;
+    pthread_mutex_t typicalLiteCqMutex;
 };
 
 struct RaSocketHandle {

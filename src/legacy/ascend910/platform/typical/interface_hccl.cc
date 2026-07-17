@@ -104,6 +104,9 @@ HcclResult hcclCreateAscendQPWithAttr(AscendQPInfo* ascendQPInfo)
 HcclResult hcclCreateAscendCQWithAttr(AscendCQInfo* ascendCQInfo)
 {
     CHK_PTR_NULL(ascendCQInfo);
+    if (ascendCQInfo->cqDepth == 0) {
+        ascendCQInfo->cqDepth = HOST_SQ_CQ_DEPTH;
+    }
     CHK_RET(CheckDepth(ascendCQInfo->cqDepth));
     
     s32 deviceLogicId = 0;
@@ -164,11 +167,13 @@ HcclResult hcclCreateAscendQPWithCQWithAttr(AscendCQInfo* ascendSendCQInfo, Asce
     if (ascendQPInfo->cap.maxSendWr == 0) {
         qpConfigInfo.sq_depth = DEFAULT_OPBASE_MAX_SEND_WR;
     } else {
+        CHK_RET(CheckDepth(ascendQPInfo->cap.maxSendWr));
         qpConfigInfo.sq_depth = ascendQPInfo->cap.maxSendWr;
     }
     if (ascendQPInfo->cap.maxRecvWr == 0) {
         qpConfigInfo.rq_depth = DEFAULT_MAX_RECV_WR;
     } else {
+        CHK_RET(CheckDepth(ascendQPInfo->cap.maxRecvWr));
         qpConfigInfo.rq_depth = ascendQPInfo->cap.maxRecvWr;
     }
 
