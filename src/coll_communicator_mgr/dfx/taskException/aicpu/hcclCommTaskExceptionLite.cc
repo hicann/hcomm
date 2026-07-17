@@ -256,10 +256,6 @@ HcclResult HcclCommTaskExceptionLite::PrintTaskExceptionBySqeId(CollCommAicpu *a
     CHK_PTR_NULL(aicpuComm->GetHcclCommDfxLite());
     CHK_PTR_NULL(aicpuComm->GetHcclCommDfxLite()->GetMirrorTaskManagerLite());
 
-    const auto curTask = aicpuComm->GetHcclCommDfxLite()->GetMirrorTaskManagerLite()->GetTaskInfo(sqId, sqeId);
-    CHK_SMART_PTR_NULL(curTask);
-    CHK_SMART_PTR_NULL(curTask->dfxOpInfo_);
-
     // 已经打印过的不再重复打印
     auto it = threadsPrinted_.find(sqId);
     if (it != threadsPrinted_.end() && it->second == sqeId) {
@@ -267,6 +263,10 @@ HcclResult HcclCommTaskExceptionLite::PrintTaskExceptionBySqeId(CollCommAicpu *a
         return HCCL_SUCCESS;
     }
     threadsPrinted_[sqId] = sqeId;
+
+    const auto curTask = aicpuComm->GetHcclCommDfxLite()->GetMirrorTaskManagerLite()->GetTaskInfo(sqId, sqeId);
+    CHK_SMART_PTR_NULL(curTask);
+    CHK_SMART_PTR_NULL(curTask->dfxOpInfo_);
 
     u32 sqHead = 0U;
     u32 sqTail = 0U;
@@ -485,7 +485,7 @@ uint16_t HcclCommTaskExceptionLite::SwitchSdmaCqeErrCodeToTsErrCode(u32 cqeErrCo
 }
 
 HcclResult HcclCommTaskExceptionLite::CollectTaskContext(CollCommAicpu *aicpuComm, u32 sqId, u32 taskId,
-    std::vector<std::shared_ptr<Hccl::TaskInfo>> &taskContext)
+    std::vector<Hccl::TaskInfo*> &taskContext)
 {
     auto queue = aicpuComm->GetHcclCommDfxLite()->GetMirrorTaskManagerLite()->GetQueue(sqId);
     CHK_PRT_RET(queue == nullptr,
@@ -517,7 +517,7 @@ HcclResult HcclCommTaskExceptionLite::CollectTaskContext(CollCommAicpu *aicpuCom
 
 HcclResult HcclCommTaskExceptionLite::PrintTaskContextInfo(CollCommAicpu *aicpuComm, u32 sqId, u32 taskId)
 {
-    std::vector<std::shared_ptr<Hccl::TaskInfo>> taskContext {};
+    std::vector<Hccl::TaskInfo*> taskContext {};
     CHK_PRT_RET(CollectTaskContext(aicpuComm, sqId, taskId, taskContext) != HCCL_SUCCESS,
         HCCL_ERROR("[%s]CollectTaskContext failed, devId[%u], sqId[%u], taskId[%u]", __func__, devId_, sqId, taskId),
         HCCL_E_PARA);
@@ -530,7 +530,7 @@ HcclResult HcclCommTaskExceptionLite::PrintTaskContextInfo(CollCommAicpu *aicpuC
             continue;
         }
         if (lastTask == nullptr) {
-            lastTask = taskContext[i].get();
+            lastTask = taskContext[i];
         }
         std::string conciseInfo = taskContext[i]->GetConciseBaseInfo() + ",";
 
@@ -542,7 +542,7 @@ HcclResult HcclCommTaskExceptionLite::PrintTaskContextInfo(CollCommAicpu *aicpuC
             HCCL_ERROR("[TaskException][AICPU]opData information is %s.", lastTask->GetIndopDataInfo().c_str());
             HCCL_ERROR("[TaskException][AICPU]task sequence is OP(%u): %s", lastOpIndex, taskContextInfo.c_str());
             taskContextInfo = "";
-            lastTask = taskContext[i].get();
+            lastTask = taskContext[i];
         }
         taskContextInfo += conciseInfo;
     }
