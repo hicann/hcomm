@@ -49,6 +49,9 @@ HcclResult HcclGetCommName(HcclComm comm, char* commName)
 // 初始化通信域
 HcclComm comm;
 // 查询通信域名称
-char commName[128];
-HcclGetCommName(comm, &commName);
+char commName[128] = {0};
+HcclResult ret = HcclGetCommName(comm, commName);
+// 错误处理
+if (ret != HCCL_SUCCESS) {
+}
 ```

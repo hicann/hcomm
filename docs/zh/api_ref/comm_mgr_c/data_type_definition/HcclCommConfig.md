@@ -38,17 +38,30 @@ typedef struct HcclCommConfigDef {
 
 ## 参数说明
 
-- **hcclBufferSize**：共享数据的缓存区大小，取值需大于等于1，单位为MByte。
+- **hcclBufferSize**：共享数据的缓存区大小，需要配置为整数，取值需大于等于1，单位为MB。取值范围和针对不同产品类型的使用约束请参见环境变量[HCCL_BUFFSIZE](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_BUFFSIZE.md)。
+
+  需要注意：
+
+  - 该配置项优先级高于HCCL_BUFFSIZE环境变量配置。
+  - 该配置项申请的内存为HCCL独占，不可与其他业务内存复用。
+  - 基于该配置项创建的通信域，会独占“2\*hcclBufferSize”大小的内存，保证多通信域并发算子互不影响。
+  - 针对集合通信算子，当数据量超过该配置值时，可能会出现性能下降的情况，建议hcclBufferSize配置值大于数据量。
+
 - **hcclDeterministic**：确定性计算开关，支持如下型号：
 
   下面分别列出不同AI处理器支持的取值及含义，未列出的代表不支持配置。
 
-  - Ascend 950PR/Ascend 950DT：仅支持配置为“1”或不配置，代表开启归约类通信算子的确定性计算，支持通信算子AllReduce、ReduceScatter、Reduce、ReduceScatterV。
+  <!-- npu="950" id1 -->
+  - Ascend 950PR/Ascend 950DT：不支持此配置，可通过HCCL_DETERMINISTIC环境变量配置全局确定性计算开关。
+  <!-- end id1 -->
+  <!-- npu="A3" id2 -->
   - Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持的取值及含义如下：
     - 0（默认值）：代表关闭确定性计算。
     - 1：开启归约类通信算子的确定性计算，支持通信算子AllReduce和ReduceScatter。
     - 2：单算子模式下配置为“2“时与配置为“1“的功能保持一致；静态图模式下暂不支持配置为“2”。
+  <!-- end id2 -->
 
+  <!-- npu="910b" id3 -->
   - Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持的取值及含义如下：
     - 0（默认值）：代表关闭确定性计算。
     - 1：开启归约类通信算子的确定性计算，支持通信算子AllReduce、ReduceScatter、Reduce、ReduceScatterV。
@@ -56,6 +69,7 @@ typedef struct HcclCommConfigDef {
       - 仅支持多机对称分布场景，不支持非对称分布的场景。
       - 开启保序时，不支持饱和模式，仅支持INF/NaN模式。
       - 相较于确定性计算，开启保序功能后会产生一定的性能下降，建议在推理场景下使用该功能。
+  <!-- end id3 -->
 
     > [!NOTE]说明
     > 在不开启确定性计算的场景下，多次执行的结果可能不同。这个差异的来源，一般是因为在算子实现中存在异步的多线程执行，会导致浮点数累加的顺序变化。当开启确定性计算后，算子在相同的硬件和输入下，多次执行将产生相同的输出。
@@ -70,17 +84,17 @@ typedef struct HcclCommConfigDef {
 
   下面分别列出不同AI处理器支持的取值及含义，未列出的代表不支持配置。
 
+  <!-- npu="950" id4 -->
   **针对Ascend 950PR/Ascend 950DT，支持的取值及含义如下：**
 
   - 0：使用默认算子展开模式，针对**Ascend 950PR/Ascend 950DT**，通信算子默认在AI CPU计算单元展开。
-  - 2：通信算子在AI CPU计算单元展开。
+  - 2：通信算子在AI CPU计算单元展开，使用STARS调度器调度运行。
 
     该配置项支持Broadcast、Reduce、AllReduce、Scatter、ReduceScatter、ReduceScatterV、AllGather、AllGatherV、AlltoAll、AlltoAllV、AlltoAllVC、Send、Recv、BatchSendRecv算子。
 
     图模式（Ascend IR）或者图捕获（aclgraph）场景，当通信算法采用AI CPU模式时，单卡上的并发图数量不能超过6个，否则可能会因AI CPU核被占满而导致通信阻塞。
 
   - 3：通信算子在Device侧的Vector Core计算单元展开。
-    - Ascend 950PR不支持此配置。
     - 该配置仅支持对称组网、推理特性。
     - 该配置下，若数据量不满足在“Vector Core”上的运行要求，部分算子会自动切换到默认模式。
     - 该配置项仅支持Broadcast、Reduce、AllReduce、ReduceScatter、Scatter、AllGather、AlltoAll、AlltoAllV算子，当前仅支持单机场景。
@@ -90,7 +104,6 @@ typedef struct HcclCommConfigDef {
     - 该配置项下，AllReduce、ReduceScatter、AllGather、AlltoAll算子支持控核能力，建议业务根据实际使用场景中计算算子与通信算子的并发情况进行Vector Core核数的配置。
 
   - 4：代表通信算子在Device侧的Vector Core计算单元展开，但不会随着数据量的变化进行模式切换，始终使用Vector Core计算，如果不满足Vector Core的运行条件，会报错退出。
-    - Ascend 950PR不支持此配置。
     - 该配置仅支持对称组网、推理特性。
     - 该配置项支持的算子及约束限制参见配置“3”。
 
@@ -105,7 +118,9 @@ typedef struct HcclCommConfigDef {
     针对单机通信场景的AllReduce、ReduceScatter、Reduce算子，当数据量超过一定值时，为防止性能下降，系统会自动切换为“2：AI_CPU模式”（该阈值并非固定，会根据算子运行模式及网络规模等因素有所调整）。
 
     当CCU资源不足时，系统会自动切换为“2：AI CPU模式”。
+  <!-- end id4 -->
 
+  <!-- npu="A3" id5 -->
   **针对Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持的取值及含义如下：**
 
   - 0：使用默认算子展开模式，Atlas A3 训练系列产品/Atlas A3 推理系列产品默认使用Device侧的AI CPU计算单元。
@@ -132,7 +147,9 @@ typedef struct HcclCommConfigDef {
     - 该配置仅支持对称组网、推理特性。
     - 该配置项支持AllReduce、ReduceScatter、AllGather、AlltoAll、AlltoAllV、AlltoAllVC算子。相关算子支持的数据类型及场景限制参见配置“3”。
     - 该配置项下，集合通信支持控核能力，不同算子的Vector Core核数要求与配置“3”相同。
+  <!-- end id5 -->
 
+  <!-- npu="910b" id6 -->
    **针对Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持的取值及含义如下：**
 
   - 0：使用默认算子展开模式，Atlas A2 训练系列产品/Atlas A2 推理系列产品默认使用Host侧CPU。
@@ -166,12 +183,17 @@ typedef struct HcclCommConfigDef {
     - 该配置仅支持对称组网、推理特性。
     - 该配置项仅支持AllReduce、AlltoAll、AlltoAllV、AlltoAllVC、AllGather、ReduceScatter算子。相关算子支持的数据类型及场景限制参见配置“3”。
     - 该配置项下，集合通信支持控核能力，不同算子的Vector Core核数要求与配置“3”相同。
+  <!-- end id6 -->
 
     > [!NOTE]说明
-    > - 通信算子展开模式设置为“3”（AIV）或“4”（AIV Only）时，不支持多个通信域并行的场景，否则可能出现不可预期行为。
+    > - 多通信域并行场景下，不支持多个通信域同时配置为“3”或“4”（AIV Only模式）。
+    > <!-- npu="910b" id7 -->
     > - 针对Atlas A2 训练系列产品/Atlas A2 推理系列产品，通信算子展开模式设置为“3”或“4”时，同时设置hcclDeterministic配置为“1”（开启确定性计算），在单机的单算子和图模式场景下，当数据量≤8MB时，仅AllReduce和ReduceScatter算子的确定性计算生效，其他场景和算子则以hcclDeterministic配置为准。
     > - 针对Atlas A2 训练系列产品/Atlas A2 推理系列产品，若hcclDeterministic配置为“2”（开启保序功能），hcclOpExpansionMode不支持配置为“3”或“4”，以保序功能为准。
+    > <!-- end id7 -->
+    > <!-- npu="A3" id8 -->
     > - 针对Atlas A3 训练系列产品/Atlas A3 推理系列产品，通信算子展开模式设置为“3”或“4”时，若同时设置hcclDeterministic为“1”（开启确定性计算）或“2”（开启保序功能），当数据量＜8MB时，仅AllReduce和ReduceScatter算子的确定性计算生效，其他场景和算子则以hcclDeterministic配置为准。
+    > <!-- end id8 -->
 
 - **hcclRdmaTrafficClass**：配置RDMA网卡的traffic class，取值范围为\[0,255\]，需要配置为4的整数倍。
 
@@ -179,7 +201,7 @@ typedef struct HcclCommConfigDef {
 
   **注意事项：**
 
-  0xFFFFFFFF被用作优先级判断标识，当配置为0xFFFFFFFF时，此通信域配置无效，会按照优先级取环境变量配置或默认值132。
+  - 0xFFFFFFFF被用作优先级判断标识，当配置为0xFFFFFFFF时，此通信域配置无效，会按照优先级取环境变量配置或默认值132。
 
 - **hcclRdmaServiceLevel**：配置RDMA网卡的service level，取值需要和网卡配置的PFC优先级保持一致，若配置不一致可能导致性能劣化。
 
@@ -187,25 +209,39 @@ typedef struct HcclCommConfigDef {
 
   **注意事项：**
 
-  0xFFFFFFFF被用作优先级判断标识，当配置为0xFFFFFFFF时，此通信域配置无效，会按照优先级取环境变量配置或默认值4。
+  - 0xFFFFFFFF被用作优先级判断标识，当配置为0xFFFFFFFF时，此通信域配置无效，会按照优先级取环境变量配置或默认值4。
 
 - **hcclWorldRankID**：NSLB-DP（Network Scale Load Balance-Data Plane：数据面网络级负载均衡）场景使用字段，代表当前进程在AI框架（如Pytorch）中的全局rank ID。
-- **hcclJobID：**NSLB-DP场景使用字段，代表当前分布式业务的唯一标识，由AI框架生成。
+- **hcclJobID**：NSLB-DP场景使用字段，代表当前分布式业务的唯一标识，由AI框架生成。
 - **aclGraphZeroCopyEnable**：该参数仅在图捕获模式（aclgraph）下对Reduce类算子生效，用于控制其是否开启零拷贝功能。
   - 0（默认值）：关闭零拷贝功能。
   - 1：开启零拷贝功能。
 
+  **注意事项：**
+
+  - Ascend 950PR/Ascend 950DT不支持此配置。
+
 - **hcclExecTimeOut**：不同设备进程在分布式训练或推理过程中存在卡间执行任务不一致的场景（如仅特定进程会保存checkpoint数据），通过该参数可控制设备间执行时同步等待的时间，在该配置时间内各设备进程等待其他设备执行通信同步。单位为s，取值范围和针对不同产品类型的使用约束请参见环境变量[HCCL_EXEC_TIMEOUT](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_EXEC_TIMEOUT.md)。
+
+  **配置示例：**
+
+    ```text
+    # 整数秒配置，配置为1800s
+    hcclExecTimeOut = 1800
+    # 十毫秒级精度配置，配置为50ms
+    hcclExecTimeOut = 0.05
+    ```
 
   **注意事项：**
 
-  0xFFFFFFFF被用作优先级判断标识，当配置为0xFFFFFFFF时，此通信域配置无效，会按照优先级取环境变量配置或默认值1836。
+  - 0xFFFFFFFF被用作优先级判断标识，当配置为0xFFFFFFFF时，此通信域配置无效，会按照优先级取环境变量配置或默认值1836。
+  - Ascend 950PR/Ascend 950DT不支持此配置，可通过HCCL_EXEC_TIMEOUT环境变量配置全局超时时间。
 
 - **hcclAlgo**：用于配置集合通信Server间通信算法以及超节点间通信算法，支持全局配置算法类型与按算子配置算法类型两种配置方式。需注意，HCCL提供自适应算法选择功能，默认会根据产品形态、数据量和Server个数选择合适的算法，一般情况下用户无需手工指定。若通过此参数指定了Server间通信算法，则自适应算法选择功能不再生效。
 
   配置方式的参数信息及针对不同产品类型支持的算法类型请参见环境变量[HCCL_ALGO](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_ALGO.md)，配置方式如下：
 
-  - 全局配置算法类型：`hcclAlgo = "level0:NA;level1:<algo>;level2:<algo>"`，示例：
+  - 通信域配置算法类型：`hcclAlgo = "level0:NA;level1:<algo>;level2:<algo>"`，  示例：
 
     ```text
     hcclAlgo = "level0:NA;level1:H-D_R"
@@ -217,6 +253,10 @@ typedef struct HcclCommConfigDef {
     # AllReduce算子使用Ring算法，AllGather算子使用RHD算法，其他算子根据产品形态、节点数以及数据量自动选择通信算法。
     hcclAlgo = "allreduce=level0:NA;level1:ring/allgather=level0:NA;level1:H-D_R"
     ```
+
+  **注意事项：**
+
+  - Ascend 950PR/Ascend 950DT不支持此配置，可通过HCCL_ALGO环境变量配置全局通信算法。
 
 - **hcclRetryEnable**：用于配置是否开启HCCL算子的重执行特性。重执行是指当通信算子执行报SDMA或者RDMA CQE类型的错误时，HCCL会尝试重新执行此通信算子。**仅支持在Atlas A3 训练系列产品/Atlas A3 推理系列产品上使用。**
 
@@ -234,6 +274,11 @@ typedef struct HcclCommConfigDef {
   - IntervalTime：同一个通信算子两次重执行的间隔时间，uint32类型，取值范围\[0,60000\]，默认值为1000，单位ms。
 
 - **hcclBufferName**：CCLBuffer名称，多通信域使用同一Buffer名称，共享同一片CCLBuffer，不指定时默认不共享，最大长度为128。需注意，传入同一CCLBuffer名称的通信域，需将算子下发到同一条Stream上。
+
+  **注意事项：**
+
+  - Ascend 950PR/Ascend 950DT不支持此配置。
+
 - **hcclQos**：用于配置超平面QoS的级别，取值范围：0\~7，默认值6。
 - **hcclSymWinMaxMemSizePerRank**：Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景下，为当前通信域中每个rank预留的对称内存大小，单位GB，取值范围：\[1, 当前环境中允许分配的物理内存最大值\]，默认值16。该参数仅在Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景下生效。Ascend 950PR/Ascend 950DT的URMA场景使用已申请的Device内存注册对称内存窗口，不依赖该参数配置预留的对称内存大小。
 
@@ -259,7 +304,7 @@ typedef struct HcclCommConfigDef {
 | --- | --- |
 | hcclBufferSize | 配置项hcclBufferSize（通信域粒度配置）> 环境变量[HCCL_BUFFSIZE](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_BUFFSIZE.md)（全局配置）> 默认值200。 |
 | hcclDeterministic | 配置项hcclDeterministic（通信域粒度配置）> 环境变量[HCCL_DETERMINISTIC](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_DETERMINISTIC.md)（全局配置）> 默认值0（关闭确定性计算）。 |
-| hcclOpExpansionMode | 配置项hcclOpExpansionMode（通信域粒度配置）> 环境变量[HCCL_OP_EXPANSION_MODE](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_OP_EXPANSION_MODE.md)（全局配置）> 默认算子展开模式。<br>Ascend 950PR/Ascend 950DT：AICPU_TS<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品：AI_CPU<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品：HOST |
+| hcclOpExpansionMode | 配置项hcclOpExpansionMode（通信域粒度配置）> 环境变量[HCCL_OP_EXPANSION_MODE](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_OP_EXPANSION_MODE.md)（全局配置）> 默认算子展开模式（同环境变量HCCL_OP_EXPANSION_MODE默认值）。|
 | hcclRdmaTrafficClass | 配置项hcclRdmaTrafficClass（通信域粒度配置） > 环境变量[HCCL_RDMA_TC](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_RDMA_TC.md)（全局配置）> 默认值132。 |
 | hcclRdmaServiceLevel | 配置项hcclRdmaServiceLevel（通信域粒度配置）> 环境变量[HCCL_RDMA_SL](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_RDMA_SL.md)（全局配置）> 默认值4。 |
 | hcclExecTimeOut | 配置项hcclExecTimeOut（通信域粒度配置）> 环境变量[HCCL_EXEC_TIMEOUT](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_EXEC_TIMEOUT.md)（全局配置）> 默认值1836。 |

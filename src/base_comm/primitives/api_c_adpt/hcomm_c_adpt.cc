@@ -526,6 +526,7 @@ HcommResult HcommChannelUpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHa
 HcommResult HcommChannelCreate(EndpointHandle endpointHandle, CommEngine engine,
     HcommChannelDesc *channelDescs, uint32_t channelNum, ChannelHandle *channels)
 {
+    CHK_PTR_NULL(endpointHandle);
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
     CHK_PRT_RET((channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]",

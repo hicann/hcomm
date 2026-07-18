@@ -43,7 +43,7 @@ TEST_F(TestHcommChannel, Ut_TestHcommChannelCreate_When_NumZero_Return_HCCL_E_PA
     desc.port = 12345;
     ChannelHandle channels[1];
     HcommResult ret = HcommChannelCreate(nullptr, COMM_ENGINE_AICPU, &desc, 0, channels);
-    EXPECT_EQ(ret, HCCL_E_PARA);
+    EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(TestHcommChannel, Ut_TestHcommCollectiveChannelCreate_When_ParamsNull_Return_HCCL_E_PTR)
