@@ -112,9 +112,9 @@ HcclResult AllReduceOperator::GetAllReduceScratchSize(const u64 count, const Hcc
 HcclResult AllReduceOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName,
                                         std::string& newTag)
 {
-    if (userRankSize_ == 1 && (GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE ||
-        param.aicpuUnfoldMode)) {
+    if (userRankSize_ == 1) {
         algName = "AllReduceSingleExecutor";
+        HCCL_INFO("[SelectAlg] AllReduce SelectAlg is algName [%s]", algName.c_str());
         return HCCL_SUCCESS;
     }
     HcclResult ret;

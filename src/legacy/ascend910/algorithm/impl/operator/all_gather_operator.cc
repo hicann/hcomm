@@ -38,8 +38,9 @@ AllGatherOperator::~AllGatherOperator()
 HcclResult AllGatherOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName,
                                         std::string& newTag)
 {
-    if (userRankSize_ == 1 && (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE)) {
+    if (userRankSize_ == 1) {
         algName = "AllGatherSingleExecutor";
+        HCCL_INFO("[SelectAlg] AllGather SelectAlg is algName [%s]", algName.c_str());
         return HCCL_SUCCESS;
     }
     HcclResult ret;

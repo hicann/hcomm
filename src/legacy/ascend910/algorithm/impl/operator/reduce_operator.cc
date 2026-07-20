@@ -34,9 +34,9 @@ HcclResult ReduceOperator::SelectAlg(const std::string &tag, const OpParam &para
 {
     HcclResult ret = HCCL_SUCCESS;
 
-    if (userRankSize_ == 1 && (GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE ||
-        param.aicpuUnfoldMode)) {
+    if (userRankSize_ == 1) {
         algName = "ReduceSingleExecutor";
+        HCCL_INFO("[SelectAlg] Reduce SelectAlg is algName [%s]", algName.c_str());
         return HCCL_SUCCESS;
     }
 
