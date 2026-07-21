@@ -30,6 +30,8 @@
 #include "topo_common_types.h"
 #include "virtual_topo.h"
 
+class AicpuTsChannelHelper;
+
 namespace hcomm {
 
 MAKE_ENUM(ChannelStatus, INIT, SOCKET_OK, SOCKET_TIMEOUT, READY, FAILED)
@@ -103,6 +105,8 @@ public:
     virtual HcclResult Resume()       = 0;
 
     virtual HcommChannelKind GetChannelKind() const;
+    CommEngine GetEngine() const { return engine_; }
+    virtual const HcommChannelDesc& GetChannelDesc() const = 0;
     virtual HcclResult Serialize(std::shared_ptr<hccl::DeviceMem> &out);
     virtual void AddPtrArrayDevMem(std::shared_ptr<hccl::DeviceMem> ptrArrayMem);
     // ------------------ 数据面接口 ------------------
@@ -122,11 +126,18 @@ public:
                                     HcommChannelDesc channelDesc,
                                     std::shared_ptr<Channel>& channelPtr);
 
+    virtual AicpuTsChannelHelper *GetAicpuTsHelper() { return nullptr; }
+
+    bool IsDeviceEntityReady() const { return deviceEntityReady_; }
+    void SetDeviceEntityReady() { deviceEntityReady_ = true; }
+
 protected:
     void ReleasePtrArrayDevMems();
 
     HcommChannelKind channelKind_{HcommChannelKind::INVALID};
+    CommEngine engine_{COMM_ENGINE_RESERVED};
     std::vector<std::shared_ptr<hccl::DeviceMem>> ptrArrayDevMems_{};
+    bool deviceEntityReady_{false};
 };
 
 } // namespace hcomm

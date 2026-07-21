@@ -28,13 +28,14 @@ public:
     HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
     ChannelStatus GetStatus() override;
     HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum) override;
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
     HcclResult Clean() override;
     HcclResult Resume() override;
 
     // 数据面接口
-    HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override;
+    HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
     HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override;
     HcclResult Write(void *dst, const void *src, uint64_t len) override;
     HcclResult Read(void *dst, const void *src, uint64_t len) override;

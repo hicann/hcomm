@@ -12,6 +12,7 @@
 
 #include <atomic>
 #include "../channel.h"
+#include "aicpu_ts_channel_helper.h"
 #include "../../sockets/socket_mgr.h"
 
 // Orion
@@ -41,7 +42,7 @@ public:
 
     HcclResult Clean() override;
     HcclResult Resume() override;
-
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
     // 数据面接口
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override;
@@ -50,7 +51,11 @@ public:
     HcclResult Read(void *dst, const void *src, uint64_t len) override;
     HcclResult ChannelFence() override;
 
+
+    AicpuTsChannelHelper *GetAicpuTsHelper() override { return &aicpuTsHelper_; }
+
 private:
+    AicpuTsChannelHelper aicpuTsHelper_;
     HcclResult Makebufs(HcommMemHandle *memHandles, uint32_t memHandleNum, std::vector<std::shared_ptr<Hccl::Buffer>> &bufs);
     HcclResult ParseInputParam();
     HcclResult BuildAttr();

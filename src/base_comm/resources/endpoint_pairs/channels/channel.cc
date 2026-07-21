@@ -100,6 +100,7 @@ HcclResult Channel::CreateChannel(
             return HCCL_E_NOT_FOUND;
     }
     CHK_PTR_NULL(uniqueChannelPtr);
+    uniqueChannelPtr->engine_ = engine;
     CHK_RET_UNAVAIL(uniqueChannelPtr->Init());
     channelPtr = std::move(uniqueChannelPtr);
     return HCCL_SUCCESS;

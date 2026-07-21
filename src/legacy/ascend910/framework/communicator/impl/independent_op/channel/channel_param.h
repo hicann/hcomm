@@ -85,6 +85,7 @@ struct HcclChannelUrmaRes {
     s32   deviceLogicId{0};          // 基础通信使用
     u32   deviceType{0};             // 基础通信使用
     DevAicpuChannelConfig channelConfig; // 收编channel配置类变量
+    void* ctxList{nullptr};          // device侧ctx指针数组，非null时kernel写ctx->deviceChannel
 };
 
 struct HcommRoceChannelRes {
@@ -134,6 +135,7 @@ struct HcommChannelRes {
     void* channelDataSizeListAddr;   // device 上 listNum 个 u32，每项为对应 channel 序列化字节数
     void* channelTypeListAddr;       // device 上 listNum 个 u32，每项为 hcomm::HcommChannelKind 数值（见 channel.h）
     HcommDeviceInfo deviceInfo;
+    void* ctxList{nullptr};          // device侧ctx指针数组，非null时kernel写ctx->deviceChannel
 };
 
 #endif

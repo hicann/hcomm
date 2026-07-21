@@ -10,6 +10,8 @@
 
 该接口为创建通信通道的资源管理接口，基于已创建的网络端点（Endpoint），根据给定的通道描述信息批量创建通信通道，为点对点通信或集合通信提供数据传输的基础设施。
 
+该接口执行后仅完成通道对象的创建，**不会立即建立链路连接**。调用者需在后续通过[HcommChannelGetStatus](HcommChannelGetStatus.md)接口推动建链状态机，直至通道状态变为就绪后方可进行通信操作。
+
 ## 函数原型
 
 ```c
@@ -53,7 +55,6 @@ HcommResult：接口成功返回0，其他失败。
   - COMM_ENGINE_AIV
     - COMM_PROTOCOL_UBC_CTP
     - COMM_PROTOCOL_UBC_TP
-    - COMM_PROTOCOL_UB_MEM
     - COMM_PROTOCOL_ROCE
   - COMM_ENGINE_CCU
     - COMM_PROTOCOL_UBC_CTP

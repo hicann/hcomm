@@ -33,7 +33,10 @@ public:
     HcclResult Resume() override;
     HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
     HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
     HcclResult BuildChannelEntityToDevice(void **devChannelPtr);
+    HcclResult PreAllocChannelEntityToDevice(void **devChannelPtr);
+    HcclResult FillChannelEntityToDevice();
 
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override;

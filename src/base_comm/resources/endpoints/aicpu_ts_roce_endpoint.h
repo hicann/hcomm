@@ -66,6 +66,9 @@ public:
 
     HcclNetDev GetNetDev() const { return netDev_; }
 
+    HcclResult GetSocket(uint32_t port, const std::string &tag,
+ 	    std::shared_ptr<hccl::HcclSocket> &outConnected);
+    
     HcclResult AcceptDataSocket(uint32_t port, const std::string &tag,
         std::shared_ptr<hccl::HcclSocket> &outConnected, uint32_t acceptTimeoutMs = 0);
 

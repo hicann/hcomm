@@ -25,8 +25,7 @@ namespace hcomm {
 class CcuUrmaChannel : public Channel {
 public:
     // 当前仅支持交换hccl buffer
-    CcuUrmaChannel(const EndpointHandle locEndpointHandle,
-        const HcommChannelDesc &channelDesc);
+    CcuUrmaChannel(const EndpointHandle locEndpointHandle, const HcommChannelDesc &channelDesc);
     ~CcuUrmaChannel() override = default;
 
     HcclResult Init() override;
@@ -56,11 +55,16 @@ public:
     HcclResult GetRmtCkeByIndex(const uint32_t index, uint32_t &rmtCkeId) const;
     HcclResult GetRmtXnByIndex(const uint32_t index, uint32_t &rmtXnId) const;
 
-    HcclResult GetRmtBuffer(uint64_t &addr, uint32_t &size,
-        uint32_t &tokenId, uint32_t &tokenValue) const;
-    
-    EndpointHandle GetlocEndPointHandle() { return locEndpointHandle_; }
-    HcommChannelDesc GetChannelDesc() { return channelDesc_; }
+    HcclResult GetRmtBuffer(uint64_t &addr, uint32_t &size, uint32_t &tokenId, uint32_t &tokenValue) const;
+
+    EndpointHandle GetlocEndPointHandle()
+    {
+        return locEndpointHandle_;
+    }
+    const HcommChannelDesc &GetChannelDesc() const override
+    {
+        return channelDesc_;
+    }
 
 private:
     std::atomic<bool> isFirstPrintChannelInfo_{true}; // 是否第一次打印通道建链信息，避免重复打印日志刷屏
@@ -69,5 +73,5 @@ private:
     HcommChannelDesc channelDesc_{};
 };
 
-}  // namespace hcomm
-#endif  // CCU_URMA_CHANNEL_H
+} // namespace hcomm
+#endif // CCU_URMA_CHANNEL_H

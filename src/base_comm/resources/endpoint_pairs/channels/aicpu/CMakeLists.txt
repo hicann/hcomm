@@ -15,6 +15,7 @@ set(src_list
     aicpu_ts_roce_channel.cc
     aicpu_ts_hccs_channel.cc
     aicpu_ts_roce_channel_v2.cc
+    aicpu_ts_channel_helper.cc
     dev_rdma_connection_v2.cc
 )
 

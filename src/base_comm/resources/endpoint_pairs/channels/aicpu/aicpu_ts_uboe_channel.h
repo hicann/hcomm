@@ -21,6 +21,7 @@
 #include "ub_mem_transport.h"
 #include "dev_ub_connection.h"
 #include "ub_local_notify.h"
+#include "aicpu_ts_channel_helper.h"
 
 namespace hcomm {
 
@@ -43,6 +44,7 @@ public:
 
     HcclResult Clean() override;
     HcclResult Resume() override;
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
     
     HcommChannelKind GetChannelKind() const override
     {
@@ -56,6 +58,8 @@ public:
     HcclResult Write(void *dst, const void *src, uint64_t len) override;
     HcclResult Read(void *dst, const void *src, uint64_t len) override;
     HcclResult ChannelFence() override;
+
+    AicpuTsChannelHelper *GetAicpuTsHelper() override { return &aicpuTsHelper_; }
 
 private:
     MAKE_ENUM(UboeRmtBufType, NOTIFY, BUFFER)
@@ -109,6 +113,7 @@ private:
     std::vector<char> GetConnUniqueIds();
 private:
     // --------------------- 入参 ---------------------
+    AicpuTsChannelHelper                                        aicpuTsHelper_;
     EndpointHandle                                              endpointHandle_;
     HcommChannelDesc                                            channelDesc_;
 

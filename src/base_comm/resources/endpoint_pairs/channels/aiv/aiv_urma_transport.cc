@@ -87,6 +87,12 @@ std::string AivUrmaTransport::Describe() const
     return msg;
 }
 
+void AivUrmaTransport::GetEntityCountsForLayout(uint32_t &bufNum, uint32_t &connNum) const
+{
+    bufNum = static_cast<uint32_t>(commonLocRes_.bufferVec.size());
+    connNum = connNum_;
+}
+
 void AivUrmaTransport::EnsureQueueIndexDeviceMem()
 {
     if (connNum_ == 0) {

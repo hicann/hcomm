@@ -126,6 +126,13 @@ void BuildReadyTransport(AivUrmaChannel &ch, DevUbCtpConnection &conn)
         commonRes, attr, linkData, socket, reinterpret_cast<RdmaHandle>(0x1));
     ch.transport_->transportStatus_ = TransportStatus::READY;
 }
+
+static void StubHrtMemcpyReal(void *dst, uint64_t dstMax, const void *src, uint64_t count, Hccl::tagRtMemcpyKind)
+{
+    if (dst != nullptr && src != nullptr && dstMax >= count) {
+        (void)std::memcpy(dst, src, static_cast<size_t>(count));
+    }
+}
 } // namespace
 
 class AivUrmaChannelTest : public testing::Test {
@@ -933,4 +940,104 @@ TEST_F(AivUrmaTransportTest, Ut_GetHostChannelEntity_WhenReady_FillsSqAndCqConte
     EXPECT_EQ(hostChannel.cqContextAddr[0].contextInfo.ubJfc.dbVa, conn->cqInfo_.swdbAddr);
     EXPECT_NE(hostChannel.cqContextAddr[0].contextInfo.ubJfc.headAddr, 0);
     EXPECT_NE(hostChannel.cqContextAddr[0].contextInfo.ubJfc.tailAddr, 0);
+}
+
+// ===================== PreAllocChannelEntityToDevice / FillChannelEntityToDevice UT =====================
+
+// PreAllocChannelEntityToDevice: devChannelPtr 为 nullptr
+TEST_F(AivUrmaChannelTest, Ut_PreAllocChannelEntityToDevice_When_DevPtrNull_Returns_E_PTR)
+{
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, MakeDefaultDesc());
+    EXPECT_EQ(ch.PreAllocChannelEntityToDevice(nullptr), HCCL_E_PTR);
+}
+
+// PreAllocChannelEntityToDevice: transport_ 为 nullptr
+TEST_F(AivUrmaChannelTest, Ut_PreAllocChannelEntityToDevice_When_TransportNull_Returns_E_PTR)
+{
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, MakeDefaultDesc());
+    void *devChannelPtr = nullptr;
+    EXPECT_EQ(ch.PreAllocChannelEntityToDevice(&devChannelPtr), HCCL_E_PTR);
+    EXPECT_EQ(devChannelPtr, nullptr);
+}
+
+// FillChannelEntityToDevice: 未预分配（slab 为 nullptr）→ E_INTERNAL
+TEST_F(AivUrmaChannelTest, Ut_FillChannelEntityToDevice_When_NotPreAllocated_Returns_E_INTERNAL)
+{
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, MakeDefaultDesc());
+    EXPECT_EQ(ch.FillChannelEntityToDevice(), HCCL_E_INTERNAL);
+}
+
+// ===================== PreAllocChannelEntityToDevice / FillChannelEntityToDevice 正常路径 UT =====================
+
+// PreAllocChannelEntityToDevice: transport ready，正常分配 slab
+TEST_F(AivUrmaChannelTest, Ut_PreAllocChannelEntityToDevice_When_TransportReady_ReturnsDevicePtr)
+{
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, MakeDefaultDesc());
+    DevUbCtpConnection conn(reinterpret_cast<RdmaHandle>(0x1), IpAddress(), IpAddress(), OpMode::OPBASE);
+    BuildReadyTransport(ch, conn);
+
+    MOCKER(aclrtMalloc)
+        .stubs()
+        .will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtFree)
+        .stubs()
+        .will(invoke(StubAclrtFree));
+
+    void *devChannelPtr = nullptr;
+    EXPECT_EQ(ch.PreAllocChannelEntityToDevice(&devChannelPtr), HCCL_SUCCESS);
+    ASSERT_NE(devChannelPtr, nullptr);
+    ASSERT_NE(ch.devChannelEntitySlab_, nullptr);
+    EXPECT_EQ(ch.devChannelEntity_, devChannelPtr);
+    EXPECT_GT(ch.devChannelEntitySlabSize_, 0);
+}
+
+// PreAllocChannelEntityToDevice: 已分配则返回缓存指针
+TEST_F(AivUrmaChannelTest, Ut_PreAllocChannelEntityToDevice_When_AlreadyBuilt_ReturnsCached)
+{
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, MakeDefaultDesc());
+    DevUbCtpConnection conn(reinterpret_cast<RdmaHandle>(0x1), IpAddress(), IpAddress(), OpMode::OPBASE);
+    BuildReadyTransport(ch, conn);
+
+    MOCKER(aclrtMalloc)
+        .stubs()
+        .will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtFree)
+        .stubs()
+        .will(invoke(StubAclrtFree));
+
+    void *firstPtr = nullptr;
+    ASSERT_EQ(ch.PreAllocChannelEntityToDevice(&firstPtr), HCCL_SUCCESS);
+    void *secondPtr = nullptr;
+    EXPECT_EQ(ch.PreAllocChannelEntityToDevice(&secondPtr), HCCL_SUCCESS);
+    EXPECT_EQ(secondPtr, firstPtr);
+}
+
+// FillChannelEntityToDevice: 先 PreAlloc 再 Fill，验证成功
+TEST_F(AivUrmaChannelTest, Ut_FillChannelEntityToDevice_When_PreAllocated_ReturnsSuccess)
+{
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, MakeDefaultDesc());
+    DevUbCtpConnection conn(reinterpret_cast<RdmaHandle>(0x1), IpAddress(), IpAddress(), OpMode::OPBASE);
+    BuildReadyTransport(ch, conn);
+
+    MOCKER(aclrtMalloc)
+        .stubs()
+        .will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtFree)
+        .stubs()
+        .will(invoke(StubAclrtFree));
+    using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
+    MOCKER((Hccl::HrtMemcpy))
+        .stubs()
+        .will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
+
+    void *devChannelPtr = nullptr;
+    ASSERT_EQ(ch.PreAllocChannelEntityToDevice(&devChannelPtr), HCCL_SUCCESS);
+    EXPECT_EQ(ch.FillChannelEntityToDevice(), HCCL_SUCCESS);
+    ASSERT_NE(ch.devChannelEntity_, nullptr);
 }

@@ -314,6 +314,17 @@ HcclResult AicpuTsRoceEndpoint::AddListenSocketWhiteList(uint32_t port, const st
     return it->second.socket->AddWhiteList(mutableCopy);
 }
 
+HcclResult AicpuTsRoceEndpoint::GetSocket(uint32_t port, const std::string &tag,
+    std::shared_ptr<hccl::HcclSocket> &outConnected)
+{
+    EXCEPTION_CATCH((outConnected = std::make_shared<hccl::HcclSocket>(tag,
+        static_cast<HcclNetDevCtx>(netDev_), hccl::HcclIpAddress(), 0, hccl::HcclSocketRole::SOCKET_ROLE_SERVER)), return HCCL_E_PTR);
+    CHK_SMART_PTR_NULL(outConnected);
+    CHK_RET(outConnected->Init());
+    
+    return HCCL_SUCCESS;
+}
+
 HcclResult AicpuTsRoceEndpoint::AcceptDataSocket(uint32_t port, const std::string &tag,
     std::shared_ptr<hccl::HcclSocket> &outConnected, uint32_t acceptTimeoutMs)
 {

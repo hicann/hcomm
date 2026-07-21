@@ -66,15 +66,14 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGet_When_Normal_Expect_Success)
 
 TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_When_Normal_Expect_Success)
 {
+    // 假 handle 未注册到 channel map，GetChannelsInfo 找不到 channel 返回错误
     ChannelHandle channelList[2] = {
         0x12345,
         0x12346
     };
     int32_t statusList[2] = {0, 0};
     HcommResult ret = HcommChannelGetStatus(channelList, 2, statusList);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(statusList[0], 0);
-    EXPECT_EQ(statusList[1], 0);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
 }
 
 TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_When_ChannelListNull_Expect_E_PTR)
@@ -103,6 +102,225 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_When_ListNumZero_Expect_E_PARA)
     int32_t statusList[2] = {0, 0};
     HcommResult ret = HcommChannelGetStatus(channelList, 0, statusList);
     EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+// ===================== 非阻塞建链 HandleAicpuStatus/HandleAivStatus UT =====================
+
+// FakeChannel for HcommChannelGetStatus 端到端测试
+class HcommCAdptFakeChannel : public hcomm::Channel {
+public:
+    HcommCAdptFakeChannel(CommEngine eng, hcomm::ChannelStatus sta)
+    {
+        engine_ = eng;
+        channelKind_ = hcomm::HcommChannelKind::AICPU_TS_UBOE;
+        fakeStatus_ = sta;
+    }
+    ~HcommCAdptFakeChannel() = default;
+
+    hcomm::HcommChannelKind GetChannelKind() const override { return channelKind_; }
+    HcclResult Init() override { return HCCL_SUCCESS; }
+    HcclResult GetNotifyNum(uint32_t *notifyNum) const override { return HCCL_SUCCESS; }
+    HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override { return HCCL_SUCCESS; }
+    hcomm::ChannelStatus GetStatus() override { return fakeStatus_; }
+    const HcommChannelDesc& GetChannelDesc() const override { return desc_; }
+    HcclResult Clean() override { return HCCL_SUCCESS; }
+    HcclResult Resume() override { return HCCL_SUCCESS; }
+    HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override { return HCCL_SUCCESS; }
+    HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override { return HCCL_SUCCESS; }
+    HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override { return HCCL_SUCCESS; }
+    HcclResult Write(void *dst, const void *src, uint64_t len) override { return HCCL_SUCCESS; }
+    HcclResult Read(void *dst, const void *src, uint64_t len) override { return HCCL_SUCCESS; }
+    HcclResult ChannelFence() override { return HCCL_SUCCESS; }
+
+private:
+    hcomm::ChannelStatus fakeStatus_{hcomm::ChannelStatus::INIT};
+    HcommChannelDesc desc_{};
+};
+
+// 辅助：注册 channel 到全局 map
+static ChannelHandle HcommCAdptRegisterChannel(std::shared_ptr<HcommCAdptFakeChannel> &ch)
+{
+    ChannelHandle handle = reinterpret_cast<ChannelHandle>(ch.get());
+    hcomm::DeviceChannelKey key{0, handle};
+    std::lock_guard<std::mutex> lock(hcomm::ChannelProcess::g_ChannelMapMtx);
+    hcomm::ChannelProcess::g_ChannelMap.emplace(handle, ch);
+    hcomm::ChannelProcess::g_ChannelD2HMap.emplace(key, handle);
+    return handle;
+}
+
+// 辅助：清理全局 map
+static void HcommCAdptClearChannelMap()
+{
+    std::lock_guard<std::mutex> lock(hcomm::ChannelProcess::g_ChannelMapMtx);
+    hcomm::ChannelProcess::g_ChannelMap.clear();
+    hcomm::ChannelProcess::g_ChannelD2HMap.clear();
+}
+
+// HandleAicpuStatus: 未全 READY（含 CONNECTING）→ 返回 CONNECTING
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Aicpu_When_Connecting_Return_Connecting)
+{
+    auto ch = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AICPU, hcomm::ChannelStatus::INIT);
+    ChannelHandle handle = HcommCAdptRegisterChannel(ch);
+
+    int32_t statusList[1] = {0};
+    HcommResult ret = HcommChannelGetStatus(&handle, 1, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_CONNECTING);
+
+    HcommCAdptClearChannelMap();
+}
+
+// HandleAicpuStatus: 含 FAILED → FAILED 真实返回
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Aicpu_When_Failed_Return_Failed)
+{
+    auto ch = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AICPU, hcomm::ChannelStatus::FAILED);
+    ChannelHandle handle = HcommCAdptRegisterChannel(ch);
+
+    int32_t statusList[1] = {0};
+    HcommResult ret = HcommChannelGetStatus(&handle, 1, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_FAILED);
+
+    HcommCAdptClearChannelMap();
+}
+
+// HandleAicpuStatus: 含 SOCKET_TIMEOUT → TIMEOUT
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Aicpu_When_SocketTimeout_Return_Timeout)
+{
+    auto ch = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AICPU, hcomm::ChannelStatus::SOCKET_TIMEOUT);
+    ChannelHandle handle = HcommCAdptRegisterChannel(ch);
+
+    int32_t statusList[1] = {0};
+    HcommResult ret = HcommChannelGetStatus(&handle, 1, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_TIMEOUT);
+
+    HcommCAdptClearChannelMap();
+}
+
+// HandleAicpuStatus: 混合状态（READY+FAILED）→ 未全 READY，FAILED 真实返回，READY 报 CONNECTING
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Aicpu_When_MixedReadyFailed_Return_FailedAndConnecting)
+{
+    auto ch1 = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AICPU, hcomm::ChannelStatus::READY);
+    auto ch2 = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AICPU, hcomm::ChannelStatus::FAILED);
+    ChannelHandle handles[2] = {
+        HcommCAdptRegisterChannel(ch1),
+        HcommCAdptRegisterChannel(ch2)
+    };
+
+    int32_t statusList[2] = {0, 0};
+    HcommResult ret = HcommChannelGetStatus(handles, 2, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_CONNECTING);
+    EXPECT_EQ(statusList[1], hcomm::HCOMM_CHANNEL_STATUS_FAILED);
+
+    HcommCAdptClearChannelMap();
+}
+
+// HandleAivStatus: 未全 READY（含 CONNECTING）→ 返回 CONNECTING
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Aiv_When_Connecting_Return_Connecting)
+{
+    auto ch = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AIV, hcomm::ChannelStatus::INIT);
+    ChannelHandle handle = HcommCAdptRegisterChannel(ch);
+
+    int32_t statusList[1] = {0};
+    HcommResult ret = HcommChannelGetStatus(&handle, 1, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_CONNECTING);
+
+    HcommCAdptClearChannelMap();
+}
+
+// HandleAivStatus: 含 FAILED → FAILED 真实返回
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Aiv_When_Failed_Return_Failed)
+{
+    auto ch = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AIV, hcomm::ChannelStatus::FAILED);
+    ChannelHandle handle = HcommCAdptRegisterChannel(ch);
+
+    int32_t statusList[1] = {0};
+    HcommResult ret = HcommChannelGetStatus(&handle, 1, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_FAILED);
+
+    HcommCAdptClearChannelMap();
+}
+
+// 非 AICPU/AIV engine（如 CPU）→ 走通用 CopyLinkStatusToOutput
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Cpu_When_Connecting_Return_Connecting)
+{
+    auto ch = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_CPU, hcomm::ChannelStatus::INIT);
+    ChannelHandle handle = HcommCAdptRegisterChannel(ch);
+
+    int32_t statusList[1] = {0};
+    HcommResult ret = HcommChannelGetStatus(&handle, 1, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_CONNECTING);
+
+    HcommCAdptClearChannelMap();
+}
+
+// GetChannelsInfo 失败（channel not found）→ HcommChannelGetStatus 返回 E_INTERNAL
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_When_ChannelNotFound_Return_E_INTERNAL)
+{
+    ChannelHandle handle = static_cast<ChannelHandle>(0x8888);
+    int32_t statusList[1] = {0};
+    HcommResult ret = HcommChannelGetStatus(&handle, 1, statusList);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+
+    HcommCAdptClearChannelMap();
+}
+
+// HandleAivStatus: 全 READY + 已 deviceEntityReady → FillAivDevEntities 跳过 → 返回 READY
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Aiv_When_AllReady_Return_Ready)
+{
+    auto ch = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AIV, hcomm::ChannelStatus::READY);
+    ch->SetDeviceEntityReady();
+    ChannelHandle handle = HcommCAdptRegisterChannel(ch);
+
+    int32_t statusList[1] = {0};
+    HcommResult ret = HcommChannelGetStatus(&handle, 1, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_READY);
+
+    HcommCAdptClearChannelMap();
+}
+
+// HandleAicpuStatus: 全 READY + 已 deviceEntityReady → LaunchAicpuKernel 跳过 → 返回 READY
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Aicpu_When_AllReady_Return_Ready)
+{
+    auto ch = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AICPU, hcomm::ChannelStatus::READY);
+    ch->SetDeviceEntityReady();
+    ChannelHandle handle = HcommCAdptRegisterChannel(ch);
+
+    int32_t statusList[1] = {0};
+    HcommResult ret = HcommChannelGetStatus(&handle, 1, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_READY);
+
+    HcommCAdptClearChannelMap();
+}
+
+// 混合 engine：AICPU + AIV 同时传入，各自独立处理 → 各自返回对应状态
+TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_MixedEngine_When_MixedStatus_Return_EachStatus)
+{
+    auto chAicpuReady = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AICPU, hcomm::ChannelStatus::READY);
+    chAicpuReady->SetDeviceEntityReady();
+    auto chAivConnecting = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AIV, hcomm::ChannelStatus::INIT);
+    auto chCpuFailed = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_CPU, hcomm::ChannelStatus::FAILED);
+    ChannelHandle handles[3] = {
+        HcommCAdptRegisterChannel(chAicpuReady),
+        HcommCAdptRegisterChannel(chAivConnecting),
+        HcommCAdptRegisterChannel(chCpuFailed),
+    };
+
+    int32_t statusList[3] = {0, 0, 0};
+    HcommResult ret = HcommChannelGetStatus(handles, 3, statusList);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_READY);       // AICPU: READY
+    EXPECT_EQ(statusList[1], hcomm::HCOMM_CHANNEL_STATUS_CONNECTING);  // AIV: INIT → CONNECTING
+    EXPECT_EQ(statusList[2], hcomm::HCOMM_CHANNEL_STATUS_FAILED);      // CPU: FAILED
+
+    HcommCAdptClearChannelMap();
 }
 
 TEST_F(HcommCAdptTest, ut_HcommChannelGetNotifyNum_When_Normal_Expect_Success)
@@ -216,12 +434,6 @@ TEST_F(HcommCAdptTest, ut_HcommChannelCreate_When_NotAiCpu_Expect_Success)
     MOCKER(ChannelProcess::CreateChannelsLoop)
         .stubs()
         .will(returnValue(HCCL_SUCCESS));
-    MOCKER(ChannelProcess::ConnectChannels)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER(ChannelProcess::SaveChannels)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommChannelCreate(endpointHandle, COMM_ENGINE_CPU, &channelDesc, 1, channels);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -284,8 +496,10 @@ TEST_F(HcommCAdptTest, ut_HcommChannelDescInit_When_Normal_Expect_Version2AndFul
     EXPECT_GE(sizeof(HcommChannelDesc), HCOMM_CHANNEL_DESC_ABI_V1_SIZE + sizeof(uint32_t));
 }
 
-TEST_F(HcommCAdptTest, ut_HcommChannelCreate_AICPU_Expect_LoadKernel)
+TEST_F(HcommCAdptTest, ut_HcommChannelCreate_AICPU_When_CreateLoopMocked_PreAllocFail_Return_Error)
 {
+    // CreateChannelsLoop 被 mock 返回 SUCCESS 但未填充 targetChannels，
+    // PreAllocAicpuChannels 拿到空指针 channel 返回 E_PTR
     EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
@@ -293,14 +507,8 @@ TEST_F(HcommCAdptTest, ut_HcommChannelCreate_AICPU_Expect_LoadKernel)
     MOCKER(ChannelProcess::CreateChannelsLoop)
         .stubs()
         .will(returnValue(HCCL_SUCCESS));
-    MOCKER(ChannelProcess::ConnectChannels)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER(ChannelProcess::SaveChannels)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommChannelCreate(endpointHandle, COMM_ENGINE_AICPU, &channelDesc, 1, channels);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CPU_Expect_Success)

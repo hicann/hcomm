@@ -503,6 +503,84 @@ HcclResult AivUrmaChannel::BuildChannelEntityToDevice(void **devChannelPtr)
     return HCCL_SUCCESS;
 }
 
+HcclResult AivUrmaChannel::PreAllocChannelEntityToDevice(void **devChannelPtr)
+{
+    if (devChannelPtr == nullptr) {
+        HCCL_ERROR("[AivUrmaChannel::%s] devChannelPtr is nullptr", __func__);
+        return HCCL_E_PTR;
+    }
+    CHK_PTR_NULL(transport_.get());
+
+    if (devChannelEntitySlab_ != nullptr) {
+        *devChannelPtr = devChannelEntity_;
+        HCCL_INFO("[AivUrmaChannel::%s] already built, return cached devPtr[%p]", __func__, devChannelEntity_);
+        return HCCL_SUCCESS;
+    }
+
+    uint32_t bufNum = 0;
+    uint32_t connNum = 0;
+    transport_->GetEntityCountsForLayout(bufNum, connNum);
+
+    ChannelEntity tmp{};
+    tmp.localBufferNum = bufNum;
+    tmp.remoteBufferNum = bufNum;
+    tmp.sqNum = connNum;
+    tmp.cqNum = connNum;
+
+    DeviceChannelEntityLayout layout;
+    CHK_RET(BuildDeviceChannelEntityLayout(tmp, layout));
+
+    void *slabPtr = nullptr;
+    AclDeviceSlabGuard slabGuard;
+    CHK_RET(AllocDeviceEntitySlab(layout.slabSize, slabGuard, slabPtr));
+
+    uint32_t queueNum = std::max(tmp.sqNum, tmp.cqNum);
+    CHK_RET(InitQueueIndexSections(slabPtr, layout, queueNum));
+
+    devChannelEntitySlab_ = slabGuard.Release();
+    devChannelEntitySlabSize_ = layout.slabSize;
+    devChannelEntity_ = GetSlabPtr(devChannelEntitySlab_, layout.entitySection);
+    SetQueueIndexDeviceMem(*transport_, devChannelEntitySlab_, layout, queueNum);
+    *devChannelPtr = devChannelEntity_;
+
+    HCCL_INFO("[AivUrmaChannel::%s] pre-alloc success, devPtr[%p], slabPtr[%p], slabSize[%zu]",
+        __func__, devChannelEntity_, devChannelEntitySlab_, devChannelEntitySlabSize_);
+    return HCCL_SUCCESS;
+}
+
+HcclResult AivUrmaChannel::FillChannelEntityToDevice()
+{
+    if (devChannelEntitySlab_ == nullptr) {
+        HCCL_ERROR("[AivUrmaChannel::%s] devChannelEntitySlab_ is nullptr, not pre-allocated.", __func__);
+        return HCCL_E_INTERNAL;
+    }
+    CHK_PTR_NULL(transport_.get());
+
+    ChannelEntity hostChannel;
+    CHK_RET(SecureMemset(&hostChannel, sizeof(ChannelEntity), 0, sizeof(ChannelEntity), "hostChannel"));
+    transport_->GetHostChannelEntity(&hostChannel);
+    hostChannel.abiHeader = channelDesc_.header;
+    hostChannel.engine = COMM_ENGINE_AIV;
+    hostChannel.protocol = channelDesc_.remoteEndpoint.protocol;
+
+    DeviceChannelEntityLayout layout;
+    CHK_RET(BuildDeviceChannelEntityLayout(hostChannel, layout));
+    if (layout.slabSize > devChannelEntitySlabSize_) {
+        HCCL_ERROR("[AivUrmaChannel::%s] slabSize[%zu] > preAllocSize[%zu]",
+            __func__, layout.slabSize, devChannelEntitySlabSize_);
+        return HCCL_E_INTERNAL;
+    }
+
+    ChannelEntity devChannel;
+    CHK_RET(CopyChannelEntityToSlab(devChannelEntitySlab_, hostChannel, layout, devChannel));
+    void *entityDevPtr = nullptr;
+    CHK_RET(CopyChannelEntityHeaderToSlab(devChannelEntitySlab_, layout, devChannel, entityDevPtr));
+
+    devChannelEntity_ = entityDevPtr;
+    HCCL_INFO("[AivUrmaChannel::%s] fill success, devPtr[%p]", __func__, devChannelEntity_);
+    return HCCL_SUCCESS;
+}
+
 HcclResult AivUrmaChannel::GetNotifyNum(uint32_t *notifyNum) const
 {
     HCCL_INFO("AivUrmaChannel GetNotifyNum is not supported.");

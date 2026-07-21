@@ -43,6 +43,7 @@ public:
     ChannelStatus GetStatus() override;
     HcclResult GetStatus(ChannelStatus &status);
     HcclResult ProcessStatus();
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
     std::string Describe() const;
 

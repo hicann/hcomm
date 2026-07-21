@@ -16,6 +16,7 @@
 #include "hccl_res.h"
 #include "hccl_socket.h"
 #include "channel.h"
+#include "aicpu_ts_channel_helper.h"
 #include "channel_param.h"
 #include "buffer.h"
 #include "hccl_dispatcher_ctx.h"
@@ -43,6 +44,7 @@ public:
     std::shared_ptr<hccl::Transport> GetTransport() {return transport_;}
     HcclResult Clean() override;
     HcclResult Resume() override;
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
     // for launch channel kernel data
     HcclResult Serialize(std::shared_ptr<hccl::DeviceMem> &out) override;
@@ -56,7 +58,10 @@ public:
     HcclResult Read(void *dst, const void *src, uint64_t len) override;
     HcclResult ChannelFence() override;
 
+    AicpuTsChannelHelper *GetAicpuTsHelper() override { return &aicpuTsHelper_; }
+
 private:
+    AicpuTsChannelHelper aicpuTsHelper_;
     HcclResult ParseInputParam();
     HcclResult EnableP2P();
     void DisableP2P();

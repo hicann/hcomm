@@ -11,6 +11,7 @@
 #define AICPU_TS_ROCE_CHANNEL_V2_H
 
 #include "../channel.h"
+#include "aicpu_ts_channel_helper.h"
 #include "enum_factory.h"
 #include "hccl_common.h"
 #include "../../sockets/socket_mgr.h"
@@ -50,6 +51,7 @@ public:
     HcclResult GetStatus(ChannelStatus &status);
     HcclResult ProcessStatus();
     HcommChannelKind GetChannelKind() const override;
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
     std::string Describe() const;
 
@@ -61,6 +63,8 @@ public:
     }
 
     HcclResult BuildAndGetDevChannelEntity(uint64_t* devChannelEntityPtr);
+    HcclResult PreAllocDevChannelEntity(uint64_t* devChannelEntityPtr);
+    HcclResult FillDevChannelEntity();
 
     HcclResult H2DResPack(std::vector<char>& buffer);
 
@@ -76,7 +80,10 @@ public:
     HcclResult Read(void *dst, const void *src, uint64_t len) override { return HCCL_SUCCESS; }
     HcclResult ChannelFence() override { return HCCL_SUCCESS; }
 
+    AicpuTsChannelHelper *GetAicpuTsHelper() override { return &aicpuTsHelper_; }
+
 private:
+    AicpuTsChannelHelper aicpuTsHelper_;
     HcclResult ParseInputParam();
     HcclResult BuildConnection();
     HcclResult BuildNotify();
@@ -104,6 +111,9 @@ private:
     HcclResult BuildAndGetLocBufInfo(std::vector<RegedBufferEntity>& bufList, RegedBufferEntity** bufferEntityPtr);
     HcclResult BuildAndGetSqContext(std::vector<SqContext>& sqList, SqContext** sqContextPtr);
     HcclResult BuildAndGetCqContext(std::vector<CqContext>& cqList, CqContext** cqContextPtr);
+    HcclResult BuildHostEntity(ChannelEntity &hostEntity,
+        std::vector<RegedBufferEntity> &locBufList, std::vector<RegedBufferEntity> &rmtBufList,
+        std::vector<SqContext> &sqList, std::vector<CqContext> &cqList);
 
     void FreeDeviceMemories();
     void ReleaseDeviceEntitySlab();

@@ -12,6 +12,7 @@
 #include "dev_aicpu_ts_channel_mgr.h"
 #include "aicpu_res_package_helper.h"
 #include "../channel.h"
+#include "aicpu_ts_channel_helper.h"
 
 #include "adapter_rts_common.h"
 #include "exception_handler.h"
@@ -78,8 +79,17 @@ HcclResult AicpuChannelProcess::InitUrmaChannel(HcclChannelUrmaRes *commParam)
         ChannelHandle channelHandle;
         CHK_RET(ParsePackData(dataVec[resType].data, channelHandle));
 
-        ChannelHandle* channelList = reinterpret_cast<ChannelHandle*>(commParam->channelList);
-        channelList[index] = channelHandle;
+        if (commParam->ctxList != nullptr) {
+            // ctx模式：device侧填充abiHeader + deviceChannel
+            auto **ctxList = reinterpret_cast<HcommAicpuChannelCtx**>(commParam->ctxList);
+            ctxList[index]->abiHeader.version = HCOMM_AICPU_CHANNEL_CTX_VERSION;
+            ctxList[index]->abiHeader.magicWord = HCOMM_AICPU_CHANNEL_CTX_MAGIC_WORD;
+            ctxList[index]->abiHeader.size = sizeof(HcommAicpuChannelCtx);
+            ctxList[index]->deviceChannel = reinterpret_cast<void*>(channelHandle);
+        } else {
+            ChannelHandle* channelList = reinterpret_cast<ChannelHandle*>(commParam->channelList);
+            channelList[index] = channelHandle;
+        }
         HCCL_INFO("[HcclCommAicpu][%s] index[%u], currentSrcAddr[%p], channelSizeAddr[%p], channelHandle[0x%llx]",
             __func__, index, currentSrcAddr, commParam->channelSizeAddr, channelHandle);
     }
@@ -121,6 +131,39 @@ void RollbackDestroy(DevAicpuTsChannelMgr &mgr, const std::vector<ChannelHandle>
     }
 }
 
+HcclResult CreateSingleHcommChannel(DevAicpuTsChannelMgr &mgr, void *dp, u64 sz,
+    const HcommDeviceInfo &deviceInfo, hcomm::HcommChannelKind kind,
+    HcommChannelRes *commParam, u32 index, ChannelHandle *channelList,
+    std::vector<ChannelHandle> &rollback)
+{
+    DevAicpuTsChannel *channel = mgr.GetOrCreateAicpuTsChannel(kind);
+    if (channel == nullptr) {
+        HCCL_ERROR("[AicpuChannelProcess][%s] index[%u] unsupported kind[%u]", __func__, index,
+            static_cast<uint32_t>(kind));
+        RollbackDestroy(mgr, rollback);
+        return HCCL_E_NOT_SUPPORT;
+    }
+    CHK_PTR_NULL(dp);
+    ChannelHandle h{};
+    HcclResult pret = channel->Create(dp, sz, deviceInfo, h);
+    if (pret != HCCL_SUCCESS) {
+        HCCL_ERROR("[AicpuChannelProcess][%s] parse fail at index[%u]", __func__, index);
+        RollbackDestroy(mgr, rollback);
+        return pret;
+    }
+    if (commParam->ctxList != nullptr) {
+        auto **ctxList = reinterpret_cast<HcommAicpuChannelCtx**>(commParam->ctxList);
+        ctxList[index]->abiHeader.version = HCOMM_AICPU_CHANNEL_CTX_VERSION;
+        ctxList[index]->abiHeader.magicWord = HCOMM_AICPU_CHANNEL_CTX_MAGIC_WORD;
+        ctxList[index]->abiHeader.size = sizeof(HcommAicpuChannelCtx);
+        ctxList[index]->deviceChannel = reinterpret_cast<void*>(h);
+    } else {
+        channelList[index] = h;
+    }
+    rollback.push_back(h);
+    return HCCL_SUCCESS;
+}
+
 } // namespace
 
 HcclResult AicpuChannelProcess::InitHcommChannelRes(HcommChannelRes *commParam)
@@ -150,26 +193,10 @@ HcclResult AicpuChannelProcess::InitHcommChannelRes(HcommChannelRes *commParam)
     std::lock_guard<std::mutex> addLock(mutex_);
     for (u32 index = 0; index < commParam->listNum; ++index) {
         hcomm::HcommChannelKind kind = static_cast<hcomm::HcommChannelKind>(typeList[index]);
-        DevAicpuTsChannel *channel = mgr.GetOrCreateAicpuTsChannel(kind);
-        if (channel == nullptr) {
-            HCCL_ERROR("[AicpuChannelProcess][%s] index[%u] unsupported kind[%u]", __func__, index,
-                static_cast<uint32_t>(kind));
-            RollbackDestroy(mgr, rollback);
-            return HCCL_E_NOT_SUPPORT;
-        }
-        void *dp = dataList[index];
-        CHK_PTR_NULL(dp);
-        const u64 sz = sizeList[index];
-        ChannelHandle h{};
-        HcclResult pret = channel->Create(dp, sz, commParam->deviceInfo, h);
-        if (pret != HCCL_SUCCESS) {
-            HCCL_ERROR("[AicpuChannelProcess][InitHcommChannelRes] parse fail at index[%u]", index);
-            RollbackDestroy(mgr, rollback);
-            return pret;
-        }
-        channelList[index] = h;
-        rollback.push_back(h);
-        HCCL_INFO("[AicpuChannelProcess][%s] index[%u] channelHandle[0x%llx]", __func__, index, h);
+        CHK_RET(CreateSingleHcommChannel(mgr, dataList[index], sizeList[index],
+            commParam->deviceInfo, kind, commParam, index, channelList, rollback));
+        HCCL_INFO("[AicpuChannelProcess][%s] index[%u] channelHandle[0x%llx]", __func__, index,
+            commParam->ctxList != nullptr ? 0 : channelList[index]);
     }
 
     HCCL_INFO("[AicpuChannelProcess][%s] aicpu_task End.", __func__);

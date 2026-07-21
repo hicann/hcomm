@@ -312,7 +312,7 @@ TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenInited_Returns_READY) {
     HcommChannelDesc desc{};
     AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
     ch.inited_ = true;
-    EXPECT_EQ(ch.GetStatus(), ChannelStatus::READY);
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::INIT);
 }
 
 TEST_F(AicpuTsRoceChannelTest, Ut_ParseInputParam_WhenClientRole_Returns_SUCCESS) {
@@ -554,7 +554,7 @@ TEST_F(AicpuTsRoceChannelTest, Ut_Init_WhenBuildDataSocketFails_Returns_Error) {
     EXPECT_EQ(ch.Init(), HCCL_E_NOT_FOUND);
 }
 
-TEST_F(AicpuTsRoceChannelTest, Ut_Init_WhenBuildDispatcherFails_Returns_Error) {
+TEST_F(AicpuTsRoceChannelTest, Ut_Init_WhenBuildDispatcherFails_Returns_Success) {
     EndpointDesc local{};
     local.protocol = COMM_PROTOCOL_ROCE;
     local.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
@@ -569,7 +569,7 @@ TEST_F(AicpuTsRoceChannelTest, Ut_Init_WhenBuildDispatcherFails_Returns_Error) {
     AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(&stub), desc);
     MOCKER_CPP(&AicpuTsRoceChannel::BuildDataSocket).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&AicpuTsRoceChannel::BuildDispatcherAndTransport).stubs().will(returnValue(HCCL_E_INTERNAL));
-    EXPECT_EQ(ch.Init(), HCCL_E_INTERNAL);
+    EXPECT_EQ(ch.Init(), HCCL_SUCCESS);
 }
 
 TEST_F(AicpuTsRoceChannelTest, Ut_Serialize_WhenInitedAndDepsStubbed_Returns_SUCCESS) {
@@ -601,4 +601,114 @@ TEST_F(AicpuTsRoceChannelTest, Ut_Serialize_WhenInitedAndDepsStubbed_Returns_SUC
     std::shared_ptr<hccl::DeviceMem> out;
     ASSERT_EQ(ch.Serialize(out), HCCL_SUCCESS);
     ASSERT_NE(out.get(), nullptr);
+}
+
+// GetStatus() 测试用例
+TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenRoceStatusInit_Returns_Init) {
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.roceStatus_ = AicpuTsRoceChannel::RoceStatus::INIT;
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::INIT);
+}
+
+TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenSocketConnectingAndSocketOk_TransitionsToReady) {
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.roceStatus_ = AicpuTsRoceChannel::RoceStatus::SOCKET_CONNECTING;
+    ch.dataSocket_ = std::shared_ptr<hccl::HcclSocket>(
+        reinterpret_cast<hccl::HcclSocket*>(0x1), [](hccl::HcclSocket *) {});
+
+    // Mock dataSocket_->GetStatus() to return SOCKET_OK
+    MOCKER_CPP(&hccl::HcclSocket::GetStatus).stubs().will(returnValue(hccl::HcclSocketStatus::SOCKET_OK));
+    // Mock BuildDispatcherAndTransport to return success
+    MOCKER_CPP(&AicpuTsRoceChannel::BuildDispatcherAndTransport).stubs().will(returnValue(HCCL_SUCCESS));
+
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::READY);
+    EXPECT_EQ(ch.roceStatus_, AicpuTsRoceChannel::RoceStatus::READY);
+}
+
+TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenSocketConnectingAndSocketTimeout_Returns_SocketTimeout) {
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.roceStatus_ = AicpuTsRoceChannel::RoceStatus::SOCKET_CONNECTING;
+    ch.dataSocket_ = std::shared_ptr<hccl::HcclSocket>(
+        reinterpret_cast<hccl::HcclSocket*>(0x1), [](hccl::HcclSocket *) {});
+
+    MOCKER_CPP(&hccl::HcclSocket::GetStatus).stubs().will(returnValue(hccl::HcclSocketStatus::SOCKET_TIMEOUT));
+    MOCKER_CPP(&hccl::HcclSocket::Close).stubs();
+
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::SOCKET_TIMEOUT);
+    EXPECT_EQ(ch.roceStatus_, AicpuTsRoceChannel::RoceStatus::FAILED);
+}
+
+TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenSocketConnectingAndSocketError_Returns_Failed) {
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.roceStatus_ = AicpuTsRoceChannel::RoceStatus::SOCKET_CONNECTING;
+    ch.dataSocket_ = std::shared_ptr<hccl::HcclSocket>(
+        reinterpret_cast<hccl::HcclSocket*>(0x1), [](hccl::HcclSocket *) {});
+
+    MOCKER_CPP(&hccl::HcclSocket::GetStatus).stubs().will(returnValue(hccl::HcclSocketStatus::SOCKET_ERROR));
+    MOCKER_CPP(&hccl::HcclSocket::Close).stubs();
+
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::FAILED);
+    EXPECT_EQ(ch.roceStatus_, AicpuTsRoceChannel::RoceStatus::FAILED);
+}
+
+TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenSocketConnectingAndOtherStatus_Returns_Init) {
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.roceStatus_ = AicpuTsRoceChannel::RoceStatus::SOCKET_CONNECTING;
+    ch.dataSocket_ = std::shared_ptr<hccl::HcclSocket>(
+        reinterpret_cast<hccl::HcclSocket*>(0x1), [](hccl::HcclSocket *) {});
+
+    MOCKER_CPP(&hccl::HcclSocket::GetStatus).stubs().will(returnValue(hccl::HcclSocketStatus::SOCKET_CONNECTING));
+
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::INIT);
+    EXPECT_EQ(ch.roceStatus_, AicpuTsRoceChannel::RoceStatus::SOCKET_CONNECTING);
+}
+
+TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenSocketOkAndBuildSuccess_Returns_Ready) {
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.roceStatus_ = AicpuTsRoceChannel::RoceStatus::SOCKET_OK;
+
+    MOCKER_CPP(&AicpuTsRoceChannel::BuildDispatcherAndTransport).stubs().will(returnValue(HCCL_SUCCESS));
+
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::READY);
+    EXPECT_EQ(ch.roceStatus_, AicpuTsRoceChannel::RoceStatus::READY);
+}
+
+TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenSocketOkAndBuildFailed_Returns_Failed) {
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.roceStatus_ = AicpuTsRoceChannel::RoceStatus::SOCKET_OK;
+    ch.dataSocket_ = std::shared_ptr<hccl::HcclSocket>(
+        reinterpret_cast<hccl::HcclSocket*>(0x1), [](hccl::HcclSocket *) {});
+
+    MOCKER_CPP(&AicpuTsRoceChannel::BuildDispatcherAndTransport).stubs().will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&hccl::HcclSocket::Close).stubs();
+
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::FAILED);
+    EXPECT_EQ(ch.roceStatus_, AicpuTsRoceChannel::RoceStatus::FAILED);
+}
+
+TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenRoceStatusReady_Returns_Ready) {
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.roceStatus_ = AicpuTsRoceChannel::RoceStatus::READY;
+
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::READY);
+}
+
+TEST_F(AicpuTsRoceChannelTest, Ut_GetStatus_WhenRoceStatusFailed_Returns_Failed) {
+    HcommChannelDesc desc{};
+    AicpuTsRoceChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+    ch.roceStatus_ = AicpuTsRoceChannel::RoceStatus::FAILED;
+    ch.dataSocket_ = std::shared_ptr<hccl::HcclSocket>(
+        reinterpret_cast<hccl::HcclSocket*>(0x1), [](hccl::HcclSocket *) {});
+
+    MOCKER_CPP(&hccl::HcclSocket::Close).stubs();
+
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::FAILED);
 }

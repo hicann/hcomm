@@ -244,6 +244,11 @@ public:
     {
         return ChannelStatus::INIT;
     }
+    const HcommChannelDesc& GetChannelDesc() const override
+    {
+        static HcommChannelDesc defaultDesc{};
+        return defaultDesc;
+    }
     HcclResult Clean() override
     {
         return HCCL_SUCCESS;

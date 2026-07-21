@@ -162,7 +162,6 @@ public:
         MOCKER_CPP(&MemNameRepository::OpenIpcMem).stubs().will(returnValue(HCCL_SUCCESS));
         MOCKER_CPP(&MemNameRepository::CloseIpcMem).stubs().will(returnValue(HCCL_SUCCESS));
 
-        MOCKER_CPP(&ChannelProcess::ConnectChannels).stubs().will(returnValue(HCCL_SUCCESS));
         MOCKER_CPP(&hccl::AicpuAclKernelLaunch).stubs().will(invoke(StubAicpuAclKernelLaunch));
         socket_data_len = 0;
     }

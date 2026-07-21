@@ -40,6 +40,8 @@
 #include "exception_handler.h"
 #include "param_check_pub.h"
 #include "channel_process.h"
+#include "aicpu_ts_channel_helper.h"
+#include "aiv_channel_helper.h"
 #include "launch_device.h"
 #include "endpoint_monitor.h"
 #include "adapter_rts_common.h"
@@ -47,14 +49,13 @@
 
 namespace hcomm {
 static std::unordered_map<ThreadHandle, std::shared_ptr<hccl::Thread>> g_ThreadMap;
-static aclrtBinHandle g_BinHandle;
-static std::mutex g_BinHandleMtx;
 }  // namespace hcomm
 
 using namespace hcomm;
 static HcommEndpointMap g_EndpointMap;
 
 namespace {
+
 HcclResult RefreshCurrentDeviceContext()
 {
     s32 deviceLogicId = 0;
@@ -255,26 +256,6 @@ HcommResult HcommResMgrInit(uint32_t devPhyId)
         return HcclResult::HCCL_SUCCESS;
     }());
     EXCEPTION_HANDLE_END
-    return HCCL_SUCCESS;
-}
-
-static HcclResult EnsureKernelBinLoaded(CommEngine engine) {
-    if (engine != COMM_ENGINE_AICPU && engine != COMM_ENGINE_AICPU_TS) {
-        HCCL_INFO("[%s] engine[%s] kernel loading not required", __func__, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
-        return HCCL_SUCCESS;
-    }
-    std::lock_guard<std::mutex> lock(hcomm::g_BinHandleMtx);
-    if (g_BinHandle != nullptr) {
-        return HCCL_SUCCESS;
-    }
-    std::string jsonPath;
-    CHK_RET(hccl::GetKernelFilePath(jsonPath));
-    jsonPath += "ccl_kernel.json";
-
-    HcclResult ret = hccl::LoadBinaryFromFile(jsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0, g_BinHandle);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[EnsureKernelBinLoaded] load aicpu file fail, path[%s]", jsonPath.c_str()),
-                ret);
     return HCCL_SUCCESS;
 }
 
@@ -546,11 +527,8 @@ HcommResult HcommChannelCreate(EndpointHandle endpointHandle, CommEngine engine,
 
     CHK_RET(ChannelProcess::CreateChannelsLoop(endpointHandle, engine, channelDescFinals.data(), channelNum,
         targetChannels));
-    CHK_RET(ChannelProcess::ConnectChannels(targetChannels, channelNum, engine));
-    CHK_RET(EnsureKernelBinLoaded(engine));
-    // INNOTODO: 这里为什么使用的是Normalize前的channelDescs
-    CHK_RET(ChannelProcess::SaveChannels(targetChannels, channels, channelDescFinals.data(), channelNum, engine, g_BinHandle));
-
+    CHK_RET(ChannelProcess::PrepareUserChannels(targetChannels, channels, channelDescFinals.data(), channelNum, engine));
+   
     return HCCL_SUCCESS;
 }
 
@@ -560,18 +538,29 @@ HcommResult HcommChannelGet(ChannelHandle channelHandle, void **channel)
     return ChannelProcess::ChannelGet(channelHandle, channel);
 }
 
-HcommResult HcommChannelGetStatus(const ChannelHandle *channelList, uint32_t listNum,  int32_t* statusList)
+HcommResult HcommChannelGetStatus(const ChannelHandle *channelList, uint32_t listNum, int32_t* statusList)
 {
-    // 当前为非阻塞式建链，直接返回成功
-    // 参数校验
     CHK_PTR_NULL(channelList);
     CHK_PTR_NULL(statusList);
     CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]",
         __func__, listNum), HCCL_E_PARA);
     (void)HcommResMgrInit();
-    // 为每个通道设置成功状态
-    for (uint32_t i = 0; i < listNum; i++) {
-        statusList[i] = 0;
+
+
+    std::vector<CommEngine> engines;
+    std::vector<HcommChannelDesc> channelDescFinals;
+    std::vector<ChannelStatus> internalStatus(listNum);
+    HcclResult ret = ChannelProcess::GetChannelsInfo(channelList, listNum, engines, channelDescFinals, internalStatus);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] GetChannelsInfo failed, ret[%d]", __func__, ret);
+        return HCCL_E_INTERNAL;
+    }
+
+    ret = ChannelProcess::HandleStatusByEngine(channelList, listNum, engines,
+        channelDescFinals, internalStatus, statusList);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] HandleStatusByEngine failed, ret[%d]", __func__, ret);
+        return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;
 }
@@ -586,7 +575,7 @@ HcommResult HcommChannelDestroy(const ChannelHandle *channels, uint32_t channelN
 {
     CHK_PTR_NULL(channels);
     (void)HcommResMgrInit();
-    return ChannelProcess::ChannelDestroy(channels, channelNum, g_BinHandle);
+    return ChannelProcess::ChannelDestroy(channels, channelNum, AicpuTsChannelHelper::GetBinHandle());
 }
 
 HcommResult HcommChannelGetRemoteMems(ChannelHandle channelHandle, uint32_t *memNum, CommMem **remoteMem, char ***memInfos)
@@ -629,8 +618,8 @@ HcommResult HcommThreadAlloc(CommEngine engine, uint32_t threadNum, const uint32
     CHK_RET(hccl::SaveThreads(newThreads));
 
     // 5. 储存线程句柄
-    CHK_RET(EnsureKernelBinLoaded(engine));
-    CHK_RET(hccl::StoreThreadHandles(newThreads, threads, engine, g_BinHandle));
+    CHK_RET(AicpuTsChannelHelper::EnsureKernelBinLoaded(engine));
+    CHK_RET(hccl::StoreThreadHandles(newThreads, threads, engine, AicpuTsChannelHelper::GetBinHandle()));
 
     HCCL_INFO("[HcommThreadAlloc] ThreadAcquire done: engine[%s] threadNum[%u], notifyPerThread[%u]",
               GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), threadNum, notifyNum);
@@ -689,8 +678,8 @@ HcommResult HcommThreadAllocWithConfig(CommEngine engine, uint32_t threadNum,
     }
 
     CHK_RET(hccl::SaveThreads(newThreads));
-    CHK_RET(EnsureKernelBinLoaded(engine));
-    CHK_RET(hccl::StoreThreadHandles(newThreads, threads, engine, g_BinHandle));
+    CHK_RET(AicpuTsChannelHelper::EnsureKernelBinLoaded(engine));
+    CHK_RET(hccl::StoreThreadHandles(newThreads, threads, engine, AicpuTsChannelHelper::GetBinHandle()));
 
     HCCL_INFO("[%s] done: engine[%d] threadType[%d] threadNum[%u]",
         __func__, engine, static_cast<int32_t>(type), threadNum);
@@ -701,7 +690,7 @@ HcommResult HcommThreadFree(const ThreadHandle *threads, uint32_t threadNum)
 {
     CHK_PTR_NULL(threads);
     (void)HcommResMgrInit();
-    return hccl::FreeThreads(threads, threadNum, g_BinHandle);
+    return hccl::FreeThreads(threads, threadNum, AicpuTsChannelHelper::GetBinHandle());
 }
 
 HcommResult HcommThreadAllocWithStream(CommEngine engine,

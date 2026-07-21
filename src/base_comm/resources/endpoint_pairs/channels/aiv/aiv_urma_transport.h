@@ -24,6 +24,7 @@ public:
 
     TransportStatus GetStatus();
     std::string Describe() const;
+    void GetEntityCountsForLayout(uint32_t &bufNum, uint32_t &connNum) const;
     void PrepareHostChannelEntity(ChannelEntity *channelEntitiesHost);
     void SetQueueIndexDeviceMem(void *sqPiMem, void *sqCiMem, void *cqPiMem, void *cqCiMem, size_t memSize);
     void GetHostChannelEntity(ChannelEntity *channelEntitiesHost);

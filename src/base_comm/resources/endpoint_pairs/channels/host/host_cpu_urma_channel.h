@@ -36,6 +36,7 @@ public:
     HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
     HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
     ChannelStatus GetStatus() override;
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
     // 数据面接口
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;

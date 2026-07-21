@@ -11,6 +11,7 @@
 #define AICPU_TS_P2P_CHANNEL_H
 
 #include "../channel.h"
+#include "aicpu_ts_channel_helper.h"
 #include "../../sockets/socket_mgr.h"
 
 #include "../../../../../../legacy/ascend950/unified_platform/resource/socket/socket.h"
@@ -35,9 +36,9 @@ public:
     HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
     ChannelStatus GetStatus() override;
     HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum) override;
-
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
     HcclResult H2DResPack(std::vector<char>& buffer);
-
+    AicpuTsChannelHelper *GetAicpuTsHelper() override { return &aicpuTsHelper_; }
     HcclResult Clean() override;
     HcclResult Resume() override;
 
@@ -49,7 +50,10 @@ public:
     HcclResult Read(void *dst, const void *src, uint64_t len) override;
     HcclResult ChannelFence() override;
 
+
+
 private:
+    AicpuTsChannelHelper aicpuTsHelper_;
     HcclResult Makebufs(HcommMemHandle *memHandles, uint32_t memHandleNum,
         std::vector<std::shared_ptr<Hccl::Buffer>> &bufs);
     HcclResult SetModuleDataName(Hccl::ModuleData &module, const std::string &name);
