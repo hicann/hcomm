@@ -463,7 +463,7 @@ void Socket::SendAsync(const void *sendBuf, u32 size)
     sendSize = 0;
     totalSendSize = 0;
     sendLeftSize = size;
-    sendDataBuff = const_cast<void *>(sendBuf);
+    sendDataBuff = sendBuf;
 
     reqHandle = HrtRaSocketSendAsync(fdHandle, sendBuf, sendLeftSize, sendSize);
     HCCL_INFO("[Socket][%s] reqHandle[%llu] start to send size[%u], [%s].",

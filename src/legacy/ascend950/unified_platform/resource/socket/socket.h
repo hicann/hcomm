@@ -117,7 +117,7 @@ private:
 
     RequestHandle reqHandle{0};
 
-    void *sendDataBuff{nullptr};         // 发送缓冲区的起始地址，需要调用方保证内存生命周期
+    const void *sendDataBuff{nullptr};         // 发送缓冲区的起始地址，需要调用方保证内存生命周期
     unsigned long long sendSize{0};      // 调用Send接口入参，返回接口调用后实际发送的数据量
     u32                sendLeftSize{0};  // 发送缓冲区剩余待发送数据量
     u32                totalSendSize{0}; // 发送缓冲区已发送总数据量
