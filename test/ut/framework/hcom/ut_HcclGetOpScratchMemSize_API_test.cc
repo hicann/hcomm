@@ -111,7 +111,7 @@ TEST_F(GetOpScratchMemSizeTest, Ut_GetOpScratchMemSize_When_AllToAllNormal_Expec
         opMemSize, dataTypeSize, rankSize, serverNum);
     
     EXPECT_EQ(result, HCCL_SUCCESS);
-    EXPECT_EQ(opMemSize, hcomOpParam->count * dataTypeSize);
+    EXPECT_EQ(opMemSize, hcomOpParam->count * dataTypeSize * rankSize);
 }
 
 // 测试 Broadcast 小数据量（<=32MB需要额外内存）

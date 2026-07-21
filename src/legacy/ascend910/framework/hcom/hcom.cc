@@ -3424,7 +3424,7 @@ HcclResult GetOpScratchMemSize(bool isOfflineCompilation, HcclCMDType hcclOpType
         }
     } else if (hcclOpType == HCCL_CMD_ALLTOALL) {
         // AlltoAll 所需workspace memory ：input mem size
-        opMemSize += count * dataTypeSize;
+        opMemSize += (count * dataTypeSize * rankSize);
     } else if (hcclOpType == HCCL_CMD_BROADCAST) {
         if (count * dataTypeSize <= HCCL_MID_COUNT_32_MB) {
             opMemSize += count * dataTypeSize * HCCL_MEMSIZE_HD_FACTOR;
