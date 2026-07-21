@@ -114,7 +114,7 @@ prop.location.id = deviceId;
 prop.location.type = ACL_MEM_LOCATION_TYPE_DEVICE;
 prop.reserve = 0;
 
-// 获取对齐粒度，通常为2M
+// 获取对齐粒度，通常为2MB
 size_t granularity;
 ACLCHECK(aclrtMemGetAllocationGranularity(&prop, ACL_RT_MEM_ALLOC_GRANULARITY_RECOMMENDED, &granularity));
 

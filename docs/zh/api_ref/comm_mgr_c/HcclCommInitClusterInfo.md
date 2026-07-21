@@ -54,6 +54,7 @@ aclInit(NULL);
 // rank table配置文件路径
 char *rankTableFile = "/path/rank_table.json";
 // 指定集合通信操作使用的Device ID
+uint32_t devId = 0;
 aclrtSetDevice(devId);
 // 创建通信域
 HcclComm hcclComm;

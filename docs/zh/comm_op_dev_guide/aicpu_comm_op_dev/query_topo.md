@@ -107,7 +107,9 @@ HcclResult FillSimpleTopoInfo(HcclComm comm, TopoInfo &topoInfo){
        if (remoteRankId == topoInfo.rankId) {continue;}
        CommLink *linkList = nullptr;
        u32 listSize = 0;
-       ret = HcclRankGraphGetLinks(comm, netLayer, myRank, remoteRankId, &linkList, &listSize);
+       uint32_t netLayer = 0;
+       ret = HcclRankGraphGetLinks(comm, netLayer, topoInfo.rankId, remoteRankId, &linkList, &listSize);
+       // 校验ret结果
        for (uint32_t idx = 0; idx < listSize; idx++) {
            HcclChannelDesc channelDesc;
            HcclChannelDescInit(&channelDesc, 1);
