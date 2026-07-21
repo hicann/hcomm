@@ -213,7 +213,9 @@ void Mc2Compont::AllocV2()
     workspaceBuffer                    = std::make_shared<DevBuffer>(MC2_WORKSPACE_SIZE);
     comParamBuffer                     = std::make_shared<DevBuffer>(comParamBufSize);
     comSyncBuffer                      = std::make_shared<DevBuffer>(comSyncBufSize);
-
+    HrtMemset(reinterpret_cast<void*>(workspaceBuffer->GetAddr()), MC2_WORKSPACE_SIZE, MC2_WORKSPACE_SIZE);
+    HrtMemset(reinterpret_cast<void*>(comParamBuffer->GetAddr()), comParamBufSize, comParamBufSize);
+    HrtMemset(reinterpret_cast<void*>(comSyncBuffer->GetAddr()), comSyncBufSize, comSyncBufSize);
     combinOpParam.workSpace     = static_cast<uint64_t>(workspaceBuffer->GetAddr());
     combinOpParam.workSpaceSize = MC2_WORKSPACE_SIZE;
     combinOpParam.rankId        = comm->GetMyRank();
