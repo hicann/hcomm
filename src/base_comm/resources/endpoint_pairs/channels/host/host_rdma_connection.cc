@@ -106,14 +106,6 @@ HcclResult HostRdmaConnection::CreateQp()
     roceAttr_.retryCnt = qpInfo_.retryCnt;
     roceAttr_.retryInterval = qpInfo_.retryInterval;
 
-    if (qpInfo_.lbValue > 0) {
-        ret = RaSetQpLbValue(qpInfo_.qpHandle, qpInfo_.lbValue);
-        CHK_PRT_RET(ret != 0,
-            HCCL_ERROR("[HostRdmaConnection::CreateQp][SetQpLbValue]errNo[0x%016llx] RaSetQpLbValue fail. "
-            "return[%d], params: qpHandle[%p], lbValue[%u]",
-            HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, qpInfo_.qpHandle, qpInfo_.lbValue),
-            HCCL_E_NETWORK);
-    }
     ret = RaSetQpAttrQos(qpInfo_.qpHandle, &qosAttr);
     CHK_PRT_RET(ret != 0,
         HCCL_ERROR("[HostRdmaConnection::CreateQp][SetQpAttrQos]errNo[0x%016llx] RaSetQpAttrQos fail. "
@@ -251,6 +243,17 @@ HcclResult HostRdmaConnection::ModifyQp()
     if (ret != 0) {
         HCCL_ERROR("[modify][ra_qp]modify qp failed, ret(%d)", ret);
         return HCCL_E_ROCE_CONNECT;
+    }
+    // 调整setlbvalue到RTS状态后
+    if (qpInfo_.lbValue >= 0) {
+        HCCL_DEBUG("[HostRdmaConnection::ModifyQp] before RaSetQpLbValue, qp_num[%u], lbValue[%d], qpHandle[%p]",
+                    qpInfo_.qp->qp_num, qpInfo_.lbValue, qpInfo_.qpHandle);
+        ret = RaSetQpLbValue(qpInfo_.qpHandle, qpInfo_.lbValue);
+        CHK_PRT_RET(ret != 0,
+            HCCL_ERROR("[HostRdmaConnection::ModifyQp][SetQpLbValue]errNo[0x%016llx] RaSetQpLbValue fail. "
+            "return[%d], params: qpHandle[%p], lbValue[%d]",
+            HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, qpInfo_.qpHandle, qpInfo_.lbValue),
+            HCCL_E_NETWORK);
     }
     rdmaConnStatus_ = RdmaConnStatus::QP_MODIFIED;
     return HCCL_SUCCESS;

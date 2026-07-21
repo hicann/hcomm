@@ -319,3 +319,55 @@ TEST_F(HostRdmaConnectionTest, Ut_RaSetQpAttrRetryCnt_Fail)
     HcclResult ret = conn.CreateQp();
     EXPECT_EQ(ret, HCCL_E_NETWORK);
 }
+
+// 覆盖 host_rdma_connection.cc ModifyQp 中 RaSetQpLbValue 分支
+// 前置依赖：rdmaConnStatus_==QP_CREATED、rmtQpAttr_ 有效、RaGetQpAttr/RaTypicalQpModify 成功
+// 用例1: lbValue >= 0 且 RaSetQpLbValue 成功 -> ModifyQp 返回 HCCL_SUCCESS
+TEST_F(HostRdmaConnectionTest, Ut_RaSetQpLbValue_Success_When_LbValue_NonNegative)
+{
+    MOCKER(RaGetQpAttr).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(0));
+    MOCKER(RaTypicalQpModify).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(0));
+    MOCKER(RaSetQpLbValue).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(0));
+
+    RdmaHandle rdmaHandle = (void *)0x1000000;
+    hcomm::HostRdmaConnection conn(fakeSocket, rdmaHandle);
+    // 直接构造 QP_CREATED 状态，跳过 CreateQp
+    conn.rdmaConnStatus_ = hcomm::HostRdmaConnection::RdmaConnStatus::QP_CREATED;
+    // rmtQpAttr_ 必须有效：qpn/psn != UINT32_MAX
+    conn.rmtQpAttr_.qpn = 100;
+    conn.rmtQpAttr_.psn = 200;
+    // qpInfo_.qp 必须非空，避免 L247 qp_num 解引用段错误
+    struct ibv_qp fakeQp{};
+    fakeQp.qp_num = 12345;
+    conn.qpInfo_.qp = &fakeQp;
+    conn.qpInfo_.qpHandle = (void *)0x2000000;
+    conn.qpInfo_.lbValue = 5;
+
+    HcclResult ret = conn.ModifyQp();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(conn.rdmaConnStatus_, hcomm::HostRdmaConnection::RdmaConnStatus::QP_MODIFIED);
+}
+
+// 用例2: lbValue >= 0 且 RaSetQpLbValue 失败 -> ModifyQp 返回 HCCL_E_NETWORK
+TEST_F(HostRdmaConnectionTest, Ut_RaSetQpLbValue_Fail_When_LbValue_NonNegative)
+{
+    MOCKER(RaGetQpAttr).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(0));
+    MOCKER(RaTypicalQpModify).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(0));
+    MOCKER(RaSetQpLbValue).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(-1));
+
+    RdmaHandle rdmaHandle = (void *)0x1000000;
+    hcomm::HostRdmaConnection conn(fakeSocket, rdmaHandle);
+    conn.rdmaConnStatus_ = hcomm::HostRdmaConnection::RdmaConnStatus::QP_CREATED;
+    conn.rmtQpAttr_.qpn = 100;
+    conn.rmtQpAttr_.psn = 200;
+    struct ibv_qp fakeQp{};
+    fakeQp.qp_num = 12345;
+    conn.qpInfo_.qp = &fakeQp;
+    conn.qpInfo_.qpHandle = (void *)0x2000000;
+    conn.qpInfo_.lbValue = 5;
+
+    HcclResult ret = conn.ModifyQp();
+    EXPECT_EQ(ret, HCCL_E_NETWORK);
+    // 失败路径不更新状态
+    EXPECT_EQ(conn.rdmaConnStatus_, hcomm::HostRdmaConnection::RdmaConnStatus::QP_CREATED);
+}
