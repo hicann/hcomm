@@ -199,3 +199,110 @@ TEST_F(RdmaHandleManagerTest, rdma_handle_manager_is_handle_valid_after_destroy_
         mgr.rdmaHandleMap[i].resize(LINK_PROTO_TYPE_NUM);
     }
 }
+// ===================== FindCachedJfcHandle / GetJfcHandle / GetJfcHandleAndCqInfo / cqInfoMap cleanup =====================
+
+static void ClearJfcCqCache(RdmaHandleManager &mgr)
+{
+    mgr.jfcHandleMap.clear();
+    mgr.cqInfoMap.clear();
+}
+
+TEST_F(RdmaHandleManagerTest, find_cached_jfc_handle_return_false_when_rdma_handle_not_exist)
+{
+    auto &mgr = RdmaHandleManager::GetInstance();
+    ClearJfcCqCache(mgr);
+
+    RdmaHandle handle = (void *)0x9999;
+    JfcHandle outHandle = 0;
+    Hccl::CqCreateInfo outCqInfo{};
+    EXPECT_FALSE(mgr.FindCachedJfcHandle(handle, HrtUbJfcMode::NORMAL, outHandle, outCqInfo));
+
+    ClearJfcCqCache(mgr);
+}
+
+TEST_F(RdmaHandleManagerTest, find_cached_jfc_handle_return_false_when_jfc_mode_not_exist)
+{
+    auto &mgr = RdmaHandleManager::GetInstance();
+    ClearJfcCqCache(mgr);
+
+    RdmaHandle handle = (void *)0x9999;
+    mgr.jfcHandleMap[handle][HrtUbJfcMode::STARS_POLL] = 100;
+
+    JfcHandle outHandle = 0;
+    Hccl::CqCreateInfo outCqInfo{};
+    EXPECT_FALSE(mgr.FindCachedJfcHandle(handle, HrtUbJfcMode::NORMAL, outHandle, outCqInfo));
+
+    ClearJfcCqCache(mgr);
+}
+
+TEST_F(RdmaHandleManagerTest, find_cached_jfc_handle_return_true_and_fill_outputs_when_hit)
+{
+    auto &mgr = RdmaHandleManager::GetInstance();
+    ClearJfcCqCache(mgr);
+
+    RdmaHandle handle = (void *)0x9999;
+    JfcHandle cachedJfc = 0x1234;
+    Hccl::CqCreateInfo cachedCqInfo{1, 2, 3, 4, 5, 6};
+
+    mgr.jfcHandleMap[handle][HrtUbJfcMode::NORMAL] = cachedJfc;
+    mgr.cqInfoMap[cachedJfc] = cachedCqInfo;
+
+    JfcHandle outHandle = 0;
+    Hccl::CqCreateInfo outCqInfo{};
+    EXPECT_TRUE(mgr.FindCachedJfcHandle(handle, HrtUbJfcMode::NORMAL, outHandle, outCqInfo));
+
+    EXPECT_EQ(outHandle, cachedJfc);
+    EXPECT_EQ(outCqInfo.va, cachedCqInfo.va);
+    EXPECT_EQ(outCqInfo.id, cachedCqInfo.id);
+    EXPECT_EQ(outCqInfo.cqeSize, cachedCqInfo.cqeSize);
+    EXPECT_EQ(outCqInfo.cqDepth, cachedCqInfo.cqDepth);
+    EXPECT_EQ(outCqInfo.swdbAddr, cachedCqInfo.swdbAddr);
+
+    ClearJfcCqCache(mgr);
+}
+
+TEST_F(RdmaHandleManagerTest, get_jfc_handle_return_cached_and_fill_cq_info_on_hit)
+{
+    auto &mgr = RdmaHandleManager::GetInstance();
+    ClearJfcCqCache(mgr);
+
+    RdmaHandle handle = (void *)0x9999;
+    JfcHandle cachedJfc = 0x4321;
+    Hccl::CqCreateInfo cachedCqInfo{10, 20, 30, 40, 50, 60};
+
+    mgr.jfcHandleMap[handle][HrtUbJfcMode::NORMAL] = cachedJfc;
+    mgr.cqInfoMap[cachedJfc] = cachedCqInfo;
+
+    Hccl::CqCreateInfo outCqInfo{};
+    JfcHandle ret = mgr.GetJfcHandle(handle, outCqInfo, HrtUbJfcMode::NORMAL);
+
+    EXPECT_EQ(ret, cachedJfc);
+    EXPECT_EQ(outCqInfo.va, cachedCqInfo.va);
+    EXPECT_EQ(outCqInfo.id, cachedCqInfo.id);
+    EXPECT_EQ(outCqInfo.cqDepth, cachedCqInfo.cqDepth);
+
+    ClearJfcCqCache(mgr);
+}
+
+TEST_F(RdmaHandleManagerTest, get_jfc_handle_create_and_cache_on_miss)
+{
+    auto &mgr = RdmaHandleManager::GetInstance();
+    ClearJfcCqCache(mgr);
+
+    RdmaHandle handle = (void *)0x9999;
+    JfcHandle newJfc = 0x5555;
+    MOCKER(HrtRaUbCreateJfc).stubs().will(returnValue(newJfc));
+
+    Hccl::CqCreateInfo inCqInfo{100, 200, 300, 400, 500, 600};
+    Hccl::CqCreateInfo outCqInfo = inCqInfo;
+
+    JfcHandle ret = mgr.GetJfcHandle(handle, outCqInfo, HrtUbJfcMode::STARS_POLL);
+
+    EXPECT_EQ(ret, newJfc);
+    EXPECT_EQ(mgr.jfcHandleMap[handle][HrtUbJfcMode::STARS_POLL], newJfc);
+    EXPECT_EQ(mgr.cqInfoMap[newJfc].va, inCqInfo.va);
+    EXPECT_EQ(mgr.cqInfoMap[newJfc].id, inCqInfo.id);
+    EXPECT_EQ(mgr.cqInfoMap[newJfc].cqeSize, inCqInfo.cqeSize);
+
+    ClearJfcCqCache(mgr);
+}

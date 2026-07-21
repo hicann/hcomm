@@ -174,6 +174,22 @@ RdmaHandle RdmaHandleManager::GetByIp(u32 devPhyId, const IpAddress &localIp)
     return res;
 }
 
+bool RdmaHandleManager::FindCachedJfcHandle(RdmaHandle rdmaHandle, HrtUbJfcMode jfcMode,
+    JfcHandle &handle, CqCreateInfo &cqInfo)
+{
+    auto outerIt = jfcHandleMap.find(rdmaHandle);
+    if (outerIt == jfcHandleMap.end()) {
+        return false;
+    }
+    auto innerIt = outerIt->second.find(jfcMode);
+    if (innerIt == outerIt->second.end()) {
+        return false;
+    }
+    handle = innerIt->second;
+    cqInfo = cqInfoMap[innerIt->second];
+    return true;
+}
+
 JfcHandle RdmaHandleManager::GetJfcHandle(RdmaHandle rdmaHandle, CqCreateInfo& cqInfo, HrtUbJfcMode jfcMode)
 {
     std::lock_guard<std::mutex> lock(managerMutex);
@@ -187,13 +203,15 @@ JfcHandle RdmaHandleManager::GetJfcHandle(RdmaHandle rdmaHandle, CqCreateInfo& c
             "please check input.", jfcMode.Describe().c_str());
     }
 
-    if (jfcHandleMap.find(rdmaHandle) != jfcHandleMap.end() && 
-        jfcHandleMap[rdmaHandle].find(jfcMode) != jfcHandleMap[rdmaHandle].end()) {
-        return jfcHandleMap[rdmaHandle][jfcMode];
+    JfcHandle cachedHandle{};
+    if (FindCachedJfcHandle(rdmaHandle, jfcMode, cachedHandle, cqInfo)) {
+        return cachedHandle;
     }
-
-    jfcHandleMap[rdmaHandle][jfcMode] = HrtRaUbCreateJfc(rdmaHandle, cqInfo, jfcMode);
-    return jfcHandleMap[rdmaHandle][jfcMode];
+    JfcHandle newHandle = HrtRaUbCreateJfc(rdmaHandle, cqInfo, jfcMode);
+    JfcHandle &ref = jfcHandleMap[rdmaHandle][jfcMode]; // 引用缓存
+    ref = newHandle;
+    cqInfoMap[ref] = cqInfo;
+    return ref;
 }
 
 JfcHandle  RdmaHandleManager::GetJfcHandleAndCqInfo(RdmaHandle rdmaHandle, CqCreateInfo& cqInfo, HrtUbJfcMode jfcMode)
@@ -209,13 +227,15 @@ JfcHandle  RdmaHandleManager::GetJfcHandleAndCqInfo(RdmaHandle rdmaHandle, CqCre
             "please check input.", jfcMode.Describe().c_str());
     }
 
-    if (jfcHandleMap.find(rdmaHandle) != jfcHandleMap.end() && 
-        jfcHandleMap[rdmaHandle].find(jfcMode) != jfcHandleMap[rdmaHandle].end()) {
-        return jfcHandleMap[rdmaHandle][jfcMode];
+    JfcHandle cachedHandle{};
+    if (FindCachedJfcHandle(rdmaHandle, jfcMode, cachedHandle, cqInfo)) {
+        return cachedHandle;
     }
-    
-    jfcHandleMap[rdmaHandle][jfcMode] = HrtRaUbCreateJfcUserCtl(rdmaHandle, cqInfo);
-    return jfcHandleMap[rdmaHandle][jfcMode];
+    JfcHandle newHandle = HrtRaUbCreateJfcUserCtl(rdmaHandle, cqInfo);
+    JfcHandle &ref = jfcHandleMap[rdmaHandle][jfcMode]; // 引用缓存
+    ref = newHandle;
+    cqInfoMap[ref] = cqInfo;
+    return ref;
 }
 
 std::pair<uint32_t, uint32_t> RdmaHandleManager::GetDieAndFuncId(RdmaHandle rdmaHandle)
@@ -311,6 +331,7 @@ void RdmaHandleManager::DestroyAll()
     DieAndFuncIdMap.clear();
     RtpEnableMap.clear();
     jfcHandleMap.clear();
+    cqInfoMap.clear();
     netWorkModeMap.clear();
 }
 
@@ -401,6 +422,7 @@ void RdmaHandleManager::CleanupJfcHandles(RdmaHandle handle)
     if (jfcIt != jfcHandleMap.end()) {
         for (auto &modeIter : jfcIt->second) {
             DECTOR_TRY_CATCH("jfc handle destroy", HrtRaUbDestroyJfc(handle, modeIter.second));
+            cqInfoMap.erase(modeIter.second);
         }
         jfcHandleMap.erase(jfcIt);
     }

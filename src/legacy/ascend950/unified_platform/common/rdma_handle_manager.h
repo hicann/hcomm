@@ -68,6 +68,8 @@ private:
 
     std::unordered_map<RdmaHandle, std::unordered_map<HrtUbJfcMode, JfcHandle, EnumClassHash>> jfcHandleMap;
 
+    std::unordered_map<JfcHandle, CqCreateInfo> cqInfoMap;
+
     std::unordered_map<RdmaHandle, std::pair<uint32_t, uint32_t>> DieAndFuncIdMap;
 
     std::unordered_map<RdmaHandle, bool> RtpEnableMap;
@@ -81,6 +83,8 @@ private:
     std::unordered_set<RdmaHandle> activeHandles_;
 
     RdmaHandleManager();
+
+    bool FindCachedJfcHandle(RdmaHandle rdmaHandle, HrtUbJfcMode jfcMode, JfcHandle &handle, CqCreateInfo &cqInfo);
 
     RdmaHandle Create(u32 devPhyId, const PortData &localPort);
     RdmaHandle Create(u32 devPhyId, const LinkProtoType &localProtocolType, const IpAddress &localIp, PortDeploymentType type);
