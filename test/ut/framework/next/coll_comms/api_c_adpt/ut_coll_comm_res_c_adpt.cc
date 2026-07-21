@@ -8,11 +8,15 @@
 #include "hccl_comm_pub.h"
 #include "independent_op.h"
 #include "llt_hccl_stub_rank_graph.h"
+#include <cstring>
 #include <string>
 #include "mockcpp/mockcpp.hpp"
 #include "dfx/cluster_monitor/cluster_monitor.h"
 #include "host/host_cpu_roce_channel.h"
 #include "param_check_pub.h"
+#include "hccl/hccl_types.h"
+#include "hccp.h"
+#include "my_rank.h"
 
 #define private public
 
@@ -21,6 +25,25 @@ using namespace hcomm;
 
 HcclResult ProcessUbChannelDesc(const HcclChannelDesc &channelDesc, HcclChannelDesc &channelDescFinal,
     hcclComm *hcclComm);
+HcclResult ProcessHcclResPackReq(const HcclChannelDesc &channelDesc, HcclChannelDesc &channelDescFinal,
+    hcclComm *hcclComm);
+
+static int StubRaGetHccnCfgRoceQosDscp(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen)
+{
+    (void)info;
+    (void)key;
+    if (value == nullptr || valueLen == nullptr) {
+        return -1;
+    }
+    const char *cfg = "0:33,1:20,4:50,6:70";
+    const unsigned int len = static_cast<unsigned int>(std::strlen(cfg));
+    if (*valueLen < len) {
+        return -1;
+    }
+    (void)std::memcpy(value, cfg, len);
+    *valueLen = len;
+    return 0;
+}
 
 static HcclMemHandle g_userMemHandle = reinterpret_cast<HcclMemHandle>(0x1111);
 static HcclMemHandle g_symMemHandle = reinterpret_cast<HcclMemHandle>(0x2222);
@@ -148,6 +171,36 @@ protected:
         channelDesc[0].roceAttr.tc = 120;
         channelDesc[0].roceAttr.sl = 3;
     }
+
+    void InitRoceChannelDesc(HcclChannelDesc &channelDesc) const
+    {
+        ASSERT_EQ(HcclChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+        channelDesc.channelProtocol = COMM_PROTOCOL_ROCE;
+        channelDesc.roceAttr.queueNum = 3;
+        channelDesc.roceAttr.retryCnt = 3;
+        channelDesc.roceAttr.retryInterval = 20;
+        channelDesc.localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+        channelDesc.localEndpoint.loc.device.devPhyId = 0U;
+    }
+
+    void ExpectRoceSlTcInHcommChannelDesc(uint32_t hcclQos, uint8_t expectSl, uint8_t expectTc)
+    {
+        hcclCommPtr->GetCollComm()->GetCommConfig().SetConfigHcclQos(hcclQos);
+
+        HcclChannelDesc in{};
+        HcclChannelDesc out{};
+        InitRoceChannelDesc(in);
+        ASSERT_EQ(HcclChannelDescInit(&out, 1), HCCL_SUCCESS);
+
+        ret = ProcessHcclResPackReq(in, out, hcclCommPtr.get());
+        ASSERT_EQ(ret, HCCL_SUCCESS);
+
+        const HcommChannelDesc hcommDesc = MyRankUtils::ChannelDescHccl2Hcomm(
+            out, hcclCommPtr->GetCollComm()->GetCommConfig());
+        EXPECT_EQ(hcommDesc.roceAttr.sl, expectSl) << "hcclQos=" << hcclQos;
+        EXPECT_EQ(hcommDesc.roceAttr.tc, expectTc) << "hcclQos=" << hcclQos;
+    }
+
 private:
     std::shared_ptr<hccl::hcclComm>hcclCommPtr;
     std::shared_ptr<Hccl::RankGraph>rankGraphV2;
@@ -367,4 +420,28 @@ TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_CpuUrma_NotAppendSymmetri
 
     ret = HcclChannelAcquire(comm, CommEngine::COMM_ENGINE_CPU, channelDesc.data(), 1, channels.data());
     EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(HcclChannelDescTest, Ut_ProcessRoceChannelDesc_When_HcclQosUnset_UsesRdmaEnvSlTc)
+{
+    // EnvRdmaConfig 默认 SL=4、TC=132（CI 中 setenv 晚于 EnvConfig 解析时不生效）
+    ExpectRoceSlTcInHcommChannelDesc(HCCL_COMM_QOS_CONFIG_NOT_SET, 4U, 132U);
+}
+
+TEST_F(HcclChannelDescTest, Ut_ProcessRoceChannelDesc_When_HcclQos1_MapsSlAndTcFromHccn)
+{
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgRoceQosDscp));
+    ExpectRoceSlTcInHcommChannelDesc(1U, 1U, static_cast<uint8_t>(20U << 2U));
+}
+
+TEST_F(HcclChannelDescTest, Ut_ProcessRoceChannelDesc_When_HcclQos4_MapsSlAndTcFromHccn)
+{
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgRoceQosDscp));
+    ExpectRoceSlTcInHcommChannelDesc(4U, 4U, static_cast<uint8_t>(50U << 2U));
+}
+
+TEST_F(HcclChannelDescTest, Ut_ProcessRoceChannelDesc_When_HcclQos6_MapsSlAndTcFromHccn)
+{
+    MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgRoceQosDscp));
+    ExpectRoceSlTcInHcommChannelDesc(6U, 6U, static_cast<uint8_t>(70U << 2U));
 }
