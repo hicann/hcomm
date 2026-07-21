@@ -201,6 +201,7 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/communicator/impl/independent_op/channel/
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/communicator/impl/independent_op/channel/device
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graphs
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/config_mgr
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/communicator/impl/independent_op/resource/engine
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/hcom/
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/hcom/gradient_segment
@@ -394,6 +395,7 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/device
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/group_schedule_mgr
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/config_mgr
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_mems/
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/remote/rank_pairs

@@ -71,6 +71,7 @@ set(UT_COMMON_INCLUDE_LIST
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/communicator/impl/independent_op/channel/
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/communicator/impl/independent_op/channel/device
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graphs
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/config_mgr
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/communicator/impl/independent_op/resource/engine
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/hcom/
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/hcom/gradient_segment

@@ -26,6 +26,7 @@
 #include "launch_device.h"
 #include "sal_pub.h"
 #include "env_config/env_config.h"
+#include "coll_comm_config.h"
 
 namespace hccl
 {
@@ -354,7 +355,9 @@ namespace hccl
         EXCEPTION_CATCH(collComm_ = std::make_unique<CollComm>(commV2, userRank, commName, callbacks, initMode),
             return HCCL_E_PTR);
 
-        CHK_RET(collComm_->Init(rankGraph, binHandle_, cclBuffer, config));
+        uint32_t configOpExpansionMode = 0;
+        CHK_RET(ApplyHcclCommConfig(config, collComm_->GetCommConfig(), configOpExpansionMode));
+        CHK_RET(collComm_->Init(rankGraph, binHandle_, cclBuffer, configOpExpansionMode));
         if (initMode == CollCommInitMode::simpleMode) { /* hccl::CommunicatorV1支持CollComm简易流程 */
             return HCCL_SUCCESS;
         }

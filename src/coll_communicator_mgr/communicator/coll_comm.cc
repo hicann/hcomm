@@ -24,12 +24,6 @@
 #include "launch_aicpu.h"
 #include "launch_device.h"
 
-constexpr uint32_t MULTIPLE = 4;               // 用于A5判断TC是否为4的倍数
-constexpr uint32_t TC_MAX = 255;               // TC的最大值（不区分芯片类型）
-constexpr uint32_t SL_MAX = 7u;                // sl范围的最大值，sl即serviceLevel（不区分芯片类型）
-constexpr uint32_t TC_DEFAULT = 0xFFFFFFFFu;   // TC的默认值（不区分芯片类型）
-constexpr uint32_t SL_DEFAULT = 0xFFFFFFFFu;   // SL的默认值（不区分芯片类型）
-
 namespace hccl {
 void SymmetricMemoryDeleter::operator()(SymmetricMemory *ptr) const
 {
@@ -72,68 +66,17 @@ CollComm::~CollComm()
     (void)DestroyAicpuComm();
 }
 
-HcclResult CollComm::ValidateConfig(const HcclCommConfig *config)
-{
-    if (config == nullptr) {
-        return HCCL_SUCCESS;
-    }
-    u32 tc = config->hcclRdmaTrafficClass;
-    CHK_PRT_RET((tc != TC_DEFAULT) && (tc > TC_MAX || (tc % MULTIPLE != 0)),
-        HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclRdmaTrafficClass[%u], must be 0xFFFFFFFF or in [0,255] "
-            "and a multiple of 4",
-            HCCL_ERROR_CODE(HCCL_E_PARA), tc),
-        HCCL_E_PARA);
-    CHK_RET(config_.SetConfigTrafficClass(tc));
-
-    u32 sl = config->hcclRdmaServiceLevel;
-    CHK_PRT_RET((sl != SL_DEFAULT) && (sl > SL_MAX),
-        HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclRdmaServiceLevel[%u], must be 0xFFFFFFFF or in [0,7]",
-            HCCL_ERROR_CODE(HCCL_E_PARA), sl),
-        HCCL_E_PARA);
-    CHK_RET(config_.SetConfigServiceLevel(sl));
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollComm::ApplyUserCommConfig(HcclCommConfig *config, uint32_t &opExpansionMode)
-{
-    if (!config) {
-        return HCCL_SUCCESS;
-    }
-
-    opExpansionMode = config->hcclOpExpansionMode;
-    u32 tc = config->hcclRdmaTrafficClass;
-    CHK_PRT_RET((tc != TC_DEFAULT) && (tc > TC_MAX || (tc % MULTIPLE != 0)),
-        HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclRdmaTrafficClass[%u], must be 0xFFFFFFFF or in [0,255] and a multiple of 4",
-            HCCL_ERROR_CODE(HCCL_E_PARA), tc),
-        HCCL_E_PARA);
-    CHK_RET(config_.SetConfigTrafficClass(tc));
-
-    u32 sl = config->hcclRdmaServiceLevel;
-    CHK_PRT_RET((sl != SL_DEFAULT) && (sl > SL_MAX),
-        HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclRdmaServiceLevel[%u], must be 0xFFFFFFFF or in [0,7]",
-            HCCL_ERROR_CODE(HCCL_E_PARA), sl),
-        HCCL_E_PARA);
-    CHK_RET(config_.SetConfigServiceLevel(sl));
-
-    u32 qos = config->hcclQos;
-    CHK_PRT_RET((qos != 0xFFFFFFFFu) && (qos > 7u),
-        HCCL_ERROR("[InitCollComm]errNo[0x%016llx] invalid hcclQos[%u], must be 0xFFFFFFFF or in [0,7]",
-            HCCL_ERROR_CODE(HCCL_E_PARA), qos),
-        HCCL_E_PARA);
-    CHK_RET(config_.SetConfigHcclQos(qos));
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollComm::Init(void * rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, HcclCommConfig *config)
+HcclResult CollComm::Init(void *rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode)
 {
     if (IsFullMode()) { // A5和下一代
-        return InitFullMode(rankGraph, binHandle, cclBuffer, config);
+        return InitFullMode(rankGraph, binHandle, cclBuffer, opExpansionMode);
     } else { // A2/A3使用简化版CollComm
-        return InitSimpleMode(rankGraph, binHandle, cclBuffer, config);
+        return InitSimpleMode(rankGraph, binHandle, cclBuffer, opExpansionMode);
     }
 }
 
-HcclResult CollComm::InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, HcclCommConfig* config)
+HcclResult CollComm::InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer,
+    uint32_t opExpansionMode)
 {
     CHK_PTR_NULL(rankGraph);
 
@@ -152,8 +95,6 @@ HcclResult CollComm::InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, H
         myRank_ = std::make_shared<MyRank>(binHandle, rankId_, config_, callbacks_, rankgraph_, rankIpPortMap_),
         return HCCL_E_PTR);
 
-    uint32_t opExpansionMode = (config != nullptr) ? config->hcclOpExpansionMode : 0;
-    CHK_RET(ValidateConfig(config));
     CHK_RET(myRank_->Init(cclBuffer, opExpansionMode, rankNum));
 
     commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_READY;
@@ -162,7 +103,8 @@ HcclResult CollComm::InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, H
     return HCCL_SUCCESS;
 }
 
-HcclResult CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, HcclCommConfig* config)
+HcclResult CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer,
+    uint32_t opExpansionMode)
 {
     CHK_PTR_NULL(rankGraph);
 
@@ -187,15 +129,12 @@ HcclResult CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, Hcc
         EXCEPTION_CATCH(contextMgr_ = std::make_unique<ContextManager>(), return HCCL_E_PTR);
     }
 
-    uint32_t opExpansionMode = 0;
-    CHK_RET(ApplyUserCommConfig(config, opExpansionMode));
-
     EXCEPTION_CATCH(
         myRank_ = std::make_shared<MyRank>(binHandle, rankId_, config_, callbacks_, rankgraph_, rankIpPortMap_),
         return HCCL_E_PTR);
     CHK_RET(myRank_->Init(cclBuffer, opExpansionMode, rankNum));
     CHK_RET(hrtGetDevice(&deviceLogicId_));
-    CHK_RET(InitSymmetricMemory(config));
+    CHK_RET(InitSymmetricMemory());
 
     CHK_RET(InitHDCommunicate());
 
@@ -211,9 +150,8 @@ HcclResult CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, Hcc
     return HCCL_SUCCESS;
 }
 
-HcclResult CollComm::InitSymmetricMemory(HcclCommConfig *config)
+HcclResult CollComm::InitSymmetricMemory()
 {
-    (void)config;
     uint32_t rankSize = GetRankSize();
     HCCL_RUN_INFO("[CollComm][InitSymmetricMemory] commId[%s], rank[%u], rankSize[%u].",
         commId_.c_str(), rankId_, rankSize);

@@ -13,6 +13,7 @@
 #include "coll_comm.h"
 #include "symmetric_memory/symmetric_memory.h"
 #undef private
+#include "coll_comm_config.h"
 #include "hcom_common.h"
 
 class TestCollComm : public TestHcommCAdptBase {
@@ -39,8 +40,7 @@ TEST_F(TestCollComm, Ut_TestCollCommInit_When_RankGraphNullptr_Return_HCCL_E_PTR
 {
     hccl::CollComm collComm(nullptr, 0, "test_comm", hccl::ManagerCallbacks{});
     HcclMem cclBuffer = {};
-    HcclCommConfig config = {};
-    HcclResult ret = collComm.Init(nullptr, nullptr, cclBuffer, &config);
+    HcclResult ret = collComm.Init(nullptr, nullptr, cclBuffer, 0);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
@@ -163,7 +163,7 @@ TEST_F(TestCollComm, Ut_InitSimpleMode_When_Success_Expect_ReturnsSuccessAndRank
     EXPECT_EQ(collComm.GetRankSize(), 0u);
 }
 
-TEST_F(TestCollComm, Ut_ApplyUserCommConfig_When_ValidConfig_Expect_Success)
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_ValidConfig_Expect_Success)
 {
     hccl::CollComm coll(nullptr, 0, "ut_qos", hccl::ManagerCallbacks{});
     HcclCommConfig config{};
@@ -173,49 +173,49 @@ TEST_F(TestCollComm, Ut_ApplyUserCommConfig_When_ValidConfig_Expect_Success)
     config.hcclRdmaServiceLevel = 3U;
     config.hcclQos = 5U;
     uint32_t opExpansionMode = 0U;
-    EXPECT_EQ(coll.ApplyUserCommConfig(&config, opExpansionMode), HCCL_SUCCESS);
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
     EXPECT_EQ(opExpansionMode, 2U);
     EXPECT_EQ(coll.GetCommConfig().GetConfigHcclQos(), 5U);
     EXPECT_EQ(coll.GetCommConfig().GetConfigTrafficClass(), 120U);
     EXPECT_EQ(coll.GetCommConfig().GetConfigServiceLevel(), 3U);
 }
 
-TEST_F(TestCollComm, Ut_ApplyUserCommConfig_When_NullConfig_Expect_Success)
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_NullConfig_Expect_Success)
 {
     hccl::CollComm coll(nullptr, 0, "ut_qos", hccl::ManagerCallbacks{});
     uint32_t opExpansionMode = 9U;
-    EXPECT_EQ(coll.ApplyUserCommConfig(nullptr, opExpansionMode), HCCL_SUCCESS);
-    EXPECT_EQ(opExpansionMode, 9U);
+    EXPECT_EQ(ApplyHcclCommConfig(nullptr, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
+    EXPECT_EQ(opExpansionMode, 0U);
 }
 
-TEST_F(TestCollComm, Ut_ApplyUserCommConfig_When_InvalidHcclQos_Expect_EPara)
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_InvalidHcclQos_Expect_EPara)
 {
     hccl::CollComm coll(nullptr, 0, "ut_qos", hccl::ManagerCallbacks{});
     HcclCommConfig config{};
     UtInitHcclCommConfig(config);
     config.hcclQos = 8U;
     uint32_t opExpansionMode = 0U;
-    EXPECT_EQ(coll.ApplyUserCommConfig(&config, opExpansionMode), HCCL_E_PARA);
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_E_PARA);
 }
 
-TEST_F(TestCollComm, Ut_ApplyUserCommConfig_When_InvalidTrafficClass_Expect_EPara)
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_InvalidTrafficClass_Expect_EPara)
 {
     hccl::CollComm coll(nullptr, 0, "ut_qos", hccl::ManagerCallbacks{});
     HcclCommConfig config{};
     UtInitHcclCommConfig(config);
     config.hcclRdmaTrafficClass = 256U;
     uint32_t opExpansionMode = 0U;
-    EXPECT_EQ(coll.ApplyUserCommConfig(&config, opExpansionMode), HCCL_E_PARA);
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_E_PARA);
 }
 
-TEST_F(TestCollComm, Ut_ApplyUserCommConfig_When_InvalidServiceLevel_Expect_EPara)
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_InvalidServiceLevel_Expect_EPara)
 {
     hccl::CollComm coll(nullptr, 0, "ut_qos", hccl::ManagerCallbacks{});
     HcclCommConfig config{};
     UtInitHcclCommConfig(config);
     config.hcclRdmaServiceLevel = 8U;
     uint32_t opExpansionMode = 0U;
-    EXPECT_EQ(coll.ApplyUserCommConfig(&config, opExpansionMode), HCCL_E_PARA);
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_E_PARA);
 }
 
 TEST_F(TestCollComm, Ut_RegisterPendingSymmetricMemHandles_When_HasPendingWindow_Expect_ReturnMemHandleOnce)

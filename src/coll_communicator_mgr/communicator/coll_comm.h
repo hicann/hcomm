@@ -51,7 +51,7 @@ public:
     ~CollComm();
     
     // 初始化通信域
-    HcclResult Init(void * rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, HcclCommConfig *config);
+    HcclResult Init(void *rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode = 0);
 
     inline CommConfig& GetCommConfig() { return config_;}
     inline RankGraph* GetRankGraph() { return rankgraph_; }
@@ -115,14 +115,12 @@ public:
     std::shared_ptr<class GroupScheduleMgr> groupScheduleMgr {nullptr}; //for group
 
 private:
-    HcclResult ValidateConfig(const HcclCommConfig *config);
     HcclResult DestroyAicpuComm();
     HcclResult InitHDCommunicate();   
     HcclResult InitTaskExceptionHandler();
     HcclResult InitKfcAndRegisterCollComm();
     HcclResult GetRankIpPortMap();
-    HcclResult ApplyUserCommConfig(HcclCommConfig *config, uint32_t &opExpansionMode);
-    HcclResult InitSymmetricMemory(HcclCommConfig *config);
+    HcclResult InitSymmetricMemory();
     HcclResult RegisterSymmetricMemoryResource(void* ptr, size_t size, SymmetricMemoryResource &resource);
     void UnregisterSymmetricMemoryResource(const SymmetricMemoryResource &resource);
 
@@ -131,8 +129,8 @@ private:
      *      fullMode：给A5及后续新架构使用，完整的CollComm初始化和资源管理
      *      SimpleMode：给A2/A3老芯片使用，由于架构限制，仅将RankGraph、MyRank等放入CollComm管理，简化CollComm实现
      */
-    HcclResult InitFullMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, HcclCommConfig* config);
-    HcclResult InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, HcclCommConfig* config);
+    HcclResult InitFullMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode);
+    HcclResult InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode);
 
     /* A2/A3：使用simpleMode兼容模式没有CommV2，使用简化版的CollComm代理rankgraph、myrank对象，其他功能暂不实现
      * A5&&下一代：使用fullMode全功能collComm模式
