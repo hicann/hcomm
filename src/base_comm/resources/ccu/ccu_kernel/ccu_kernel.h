@@ -214,6 +214,7 @@ public:
 private:
     CcuResult GetVariableByHandle(CcuVariableHandle varHandle, CcuRep::Variable **variable);
     CcuResult GetEventByHandle(CcuEventHandle eventHandle, CcuRep::CompletedEvent **event);
+    CcuResult LatchBodyError(CcuResult err);
     // 按需扩容 res_.blockExecutor[0]：不足 maxLoopNum 时补足，足够则不动；
     // 由 LoopGroupCreate / LoopGroupCreateFromVar 在 LoopGroup 创建时调用。
     CcuResult EnsureLoopEnginePool(uint32_t maxLoopNum);
@@ -257,8 +258,13 @@ private:
         const char *label{nullptr};
         bool        bodyDone{false};
     };
-    std::vector<IfLabelEntry> iflabelStack_;
-    std::vector<const char *> doWhileLabelStack_;
+    struct DoWhileLabelEntry {
+        const char *label{nullptr};
+        std::shared_ptr<CcuRep::CcuRepBlock> snapshotBlock{nullptr};
+        size_t snapshotRepCount{0};
+    };
+    std::vector<IfLabelEntry>       iflabelStack_;
+    std::vector<DoWhileLabelEntry>  doWhileLabelStack_;
     bool isFlushing_ = false;
 
 
@@ -429,7 +435,8 @@ private:
     std::unordered_map<const void *, uint64_t> funcInstanceMap_;
     uint64_t funcHandleCounter_{0};
     bool inFuncBody_{false};
-    bool funcBodyError_{false};
+    // loop/func body 内首个非法错误的粘性闩，退出 body 时上抛（void body 无法直接回传）。
+    CcuResult bodyError_{CcuResult::CCU_SUCCESS};
 
     std::unordered_map<CcuLoopExecutors, std::vector<CcuRep::Executor>> loopEnginePools_;
     uint32_t loopEnginePoolCounter_{0};

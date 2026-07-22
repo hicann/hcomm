@@ -528,7 +528,7 @@ CcuResult CcuKernel::LocalNotifyRecord(const char *notifyTag, const uint32_t mas
     }
     if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[CcuKernel][%s] is not supported in loop block, please check.", __func__);
-        return CcuResult::CCU_E_NOT_SUPPORT;
+        return LatchBodyError(CcuResult::CCU_E_NOT_SUPPORT);
     }
 
     const std::string tagKey(notifyTag);
@@ -568,6 +568,10 @@ CcuResult CcuKernel::LocalNotifyWait(const char *notifyTag, const uint32_t mask)
 CcuResult CcuKernel::NotifyRecord(const ChannelHandle channel,
     uint32_t remoteNotifyIdx, uint32_t mask)
 {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
+        HCCL_ERROR("[%s] NotifyRecord is not allowed inside a ccu::Loop body", __func__);
+        return LatchBodyError(CcuResult::CCU_E_NOT_SUPPORT);
+    }
     channels_.insert(channel);
     Append(std::make_shared<CcuRep::CcuRepRemPostSem>(channel, remoteNotifyIdx, mask));
     return CCU_SUCCESS;
@@ -587,6 +591,10 @@ CcuResult CcuKernel::NotifyWait(const ChannelHandle channel, uint32_t localNotif
 CcuResult CcuKernel::WriteVariableWithNotify(const ChannelHandle channel, CcuVariableHandle varHandle,
     uint32_t remoteVarIdx, uint32_t remoteNotifyIdx, uint32_t mask)
 {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
+        HCCL_ERROR("[%s] WriteVariableWithNotify is not allowed inside a ccu::Loop body", __func__);
+        return LatchBodyError(CcuResult::CCU_E_NOT_SUPPORT);
+    }
     channels_.insert(channel);
     CcuRep::Variable *var{nullptr};
     CCU_CHK_RET(GetVariableByHandle(varHandle, &var));
@@ -894,10 +902,10 @@ void CcuKernel::Append(std::shared_ptr<CcuRep::CcuRepBase> rep)
 CcuResult CcuKernel::IfBegin(CcuVariableHandle varHandle, uint64_t immediate,
     CcuConditionType condType, const char *label)
 {
-    if (loopBodyDepth_ > 0) {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[%s] CCU_IF is not allowed inside a ccu::Loop body (label='%s')",
             __func__, label != nullptr ? label : "(null)");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
     CcuRep::Variable *variable{nullptr};
     CCU_CHK_RET(GetVariableByHandle(varHandle, &variable));
@@ -944,10 +952,10 @@ CcuResult CcuKernel::IfBegin(CcuVariableHandle varHandle, uint64_t immediate,
 
 CcuResult CcuKernel::IfElse(const char *label)
 {
-    if (loopBodyDepth_ > 0) {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[%s] CCU_ELSE is not allowed inside a ccu::Loop body (label='%s')",
             __func__, label != nullptr ? label : "(null)");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
 
     std::string labelStr(label);
@@ -1003,10 +1011,10 @@ CcuResult CcuKernel::IfEnd(const char *label)
 CcuResult CcuKernel::WhileBegin(CcuVariableHandle varHandle, uint64_t immediate,
     CcuConditionType condType, const char *label)
 {
-    if (loopBodyDepth_ > 0) {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[%s] CCU_WHILE is not allowed inside a ccu::Loop body (label='%s')",
             __func__, label != nullptr ? label : "(null)");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
 
     CcuRep::Variable *variable{nullptr};
@@ -1078,10 +1086,10 @@ CcuResult CcuKernel::WhileEnd(const char *label)
 
 CcuResult CcuKernel::DoWhileBegin(const char *label)
 {
-    if (loopBodyDepth_ > 0) {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[%s] CCU_DO is not allowed inside a ccu::Loop body (label='%s')",
             __func__, label != nullptr ? label : "(null)");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
 
     std::string labelStr(label);
@@ -1186,20 +1194,37 @@ const char *CcuKernel::IfLabelStackPop()
 
 void CcuKernel::DoWhileLabelStackPush(const char *label)
 {
-    doWhileLabelStack_.push_back(label);
+    DoWhileLabelEntry entry;
+    entry.label = label;
+    entry.snapshotBlock = CurrentBlock();
+    entry.snapshotRepCount = (entry.snapshotBlock != nullptr)
+        ? entry.snapshotBlock->GetReps().size()
+        : 0;
+    doWhileLabelStack_.push_back(std::move(entry));
 }
 
 const char *CcuKernel::DoWhileLabelStackPopForWhile()
 {
-    if (loopBodyDepth_ > 0) {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         return nullptr;
     }
     if (doWhileLabelStack_.empty()) {
         return nullptr;
     }
-    const char *label = doWhileLabelStack_.back();
+    DoWhileLabelEntry entry = doWhileLabelStack_.back();
     doWhileLabelStack_.pop_back();
-    return label;
+
+    auto currentBlock = CurrentBlock();
+    size_t currentRepCount = (currentBlock != nullptr) ? currentBlock->GetReps().size() : 0;
+    if (currentBlock != entry.snapshotBlock || currentRepCount != entry.snapshotRepCount) {
+        HCCL_ERROR("[CcuKernel::DoWhileLabelStackPopForWhile] dangling CCU calls between CCU_DO end "
+                   "and CCU_WHILE (label='%s', snapRep=%zu, curRep=%zu, blockChanged=%d); they must "
+                   "be syntactically adjacent, otherwise the code in between is pulled into the body.",
+                   entry.label != nullptr ? entry.label : "(null)", entry.snapshotRepCount,
+                   currentRepCount, currentBlock != entry.snapshotBlock ? 1 : 0);
+        return nullptr;
+    }
+    return entry.label;
 }
 
 CcuResult CcuKernel::GetAddressByHandle(CcuAddressHandle addrHandle, CcuRep::Address **address)
@@ -1318,6 +1343,7 @@ HcclResult CcuKernel::RecordEvent(CcuRep::CompletedEvent event, uint32_t mask)
 {
     if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[CcuKernel][%s] is not supported in loop block, please check.", __func__);
+        LatchBodyError(HCCL_TO_CCU_RET(HcclResult::HCCL_E_NOT_SUPPORT));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
 
@@ -1564,14 +1590,13 @@ CcuResult CcuKernel::LoopCreate(CcuLoop *loop)
         HCCL_ERROR("[CcuKernel::LoopCreate] null pointer");
         return CcuResult::CCU_E_PTR;
     }
-    if (loopBodyDepth_ > 0) {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[CcuKernel::LoopCreate] cannot create loop inside a loop body");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
     if (inFuncBody_) {
-        funcBodyError_ = true;
         HCCL_ERROR("[CcuKernel::LoopCreate] cannot create loop inside a func body");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
 
     CcuLoop handle = ++loopHandleCounter_;
@@ -1584,6 +1609,15 @@ CcuResult CcuKernel::LoopCreate(CcuLoop *loop)
     loopMap_[handle] = std::move(desc);
     *loop = handle;
     return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuKernel::LatchBodyError(CcuResult err)
+{
+    if ((CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK || inFuncBody_)
+        && bodyError_ == CcuResult::CCU_SUCCESS) {
+        bodyError_ = err;
+    }
+    return err;
 }
 
 CcuResult CcuKernel::LoopBodyEnter(CcuLoop loop)
@@ -1603,6 +1637,7 @@ CcuResult CcuKernel::LoopBodyEnter(CcuLoop loop)
     desc.prevActiveBlock = CurrentBlock();
     SetCurrentBlock(desc.repLoopBlock);
     ++loopBodyDepth_;
+    bodyError_ = CcuResult::CCU_SUCCESS;
 
     return CcuResult::CCU_SUCCESS;
 }
@@ -1620,6 +1655,13 @@ CcuResult CcuKernel::LoopBodyExit(CcuLoop loop)
     desc.bodyDefined = true;
     --loopBodyDepth_;
 
+    if (bodyError_ != CcuResult::CCU_SUCCESS) {
+        const CcuResult err = bodyError_;
+        HCCL_ERROR("[CcuKernel::LoopBodyExit] illegal operation inside loop body, err=%d", err);
+        bodyError_ = CcuResult::CCU_SUCCESS;
+        return err;
+    }
+
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -1629,12 +1671,9 @@ CcuResult CcuKernel::FuncBlockLookup(const void *funcPtr, uint64_t *outHandle)
         HCCL_ERROR("[CcuKernel::FuncBlockLookup] null pointer");
         return CcuResult::CCU_E_PTR;
     }
-    if (loopBodyDepth_ > 0 || inFuncBody_) {
-        if (inFuncBody_) {
-            funcBodyError_ = true;
-        }
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK || inFuncBody_) {
         HCCL_ERROR("[CcuKernel::FuncBlockLookup] ccu::CallFunc only allowed at top level");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
 
     auto it = funcInstanceMap_.find(funcPtr);
@@ -1648,12 +1687,9 @@ CcuResult CcuKernel::FuncBlockBegin(const void *funcPtr, uint64_t *outHandle)
         HCCL_ERROR("[CcuKernel::FuncBlockBegin] null pointer");
         return CcuResult::CCU_E_PTR;
     }
-    if (loopBodyDepth_ > 0 || inFuncBody_) {
-        if (inFuncBody_) {
-            funcBodyError_ = true;
-        }
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK || inFuncBody_) {
         HCCL_ERROR("[CcuKernel::FuncBlockBegin] ccu::CallFunc only allowed at top level");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
 
     auto exist = funcInstanceMap_.find(funcPtr);
@@ -1674,7 +1710,7 @@ CcuResult CcuKernel::FuncBlockBegin(const void *funcPtr, uint64_t *outHandle)
     funcMap_[handle] = desc;
     SetCurrentBlock(desc.repFuncBlock);
     inFuncBody_ = true;
-    funcBodyError_ = false;
+    bodyError_ = CcuResult::CCU_SUCCESS;
     *outHandle = handle;
     return CcuResult::CCU_SUCCESS;
 }
@@ -1691,11 +1727,12 @@ CcuResult CcuKernel::FuncBlockEnd(uint64_t handle)
     SetCurrentBlock(desc.prevActiveBlock);
     inFuncBody_ = false;
 
-    if (funcBodyError_) {
-        HCCL_ERROR("[CcuKernel::FuncBlockEnd] ccu::CallFunc only allowed at top level");
-        funcBodyError_ = false;
+    if (bodyError_ != CcuResult::CCU_SUCCESS) {
+        const CcuResult err = bodyError_;
+        HCCL_ERROR("[CcuKernel::FuncBlockEnd] illegal operation inside func body, err=%d", err);
+        bodyError_ = CcuResult::CCU_SUCCESS;
         funcMap_.erase(it);
-        return CcuResult::CCU_E_INTERNAL;
+        return err;
     }
 
     Append(desc.repFuncBlock);
@@ -1720,12 +1757,9 @@ CcuResult CcuKernel::FuncDefineInArg(uint64_t handle, CcuVariableHandle formal)
 
 CcuResult CcuKernel::FuncCall(uint64_t handle, const CcuVariableHandle *inArgs, uint32_t numIn)
 {
-    if (loopBodyDepth_ > 0 || inFuncBody_) {
-        if (inFuncBody_) {
-            funcBodyError_ = true;
-        }
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK || inFuncBody_) {
         HCCL_ERROR("[CcuKernel::FuncCall] ccu::CallFunc only allowed at top level");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
     if (numIn > 0 && inArgs == nullptr) {
         HCCL_ERROR("[CcuKernel::FuncCall] null input args");
@@ -1777,14 +1811,13 @@ CcuResult CcuKernel::LoopGroupCreate(CcuLoopGroup *group, uint32_t maxLoopNum,
         HCCL_ERROR("[CcuKernel::LoopGroupCreate] null pointer");
         return CcuResult::CCU_E_PTR;
     }
-    if (loopBodyDepth_ > 0) {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[CcuKernel::LoopGroupCreate] cannot create loop group inside a loop body");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
     if (inFuncBody_) {
-        funcBodyError_ = true;
         HCCL_ERROR("[CcuKernel::LoopGroupCreate] cannot create loop group inside a func body");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
 
     // 按需扩 LoopEngine 池；池足够则复用低位 executorId，跨组共享。
@@ -1815,14 +1848,13 @@ CcuResult CcuKernel::LoopGroupCreateFromVar(CcuLoopGroup *group, uint32_t maxLoo
         HCCL_ERROR("[CcuKernel::LoopGroupCreateFromVar] null pointer for group");
         return CcuResult::CCU_E_PTR;
     }
-    if (loopBodyDepth_ > 0) {
+    if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[CcuKernel::LoopGroupCreateFromVar] cannot create loop group inside a loop body");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
     if (inFuncBody_) {
-        funcBodyError_ = true;
         HCCL_ERROR("[CcuKernel::LoopGroupCreateFromVar] cannot create loop group inside a func body");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
 
     CCU_CHK_RET(EnsureLoopEnginePool(maxLoopNum));

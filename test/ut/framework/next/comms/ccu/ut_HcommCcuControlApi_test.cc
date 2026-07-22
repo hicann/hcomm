@@ -194,6 +194,11 @@ CCU_FUNC_KERNEL_TEST(Ut_FuncCallReuse_Expect_Success, CcuFuncCallReuseDemoKernel
 CCU_FUNC_KERNEL_TEST(Ut_FuncCallMultiArg_Expect_Success, CcuFuncCallMultiArgDemoKernel, true)
 CCU_FUNC_KERNEL_TEST(Ut_FuncCallInLoop_Expect_Fail, CcuFuncCallInLoopInvalidDemoKernel, false)
 CCU_FUNC_KERNEL_TEST(Ut_FuncCallNested_Expect_Fail, CcuFuncCallNestedInvalidDemoKernel, false)
+CCU_FUNC_KERNEL_TEST(Ut_IfInLoop_Expect_Fail, CcuIfInLoopInvalidDemoKernel, false)
+CCU_FUNC_KERNEL_TEST(Ut_NotifyRecordInLoop_Expect_Fail, CcuNotifyRecordInLoopInvalidDemoKernel, false)
+CCU_FUNC_KERNEL_TEST(Ut_WriteVarWithNotifyInLoop_Expect_Fail, CcuWriteVarWithNotifyInLoopInvalidDemoKernel, false)
+CCU_FUNC_KERNEL_TEST(Ut_EventRecordTagInLoop_Expect_Fail, CcuEventRecordTagInLoopInvalidDemoKernel, false)
+CCU_FUNC_KERNEL_TEST(Ut_EventRecordInLoop_Expect_Fail, CcuEventRecordInLoopInvalidDemoKernel, false)
 
 TEST_F(HcommCcuControlApiTest, Ut_LoopObjectApi_Expect_Success)
 {
@@ -578,6 +583,56 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelDoWhileUnified_When_AllFine_Expe
     MockChannelDestory(handlePair);
     ccuRet = HcommCcuInsDestroy(insHandle, fakeDeviceLogicId);
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_DoWhileLabelStackPopForWhile_When_Adjacent_Expect_ReturnLabel)
+{
+    hcomm::CcuKernel kernel;
+    const char *label = "ut_dw_adjacent";
+
+    EXPECT_EQ(kernel.DoWhileBegin(label), CcuResult::CCU_SUCCESS);
+    kernel.DoWhileLabelStackPush(label);
+
+    const char *popped = kernel.DoWhileLabelStackPopForWhile();
+    ASSERT_NE(popped, nullptr);
+    EXPECT_STREQ(popped, label);
+    EXPECT_TRUE(kernel.doWhileLabelStack_.empty());
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_DoWhileLabelStackPopForWhile_When_DanglingAppend_Expect_ReturnNullptr)
+{
+    hcomm::CcuKernel kernel;
+    const char *labelOuter = "ut_dw_outer";
+    const char *labelDangling = "ut_dw_dangling";
+
+    EXPECT_EQ(kernel.DoWhileBegin(labelOuter), CcuResult::CCU_SUCCESS);
+    kernel.DoWhileLabelStackPush(labelOuter);
+
+    // 用第二次 DoWhileBegin 模拟 CCU_DO 与 CCU_WHILE 之间夹杂了会 Append 指令的代码。
+    EXPECT_EQ(kernel.DoWhileBegin(labelDangling), CcuResult::CCU_SUCCESS);
+
+    // 快照 rep 数与当前不匹配，PopForWhile 返回 nullptr 拒绝配对，但仍需弹出栈条目。
+    const char *popped = kernel.DoWhileLabelStackPopForWhile();
+    EXPECT_EQ(popped, nullptr);
+    EXPECT_TRUE(kernel.doWhileLabelStack_.empty());
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_DoWhileLabelStackPopForWhile_When_InLoopBody_Expect_ReturnNullptr)
+{
+    // loop body 内(CurrentBlock 为 LOOP_BLOCK)PopForWhile 应直接返回 nullptr 且不消费栈条目。
+    hcomm::CcuKernel kernel;
+    CcuLoop loop = 0;
+    ASSERT_EQ(kernel.LoopCreate(&loop), CcuResult::CCU_SUCCESS);
+    ASSERT_EQ(kernel.LoopBodyEnter(loop), CcuResult::CCU_SUCCESS);
+
+    const char *label = "ut_dw_in_loop";
+    kernel.DoWhileLabelStackPush(label);
+    ASSERT_FALSE(kernel.doWhileLabelStack_.empty());
+
+    EXPECT_EQ(kernel.DoWhileLabelStackPopForWhile(), nullptr);
+    EXPECT_FALSE(kernel.doWhileLabelStack_.empty());
+
+    EXPECT_EQ(kernel.LoopBodyExit(loop), CcuResult::CCU_SUCCESS);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelLoopAdd_When_AllFine_Expect_ReturnCcuSUCCESS)

@@ -85,3 +85,73 @@ CcuResult CcuLoopAddDemoKernel(CcuKernelArg arg)
 
     return CcuResult::CCU_SUCCESS;
 }
+
+inline CcuResult CcuIfInLoopInvalidDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    (void)arg;
+    Variable v{};
+    v = 0;
+    Func body([&]() {
+        CCU_IF(v == 0) {
+            Variable t{};
+            t = v + v;
+        }
+    });
+    LoopConfig dummyCfg{};
+    Loop loop(dummyCfg, body);
+    return CcuResult::CCU_SUCCESS;
+}
+
+inline CcuResult CcuNotifyRecordInLoopInvalidDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    (void)arg;
+    ChannelHandle ch = 0;
+    Func body([&]() {
+        (void)NotifyRecord(ch, 0);
+    });
+    LoopConfig dummyCfg{};
+    Loop loop(dummyCfg, body);
+    return CcuResult::CCU_SUCCESS;
+}
+
+inline CcuResult CcuWriteVarWithNotifyInLoopInvalidDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    (void)arg;
+    ChannelHandle ch = 0;
+    Variable v{};
+    v = 1;
+    Func body([&]() {
+        (void)WriteVariableWithNotify(ch, v, 0, 0);
+    });
+    LoopConfig dummyCfg{};
+    Loop loop(dummyCfg, body);
+    return CcuResult::CCU_SUCCESS;
+}
+
+inline CcuResult CcuEventRecordTagInLoopInvalidDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    (void)arg;
+    Func body([&]() {
+        (void)EventRecord("evt_tag", 1);
+    });
+    LoopConfig dummyCfg{};
+    Loop loop(dummyCfg, body);
+    return CcuResult::CCU_SUCCESS;
+}
+
+inline CcuResult CcuEventRecordInLoopInvalidDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    (void)arg;
+    Event evt{};
+    Func body([&]() {
+        (void)EventRecord(evt, 1);
+    });
+    LoopConfig dummyCfg{};
+    Loop loop(dummyCfg, body);
+    return CcuResult::CCU_SUCCESS;
+}
