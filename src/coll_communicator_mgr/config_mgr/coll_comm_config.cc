@@ -21,14 +21,12 @@ static HcclResult GetHcclCommConfigVersion(const HcclCommConfig *config, uint32_
 {
     CHK_PTR_NULL(config);
 
-    typedef struct {
-        size_t size;
-        uint32_t magicWord;
-        uint32_t version;
-        uint64_t reserved;
-    } configInfo_t;
-    configInfo_t *info = (configInfo_t *)config;
-    version = info->version;
+    CommConfigInfo info{};
+    s32 sRet = memcpy_s(&info, sizeof(info), config->reserved, sizeof(info));
+    CHK_PRT_RET(sRet != EOK,
+        HCCL_ERROR("[GetHcclCommConfigVersion] memcpy_s failed, errno[%d]", sRet),
+        HCCL_E_MEMORY);
+    version = info.version;
     return HCCL_SUCCESS;
 }
 
