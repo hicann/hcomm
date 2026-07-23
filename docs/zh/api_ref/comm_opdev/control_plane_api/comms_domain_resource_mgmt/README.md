@@ -4,6 +4,7 @@
 - [HcclThreadAcquire](HcclThreadAcquire.md)  
 - [HcclThreadAcquireWithStream](HcclThreadAcquireWithStream.md)  
 - [HcclThreadAcquireWithConfig](HcclThreadAcquireWithConfig.md)  
+- [ThreadConfigInit](ThreadConfigInit.md)  
 - [HcclThreadResGetInfo](HcclThreadResGetInfo.md)  
 - [HcclChannelDescInit](HcclChannelDescInit.md)  
 - [HcclChannelAcquire](HcclChannelAcquire.md)  
