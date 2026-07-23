@@ -1,5 +1,6 @@
 # 基础资源管理
 
+- [EndpointDescInit](EndpointDescInit.md)
 - [HcommEndpointCreate](HcommEndpointCreate.md)  
 - [HcommEndpointDestroy](HcommEndpointDestroy.md)  
 - [HcommEndpointCheckFeature](HcommEndpointCheckFeature.md)  
