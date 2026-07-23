@@ -20,6 +20,7 @@
   - [HcclGetCommConfigCapability](HcclGetCommConfigCapability.md)
   - [HcclCommSuspend](HcclCommSuspend.md)
   - [HcclCommResume](HcclCommResume.md)
+  - [HcclCommRegCommStateCallback](HcclCommRegCommStateCallback.md)
   - [HcclCommGetStatus](HcclCommGetStatus.md)
   - [HcclCreateSubCommConfig](HcclCreateSubCommConfig.md)
   - [HcclCommWorkingDevNicSet](HcclCommWorkingDevNicSet.md)

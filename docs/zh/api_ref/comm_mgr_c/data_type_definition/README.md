@@ -18,3 +18,5 @@
 - [HcclKernelFuncInfo](HcclKernelFuncInfo.md)
 - [HcclKernelLaunchCfg](HcclKernelLaunchCfg.md)
 - [HcclOpDesc](HcclOpDesc.md)
+- [HcclCommStatePhase](HcclCommStatePhase.md)
+- [HcclCommStateCallback](HcclCommStateCallback.md)
