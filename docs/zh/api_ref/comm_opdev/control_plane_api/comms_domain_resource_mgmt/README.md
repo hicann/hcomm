@@ -1,6 +1,7 @@
 # 通信域资源管理
 
 - [HcclGetHcclBuffer](HcclGetHcclBuffer.md)  
+- [HcclGetHcclBufferCleared](HcclGetHcclBufferCleared.md)  
 - [HcclThreadAcquire](HcclThreadAcquire.md)  
 - [HcclThreadAcquireWithStream](HcclThreadAcquireWithStream.md)  
 - [HcclThreadAcquireWithConfig](HcclThreadAcquireWithConfig.md)  
