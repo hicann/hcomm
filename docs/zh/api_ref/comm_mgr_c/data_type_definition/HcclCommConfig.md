@@ -217,7 +217,17 @@ typedef struct HcclCommConfigDef {
   - 0xFFFFFFFF被用作优先级判断标识，当配置为0xFFFFFFFF时，此通信域配置无效，会按照优先级取环境变量配置或默认值4。
 
 - **hcclWorldRankID**：NSLB-DP（Network Scale Load Balance-Data Plane：数据面网络级负载均衡）场景使用字段，代表当前进程在AI框架（如Pytorch）中的全局rank ID。
+
+  **注意事项：**
+
+  - Ascend 950PR/Ascend 950DT不支持此配置。
+
 - **hcclJobID**：NSLB-DP场景使用字段，代表当前分布式业务的唯一标识，由AI框架生成。
+
+  **注意事项：**
+
+  - Ascend 950PR/Ascend 950DT不支持此配置。
+
 - **aclGraphZeroCopyEnable**：该参数仅在图捕获模式（aclgraph）下对Reduce类算子生效，用于控制其是否开启零拷贝功能。
   - 0（默认值）：关闭零拷贝功能。
   - 1：开启零拷贝功能。
@@ -284,7 +294,11 @@ typedef struct HcclCommConfigDef {
 
   - Ascend 950PR/Ascend 950DT不支持此配置。
 
-- **hcclQos**：用于配置超平面QoS的级别，取值范围：0\~7，默认值6。
+- **hcclQos**：用于配置超平面QoS的级别，取值范围：\[0, 7\]。
+
+   针对Ascend 950PR/Ascend 950DT，默认值为：4
+   针对Atlas A3 训练系列产品/Atlas A3 推理系列产品和Atlas A2 训练系列产品/Atlas A2 推理系列产品，默认值为：6
+
 - **hcclSymWinMaxMemSizePerRank**：Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景下，为当前通信域中每个rank预留的对称内存大小，单位GB，取值范围：\[1, 当前环境中允许分配的物理内存最大值\]，默认值16。该参数仅在Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景下生效。Ascend 950PR/Ascend 950DT的URMA场景使用已申请的Device内存注册对称内存窗口，不依赖该参数配置预留的对称内存大小。
 
 ## 配置优先级说明
@@ -308,11 +322,11 @@ typedef struct HcclCommConfigDef {
 | 配置项 | 配置优先级 |
 | --- | --- |
 | hcclBufferSize | 配置项hcclBufferSize（通信域粒度配置）> 环境变量[HCCL_BUFFSIZE](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_BUFFSIZE.md)（全局配置）> 默认值200。 |
-| hcclDeterministic | 配置项hcclDeterministic（通信域粒度配置）> 环境变量[HCCL_DETERMINISTIC](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_DETERMINISTIC.md)（全局配置）> 默认值0（关闭确定性计算）。 |
+| hcclDeterministic | 配置项hcclDeterministic（通信域粒度配置）> 环境变量[HCCL_DETERMINISTIC](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_DETERMINISTIC.md)（全局配置）> 默认确定性开关（同环境变量HCCL_DETERMINISTIC默认值）。 |
 | hcclOpExpansionMode | 配置项hcclOpExpansionMode（通信域粒度配置）> 环境变量[HCCL_OP_EXPANSION_MODE](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_OP_EXPANSION_MODE.md)（全局配置）> 默认算子展开模式（同环境变量HCCL_OP_EXPANSION_MODE默认值）。|
 | hcclRdmaTrafficClass | 配置项hcclRdmaTrafficClass（通信域粒度配置） > 环境变量[HCCL_RDMA_TC](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_RDMA_TC.md)（全局配置）> 默认值132。 |
 | hcclRdmaServiceLevel | 配置项hcclRdmaServiceLevel（通信域粒度配置）> 环境变量[HCCL_RDMA_SL](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_RDMA_SL.md)（全局配置）> 默认值4。 |
-| hcclExecTimeOut | 配置项hcclExecTimeOut（通信域粒度配置）> 环境变量[HCCL_EXEC_TIMEOUT](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_EXEC_TIMEOUT.md)（全局配置）> 默认值1836。 |
+| hcclExecTimeOut | 配置项hcclExecTimeOut（通信域粒度配置）> 环境变量[HCCL_EXEC_TIMEOUT](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_EXEC_TIMEOUT.md)（全局配置）> 默认超时时间（同环境变量HCCL_EXEC_TIMEOUT默认值）。 |
 | hcclAlgo | 配置项hcclAlgo（通信域粒度配置）> 环境变量[HCCL_ALGO](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_ALGO.md)（全局配置）> 自适应选择算法。 |
 | hcclRetryEnable | 配置项hcclRetryEnable（通信域粒度配置）> 环境变量[HCCL_OP_RETRY_ENABLE](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_ENABLE.md)（全局配置）> 默认值0。 |
 | hcclRetryParams | 配置项hcclRetryParams（通信域粒度配置）> 环境变量[HCCL_OP_RETRY_PARAMS](https://gitcode.com/cann/hccl/blob/9.1.0/docs/zh/user_guide/hccl_env/HCCL_OP_RETRY_PARAMS.md)（全局配置）> 默认配置（MaxCnt：1，HoldTime：5000，IntervalTime：1000）。 |

@@ -2,7 +2,7 @@
 
 ## 产品支持情况
 
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR/Ascend 950DT：支持
 - Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
 - Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
 
@@ -31,24 +31,32 @@ HcclResult HcclChannelGetHcclBuffer(HcclComm comm, ChannelHandle channel, void *
 
 ## 约束说明
 
-无
+无。
 
 ## 调用示例
 
 ```c
+// 设置当前线程操作的Device
+aclrtSetDevice(0);
+
+// 初始化Channel描述符
 uint32_t channelNum = 1;
 std::vector<HcclChannelDesc> channelDesc(channelNum);
 HcclChannelDescInit(channelDesc.data(), channelNum);
 
+// 对端为Rank1
 channelDesc[0].remoteRank = 1;
 channelDesc[0].channelProtocol = CommProtocol::COMM_PROTOCOL_HCCS;
 channelDesc[0].notifyNum = 3;
 
+// 通信域句柄
 HcclComm comm;
+// 创建Channel资源
 CommEngine engine = CommEngine::COMM_ENGINE_CPU_TS;
 std::vector<ChannelHandle> channels(channelNum);
 HcclChannelAcquire(comm, engine, channelDesc.data(), channelNum, channels.data());
 
+// 获取对端（Rank1）的HCCL Buffer地址和大小
 void *remoteBufferAddr;
 uint64_t remoteBufferSize;
 HcclChannelGetHcclBuffer(comm, channels[0], &remoteBufferAddr, &remoteBufferSize);

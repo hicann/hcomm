@@ -9,6 +9,7 @@
 - [ThreadType](ThreadType.md)  
 - [ThreadConfig](ThreadConfig.md)  
 - [ThreadResType](ThreadResType.md)
+- [ThreadResTypeStream](ThreadResTypeStream.md)
 - [CommEngine](CommEngine.md)  
 - [CommAbiHeader](CommAbiHeader.md)  
 - [CommProtocol](CommProtocol.md)  

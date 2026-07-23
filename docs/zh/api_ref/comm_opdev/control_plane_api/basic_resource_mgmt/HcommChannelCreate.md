@@ -56,9 +56,10 @@ HcommResult：接口成功返回0，其他失败。
     - COMM_PROTOCOL_UBC_CTP
     - COMM_PROTOCOL_UBC_TP
     - COMM_PROTOCOL_ROCE
-  - COMM_ENGINE_CCU
-    - COMM_PROTOCOL_UBC_CTP
-    - COMM_PROTOCOL_UBC_TP
+
+  **注意事项：**
+    - Atlas 350加速卡不支持COMM_ENGINE_CPU通信引擎以及相应的通信协议
+    - Atlas 350加速卡不支持COMM_ENGINE_AICPU_TS通信引擎的COMM_PROTOCOL_ROCE通信协议
 
 ## 调用示例
 
