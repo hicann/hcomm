@@ -73,6 +73,13 @@ public:
             (other.addr_ < addr_ + size_ && other.addr_ + other.size_ > addr_);
     }
 
+    inline bool IsPartialIntersect(const BufferKey& other) const 
+    {
+        // 只判断有交集，排除区间完全相同的场景
+        return (addr_ < other.addr_ + other.size_ && addr_ + size_ > other.addr_) &&
+            !(addr_ == other.addr_ && size_ == other.size_);
+    }
+
     inline bool IsDisjoint(const BufferKey& other) const 
     {
         // 检查是否没有交集：一方完全在另一方之前或之后。
