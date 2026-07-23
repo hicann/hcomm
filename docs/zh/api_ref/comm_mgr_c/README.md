@@ -46,3 +46,5 @@
   - [HcclGroupEnd](HcclGroupEnd.md)
   - [HcclGroupStatusGet](HcclGroupStatusGet.md)
   - [HcclAicpuKernelLaunch](HcclAicpuKernelLaunch.md)
+  - [HcclOpDescInit](HcclOpDescInit.md)
+  - [HcclKernelLaunchCfgInit](HcclKernelLaunchCfgInit.md)

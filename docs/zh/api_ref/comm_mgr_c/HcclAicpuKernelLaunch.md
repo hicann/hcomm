@@ -20,9 +20,9 @@
 
 ## 功能说明
 
-在AICPU上运行核函数。该接口用于下发自定义通信算子到AICPU执行，支持在Group通信场景和非Group通信场景下使用。
+在AI CPU上运行核函数。该接口用于下发自定义通信算子到AI CPU执行，支持在Group通信场景和非Group通信场景下使用。
 
-在Group通信场景下（调用了HcclGroupStart），该接口会将任务添加到Group任务队列中，等待HcclGroupEnd时统一执行；在非Group通信场景下，直接在AICPU上运行核函数。
+在Group通信场景下（调用了HcclGroupStart），该接口会将任务添加到Group任务队列中，等待HcclGroupEnd时统一执行；在非Group通信场景下，直接在AI CPU上运行核函数。
 
 ## 函数原型
 
@@ -66,13 +66,13 @@ if (ret != HCCL_SUCCESS) {
 
 HcclOpDesc opInfo;
 HcclOpDescInit(&opInfo);
-opInfo.opDescType = 1;
+opInfo.opDescType = 1;  // 代表Send或Receive算子
 opInfo.p2p.buffer = sendBuffer;
 opInfo.p2p.cmdType = HCCL_CMD_SEND;
 opInfo.p2p.dataType = HCCL_DATA_TYPE_FP32;
 opInfo.p2p.count = dataSize;
 opInfo.p2p.remoteRank = destRank;
-opInfo.p2p.unfoldStream = aicpuStream;
+opInfo.p2p.unfoldStream = userStream;
 
 // 初始化核函数信息
 HcclKernelFuncInfo funcInfo;
@@ -89,7 +89,7 @@ HcclKernelLaunchCfg kernelLaunchCfg;
 HcclKernelLaunchCfgInit(&kernelLaunchCfg);
 kernelLaunchCfg.timeOut = kernelLaunchTimeout;
 
-// 运行AICPU核函数
+// 运行AI CPU核函数
 ret = HcclAicpuKernelLaunch(comm, &opInfo, &funcInfo, aicpuThreadHandle, userStream, &kernelLaunchCfg);
 if (ret != HCCL_SUCCESS) {
     // 处理错误
