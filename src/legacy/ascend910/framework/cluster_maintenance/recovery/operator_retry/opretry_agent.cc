@@ -573,7 +573,9 @@ HcclResult OpRetryAgentPollAicpuStop::ProcessEvent(RetryContext* retryCtx)
                     }
                 } else if (aicpuState == KfcStatus::kRetryError && errorCode == KfcError::kExecConstraint) {
                     retryCtx->localRetryInfo_.isNeedReportOpRetryErr = true;
-                    HCCL_INFO("[OpRetry][Agent]Inplace Error, isNeedReportOpRetryErr[%d]", retryCtx->localRetryInfo_.isNeedReportOpRetryErr);
+                    HCCL_ERROR("[OpRetry][Agent]can not retry for constraint");
+ 	                nextState = RETRY_STATE_RESP_RUNNING_ERR;
+ 	                break;
                 }
                 break;
             case RETRY_STATE_POLL_STREAM_STOPED:
@@ -581,7 +583,9 @@ HcclResult OpRetryAgentPollAicpuStop::ProcessEvent(RetryContext* retryCtx)
                     nextState = RETRY_STATE_RESP_STREAM_STOPED;
                 } else if (aicpuState == KfcStatus::kRetryError && errorCode == KfcError::kExecConstraint) {
                     retryCtx->localRetryInfo_.isNeedReportOpRetryErr = true;
-                    HCCL_INFO("[OpRetry][Agent]Inplace Error, isNeedReportOpRetryErr[%d]", retryCtx->localRetryInfo_.isNeedReportOpRetryErr);
+                    HCCL_ERROR("[OpRetry][Agent]can not retry for constraint");
+ 	                nextState = RETRY_STATE_RESP_RUNNING_ERR;
+ 	                break;
                 }
                 break;
             case RETRY_STATE_POLL_AICPU_CHANGED:

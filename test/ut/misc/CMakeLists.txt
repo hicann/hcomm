@@ -33,7 +33,7 @@ set(hccl_utest_misc_list
     ut_topoinfo_exchange_dispatcher.cc
     ut_op_counter.cc
     ut_hccl_hdc.cc
-    # ut_opretry.cc
+    ut_opretry.cc
     ut_peterson_lock.cc
     ut_task_abort_handler.cc
     # ut_hccl_comm_aicpuunfold.cc

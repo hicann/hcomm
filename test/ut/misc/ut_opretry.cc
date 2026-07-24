@@ -182,7 +182,7 @@ HcclResult stub_WaitChangeLink(OpRetryBase* that, std::shared_ptr<HcclSocket> so
     changeLinkInfo.remoteRankNum = 1;
     return HCCL_SUCCESS;
 }
-
+#if 0
 TEST_F(RetryTest, ut_retry_Agent_processEvent)
 {
     MOCKER_CPP(&OpRetryBase::Send).stubs().with(mockcpp::any()).will(returnValue(0));
@@ -2133,49 +2133,6 @@ TEST_F(RetryTest, ut_retry_Agent_OpName_Inconsistent)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(RetryTest, ut_retry_Agent_Inplace_Err)
-{
-    u32 rankId = 0;
-    HcclIpAddress localIp = HcclIpAddress("192.168.100.110");
-    
-    // retryAgentPollAicpuStop Agent状态机等待aicpu停止，超时后直接退出
-    OpRetryAgentParam agentParam;
-    agentParam.h2dPtr.reset(new (std::nothrow) hccl::HDCommunicate(0, HCCL_HDC_TYPE_H2D, sizeof(KfcExecControl)));
-    agentParam.d2hPtr.reset(new (std::nothrow) hccl::HDCommunicate(0, HCCL_HDC_TYPE_D2H, sizeof(KfcExecStatus)));
-    HcclOpStreamRes myMap;
-    std::string key = "example_key";
-    std::vector<Stream> slaves;
-    for (int i = 0; i < TEST_RANK_NUM; i++) {
-        slaves.push_back(Stream(StreamType::STREAM_TYPE_ONLINE));
-    }
-    myMap[key] = slaves;
-    agentParam.opStreamPtr =  std::make_shared<HcclOpStreamRes>(myMap);
-    s32 deviceLogicId = 0;
-    HcclIpAddress deviceIP = HcclIpAddress("10.21.78.208");
-    agentParam.agentInfo = {rankId, deviceLogicId, localIp, deviceIP};
-    agentParam.group = "group";
-    agentParam.agentConnection = std::make_shared<HcclSocket>("st_retry_Agent_OpName_Inconsistentr",
-        nullptr, localIp, 16666, HcclSocketRole::SOCKET_ROLE_SERVER);
-    agentParam.isEnableBackupLink = false;
-    agentParam.notifyResetCallback = notifyResetCallback;
-    agentParam.setTransportStatusCallback = setTransportStatusCallback;
-    agentParam.getSwitchRanksCallback = getSwitchRanksCallback;
-
-    std::shared_ptr<OpRetryAgentPollAicpuStop> retryAgentPollAicpuStop = std::make_shared<OpRetryAgentPollAicpuStop>();
-    RetryContext context1(agentParam, retryAgentPollAicpuStop);
-    KfcExecStatus opInfo;
-    opInfo.execStatus.kfcError = KfcError::kExecConstraint;
-    context1.state_ = RETRY_STATE_POLL_AICPU_STOPED;
-    opInfo.execStatus.kfcStatus = KfcStatus::kRetryError;
-    context1.SetRetryState(RETRY_STATE_POLL_AICPU_STOPED, retryAgentPollAicpuStop);
-    context1.localRetryInfo_.isNeedReportOpRetryErr = false;
-    MOCKER_CPP(&OpRetryBase::GetOpExecInfo).stubs().with(mockcpp::any(), outBound(opInfo)).will(returnValue(0));
-    HcclResult ret = retryAgentPollAicpuStop->ProcessEvent(&context1);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(context1.localRetryInfo_.isNeedReportOpRetryErr, true);
-    GlobalMockObject::verify();
-}
-
 TEST_F(RetryTest, ut_retry_Server_Inplace_Err)
 {
     MOCKER_CPP(&OpRetryBase::Send).stubs().with(mockcpp::any()).will(returnValue(0));
@@ -2695,4 +2652,48 @@ TEST_F(RetryTest, ut_SetTransportResumeStatus)
     communication.SetTransportResumeStatus(remoteRankPortMap, isChangeLinkMap, isChangeLinkFlag, statusStop);
     isChangeLinkFlag = true;
     communication.SetTransportResumeStatus(remoteRankPortMap, isChangeLinkMap, isChangeLinkFlag, statusStop);
+}
+#endif
+
+TEST_F(RetryTest, ut_retry_Agent_Inplace_Err)
+{
+    u32 rankId = 0;
+    HcclIpAddress localIp = HcclIpAddress("192.168.100.110");
+    
+    // retryAgentPollAicpuStop Agent状态机等待aicpu停止，超时后直接退出
+    OpRetryAgentParam agentParam;
+    agentParam.h2dPtr.reset(new (std::nothrow) hccl::HDCommunicate(0, HCCL_HDC_TYPE_H2D, sizeof(KfcExecControl)));
+    agentParam.d2hPtr.reset(new (std::nothrow) hccl::HDCommunicate(0, HCCL_HDC_TYPE_D2H, sizeof(KfcExecStatus)));
+    HcclOpStreamRes myMap;
+    std::string key = "example_key";
+    std::vector<Stream> slaves;
+    for (int i = 0; i < TEST_RANK_NUM; i++) {
+        slaves.push_back(Stream(StreamType::STREAM_TYPE_ONLINE));
+    }
+    myMap[key] = slaves;
+    agentParam.opStreamPtr =  std::make_shared<HcclOpStreamRes>(myMap);
+    s32 deviceLogicId = 0;
+    HcclIpAddress deviceIP = HcclIpAddress("10.21.78.208");
+    agentParam.agentInfo = {rankId, deviceLogicId, localIp, deviceIP};
+    agentParam.group = "group";
+    agentParam.agentConnection = std::make_shared<HcclSocket>("st_retry_Agent_OpName_Inconsistentr",
+        nullptr, localIp, 16666, HcclSocketRole::SOCKET_ROLE_SERVER);
+    agentParam.isEnableBackupLink = false;
+    agentParam.notifyResetCallback = notifyResetCallback;
+    agentParam.setTransportStatusCallback = setTransportStatusCallback;
+    agentParam.getSwitchRanksCallback = getSwitchRanksCallback;
+
+    std::shared_ptr<OpRetryAgentPollAicpuStop> retryAgentPollAicpuStop = std::make_shared<OpRetryAgentPollAicpuStop>();
+    RetryContext context1(agentParam, retryAgentPollAicpuStop);
+    KfcExecStatus opInfo;
+    opInfo.execStatus.kfcError = KfcError::kExecConstraint;
+    context1.state_ = RETRY_STATE_POLL_AICPU_STOPED;
+    opInfo.execStatus.kfcStatus = KfcStatus::kRetryError;
+    context1.SetRetryState(RETRY_STATE_POLL_AICPU_STOPED, retryAgentPollAicpuStop);
+    context1.localRetryInfo_.isNeedReportOpRetryErr = false;
+    MOCKER_CPP(&OpRetryBase::GetOpExecInfo).stubs().with(mockcpp::any(), outBound(opInfo)).will(returnValue(0));
+    HcclResult ret = retryAgentPollAicpuStop->ProcessEvent(&context1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(context1.localRetryInfo_.isNeedReportOpRetryErr, true);
+    GlobalMockObject::verify();
 }
