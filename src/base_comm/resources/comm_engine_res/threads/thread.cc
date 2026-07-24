@@ -467,6 +467,7 @@ HcclResult Thread::ReportHostLocalCopyTask(void *dst, const void *src, uint64_t 
     taskParam.taskPara.DMA.notifyID = INVALID_U64;
     taskParam.taskPara.DMA.linkType = Hccl::DfxLinkType::ONCHIP;
     taskParam.taskPara.DMA.dmaOp    = Hccl::DmaOp::HCCL_DMA_READ;
+    taskParam.isMaster = isMaster;
 
     u32 taskId = 0;
     u32 streamId = 0;
