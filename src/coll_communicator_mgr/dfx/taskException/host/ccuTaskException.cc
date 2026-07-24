@@ -919,14 +919,17 @@ HcclResult CcuTaskException::GetCcuErrorMsg(int32_t deviceId, uint16_t missionSt
     if ((prevRep != nullptr && prevRep->Type() == CcuRep::CcuRepType::LOOPGROUP) || (rep->Type() == CcuRep::CcuRepType::LOOPGROUP)) {
         // 处理LoopGroup
         CHK_RET(GenErrorInfoLoopGroup(baseInfo, prevRep, *ctx, errorInfo));
-    } else if (rep->Type() == CcuRep::CcuRepType::LOC_WAIT_EVENT || rep->Type() == CcuRep::CcuRepType::LOC_WAIT_NOTIFY) {
+    } else if (rep->Type() == CcuRep::CcuRepType::LOC_WAIT_EVENT) {
         GenErrorInfoByRepType(baseInfo, rep, errorInfo);
         uint16_t actValue = errorInfo.back().msg.waitSignal.signalValue;
         uint16_t expValue = errorInfo.back().msg.waitSignal.signalMask;
         for (uint16_t i = 0; i < 16; ++i) { // CKE的bit数最多为16
             uint16_t mask = 1 << i; // 创建一个用于检查第 i 位的掩码
             if ((expValue & mask) != 0 && (actValue & mask) == 0) {
-                HCCL_INFO("Do GenErrorInfoByRepType");
+                auto depRepVec = static_pointer_cast<CcuRep::CcuRepLocWaitEvent>(rep)->GetDependencyInfo(mask);
+                for (const auto& depRep : depRepVec) {
+                    GenErrorInfoByRepType(baseInfo, depRep, errorInfo);
+                }
             }
         }
     } else {

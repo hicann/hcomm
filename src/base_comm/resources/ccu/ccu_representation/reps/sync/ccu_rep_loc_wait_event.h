@@ -26,10 +26,14 @@ public:
     uint32_t    GetMask() { return mask_; };
     uint32_t    GetEventId()  { return event_.Id(); };
 
+    void SetDependencyInfo(const std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>>& depInfo);
+    std::vector<std::shared_ptr<CcuRepBase>> GetDependencyInfo(uint32_t bit);
+
 private:
     CompletedEvent event_{};
     uint32_t       mask_{1};
     bool           isProfiling_{true};
+    std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>> depInfo_;
 };
 
 }; // namespace CcuRep

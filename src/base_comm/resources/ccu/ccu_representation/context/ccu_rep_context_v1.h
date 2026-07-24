@@ -68,6 +68,11 @@ public:
     int32_t AddProfiling(const ChannelHandle *channels, uint32_t channelNum);
     int32_t AddProfiling(const ChannelHandle *channels, uint32_t channelNum, HcommDataType hcommDataType,
         HcommDataType hcommOutputDataType, HcommReduceOp hcommOpType);
+
+    void SetDependencyInfo(uint32_t id, uint32_t mask, const std::shared_ptr<CcuRepBase> &rep);
+    std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>> GetDependencyInfo(uint32_t id);
+    void EraseDependencyInfo(uint32_t id);
+    void ClearDependencyInfo();
 public:
     // CCU Profiling相关数据
     CcuProfilingInfo ccuProfilingInfoCache;
@@ -77,6 +82,7 @@ public:
     std::vector<CcuProfilingInfo> profilingInfo; // context全部profiling缓存信息
 protected:
     std::set<std::string> registeredLoop;
+    std::unordered_map<uint32_t, std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>>> depInfo;
 
 private:
     std::shared_ptr<CcuRep::CcuRepBlock> activeBlock{nullptr};
