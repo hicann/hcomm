@@ -24,39 +24,70 @@ namespace CcuRep {
 
 class CcuRepLoopGroupBundle : public CcuRepBase {
 public:
+    enum class Layout {
+        Config,      // 结构体 config 构造
+        PackedVar,   // 旧打包变量构造（兼容路径）
+        VersionV2,  // 960 三变量直传
+    };
+
     struct LoopEntry {
         CcuLoopConfig config;
         Executor executor;
         std::shared_ptr<CcuRepLoopBlock> repLoopBlock;
         Variable loopParamVar;
-        bool isVarBased{false};
+        Variable iterNumVar;
+        Variable addrOffsetVar;
+        Variable ctxIdVar;
+        Layout layout{Layout::Config};
     };
 
-    CcuRepLoopGroupBundle(const CcuLoopGroupConfig &config,
+    CcuRepLoopGroupBundle(CcuInsGeneraterBase* insGenPtr, const CcuLoopGroupConfig &config,
                           const Variable &parallelVar, const Variable &offsetVar);
-    CcuRepLoopGroupBundle(const Variable &parallelVar, const Variable &offsetVar);
+    CcuRepLoopGroupBundle(CcuInsGeneraterBase* insGenPtr, const Variable &parallelVar, const Variable &offsetVar);
 
     void AddLoop(const LoopEntry &entry);
     void SetRepeatLoopIdx(uint64_t idx) { repeatLoopIdx_ = idx; }
     void SetTotalLoopNum(uint64_t num) { totalLoopNum_ = num; }
+    void SetLayout(Layout layout) { layout_ = layout; }
+    void SetXnOffsetVar(const Variable &xnOffsetVar) { xnOffsetVar_ = Variable(xnOffsetVar); }
+    void SetCompatRemapVars(const Variable &newParallelVar, const Variable &scratchVar)
+    {
+        // Variable 的 const& operator= 是 DSL 赋值，须用临时量走移动赋值做纯拷贝
+        newParallelVar_ = Variable(newParallelVar);
+        scratchVar_ = Variable(scratchVar);
+    }
 
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     uint16_t    InstrCount() override;
     std::string Describe() override;
 
     uint16_t GetStartLoopInstrId() const;
     const Variable &GetOffsetParam() const { return offsetVar_; }
 
+    const std::vector<LoopEntry> &GetLoops() const { return loops_; }
+    const CcuLoopGroupConfig &GetConfig() const { return config_; }
+    const Variable &GetParallelVar() const { return parallelVar_; }
+    uint64_t GetRepeatLoopIdx() const { return repeatLoopIdx_; }
+    uint64_t GetTotalLoopNum() const { return totalLoopNum_; }
+    Layout GetLayout() const { return layout_; }
+    const Variable &GetNewParallelVar() const { return newParallelVar_; }
+    const Variable &GetScratchVar() const { return scratchVar_; }
+    const Variable &GetXnOffsetVar() const { return xnOffsetVar_; }
+
 private:
     uint16_t LoopGroupInstrOffsetInBundle() const;
 
+    CcuInsGeneraterBase* insGenPtr_{nullptr};
     CcuLoopGroupConfig config_;
     Variable parallelVar_;
     Variable offsetVar_;
     uint64_t repeatLoopIdx_{0};
     uint64_t totalLoopNum_{0};
     std::vector<LoopEntry> loops_;
-    bool isGroupVarBased_{false};
+    Layout layout_{Layout::Config};
+    Variable newParallelVar_;
+    Variable scratchVar_;
+    Variable xnOffsetVar_;
 };
 
 }; // namespace CcuRep

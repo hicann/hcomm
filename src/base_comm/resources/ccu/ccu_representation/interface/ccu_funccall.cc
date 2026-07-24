@@ -13,17 +13,23 @@
 #include "exception_util.h"
 #include "ccu_api_exception.h"
 
+#include "ccu_ins_generater_base.h"
+
 namespace hcomm {
 namespace CcuRep {
 
 FuncCall::FuncCall(CcuRepContext *context, std::string label) : context(context), label(label)
 {
-    repFuncCall = std::make_shared<CcuRepFuncCall>(label);
+    CcuInsGeneraterBase* insGenPtr = context->GetInsGenerator();
+    Hccl::CHECK_NULLPTR(insGenPtr, "[FuncCall::FuncCall](label) insGenPtr is nullptr!");
+    repFuncCall = std::make_shared<CcuRepFuncCall>(insGenPtr, label);
 }
 
 FuncCall::FuncCall(CcuRepContext *context, const Variable &funcAddr) : context(context)
 {
-    repFuncCall = std::make_shared<CcuRepFuncCall>(funcAddr);
+    CcuInsGeneraterBase* insGenPtr = context->GetInsGenerator();
+    Hccl::CHECK_NULLPTR(insGenPtr, "[FuncCall::FuncCall](funcAddr) insGenPtr is nullptr!");
+    repFuncCall = std::make_shared<CcuRepFuncCall>(insGenPtr, funcAddr);
 }
 
 void FuncCall::AppendToContext()

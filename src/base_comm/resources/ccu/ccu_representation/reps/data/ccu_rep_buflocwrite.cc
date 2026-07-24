@@ -6,27 +6,27 @@
  */
 
 #include "ccu_rep_v1.h"
-
+#include "ccu_ins_generater_v1.h"
 #include "string_util.h"
+#include "ccu_ins_generater_base.h"
+#include "ccu_kernel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepBufLocWrite::CcuRepBufLocWrite(CcuBuf src, LocalAddr dst, Variable len, CompletedEvent sem, uint32_t mask)
-    : src(src), dst(dst), len(len), sem(sem), mask(mask)
+CcuRepBufLocWrite::CcuRepBufLocWrite(CcuInsGeneraterBase* insGenPtr, CcuBuf src, LocalAddr dst, Variable len, CompletedEvent sem, uint32_t mask)
+    : insGenPtr(insGenPtr), src(src), dst(dst), len(len), sem(sem), mask(mask)
 {
     type       = CcuRepType::BUF_LOC_WRITE;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
-bool CcuRepBufLocWrite::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepBufLocWrite::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     this->instrId = instrId;
     translated    = true;
 
-    TransLocMSToLocMemInstr(instr++, dst.addr.Id(), dst.token.Id(), src.Id(), len.Id(), dep.reserveChannalId[0],
-                            sem.Id(), mask, 0, 0, 1, 1);
-
+    insGenPtr->CcuRepBufLocWriteTranslate(ccuKernel, instr, this, dep);
     instrId += instrCount;
 
     return translated;

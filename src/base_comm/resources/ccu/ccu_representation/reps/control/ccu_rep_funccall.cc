@@ -12,15 +12,23 @@
 #include "exception_util.h"
 #include "ccu_api_exception.h"
 
+#include "ccu_ins_generater_base.h"
+#include "ccu_kernel.h"
+
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepFuncCall::CcuRepFuncCall(const std::string &label) : label(label)
+using namespace Hccl;
+
+CcuRepFuncCall::CcuRepFuncCall(CcuInsGeneraterBase* insGenPtr, const std::string &label) :
+    insGeneratorPtr_(insGenPtr), label(label)
 {
     type = CcuRepType::FUNC_CALL;
+    instrCount = 0;
 }
 
-CcuRepFuncCall::CcuRepFuncCall(const Variable &funcAddrVar) : label(""), funcAddrVar(funcAddrVar)
+CcuRepFuncCall::CcuRepFuncCall(CcuInsGeneraterBase* insGenPtr, const Variable &funcAddrVar) :
+    insGeneratorPtr_(insGenPtr), label(""), funcAddrVar(funcAddrVar)
 {
     type = CcuRepType::FUNC_CALL;
 }
@@ -72,17 +80,17 @@ void CcuRepFuncCall::SetOutArg(const std::vector<Variable> &varList)
 
 uint16_t CcuRepFuncCall::InstrCount()
 {
-    instrCount = inArgCount + outArgCount + 4; // funcCall除去入参和出参的处理外，需要额外4条指令
+    instrCount = inArgCount + outArgCount + insGeneratorPtr_->GetInstrCount(type); // funcCall除去入参和出参的处理外，需要额外4条指令
     return instrCount;
 }
 
-bool CcuRepFuncCall::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepFuncCall::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     if (funcManager == nullptr) {
         Hccl::THROW<Hccl::CcuApiException>("funcManager is nullptr");
     }
     // 未实现, FuncCall和FuncBlock中的args个数校验
-    uint32_t extraInstrNum = 4; // funcCall除去入参和出参的处理外，需要额外4条指令
+
     if (this->instr == nullptr) {
         this->instrId = instrId;
         this->instr   = instr;
@@ -96,60 +104,9 @@ bool CcuRepFuncCall::Translate(CcuInstr *&instr, uint16_t &instrId, const TransD
 
     translated = true;
 
-    std::vector<Variable> formalIns;
-    if (funcBlock != nullptr) {
-        formalIns = funcBlock->GetInArgVars();
-        if (static_cast<uint32_t>(formalIns.size()) != inArgCount) {
-            Hccl::THROW<Hccl::CcuApiException>("FuncCall arg count mismatch: caller = %u, callee formal = %u",
-                                               inArgCount, static_cast<uint32_t>(formalIns.size()));
-        }
-    }
-
-    auto inArgDstId = [&](uint32_t idx) -> uint16_t {
-        return (funcBlock != nullptr) ? formalIns[idx].Id() : funcManager->GetFuncIn()[idx].Id();
-    };
-
-    uint32_t iInArg = 0;
-    for (uint32_t i = 0; i < inArgs.size(); i++) {
-        if (inArgs[i].type == CcuArgType::VARIABLE) {
-            LoadXXInstr(this->instr + iInArg, inArgDstId(iInArg), inArgs[i].var.Id(), dep.reserveXnId);
-            iInArg++;
-        } else if (inArgs[i].type == CcuArgType::VARIABLE_LIST) {
-            for (uint32_t j = 0; j < inArgs[i].varList.size(); j++) {
-                LoadXXInstr(this->instr + iInArg, inArgDstId(iInArg), inArgs[i].varList[j].Id(), dep.reserveXnId);
-                iInArg++;
-            }
-        }
-    }
-
-    uint32_t locId = 0;
-    if (funcBlock != nullptr) {
-        LoadImdToXnInstr(this->instr + inArgCount + locId++, funcManager->GetFuncCall().Id(),
-                         funcBlock->StartInstrId());
-    } else {
-        LoadXXInstr(this->instr + inArgCount + locId++, funcManager->GetFuncCall().Id(), funcAddrVar.Id(),
-                    dep.reserveXnId);
-    }
-
-    LoadImdToXnInstr(this->instr + inArgCount + locId++, funcManager->GetFuncRet(GetCallLayer()).Id(),
-                     this->instrId + inArgCount + 3); // 需要指向函数返回位置，为输入指令Id + 3
-    JumpInstr(this->instr + inArgCount + locId++, funcManager->GetFuncCall().Id(), dep.reserveXnId, 1);
-    LoadImdToXnInstr(this->instr + inArgCount + locId++, dep.reserveXnId, 0);
-
-    uint32_t iOutArg = 0;
-    for (uint32_t i = 0; i < outArgs.size(); i++) {
-        if (outArgs[i].type == CcuArgType::VARIABLE) {
-            LoadXXInstr(this->instr + inArgCount + extraInstrNum + iOutArg, outArgs[i].var.Id(),
-                        funcManager->GetFuncOut()[iOutArg].Id(), dep.reserveXnId);
-            iOutArg++;
-        } else if (outArgs[i].type == CcuArgType::VARIABLE_LIST) {
-            for (uint32_t j = 0; j < outArgs[i].varList.size(); j++) {
-                LoadXXInstr(this->instr + inArgCount + extraInstrNum + iOutArg, outArgs[i].varList[j].Id(),
-                            funcManager->GetFuncOut()[iOutArg].Id(), dep.reserveXnId);
-                iOutArg++;
-            }
-        }
-    }
+    CHK_RET_THROW(CcuApiException,
+        Hccl::StringFormat("[CcuRepFuncCall][%s] failed to translate functionCall for instrId[%u] ", __func__, instrId),
+            insGeneratorPtr_->CcuRepFuncCallTranslate(ccuKernel, instr, instrId, this, dep));
 
     return translated;
 }

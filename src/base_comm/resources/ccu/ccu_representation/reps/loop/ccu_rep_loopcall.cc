@@ -10,11 +10,16 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
+#include "ccu_ins_generater_base.h"
+#include "ccu_kernel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLoopCall::CcuRepLoopCall(const std::string &label) : label(label)
+using namespace Hccl;
+
+CcuRepLoopCall::CcuRepLoopCall(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label) :
+    insGeneratorPtr_(insGeneratorPtr), label(label)
 {
     type = CcuRepType::LOOP_CALL;
 }
@@ -92,7 +97,7 @@ uint16_t CcuRepLoopCall::InstrCount()
     return instrCount;
 }
 
-bool CcuRepLoopCall::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepLoopCall::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     this->instrId = instrId;
     translated    = true;
@@ -101,61 +106,6 @@ bool CcuRepLoopCall::Translate(CcuInstr *&instr, uint16_t &instrId, const TransD
 
     if (!loopBlock->Translated()) {
         Hccl::THROW<Hccl::CcuApiException>("Reference To Invalid LoopBlock");
-    }
-
-    for (uint32_t i = 0; i < inArgs.size(); i++) {
-        if (inArgs[i].type == CcuArgType::VARIABLE && loopBlock->GetArg(i).type == CcuArgType::VARIABLE) {
-            LoadXXInstr(instr++, loopBlock->GetArg(i).var.Id(), inArgs[i].var.Id(), dep.reserveXnId);
-        } else if (inArgs[i].type == CcuArgType::VARIABLE_LIST
-                   && loopBlock->GetArg(i).type == CcuArgType::VARIABLE_LIST) {
-            if (inArgs[i].varList.size() != loopBlock->GetArg(i).varList.size()) {
-                Hccl::THROW<Hccl::CcuApiException>("Mismatched Arg Size");
-            }
-            for (uint32_t j = 0; j < inArgs[i].varList.size(); j++) {
-                LoadXXInstr(instr++, loopBlock->GetArg(i).varList[j].Id(), inArgs[i].varList[j].Id(), dep.reserveXnId);
-            }
-        } else if (inArgs[i].type == CcuArgType::MEMORY && loopBlock->GetArg(i).type == CcuArgType::MEMORY) {
-            LoadGSAGSAInstr(instr++, loopBlock->GetArg(i).mem.addr.Id(), inArgs[i].mem.addr.Id(), dep.reserveGsaId);
-            LoadXXInstr(instr++, loopBlock->GetArg(i).mem.token.Id(), inArgs[i].mem.token.Id(), dep.reserveXnId);
-        } else if (inArgs[i].type == CcuArgType::LOCAL_ADDR && loopBlock->GetArg(i).type == CcuArgType::LOCAL_ADDR) {
-            LoadGSAGSAInstr(instr++, loopBlock->GetArg(i).localAddr.addr.Id(), inArgs[i].localAddr.addr.Id(), dep.reserveGsaId);
-            LoadXXInstr(instr++, loopBlock->GetArg(i).localAddr.token.Id(), inArgs[i].localAddr.token.Id(), dep.reserveXnId);
-        } else if (inArgs[i].type == CcuArgType::REMOTE_ADDR && loopBlock->GetArg(i).type == CcuArgType::REMOTE_ADDR) {
-            LoadGSAGSAInstr(instr++, loopBlock->GetArg(i).remoteAddr.addr.Id(), inArgs[i].remoteAddr.addr.Id(), dep.reserveGsaId);
-            LoadXXInstr(instr++, loopBlock->GetArg(i).remoteAddr.token.Id(), inArgs[i].remoteAddr.token.Id(), dep.reserveXnId);
-        } else if (inArgs[i].type == CcuArgType::MEMORY_LIST && loopBlock->GetArg(i).type == CcuArgType::MEMORY_LIST) {
-            if (inArgs[i].memList.size() != loopBlock->GetArg(i).memList.size()) {
-                Hccl::THROW<Hccl::CcuApiException>("Mismatched Arg Size");
-            }
-            for (uint32_t j = 0; j < inArgs[i].memList.size(); j++) {
-                LoadGSAGSAInstr(instr++, loopBlock->GetArg(i).memList[j].addr.Id(), inArgs[i].memList[j].addr.Id(),
-                                dep.reserveGsaId);
-                LoadXXInstr(instr++, loopBlock->GetArg(i).memList[j].token.Id(), inArgs[i].memList[j].token.Id(),
-                            dep.reserveXnId);
-            }
-        } else if (inArgs[i].type == CcuArgType::LOCAL_ADDR_LIST && loopBlock->GetArg(i).type == CcuArgType::LOCAL_ADDR_LIST) {
-            if (inArgs[i].localAddrList.size() != loopBlock->GetArg(i).localAddrList.size()) {
-                Hccl::THROW<Hccl::CcuApiException>("Mismatched Arg Size");
-            }
-            for (uint32_t j = 0; j < inArgs[i].localAddrList.size(); j++) {
-                LoadGSAGSAInstr(instr++, loopBlock->GetArg(i).localAddrList[j].addr.Id(), inArgs[i].localAddrList[j].addr.Id(),
-                                dep.reserveGsaId);
-                LoadXXInstr(instr++, loopBlock->GetArg(i).localAddrList[j].token.Id(), inArgs[i].localAddrList[j].token.Id(),
-                            dep.reserveXnId);
-            }
-        } else if (inArgs[i].type == CcuArgType::REMOTE_ADDR_LIST && loopBlock->GetArg(i).type == CcuArgType::REMOTE_ADDR_LIST) {
-            if (inArgs[i].remoteAddrList.size() != loopBlock->GetArg(i).remoteAddrList.size()) {
-                Hccl::THROW<Hccl::CcuApiException>("Mismatched Arg Size");
-            }
-            for (uint32_t j = 0; j < inArgs[i].remoteAddrList.size(); j++) {
-                LoadGSAGSAInstr(instr++, loopBlock->GetArg(i).remoteAddrList[j].addr.Id(), inArgs[i].remoteAddrList[j].addr.Id(),
-                                dep.reserveGsaId);
-                LoadXXInstr(instr++, loopBlock->GetArg(i).remoteAddrList[j].token.Id(), inArgs[i].remoteAddrList[j].token.Id(),
-                            dep.reserveXnId);
-            }
-        } else {
-            Hccl::THROW<Hccl::CcuApiException>("Mismatched Arg Type");
-        }
     }
 
     instrId += InstrCount();

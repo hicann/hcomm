@@ -251,6 +251,102 @@ TEST_F(HcommCcuControlApiTest, Ut_LoopObjectApi_Expect_Success)
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 }
 
+TEST_F(HcommCcuControlApiTest, Ut_LoopCompatGroupApi_When_V2_Expect_Success)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 2;
+    MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(fakeDevId));
+    int32_t fakeDeviceLogicId = static_cast<int32_t>(fakeDevId);
+    MOCKER(hrtGetDevice).stubs()
+        .with(outBoundP(&fakeDeviceLogicId))
+        .will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs()
+        .with(mockcpp::any(), outBound(static_cast<uint32_t>(fakeDeviceLogicId)), mockcpp::any())
+        .will(returnValue(HcclResult::HCCL_SUCCESS));
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V2;
+    MockCcuNetworkDeviceDefault(fakeDeviceLogicId);
+    EXPECT_EQ(MockCcuResourcesDefault(fakeDeviceLogicId, fakeCcuVersion), HcclResult::HCCL_SUCCESS);
+    MockCcuChannelGetRes();
+    MOCKER(hrtMemcpy).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
+
+    CcuResDesc resDesc{};
+    resDesc.dieId = hcomm::CCU_MAX_IODIE_NUM;
+    resDesc.insType = CcuInstanceType::CCU_MS;
+    constexpr uint32_t descNum = 1;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreateLegacy(static_cast<void *>(&resDesc), descNum, &insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterStart(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    int32_t dummyArg = 0;
+    CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&dummyArg);
+    const void *kernelArgs[] = {kernelArg};
+    auto kernelFunc = reinterpret_cast<void *>(CcuV2CompatLoopGroupDemoKernel);
+    char *kernelFuncName = "CcuV2CompatLoopGroupDemoKernel";
+    CcuKernelHandle kernelHandle{0};
+    constexpr uint32_t fakeDieId = 0;
+    constexpr uint32_t kernelArgNum = 1;
+    ccuRet = HcommCcuKernelRegister(insHandle, fakeDieId,
+        kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuInsDestroyLegacy(insHandle, fakeDeviceLogicId);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_LoopConfigGroupApi_When_V2_Expect_Success)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 2;
+    MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(fakeDevId));
+    int32_t fakeDeviceLogicId = static_cast<int32_t>(fakeDevId);
+    MOCKER(hrtGetDevice).stubs()
+        .with(outBoundP(&fakeDeviceLogicId))
+        .will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs()
+        .with(mockcpp::any(), outBound(static_cast<uint32_t>(fakeDeviceLogicId)), mockcpp::any())
+        .will(returnValue(HcclResult::HCCL_SUCCESS));
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V2;
+    MockCcuNetworkDeviceDefault(fakeDeviceLogicId);
+    EXPECT_EQ(MockCcuResourcesDefault(fakeDeviceLogicId, fakeCcuVersion), HcclResult::HCCL_SUCCESS);
+    MockCcuChannelGetRes();
+    MOCKER(hrtMemcpy).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
+
+    CcuResDesc resDesc{};
+    resDesc.dieId = hcomm::CCU_MAX_IODIE_NUM;
+    resDesc.insType = CcuInstanceType::CCU_MS;
+    constexpr uint32_t descNum = 1;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreateLegacy(static_cast<void *>(&resDesc), descNum, &insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterStart(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    int32_t dummyArg = 0;
+    CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&dummyArg);
+    const void *kernelArgs[] = {kernelArg};
+    auto kernelFunc = reinterpret_cast<void *>(CcuV2ConfigLoopGroupDemoKernel);
+    char *kernelFuncName = "CcuV2ConfigLoopGroupDemoKernel";
+    CcuKernelHandle kernelHandle{0};
+    constexpr uint32_t fakeDieId = 0;
+    constexpr uint32_t kernelArgNum = 1;
+    ccuRet = HcommCcuKernelRegister(insHandle, fakeDieId,
+        kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuInsDestroyLegacy(insHandle, fakeDeviceLogicId);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+}
+
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRegister_When_AllFine_Expect_ReturnCcuSUCCESS)
 {
     // 整体打桩，处理ccu资源

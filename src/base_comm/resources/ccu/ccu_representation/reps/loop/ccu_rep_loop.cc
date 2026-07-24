@@ -8,17 +8,40 @@
 #include "ccu_rep_v1.h"
 #include <climits>
 
-#include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
+#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generater_v1.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLoop::CcuRepLoop(const std::string &label, const Variable &loopParam) : label(label), loopParam(loopParam)
+using namespace Hccl;
+
+CcuRepLoop::CcuRepLoop(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label, const Variable &loopParam) :
+    insGeneratorPtr_(insGeneratorPtr), label(label), loopParam(loopParam)
 {
     type       = CcuRepType::LOOP;
-    instrCount = 1; // loop翻译需要1条指令
+    instrCount = insGeneratorPtr_->GetInstrCount(type);
+    supportCcuV1 = true;
+}
+
+CcuRepLoop::CcuRepLoop(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label,
+    const Variable &loopParam, const Variable &loopIterNum, const Variable &loopGsaOffset) :
+    insGeneratorPtr_(insGeneratorPtr), label(label), loopParam(loopParam), loopIterNum(loopIterNum), loopGsaOffset(loopGsaOffset)
+{
+    type       = CcuRepType::LOOP;
+    instrCount = insGeneratorPtr_->GetInstrCount(type);
+    supportCcuV1 = false;  // loopParam按照A6格式填写，不适用A5
+}
+
+void CcuRepLoop::ValidateInsGeneratorForLoop()
+{
+    CcuInsGeneraterV1* tmpPtrV1 = dynamic_cast<CcuInsGeneraterV1*>(insGeneratorPtr_);
+    if (tmpPtrV1 && !supportCcuV1) {
+        // 在A5场景下没有使用A5的loop调用方式
+        Hccl::THROW<Hccl::CcuApiException>("Cannot translate CcuRepLoop for A5 when supportCcuV1 is false!");
+    }
 }
 
 const std::string &CcuRepLoop::GetLabel() const
@@ -33,11 +56,14 @@ void CcuRepLoop::Reference(std::shared_ptr<CcuRepLoopBlock> refRep)
 
 std::shared_ptr<CcuRepBase> CcuRepLoop::SetLoopParam(Executor executor, Variable var)
 {
-    return std::make_shared<CcuRepSetLoop>(loopParam, executor, var);
+    return std::make_shared<CcuRepSetLoop>(insGeneratorPtr_, loopParam, executor, var);
 }
 
-bool CcuRepLoop::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepLoop::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
+    (void)dep;
+    ValidateInsGeneratorForLoop();
+
     this->instrId = instrId;
     translated    = true;
 

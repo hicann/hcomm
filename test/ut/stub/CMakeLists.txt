@@ -444,10 +444,9 @@ target_include_directories(hccl_llt  PRIVATE
  
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_kernel
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_instance
+    ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_dfx
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
-    # ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode_opt
-    # ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode_opt/config
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/interface
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/context
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps
@@ -455,9 +454,9 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/common
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/control
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/data
-    # ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/logical
+    ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/logical
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/loop
-    # ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/shift
+    ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/shift
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/sync
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/reps/translator
 

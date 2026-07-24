@@ -13,6 +13,7 @@
 #include <string>
 #include <climits>
 
+#include "ccu_ins_generater_v1.h"
 #include "ccu_rep_base_v1.h"
 #include "ccu_rep_block_v1.h"
 #include "ccu_rep_nop_v1.h"
@@ -38,12 +39,13 @@ class CcuRepLoopTest : public ::testing::Test {
 protected:
     void SetUp() override {
     }
+    CcuInsGeneraterV1 insGen {};
 };
 
 TEST_F(CcuRepLoopTest, Constructor)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
 
     EXPECT_EQ(loop.GetLabel(), "test_loop");
     EXPECT_EQ(loop.Type(), CcuRepType::LOOP);
@@ -52,7 +54,7 @@ TEST_F(CcuRepLoopTest, Constructor)
 TEST_F(CcuRepLoopTest, GetLoopParam)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
 
     Variable* param = loop.GetLoopParam();
     EXPECT_NE(param, nullptr);
@@ -61,8 +63,8 @@ TEST_F(CcuRepLoopTest, GetLoopParam)
 TEST_F(CcuRepLoopTest, Reference)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
-    auto loopBlock = std::make_shared<CcuRepLoopBlock>("loop_block");
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
+    auto loopBlock = std::make_shared<CcuRepLoopBlock>(&insGen, "loop_block");
 
     loop.Reference(loopBlock);
 
@@ -72,7 +74,7 @@ TEST_F(CcuRepLoopTest, Reference)
 TEST_F(CcuRepLoopTest, SetLoopParam)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
 
     Executor executor(nullptr);
     Variable var(nullptr);
@@ -85,7 +87,7 @@ TEST_F(CcuRepLoopTest, SetLoopParam)
 TEST_F(CcuRepLoopTest, Describe)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
 
     std::string desc = loop.Describe();
     EXPECT_NE(desc.find("test_loop"), std::string::npos);
@@ -94,10 +96,10 @@ TEST_F(CcuRepLoopTest, Describe)
 TEST_F(CcuRepLoopTest, Translate)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
 
-    auto loopBlock = std::make_shared<CcuRepLoopBlock>("loop_block");
-    loopBlock->Append(std::make_shared<CcuRepNop>());
+    auto loopBlock = std::make_shared<CcuRepLoopBlock>(&insGen, "loop_block");
+    loopBlock->Append(std::make_shared<CcuRepNop>(&insGen));
     loop.Reference(loopBlock);
 
     CcuInstr instr[2] {};
@@ -105,11 +107,11 @@ TEST_F(CcuRepLoopTest, Translate)
     uint16_t instrId = 0;
     TransDep dep {};
 
-    loopBlock->Translate(instrPtr, instrId, dep);
+    loopBlock->Translate(nullptr, instrPtr, instrId, dep);
     instrPtr = instr;
     instrId = 0;
 
-    bool result = loop.Translate(instrPtr, instrId, dep);
+    bool result = loop.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instrId, 1U);
@@ -118,9 +120,9 @@ TEST_F(CcuRepLoopTest, Translate)
 TEST_F(CcuRepLoopTest, Translate_EmptyLoopBlock)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
 
-    auto loopBlock = std::make_shared<CcuRepLoopBlock>("loop_block");
+    auto loopBlock = std::make_shared<CcuRepLoopBlock>(&insGen, "loop_block");
     loop.Reference(loopBlock);
 
     CcuInstr instr {};
@@ -128,34 +130,34 @@ TEST_F(CcuRepLoopTest, Translate_EmptyLoopBlock)
     uint16_t instrId = 0;
     TransDep dep {};
 
-    loopBlock->Translate(instrPtr, instrId, dep);
+    loopBlock->Translate(nullptr, instrPtr, instrId, dep);
     instrPtr = &instr;
     instrId = 0;
 
-    bool result = loop.Translate(instrPtr, instrId, dep);
+    bool result = loop.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_FALSE(result);
 }
 
 TEST_F(CcuRepLoopTest, Translate_NullLoopBlock)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
 
     CcuInstr instr {};
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep {};
 
-    EXPECT_THROW(loop.Translate(instrPtr, instrId, dep), Hccl::NullPtrException);
+    EXPECT_THROW(loop.Translate(nullptr, instrPtr, instrId, dep), Hccl::NullPtrException);
 }
 
 TEST_F(CcuRepLoopTest, Translate_UntranslatedLoopBlock)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
 
-    auto loopBlock = std::make_shared<CcuRepLoopBlock>("loop_block");
-    loopBlock->Append(std::make_shared<CcuRepNop>());
+    auto loopBlock = std::make_shared<CcuRepLoopBlock>(&insGen, "loop_block");
+    loopBlock->Append(std::make_shared<CcuRepNop>(&insGen));
     loop.Reference(loopBlock);
 
     CcuInstr instr {};
@@ -163,16 +165,16 @@ TEST_F(CcuRepLoopTest, Translate_UntranslatedLoopBlock)
     uint16_t instrId = 0;
     TransDep dep {};
 
-    EXPECT_THROW(loop.Translate(instrPtr, instrId, dep), Hccl::CcuApiException);
+    EXPECT_THROW(loop.Translate(nullptr, instrPtr, instrId, dep), Hccl::CcuApiException);
 }
 
 TEST_F(CcuRepLoopTest, Translate_InstrIdOverflow)
 {
     Variable loopParam(nullptr);
-    CcuRepLoop loop("test_loop", loopParam);
+    CcuRepLoop loop(&insGen, "test_loop", loopParam);
 
-    auto loopBlock = std::make_shared<CcuRepLoopBlock>("loop_block");
-    loopBlock->Append(std::make_shared<CcuRepNop>());
+    auto loopBlock = std::make_shared<CcuRepLoopBlock>(&insGen, "loop_block");
+    loopBlock->Append(std::make_shared<CcuRepNop>(&insGen));
     loop.Reference(loopBlock);
 
     CcuInstr instr[2] {};
@@ -180,23 +182,24 @@ TEST_F(CcuRepLoopTest, Translate_InstrIdOverflow)
     uint16_t instrId = 0;
     TransDep dep {};
 
-    loopBlock->Translate(instrPtr, instrId, dep);
+    loopBlock->Translate(nullptr, instrPtr, instrId, dep);
     instrPtr = instr;
     instrId = USHRT_MAX;
 
-    bool result = loop.Translate(instrPtr, instrId, dep);
+    bool result = loop.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_FALSE(result);
 }
 
 class CcuRepLoopBlockTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {
     }
 };
 
 TEST_F(CcuRepLoopBlockTest, Constructor)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
 
     EXPECT_EQ(loopBlock.GetLabel(), "test_block");
     EXPECT_EQ(loopBlock.Type(), CcuRepType::LOOP_BLOCK);
@@ -204,7 +207,7 @@ TEST_F(CcuRepLoopBlockTest, Constructor)
 
 TEST_F(CcuRepLoopBlockTest, Describe)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
 
     std::string desc = loopBlock.Describe();
     EXPECT_NE(desc.find("test_block"), std::string::npos);
@@ -212,7 +215,7 @@ TEST_F(CcuRepLoopBlockTest, Describe)
 
 TEST_F(CcuRepLoopBlockTest, DefineArg_Variable)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
     Variable var(nullptr);
 
     loopBlock.DefineArg(var);
@@ -223,7 +226,7 @@ TEST_F(CcuRepLoopBlockTest, DefineArg_Variable)
 
 TEST_F(CcuRepLoopBlockTest, DefineArg_Memory)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
     Address addr(nullptr);
     Variable token(nullptr);
     Memory mem(addr, token);
@@ -236,7 +239,7 @@ TEST_F(CcuRepLoopBlockTest, DefineArg_Memory)
 
 TEST_F(CcuRepLoopBlockTest, DefineArg_LocalAddr)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
     Address addr(nullptr);
     Variable token(nullptr);
     LocalAddr localAddr(addr, token);
@@ -249,7 +252,7 @@ TEST_F(CcuRepLoopBlockTest, DefineArg_LocalAddr)
 
 TEST_F(CcuRepLoopBlockTest, DefineArg_RemoteAddr)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
     Address addr(nullptr);
     Variable token(nullptr);
     RemoteAddr remoteAddr(addr, token);
@@ -262,7 +265,7 @@ TEST_F(CcuRepLoopBlockTest, DefineArg_RemoteAddr)
 
 TEST_F(CcuRepLoopBlockTest, DefineArg_VariableList)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
     std::vector<Variable> varList = {Variable(nullptr), Variable(nullptr)};
 
     loopBlock.DefineArg(varList);
@@ -274,7 +277,7 @@ TEST_F(CcuRepLoopBlockTest, DefineArg_VariableList)
 
 TEST_F(CcuRepLoopBlockTest, DefineArg_MemoryList)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
     Address addr(nullptr);
     Variable token(nullptr);
     std::vector<Memory> memList = {Memory(addr, token), Memory(addr, token)};
@@ -288,7 +291,7 @@ TEST_F(CcuRepLoopBlockTest, DefineArg_MemoryList)
 
 TEST_F(CcuRepLoopBlockTest, DefineArg_LocalAddrList)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
     Address addr(nullptr);
     Variable token(nullptr);
     std::vector<LocalAddr> addrList = {LocalAddr(addr, token), LocalAddr(addr, token)};
@@ -302,7 +305,7 @@ TEST_F(CcuRepLoopBlockTest, DefineArg_LocalAddrList)
 
 TEST_F(CcuRepLoopBlockTest, DefineArg_RemoteAddrList)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
     Address addr(nullptr);
     Variable token(nullptr);
     std::vector<RemoteAddr> addrList = {RemoteAddr(addr, token), RemoteAddr(addr, token)};
@@ -316,20 +319,21 @@ TEST_F(CcuRepLoopBlockTest, DefineArg_RemoteAddrList)
 
 TEST_F(CcuRepLoopBlockTest, GetArg_OutOfRange)
 {
-    CcuRepLoopBlock loopBlock("test_block");
+    CcuRepLoopBlock loopBlock(&insGen, "test_block");
 
     EXPECT_THROW(loopBlock.GetArg(0), Hccl::CcuApiException);
 }
 
 class CcuRepLoopCallTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {
     }
 };
 
 TEST_F(CcuRepLoopCallTest, Constructor)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
 
     EXPECT_EQ(loopCall.GetLabel(), "test_call");
     EXPECT_EQ(loopCall.Type(), CcuRepType::LOOP_CALL);
@@ -337,8 +341,8 @@ TEST_F(CcuRepLoopCallTest, Constructor)
 
 TEST_F(CcuRepLoopCallTest, Reference)
 {
-    CcuRepLoopCall loopCall("test_call");
-    auto loopBlock = std::make_shared<CcuRepLoopBlock>("loop_block");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
+    auto loopBlock = std::make_shared<CcuRepLoopBlock>(&insGen, "loop_block");
 
     loopCall.Reference(loopBlock);
 
@@ -347,7 +351,7 @@ TEST_F(CcuRepLoopCallTest, Reference)
 
 TEST_F(CcuRepLoopCallTest, SetInArg_Variable)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
     Variable var(nullptr);
 
     loopCall.SetInArg(var);
@@ -357,7 +361,7 @@ TEST_F(CcuRepLoopCallTest, SetInArg_Variable)
 
 TEST_F(CcuRepLoopCallTest, SetInArg_VariableList)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
     std::vector<Variable> varList = {Variable(nullptr), Variable(nullptr)};
 
     loopCall.SetInArg(varList);
@@ -367,7 +371,7 @@ TEST_F(CcuRepLoopCallTest, SetInArg_VariableList)
 
 TEST_F(CcuRepLoopCallTest, SetInArg_Memory)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
     Address addr(nullptr);
     Variable token(nullptr);
     Memory mem(addr, token);
@@ -379,7 +383,7 @@ TEST_F(CcuRepLoopCallTest, SetInArg_Memory)
 
 TEST_F(CcuRepLoopCallTest, SetInArg_MemoryList)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
     Address addr(nullptr);
     Variable token(nullptr);
     std::vector<Memory> memList = {Memory(addr, token), Memory(addr, token)};
@@ -391,7 +395,7 @@ TEST_F(CcuRepLoopCallTest, SetInArg_MemoryList)
 
 TEST_F(CcuRepLoopCallTest, SetInArg_LocalAddr)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
     Address addr(nullptr);
     Variable token(nullptr);
     LocalAddr localAddr(addr, token);
@@ -403,7 +407,7 @@ TEST_F(CcuRepLoopCallTest, SetInArg_LocalAddr)
 
 TEST_F(CcuRepLoopCallTest, SetInArg_RemoteAddr)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
     Address addr(nullptr);
     Variable token(nullptr);
     RemoteAddr remoteAddr(addr, token);
@@ -415,7 +419,7 @@ TEST_F(CcuRepLoopCallTest, SetInArg_RemoteAddr)
 
 TEST_F(CcuRepLoopCallTest, SetInArg_LocalAddrList)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
     Address addr(nullptr);
     Variable token(nullptr);
     std::vector<LocalAddr> addrList = {LocalAddr(addr, token), LocalAddr(addr, token)};
@@ -427,7 +431,7 @@ TEST_F(CcuRepLoopCallTest, SetInArg_LocalAddrList)
 
 TEST_F(CcuRepLoopCallTest, SetInArg_RemoteAddrList)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
     Address addr(nullptr);
     Variable token(nullptr);
     std::vector<RemoteAddr> addrList = {RemoteAddr(addr, token), RemoteAddr(addr, token)};
@@ -439,7 +443,7 @@ TEST_F(CcuRepLoopCallTest, SetInArg_RemoteAddrList)
 
 TEST_F(CcuRepLoopCallTest, Describe)
 {
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
 
     std::string desc = loopCall.Describe();
     EXPECT_NE(desc.find("test_call"), std::string::npos);
@@ -447,13 +451,14 @@ TEST_F(CcuRepLoopCallTest, Describe)
 
 TEST_F(CcuRepLoopCallTest, Translate)
 {
-    auto loopBlock = std::make_shared<CcuRepLoopBlock>("loop_block");
+    CcuInsGeneraterV1 insGen;
+    auto loopBlock = std::make_shared<CcuRepLoopBlock>(&insGen, "loop_block");
     Address addr(nullptr);
     Variable token(nullptr);
     loopBlock->DefineArg(Variable(nullptr));
     loopBlock->DefineArg(LocalAddr(addr, token));
 
-    CcuRepLoopCall loopCall("test_call");
+    CcuRepLoopCall loopCall(&insGen, "test_call");
     loopCall.Reference(loopBlock);
     Variable var(nullptr);
     loopCall.SetInArg(var);
@@ -462,37 +467,39 @@ TEST_F(CcuRepLoopCallTest, Translate)
     CcuInstr instr[10] = {};
     CcuInstr* instrPtr = instr;
     uint16_t instrId = 0;
-    TransDep dep {0, 0, 1, 1, 0, {0, 0}, 0, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
+    TransDep dep {0, 0, 1, 1, 0, {0, 0}, {0}, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
 
-    loopBlock->Translate(instrPtr, instrId, dep);
+    loopBlock->Translate(nullptr, instrPtr, instrId, dep);
     instrPtr = instr;
     instrId = 0;
 
-    bool result = loopCall.Translate(instrPtr, instrId, dep);
+    bool result = loopCall.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
 }
 
 class CcuRepLoopGroupBundleTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {
     }
 
     static CcuRepLoopGroupBundle::LoopEntry MakeTranslatedLoopEntry()
     {
+        CcuInsGeneraterV1 insGen;
         CcuRepLoopGroupBundle::LoopEntry entry;
         entry.config = CcuLoopConfig{};
         entry.executor = Executor(nullptr);
-        entry.repLoopBlock = std::make_shared<CcuRepLoopBlock>("loop_block");
-        entry.repLoopBlock->Append(std::make_shared<CcuRepNop>());
+        entry.repLoopBlock = std::make_shared<CcuRepLoopBlock>(&insGen, "loop_block");
+        entry.repLoopBlock->Append(std::make_shared<CcuRepNop>(&insGen));
         entry.loopParamVar = Variable(nullptr);
-        entry.isVarBased = false;
+        entry.layout = CcuRepLoopGroupBundle::Layout::Config;
 
         CcuInstr blockInstr[1] {};
         CcuInstr* blockPtr = blockInstr;
         uint16_t blockInstrId = 0;
-        TransDep blockDep {0, 0, 1, 1, 0, {0, 0}, 0, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
-        entry.repLoopBlock->Translate(blockPtr, blockInstrId, blockDep);
+        TransDep blockDep {0, 0, 1, 1, 0, {0, 0}, {0}, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
+        entry.repLoopBlock->Translate(nullptr, blockPtr, blockInstrId, blockDep);
         return entry;
     }
 };
@@ -502,7 +509,7 @@ TEST_F(CcuRepLoopGroupBundleTest, Constructor)
     CcuLoopGroupConfig grpCfg{};
     Variable parallelParam(nullptr);
     Variable offsetParam(nullptr);
-    CcuRepLoopGroupBundle bundle(grpCfg, parallelParam, offsetParam);
+    CcuRepLoopGroupBundle bundle(&insGen, grpCfg, parallelParam, offsetParam);
 
     EXPECT_EQ(bundle.Type(), CcuRepType::LOOPGROUP);
 }
@@ -512,7 +519,7 @@ TEST_F(CcuRepLoopGroupBundleTest, GetOffsetParam)
     CcuLoopGroupConfig grpCfg{};
     Variable parallelParam(nullptr);
     Variable offsetParam(nullptr);
-    CcuRepLoopGroupBundle bundle(grpCfg, parallelParam, offsetParam);
+    CcuRepLoopGroupBundle bundle(&insGen, grpCfg, parallelParam, offsetParam);
 
     EXPECT_EQ(bundle.GetOffsetParam().Id(), offsetParam.Id());
 }
@@ -522,16 +529,16 @@ TEST_F(CcuRepLoopGroupBundleTest, Translate)
     CcuLoopGroupConfig grpCfg{};
     Variable parallelParam(nullptr);
     Variable offsetParam(nullptr);
-    CcuRepLoopGroupBundle bundle(grpCfg, parallelParam, offsetParam);
+    CcuRepLoopGroupBundle bundle(&insGen, grpCfg, parallelParam, offsetParam);
     bundle.AddLoop(MakeTranslatedLoopEntry());
 
     constexpr uint16_t kExpectedInstrCount = 8;
     CcuInstr instr[kExpectedInstrCount] = {};
     CcuInstr* instrPtr = instr;
     uint16_t instrId = 0;
-    TransDep dep {0, 0, 1, 1, 0, {0, 0}, 0, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
+    TransDep dep {0, 0, 1, 1, 0, {0, 0}, {0}, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
 
-    bool result = bundle.Translate(instrPtr, instrId, dep);
+    bool result = bundle.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instrId, kExpectedInstrCount);
@@ -542,16 +549,16 @@ TEST_F(CcuRepLoopGroupBundleTest, GetStartLoopInstrId)
     CcuLoopGroupConfig grpCfg{};
     Variable parallelParam(nullptr);
     Variable offsetParam(nullptr);
-    CcuRepLoopGroupBundle bundle(grpCfg, parallelParam, offsetParam);
+    CcuRepLoopGroupBundle bundle(&insGen, grpCfg, parallelParam, offsetParam);
     bundle.AddLoop(MakeTranslatedLoopEntry());
 
     constexpr uint16_t kBundleInstrCount = 8;
     CcuInstr instr[kBundleInstrCount] = {};
     CcuInstr* instrPtr = instr;
     uint16_t instrId = 10;
-    TransDep dep {0, 0, 1, 1, 0, {0, 0}, 0, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
+    TransDep dep {0, 0, 1, 1, 0, {0, 0}, {0}, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
 
-    bundle.Translate(instrPtr, instrId, dep);
+    bundle.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_EQ(bundle.GetStartLoopInstrId(), 16U);
 }
@@ -561,7 +568,7 @@ TEST_F(CcuRepLoopGroupBundleTest, Describe)
     CcuLoopGroupConfig grpCfg{};
     Variable parallelParam(nullptr);
     Variable offsetParam(nullptr);
-    CcuRepLoopGroupBundle bundle(grpCfg, parallelParam, offsetParam);
+    CcuRepLoopGroupBundle bundle(&insGen, grpCfg, parallelParam, offsetParam);
 
     std::string desc = bundle.Describe();
     EXPECT_NE(desc.find("LoopGroupBundle"), std::string::npos);
@@ -569,6 +576,7 @@ TEST_F(CcuRepLoopGroupBundleTest, Describe)
 
 class CcuRepSetLoopTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {
     }
 };
@@ -578,7 +586,7 @@ TEST_F(CcuRepSetLoopTest, Constructor)
     Variable loopParam(nullptr);
     Executor executor(nullptr);
     Variable var(nullptr);
-    CcuRepSetLoop setLoop(loopParam, executor, var);
+    CcuRepSetLoop setLoop(&insGen, loopParam, executor, var);
 
     EXPECT_EQ(setLoop.Type(), CcuRepType::SET_LOOP);
     EXPECT_EQ(setLoop.loopParam.Id(), loopParam.Id());
@@ -588,17 +596,18 @@ TEST_F(CcuRepSetLoopTest, Constructor)
 
 TEST_F(CcuRepSetLoopTest, Translate)
 {
+    CcuInsGeneraterV1 insGen;
     Variable loopParam(nullptr);
     Executor executor(nullptr);
     Variable var(nullptr);
-    CcuRepSetLoop setLoop(loopParam, executor, var);
+    CcuRepSetLoop setLoop(&insGen, loopParam, executor, var);
 
     CcuInstr instr[2] = {};
     CcuInstr* instrPtr = instr;
     uint16_t instrId = 0;
-    TransDep dep {0, 0, 1, 1, 0, {0, 0}, 0, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
+    TransDep dep {0, 0, 1, 1, 0, {0, 0}, {0}, 0, 0, {0, 0, 0}, {0, 0}, 0, false};
 
-    bool result = setLoop.Translate(instrPtr, instrId, dep);
+    bool result = setLoop.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instrId, 2U);
@@ -609,7 +618,7 @@ TEST_F(CcuRepSetLoopTest, Describe)
     Variable loopParam(nullptr);
     Executor executor(nullptr);
     Variable var(nullptr);
-    CcuRepSetLoop setLoop(loopParam, executor, var);
+    CcuRepSetLoop setLoop(&insGen, loopParam, executor, var);
 
     std::string desc = setLoop.Describe();
     EXPECT_NE(desc.find("loopParam"), std::string::npos);

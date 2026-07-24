@@ -14,14 +14,17 @@ namespace CcuRep {
 
 class CcuRepRemPostSem : public CcuRepBase {
 public:
-    CcuRepRemPostSem(const ChannelHandle channel, uint16_t semIndex, uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    CcuRepRemPostSem(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, uint16_t semIndex, uint16_t mask);
+    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
-    uint32_t    GetMask() { return mask; }
     uint32_t    GetId() override { return signalId; }
     uint32_t    GetChannelId() { return channelId; }
 
+    ChannelHandle GetChannel() { return channel; }
+    uint16_t GetSemIndex() { return semIndex; }
+    uint16_t GetMask() { return mask; }
 private:
+    CcuInsGeneraterBase* insGenPtr{nullptr};
     ChannelHandle channel;
     uint32_t            channelId{0};
     uint16_t            semIndex{0};

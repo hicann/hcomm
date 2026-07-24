@@ -13,12 +13,19 @@
 #include "exception_util.h"
 #include "ccu_api_exception.h"
 
+#include "ccu_ins_generater_base.h"
+#include "ccu_kernel.h"
+
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepFuncBlock::CcuRepFuncBlock(const std::string &label) : CcuRepBlock(label)
+using namespace Hccl;
+
+CcuRepFuncBlock::CcuRepFuncBlock(CcuInsGeneraterBase* insGenPtr, const std::string &label) :
+    CcuRepBlock(insGenPtr, label)
 {
     type = CcuRepType::FUNC_BLOCK;
+    instrCount = 0;
 }
 
 std::string CcuRepFuncBlock::Describe()
@@ -107,14 +114,13 @@ std::vector<Variable> CcuRepFuncBlock::GetInArgVars() const
     }
     return vars;
 }
-
 uint16_t CcuRepFuncBlock::InstrCount()
 {
-    instrCount = CcuRepBlock::InstrCount() + outArgCount + 2;
+    instrCount = CcuRepBlock::InstrCount() + inArgCount + outArgCount + insGeneratorPtr_->GetInstrCount(type); // FuncBlock需要额外指令
     return instrCount;
 }
 
-bool CcuRepFuncBlock::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepFuncBlock::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     if (funcManager == nullptr) {
         Hccl::THROW<Hccl::CcuApiException>("funcManager is nullptr");
@@ -123,34 +129,19 @@ bool CcuRepFuncBlock::Translate(CcuInstr *&instr, uint16_t &instrId, const Trans
     this->instrId = instrId;
     translated    = true;
 
-    // 函数入口为Nop指令
-    LoadImdToXnInstr(instr++, dep.reserveXnId, 0);
-    instrId++;
-
-
+    CHK_RET_THROW(Hccl::CcuApiException,
+        Hccl::StringFormat("[CcuRepFuncBlock][%s] failed to translate inArgs processing for instrId[%u] ", __func__, instrId),
+            insGeneratorPtr_->CcuRepFuncBlockTranslate(ccuKernel, instr, instrId, this, dep, 0));
     // 使用空实现的自定义删除器，避免智能指针析构时释放对象
     auto translator
         = CcuRepTranslator(std::shared_ptr<CcuRepReferenceManager>(funcManager, [](CcuRepReferenceManager *ptr) {}), dep);
-    translator.Translate(GetReps(), instr, instrId, [](std::shared_ptr<CcuRepBase> rep) -> bool {
+    translator.Translate(ccuKernel, GetReps(), instr, instrId, [](std::shared_ptr<CcuRepBase> rep) -> bool {
         return true;
     });
 
-    uint32_t iOutArg = 0;
-    for (uint32_t i = 0; i < outArgs.size(); i++) {
-        if (outArgs[i].type == CcuArgType::VARIABLE) {
-            LoadXXInstr(instr++, funcManager->GetFuncOut()[iOutArg++].Id(), outArgs[i].var.Id(), dep.reserveXnId);
-            instrId++;
-        } else if (outArgs[i].type == CcuArgType::VARIABLE_LIST) {
-            for (uint32_t j = 0; j < outArgs[i].varList.size(); j++) {
-                LoadXXInstr(instr++, funcManager->GetFuncOut()[iOutArg++].Id(), outArgs[i].varList[j].Id(),
-                            dep.reserveXnId);
-                instrId++;
-            }
-        }
-    }
-
-    JumpInstr(instr++, funcManager->GetFuncRet(callLayer).Id(), dep.reserveXnId, 1);
-    instrId++;
+    CHK_RET_THROW(Hccl::CcuApiException,
+        Hccl::StringFormat("[CcuRepFuncBlock][%s] failed to translate outArgs processing for instrId[%u] ", __func__, instrId),
+            insGeneratorPtr_->CcuRepFuncBlockTranslate(ccuKernel, instr, instrId, this, dep, 1));
 
     return translated;
 }

@@ -11,6 +11,7 @@
 #ifndef CCU_ERROR_INFO_V1_H
 #define CCU_ERROR_INFO_V1_H
 #include <cstdint>
+#include "enum_factory.h"
 #include "ccu_rep_type_v1.h"
 
 namespace hcomm {
@@ -378,4 +379,4 @@ union LoopGroupXn {
 
 }; // namespace hcomm
 
-#endif // _CCU_REPRESENTATION_TYPE_H
+#endif // CCU_ERROR_INFO_V1_H

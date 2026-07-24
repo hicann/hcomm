@@ -15,9 +15,9 @@ namespace CcuRep {
 
 class CcuRepBufWrite : public CcuRepBase {
 public:
-    CcuRepBufWrite(const ChannelHandle channel, CcuBuf src, RemoteAddr dst, Variable len, CompletedEvent sem,
+    CcuRepBufWrite(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, CcuBuf src, RemoteAddr dst, Variable len, CompletedEvent sem,
                    uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
 
     uint16_t GetSrcId() { return src.Id(); }
@@ -25,9 +25,16 @@ public:
     uint16_t GetDstTokenId() { return dst.token.Id(); }
     uint16_t GetLenId() { return len.Id(); }
     uint16_t GetSemId() { return sem.Id(); }
-    uint32_t GetMask() { return mask; }
     uint32_t GetChannelId() { return channelId; }
+    CcuBuf GetSrc() { return src; }
+    RemoteAddr GetDst() { return dst; }
+    Variable GetLen() { return len; }
+    CompletedEvent GetSem() { return sem; }
+    uint16_t GetMask() { return mask; }
+    ChannelHandle GetChannel() { return channel; }
+
 private:
+    CcuInsGeneraterBase* insGenPtr{nullptr};
     ChannelHandle channel;
     uint32_t channelId{0};
 

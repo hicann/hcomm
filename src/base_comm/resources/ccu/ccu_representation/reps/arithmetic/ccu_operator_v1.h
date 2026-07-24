@@ -22,7 +22,7 @@ public:
     rhsT rhs;
 };
 
-enum class CcuArithmeticOperatorType { ADDITION, INVALID };
+enum class CcuArithmeticOperatorType { ADDITION, MULTIPLICATION, SUBTRACTION, INVALID };
 
 template <typename lhsT, typename rhsT> class CcuArithmeticOperator : public CcuOperator<lhsT, rhsT> {
 public:
@@ -40,7 +40,7 @@ public:
     CcuArithmeticOperatorType type{CcuArithmeticOperatorType::INVALID};
 };
 
-enum class CcuRelationalOperatorType { EQUAL, NOT_EQUAL, INVALID };
+enum class CcuRelationalOperatorType { EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_EQUAL, LESS_THAN, LESS_EQUAL, INVALID };
 
 template <typename lhsT, typename rhsT> class CcuRelationalOperator : public CcuOperator<lhsT, rhsT> {
 public:
@@ -56,6 +56,47 @@ public:
     }
 
     CcuRelationalOperatorType type{CcuRelationalOperatorType::INVALID};
+};
+
+enum class CcuLogicOperatorType { AND, OR, XOR, NOT, INVALID };
+
+template <typename lhsT, typename rhsT = std::nullptr_t> class CcuLogicOperator : public CcuOperator<lhsT, rhsT> {
+public:
+    template <typename U = rhsT, typename std::enable_if<!std::is_same<U, std::nullptr_t>::value, int>::type = 0>
+    CcuLogicOperator(lhsT lhs, U rhs, CcuLogicOperatorType type) : CcuOperator<lhsT, U>(lhs, rhs), type(type)
+    {
+        Check();
+    }
+
+    template <typename U = rhsT, typename std::enable_if<std::is_same<U, std::nullptr_t>::value, int>::type = 0>
+    CcuLogicOperator(lhsT lhs, CcuLogicOperatorType type) : CcuOperator<lhsT, U>(lhs, {}), type(type)
+    {
+        Check();
+    }
+
+    void Check() const
+    {
+        throw std::runtime_error("Invalid LogicOperator Operator");
+    }
+
+    CcuLogicOperatorType type{CcuLogicOperatorType::INVALID};
+};
+
+enum class CcuShiftType { LEFT, RIGHT, INVALID };
+
+template <typename lhsT, typename rhsT> class CcuShiftOperator : public CcuOperator<lhsT, rhsT> {
+public:
+    CcuShiftOperator(lhsT lhs, rhsT rhs, CcuShiftType type) : CcuOperator<lhsT, rhsT>(lhs, rhs), type(type)
+    {
+        Check();
+    }
+    void Check() const
+    {
+        //THROW<CcuApiException>("Invalid ShiftT Operator");
+        throw std::runtime_error("Invalid ShiftT Operator");
+    }
+
+    CcuShiftType type{CcuShiftType::INVALID};
 };
 
 }; // namespace CcuRep

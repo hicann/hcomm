@@ -15,8 +15,8 @@ namespace CcuRep {
 
 class CcuRepLoopCall : public CcuRepBase {
 public:
-    explicit CcuRepLoopCall(const std::string &label);
-    bool               Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    explicit CcuRepLoopCall(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label);
+    bool               Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string        Describe() override;
     uint16_t InstrCount() override;
     const std::string &GetLabel() const;
@@ -33,7 +33,12 @@ public:
     void SetInArg(const std::vector<LocalAddr> &addrList);
     void SetInArg(const std::vector<RemoteAddr> &addrList);
 
+    std::shared_ptr<CcuRepLoopBlock> GetLoopBlock() {return loopBlock;}
+    std::vector<CcuRepArg>& GetInArgs() {return inArgs;}
+    uint32_t GetInArgCount() {return inArgCount;}
+
 private:
+    CcuInsGeneraterBase*             insGeneratorPtr_;
     std::string                      label;
     std::shared_ptr<CcuRepLoopBlock> loopBlock{nullptr};
  

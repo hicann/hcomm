@@ -322,3 +322,4 @@ CcuResult CcuNestedInIfIfDemoKernel(CcuKernelArg arg)
 
     return CcuResult::CCU_SUCCESS;
 }
+

@@ -16,9 +16,9 @@ namespace CcuRep {
 
 class CcuRepFuncCall : public CcuRepBase {
 public:
-    explicit CcuRepFuncCall(const std::string &label);
-    explicit CcuRepFuncCall(const Variable &funcAddrVar);
-    bool               Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    explicit CcuRepFuncCall(CcuInsGeneraterBase* insGenPtr, const std::string &label);
+    explicit CcuRepFuncCall(CcuInsGeneraterBase* insGenPtr, const Variable &funcAddrVar);
+    bool               Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string        Describe() override;
     uint16_t InstrCount() override;
     const std::string &GetLabel() const;
@@ -33,8 +33,18 @@ public:
 
     int32_t GetCallLayer();
 
+    CcuRepReferenceManager* GetFuncManager() { return funcManager; }
+    std::shared_ptr<CcuRepFuncBlock>& GetFuncBlock() { return funcBlock; }
+    Variable GetFuncAddrVar() { return funcAddrVar; }
+    std::vector<CcuRepArg>& GetInArgs() { return inArgs; }
+    std::vector<CcuRepArg>& GetOutArgs() { return outArgs; }
+    uint32_t GetInArgCount() { return inArgCount; }
+    uint32_t GetOutArgCount() { return outArgCount; }
+    CcuInstr* GetInstr() { return instr; }
+
 private:
-    CcuRepReferenceManager *funcManager{nullptr};
+    CcuInsGeneraterBase*    insGeneratorPtr_;
+    CcuRepReferenceManager* funcManager{nullptr};
 
     std::string                      label;
     std::shared_ptr<CcuRepFuncBlock> funcBlock{nullptr};

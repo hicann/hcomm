@@ -10,24 +10,28 @@
 #include <climits>
 
 #include "string_util.h"
+#include "exception_util.h"
+#include "ccu_api_exception.h"
+#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generater_v1.h"
+#include "ccu_kernel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepSetLoop::CcuRepSetLoop(const Variable &loopParam, const Executor &executor, const Variable &var)
-    : loopParam(loopParam), executor(executor), var(var)
+using namespace Hccl;
+
+CcuRepSetLoop::CcuRepSetLoop(CcuInsGeneraterBase* insGeneratorPtr, const Variable &loopParam, const Executor &executor, const Variable &var)
+    : insGeneratorPtr_(insGeneratorPtr), loopParam(loopParam), executor(executor), var(var)
 {
     type       = CcuRepType::SET_LOOP;
-    instrCount = 2;  // set loop 指令数量为2
+    instrCount = insGeneratorPtr_->GetInstrCount(type);  // set loop 指令数量为2
 }
 
-bool CcuRepSetLoop::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepSetLoop::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     this->instrId = instrId;
     translated    = true;
-
-    LoadImdToXnInstr(instr++, loopParam.Id(), GetLoopParam(executor.Id(), 0, 0));
-    LoadXXInstr(instr++, loopParam.Id(), loopParam.Id(), var.Id());
 
     if (instrId > USHRT_MAX - instrCount) {
         Hccl::THROW<Hccl::InternalException>(Hccl::StringFormat("[CcuRepSetLoop][Translate] instrId[%u] + instrCount[%u] exceeds the "

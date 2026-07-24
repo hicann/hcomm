@@ -47,6 +47,8 @@ protected:
 
 TEST_F(HcclCommunicatorHostTest, Ut_InitSymmetricMemory_When_Normal_Expect_ReturnIsHCCL_SUCCESS)
 {
+    MOCKER_CPP(hrtRaGetSingleSocketVnicIpInfo).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclSocketManager::WaitLinkEstablish).stubs().will(returnValue(HCCL_SUCCESS));
     std::unique_ptr<HcclCommunicator> hcclCommunicator(new (std::nothrow) HcclCommunicator());
     hcclCommunicator->rankInfoList_.resize(2);
     hcclCommunicator->realUserRank_ = 0;
@@ -59,6 +61,8 @@ TEST_F(HcclCommunicatorHostTest, Ut_InitSymmetricMemory_When_Normal_Expect_Retur
 
 TEST_F(HcclCommunicatorHostTest, Ut_InitSymmetricMemory_When_StrideIsValid_Expect_ReturnsIsHCCL_SUCCESS)
 {
+    MOCKER_CPP(hrtRaGetSingleSocketVnicIpInfo).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclSocketManager::WaitLinkEstablish).stubs().will(returnValue(HCCL_SUCCESS));
     HcclCommConfig config;
     HcclCommConfigInit(&config);
     config.hcclSymWinMaxMemSizePerRank = 8;
@@ -87,6 +91,8 @@ TEST_F(HcclCommunicatorHostTest, Ut_InitSymmetricMemory_When_SuperPodNumGreaterT
 
 TEST_F(HcclCommunicatorHostTest, Ut_IsSupportSymmetricMemory_When_Normal_Expect_ReturnIsTrue)
 {
+    MOCKER_CPP(hrtRaGetSingleSocketVnicIpInfo).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclSocketManager::WaitLinkEstablish).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&SymmetricMemory::FindSymmetricWindow).stubs().will(returnValue(HCCL_SUCCESS));
     std::unique_ptr<HcclCommunicator> hcclCommunicator(new (std::nothrow) HcclCommunicator());
     hcclCommunicator->rankInfoList_.resize(2);
@@ -113,6 +119,8 @@ TEST_F(HcclCommunicatorHostTest, Ut_IsSupportSymmetricMemory_When_Normal_Expect_
 
 TEST_F(HcclCommunicatorHostTest, Ut_IsSupportSymmetricMemory_When_AicpuUnfoldIsFalse_Expect_ReturnIsFalse)
 {
+    MOCKER_CPP(hrtRaGetSingleSocketVnicIpInfo).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclSocketManager::WaitLinkEstablish).stubs().will(returnValue(HCCL_SUCCESS));
     std::unique_ptr<HcclCommunicator> hcclCommunicator(new (std::nothrow) HcclCommunicator());
     hcclCommunicator->rankInfoList_.resize(2);
     hcclCommunicator->realUserRank_ = 0;
@@ -129,6 +137,8 @@ TEST_F(HcclCommunicatorHostTest, Ut_IsSupportSymmetricMemory_When_AicpuUnfoldIsF
 
 TEST_F(HcclCommunicatorHostTest, Ut_IsSupportSymmetricMemory_When_WorkFlowModeIsNotOpBase_Expect_ReturnIsFalse)
 {
+    MOCKER_CPP(hrtRaGetSingleSocketVnicIpInfo).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclSocketManager::WaitLinkEstablish).stubs().will(returnValue(HCCL_SUCCESS));
     std::unique_ptr<HcclCommunicator> hcclCommunicator(new (std::nothrow) HcclCommunicator());
     hcclCommunicator->rankInfoList_.resize(2);
     hcclCommunicator->realUserRank_ = 0;
@@ -163,6 +173,8 @@ TEST_F(HcclCommunicatorHostTest, Ut_IsSupportSymmetricMemory_When_deviceTypeIsNo
 TEST_F(
     HcclCommunicatorHostTest, Ut_IsSupportSymmetricMemory_When_multiModuleDiffDeviceNumModeIsTrue_Expect_ReturnIsFalse)
 {
+    MOCKER_CPP(hrtRaGetSingleSocketVnicIpInfo).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclSocketManager::WaitLinkEstablish).stubs().will(returnValue(HCCL_SUCCESS));
     std::unique_ptr<HcclCommunicator> hcclCommunicator(new (std::nothrow) HcclCommunicator());
     hcclCommunicator->rankInfoList_.resize(2);
     hcclCommunicator->realUserRank_ = 0;

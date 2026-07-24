@@ -6,41 +6,74 @@
  */
 
 #include "ccu_rep_v1.h"
-
 #include "string_util.h"
+#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generater_base.h"
+#include "ccu_kernel.h"
+
+#include "ccu_api_exception.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLocCpy::CcuRepLocCpy(LocalAddr dst, LocalAddr src, Variable len, CompletedEvent sem, uint16_t mask)
-    : dst(dst), src(src), len(len), sem(sem), mask(mask)
+CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, CompletedEvent sem, uint16_t mask)
+    : insGenPtr(insGenPtr), dst(dst), src(src), len(len), sem(sem), mask(mask)
 {
     type       = CcuRepType::LOCAL_CPY;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
+    useCcuBuffer = false;
 }
 
-CcuRepLocCpy::CcuRepLocCpy(LocalAddr dst, LocalAddr src, Variable len, uint16_t dataType, uint16_t opType, CompletedEvent sem,
+CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, uint16_t dataType, uint16_t opType, CompletedEvent sem,
                            uint16_t mask)
-    : dst(dst), src(src), len(len), sem(sem), mask(mask), dataType(dataType), opType(opType), reduceFlag(1)
+    : insGenPtr(insGenPtr), dst(dst), src(src), len(len), sem(sem), mask(mask), dataType(dataType), opType(opType) 
 {
     type       = CcuRepType::LOCAL_REDUCE;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
+    reduceFlag = 1;
+    // A5和A6都走环回
+    useCcuBuffer = false;
 }
 
-bool CcuRepLocCpy::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len,
+                           const std::vector<CcuBuf> &bufs, CompletedEvent sem, uint16_t mask)
+    : insGenPtr(insGenPtr), dst(dst), src(src), len(len), bufs(bufs), sem(sem), mask(mask)
 {
+    type       = CcuRepType::LOCAL_CPY;
+    instrCount = insGenPtr->GetInstrCount(type);
+    useCcuBuffer = true;
+}
+
+void CcuRepLocCpy::ValidateInsGeneratorForLocCpy()
+{
+    CcuInsGeneraterV1* tmpPtrV1 = dynamic_cast<CcuInsGeneraterV1*>(insGenPtr);
+    if (tmpPtrV1 && useCcuBuffer) {
+        // 使用了A6场景的ms中转搬运
+        Hccl::THROW<Hccl::CcuApiException>("Cannot translate CcuRepLocCpy for A5 when useCcuBuffer is true!");
+    }
+}
+
+uint16_t CcuRepLocCpy::GetFirstBufId()
+{
+    if (bufs.size() == 0) {
+        Hccl::THROW<Hccl::CcuApiException>("The length of CcuBuffer is 0!");
+    }
+    return bufs[0].Id();
+}
+    
+uint16_t CcuRepLocCpy::GetUsedBufNum()
+{
+    return bufs.size();
+}
+
+bool CcuRepLocCpy::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+{
+    ValidateInsGeneratorForLocCpy();
+
     this->instrId = instrId;
     translated    = true;
 
-    if (reduceFlag == 0) {
-        TransLocMemToLocMemInstr(instr++, dst.addr.Id(), dst.token.Id(), src.addr.Id(), src.token.Id(), len.Id(),
-                                 dep.reserveChannalId[0], sem.Id(), mask, 0, 0, 1, 1);
-    } else {
-        // 这个翻译需要验证
-        TransLocMemToRmtMemInstr(instr++, dst.addr.Id(), dst.token.Id(), src.addr.Id(), src.token.Id(), len.Id(),
-                                 dep.reserveChannalId[0], dataType, opType, sem.Id(), mask, 0, 0, 1, 1, reduceFlag);
-    }
-
+    insGenPtr->CcuRepLocCpyTranslate(ccuKernel, instr, this, dep);
     instrId += instrCount;
 
     return translated;

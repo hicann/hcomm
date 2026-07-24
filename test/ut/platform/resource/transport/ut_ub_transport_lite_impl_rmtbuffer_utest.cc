@@ -143,15 +143,55 @@ TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_HeaderSerialization_When_RmtbufferEqu
 
 TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_RmtbufferNumMember_When_Default_Expect_Zero)
 {
-    std::vector<char> emptyId;
-    UbTransportLiteImpl transportDev(emptyId);
+    u32 type = static_cast<u32>(TransportType::UB);
+    u32 notifyNum = 0;
+    u32 bufferNum = 0;
+    u32 rmtbufferNum = 0;
+    u32 connNum = 0;
+
+    BinaryStream binaryStream;
+    binaryStream << type;
+    binaryStream << notifyNum;
+    binaryStream << bufferNum;
+    binaryStream << rmtbufferNum;
+    binaryStream << connNum;
+    std::vector<char> emptyVector;
+    binaryStream << emptyVector; // notifyUniqueIds
+    binaryStream << emptyVector; // rmtNotifyUniqueIds
+    binaryStream << emptyVector; // locBufferUniqueIds
+    binaryStream << emptyVector; // rmtBufferUniqueIds
+    binaryStream << emptyVector; // connUniqueIds
+
+    std::vector<char> data;
+    binaryStream.Dump(data);
+    UbTransportLiteImpl transportDev(data);
     EXPECT_EQ(transportDev.rmtbufferNum, 0);
 }
 
 TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_RmtbufferNumMember_When_RmtbufferDifferentFromBuffer_Expect_IndependentValue)
 {
-    std::vector<char> emptyId;
-    UbTransportLiteImpl transportDev(emptyId);
+    u32 type = static_cast<u32>(TransportType::UB);
+    u32 notifyNum = 2;
+    u32 bufferNum = 3;
+    u32 rmtbufferNum = 5;
+    u32 connNum = 1;
+
+    BinaryStream binaryStream;
+    binaryStream << type;
+    binaryStream << notifyNum;
+    binaryStream << bufferNum;
+    binaryStream << rmtbufferNum;
+    binaryStream << connNum;
+    std::vector<char> emptyVector;
+    binaryStream << emptyVector; // notifyUniqueIds
+    binaryStream << emptyVector; // rmtNotifyUniqueIds
+    binaryStream << emptyVector; // locBufferUniqueIds
+    binaryStream << emptyVector; // rmtBufferUniqueIds
+    binaryStream << emptyVector; // connUniqueIds
+
+    std::vector<char> data;
+    binaryStream.Dump(data);
+    UbTransportLiteImpl transportDev(data);
     transportDev.notifyNum = 2;
     transportDev.bufferNum = 3;
     transportDev.rmtbufferNum = 5;

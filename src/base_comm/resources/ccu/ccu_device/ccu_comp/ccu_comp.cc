@@ -763,6 +763,7 @@ HcclResult CcuComponent::GetLoopChannelId(const uint8_t srcDieId, const uint8_t 
     uint32_t &channelId) const
 {
     channelId = INVAILD_LOOP_CHANNEL_ID; // 允许die未启用时查询环回channelId
+
     CHK_RET(CheckDieValid(__func__, devLogicId_, srcDieId, {true, true}));
     CHK_RET(CheckDieValid(__func__, devLogicId_, dstDieId, {true, true}));
 
@@ -1109,7 +1110,6 @@ HcclResult CcuComponent::AllocWishCntXn(const uint8_t dieId, const std::string &
 
     return HcclResult::HCCL_SUCCESS;
 }
-
 
 HcclResult CcuComponent::ReleaseWishCntXn(const uint8_t dieId, const std::string &resGroupTag, uint32_t wishCntXn)
 {

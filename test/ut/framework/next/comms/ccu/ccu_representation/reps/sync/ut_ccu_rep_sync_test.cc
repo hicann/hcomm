@@ -13,6 +13,7 @@
 #include <string>
 #include <climits>
 
+#include "ccu_ins_generater_v1.h"
 #include "ccu_rep_loc_wait_event.h"
 #include "ccu_rep_loc_wait_notify.h"
 #include "ccu_rep_loc_record_event.h"
@@ -31,42 +32,49 @@ namespace {
 class CcuRepLocWaitEventTest : public ::testing::Test {
 protected:
     void SetUp() override {}
+    CcuInsGeneraterV1 insGen {};
 };
 
 class CcuRepLocWaitNotifyTest : public ::testing::Test {
 protected:
     void SetUp() override {}
+    CcuInsGeneraterV1 insGen {};
 };
 
 class CcuRepLocRecordEventTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {}
 };
 
 class CcuRepRecordSharedNotifyTest : public ::testing::Test {
 protected:
     void SetUp() override {}
+    CcuInsGeneraterV1 insGen {};
 };
 
 class CcuRepRemPostSemTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {}
 };
 
 class CcuRepRemPostVarTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {}
 };
 
 class CcuRepRemWaitSemTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {}
 };
 
 TEST_F(CcuRepLocWaitEventTest, ConstructorInitializesCorrectly)
 {
     CompletedEvent event;
-    CcuRepLocWaitEvent rep(event, 0xF, true);
+    CcuRepLocWaitEvent rep(&insGen, event, 0xF, true);
 
     EXPECT_EQ(rep.Type(), CcuRepType::LOC_WAIT_EVENT);
     EXPECT_EQ(rep.InstrCount(), 1);
@@ -76,7 +84,7 @@ TEST_F(CcuRepLocWaitEventTest, ConstructorInitializesCorrectly)
 TEST_F(CcuRepLocWaitEventTest, ConstructorWithProfilingDisabled)
 {
     CompletedEvent event;
-    CcuRepLocWaitEvent rep(event, 0xA, false);
+    CcuRepLocWaitEvent rep(&insGen, event, 0xA, false);
 
     EXPECT_EQ(rep.Type(), CcuRepType::LOC_WAIT_EVENT);
     EXPECT_EQ(rep.InstrCount(), 1);
@@ -86,14 +94,14 @@ TEST_F(CcuRepLocWaitEventTest, ConstructorWithProfilingDisabled)
 TEST_F(CcuRepLocWaitEventTest, TranslateWithProfilingEnabled)
 {
     CompletedEvent event;
-    CcuRepLocWaitEvent rep(event, 0xF, true);
+    CcuRepLocWaitEvent rep(&insGen, event, 0xF, true);
 
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
@@ -106,14 +114,14 @@ TEST_F(CcuRepLocWaitEventTest, TranslateWithProfilingEnabled)
 TEST_F(CcuRepLocWaitEventTest, TranslateWithProfilingDisabled)
 {
     CompletedEvent event;
-    CcuRepLocWaitEvent rep(event, 0x5, false);
+    CcuRepLocWaitEvent rep(&insGen, event, 0x5, false);
 
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 10;
     TransDep dep = {};
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
@@ -125,7 +133,7 @@ TEST_F(CcuRepLocWaitEventTest, TranslateWithProfilingDisabled)
 TEST_F(CcuRepLocWaitEventTest, Describe)
 {
     CompletedEvent event;
-    CcuRepLocWaitEvent rep(event, 0xABCD, true);
+    CcuRepLocWaitEvent rep(&insGen, event, 0xABCD, true);
 
     std::string desc = rep.Describe();
 
@@ -136,9 +144,9 @@ TEST_F(CcuRepLocWaitEventTest, Describe)
 TEST_F(CcuRepLocWaitEventTest, SetAndGetDependencyInfo_SingleBit)
 {
     CompletedEvent event;
-    CcuRepLocWaitEvent rep(event, 0x3, true);
+    CcuRepLocWaitEvent rep(&insGen, event, 0x3, true);
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>> depInfo;
-    auto depRep = std::make_shared<CcuRepNop>();
+    auto depRep = std::make_shared<CcuRepNop>(&insGen);
     depInfo[0x1].push_back(depRep);
     rep.SetDependencyInfo(depInfo);
     auto result = rep.GetDependencyInfo(0x1);
@@ -149,20 +157,21 @@ TEST_F(CcuRepLocWaitEventTest, SetAndGetDependencyInfo_SingleBit)
 TEST_F(CcuRepLocWaitEventTest, GetDependencyInfo_NotFound_ReturnsEmpty)
 {
     CompletedEvent event;
-    CcuRepLocWaitEvent rep(event, 0x3, true);
+    CcuRepLocWaitEvent rep(&insGen, event, 0x3, true);
     auto result = rep.GetDependencyInfo(0x2);
     EXPECT_TRUE(result.empty());
 }
 
 class CcuRepContextDepTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {}
 };
 
 TEST_F(CcuRepContextDepTest, SetDependencyInfo_SingleBitMask)
 {
     CcuRepContext context;
-    auto rep = std::make_shared<CcuRepNop>();
+    auto rep = std::make_shared<CcuRepNop>(&insGen);
     context.SetDependencyInfo(1, 0x1, rep);
     auto dep = context.GetDependencyInfo(1);
     EXPECT_EQ(dep.size(), 1U);
@@ -174,7 +183,7 @@ TEST_F(CcuRepContextDepTest, SetDependencyInfo_SingleBitMask)
 TEST_F(CcuRepContextDepTest, SetDependencyInfo_MultiBitMask_SplitToSingleBitKeys)
 {
     CcuRepContext context;
-    auto rep = std::make_shared<CcuRepNop>();
+    auto rep = std::make_shared<CcuRepNop>(&insGen);
     // mask=0x3 (bit0+bit1) 应拆解到 0x1 和 0x2 两个单 bit key，与异常侧按 1<<i 查询对齐
     context.SetDependencyInfo(1, 0x3, rep);
     auto dep = context.GetDependencyInfo(1);
@@ -190,7 +199,7 @@ TEST_F(CcuRepContextDepTest, SetDependencyInfo_MultiBitMask_SplitToSingleBitKeys
 TEST_F(CcuRepContextDepTest, SetDependencyInfo_HighBitMask_AllBitsRegistered)
 {
     CcuRepContext context;
-    auto rep = std::make_shared<CcuRepNop>();
+    auto rep = std::make_shared<CcuRepNop>(&insGen);
     context.SetDependencyInfo(7, 0xABCD, rep);
     auto dep = context.GetDependencyInfo(7);
     // 0xABCD = 1010 1011 1100 1101，置位 bit: 0,2,3,6,7,8,9,11,13,15 共 10 个
@@ -200,7 +209,7 @@ TEST_F(CcuRepContextDepTest, SetDependencyInfo_HighBitMask_AllBitsRegistered)
 TEST_F(CcuRepContextDepTest, SetDependencyInfo_ZeroMask_ReturnsError)
 {
     CcuRepContext context;
-    auto rep = std::make_shared<CcuRepNop>();
+    auto rep = std::make_shared<CcuRepNop>(&insGen);
     context.SetDependencyInfo(1, 0, rep);
 }
 
@@ -214,8 +223,8 @@ TEST_F(CcuRepContextDepTest, GetDependencyInfo_NotFound_ReturnsEmpty)
 TEST_F(CcuRepContextDepTest, SetDependencyInfo_MultipleRepsSameBit_AppendedInOrder)
 {
     CcuRepContext context;
-    auto rep1 = std::make_shared<CcuRepNop>();
-    auto rep2 = std::make_shared<CcuRepNop>();
+    auto rep1 = std::make_shared<CcuRepNop>(&insGen);
+    auto rep2 = std::make_shared<CcuRepNop>(&insGen);
     context.SetDependencyInfo(1, 0x1, rep1);
     context.SetDependencyInfo(1, 0x1, rep2);
     auto dep = context.GetDependencyInfo(1);
@@ -227,8 +236,8 @@ TEST_F(CcuRepContextDepTest, SetDependencyInfo_MultipleRepsSameBit_AppendedInOrd
 TEST_F(CcuRepContextDepTest, EraseDependencyInfo_OnlyErasesSpecifiedId)
 {
     CcuRepContext context;
-    auto repA = std::make_shared<CcuRepNop>();
-    auto repB = std::make_shared<CcuRepNop>();
+    auto repA = std::make_shared<CcuRepNop>(&insGen);
+    auto repB = std::make_shared<CcuRepNop>(&insGen);
     // 模拟多 event 交错：A 注册后 B 注册，清 A 不应影响 B
     context.SetDependencyInfo(1, 0x1, repA);
     context.SetDependencyInfo(2, 0x2, repB);
@@ -246,8 +255,8 @@ TEST_F(CcuRepContextDepTest, EraseDependencyInfo_OnlyErasesSpecifiedId)
 TEST_F(CcuRepContextDepTest, ClearDependencyInfo_RemovesAll)
 {
     CcuRepContext context;
-    context.SetDependencyInfo(1, 0x1, std::make_shared<CcuRepNop>());
-    context.SetDependencyInfo(2, 0x2, std::make_shared<CcuRepNop>());
+    context.SetDependencyInfo(1, 0x1, std::make_shared<CcuRepNop>(&insGen));
+    context.SetDependencyInfo(2, 0x2, std::make_shared<CcuRepNop>(&insGen));
     context.ClearDependencyInfo();
     EXPECT_TRUE(context.GetDependencyInfo(1).empty());
     EXPECT_TRUE(context.GetDependencyInfo(2).empty());
@@ -257,9 +266,9 @@ TEST_F(CcuRepLocWaitNotifyTest, ConstructorInitializesCorrectly)
 {
     LocalNotify notify;
     uint32_t mask = 0xFF;
-    CcuRepLocWaitNotify rep(notify, mask, true);
+    CcuRepLocWaitNotify rep(&insGen, notify, mask, true);
 
-    EXPECT_EQ(rep.Type(), CcuRepType::LOC_WAIT_EVENT);
+    EXPECT_EQ(rep.Type(), CcuRepType::LOC_WAIT_NOTIFY);
     EXPECT_EQ(rep.InstrCount(), 1);
     EXPECT_EQ(rep.GetMask(), 0xFF);
 }
@@ -268,9 +277,9 @@ TEST_F(CcuRepLocWaitNotifyTest, ConstructorWithProfilingDisabled)
 {
     LocalNotify notify;
     uint32_t mask = 0x0F;
-    CcuRepLocWaitNotify rep(notify, mask, false);
+    CcuRepLocWaitNotify rep(&insGen, notify, mask, false);
 
-    EXPECT_EQ(rep.Type(), CcuRepType::LOC_WAIT_EVENT);
+    EXPECT_EQ(rep.Type(), CcuRepType::LOC_WAIT_NOTIFY);
     EXPECT_FALSE(rep.Translated());
 }
 
@@ -278,14 +287,14 @@ TEST_F(CcuRepLocWaitNotifyTest, TranslateWithProfilingEnabled)
 {
     LocalNotify notify;
     uint32_t mask = 0xF;
-    CcuRepLocWaitNotify rep(notify, mask, true);
+    CcuRepLocWaitNotify rep(&insGen, notify, mask, true);
 
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
@@ -298,14 +307,14 @@ TEST_F(CcuRepLocWaitNotifyTest, TranslateWithProfilingDisabled)
 {
     LocalNotify notify;
     uint32_t mask = 0xA;
-    CcuRepLocWaitNotify rep(notify, mask, false);
+    CcuRepLocWaitNotify rep(&insGen, notify, mask, false);
 
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 5;
     TransDep dep = {};
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
@@ -318,7 +327,7 @@ TEST_F(CcuRepLocWaitNotifyTest, Describe)
 {
     LocalNotify notify;
     uint32_t mask = 0x1234;
-    CcuRepLocWaitNotify rep(notify, mask, true);
+    CcuRepLocWaitNotify rep(&insGen, notify, mask, true);
 
     std::string desc = rep.Describe();
 
@@ -328,7 +337,7 @@ TEST_F(CcuRepLocWaitNotifyTest, Describe)
 TEST_F(CcuRepLocRecordEventTest, ConstructorInitializesCorrectly)
 {
     CompletedEvent event;
-    CcuRepLocRecordEvent rep(event, 0xF);
+    CcuRepLocRecordEvent rep(&insGen, event, 0xF);
 
     EXPECT_EQ(rep.Type(), CcuRepType::LOC_RECORD_EVENT);
     EXPECT_EQ(rep.InstrCount(), 1);
@@ -337,15 +346,16 @@ TEST_F(CcuRepLocRecordEventTest, ConstructorInitializesCorrectly)
 
 TEST_F(CcuRepLocRecordEventTest, Translate)
 {
+    CcuInsGeneraterV1 insGen;
     CompletedEvent event;
-    CcuRepLocRecordEvent rep(event, 0xABCD);
+    CcuRepLocRecordEvent rep(&insGen, event, 0xABCD);
 
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 100;
     TransDep dep = {};
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
@@ -358,7 +368,7 @@ TEST_F(CcuRepLocRecordEventTest, Translate)
 TEST_F(CcuRepLocRecordEventTest, Describe)
 {
     CompletedEvent event;
-    CcuRepLocRecordEvent rep(event, 0xABCD);
+    CcuRepLocRecordEvent rep(&insGen, event, 0xABCD);
 
     std::string desc = rep.Describe();
 
@@ -370,7 +380,7 @@ TEST_F(CcuRepRecordSharedNotifyTest, ConstructorInitializesCorrectly)
 {
     LocalNotify notify;
     uint16_t mask = 0xFF;
-    CcuRepRecordSharedNotify rep(notify, mask);
+    CcuRepRecordSharedNotify rep(&insGen, notify, mask);
 
     EXPECT_EQ(rep.Type(), CcuRepType::RECORD_SHARED_NOTIFY);
     EXPECT_EQ(rep.InstrCount(), 1);
@@ -381,7 +391,7 @@ TEST_F(CcuRepRecordSharedNotifyTest, TranslateSameDie)
 {
     LocalNotify notify;
     uint16_t mask = 0xF;
-    CcuRepRecordSharedNotify rep(notify, mask);
+    CcuRepRecordSharedNotify rep(&insGen, notify, mask);
 
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
@@ -389,7 +399,7 @@ TEST_F(CcuRepRecordSharedNotifyTest, TranslateSameDie)
     TransDep dep = {};
     dep.dieId = 0;
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
@@ -402,7 +412,7 @@ TEST_F(CcuRepRecordSharedNotifyTest, TranslateDifferentDie)
 {
     LocalNotify notify;
     uint16_t mask = 0xA;
-    CcuRepRecordSharedNotify rep(notify, mask);
+    CcuRepRecordSharedNotify rep(&insGen, notify, mask);
 
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
@@ -412,7 +422,7 @@ TEST_F(CcuRepRecordSharedNotifyTest, TranslateDifferentDie)
     dep.reserveCkeId = 2;
     dep.reserveChannalId[1] = 3;
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
@@ -425,7 +435,7 @@ TEST_F(CcuRepRecordSharedNotifyTest, Describe)
 {
     LocalNotify notify;
     uint16_t mask = 0x1234;
-    CcuRepRecordSharedNotify rep(notify, mask);
+    CcuRepRecordSharedNotify rep(&insGen, notify, mask);
 
     std::string desc = rep.Describe();
 

@@ -86,6 +86,66 @@ CcuResult CcuLoopAddDemoKernel(CcuKernelArg arg)
     return CcuResult::CCU_SUCCESS;
 }
 
+CcuResult CcuV2CompatLoopGroupDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    (void)arg;
+
+    Variable numA{}, numB{}, r1{};
+    numA = 3;
+    numB = 4;
+
+    Variable varLoopParam1{}, varLoopParam2{}, varParallel{}, varOffset{};
+    varLoopParam1 = 0x0001000200030000ULL;
+    varLoopParam2 = 0x0002000300040000ULL;
+    varParallel   = 0x0002000100020000ULL;
+    varOffset     = 0x1000000100010000ULL;
+
+    Func body1([&]() {
+        r1 = numA + numB;
+    });
+    Func body2([&]() {
+        r1 = numA + numB;
+    });
+
+    Loop loop1(varLoopParam1, body1);
+    Loop loop2(varLoopParam2, body2);
+
+    LoopGroup group(varParallel, varOffset, /*maxLoopNum=*/2, {loop1, loop2});
+
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuV2ConfigLoopGroupDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    (void)arg;
+
+    Variable numA{}, numB{}, r1{}, r2{};
+    numA = 3;
+    numB = 4;
+
+    Func body1([&]() {
+        r1 = numA + numB;
+    });
+    Func body2([&]() {
+        r2 = numA + numB;
+    });
+
+    LoopConfig cfg1 = {.addrOffset = 0, .iterNum = 2};
+    LoopConfig cfg2 = {.addrOffset = 4096, .iterNum = 4};
+    Loop loop1(cfg1, body1);
+    Loop loop2(cfg2, body2);
+
+    LoopGroupConfig grpCfg = {
+        .cloneNum = 3, .cloneLoopOffset = 1,
+        .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1
+    };
+    LoopGroup group(grpCfg, /*maxLoopNum=*/2, {loop1, loop2});
+
+    return CcuResult::CCU_SUCCESS;
+}
+
 inline CcuResult CcuIfInLoopInvalidDemoKernel(CcuKernelArg arg)
 {
     using namespace ccu;

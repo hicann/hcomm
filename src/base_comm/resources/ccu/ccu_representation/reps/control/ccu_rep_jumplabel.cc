@@ -8,14 +8,16 @@
 #include "ccu_rep_v1.h"
 
 #include "string_util.h"
+#include "ccu_ins_generater_base.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepJumpLabel::CcuRepJumpLabel(const std::string &label) : CcuRepBlock(label)
+CcuRepJumpLabel::CcuRepJumpLabel(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label) :
+    CcuRepBlock(insGeneratorPtr, label)
 {
     type = CcuRepType::JUMP_LABEL;
-    Append(std::make_shared<CcuRepNop>());
+    Append(std::make_shared<CcuRepNop>(insGeneratorPtr));
 }
 
 std::string CcuRepJumpLabel::Describe()

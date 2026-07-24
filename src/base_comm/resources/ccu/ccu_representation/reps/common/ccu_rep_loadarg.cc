@@ -6,40 +6,33 @@
  */
 
 #include "ccu_rep_v1.h"
-
 #include "string_util.h"
+#include "exception_util.h"
+#include "ccu_api_exception.h"
+
+#include "ccu_ins_generater_base.h"
+#include "ccu_kernel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLoadArg::CcuRepLoadArg(const Variable &var, uint16_t argId, uint16_t fullArgId)
-    : var(var), argId(argId), fullArgId(fullArgId)
+using namespace Hccl;
+
+CcuRepLoadArg::CcuRepLoadArg(CcuInsGeneraterBase* insGenPtr, const Variable &var, uint16_t argId, uint16_t fullArgId) :
+    insGeneratorPtr_(insGenPtr), var(var), argId(argId), fullArgId(fullArgId)
 {
     type       = CcuRepType::LOAD_ARG;
-    instrCount = 1;
+    instrCount = insGeneratorPtr_->GetInstrCount(type);
 }
 
-uint16_t CcuRepLoadArg::GetVarId() const
-{
-    return var.Id();
-}
-
-uint16_t CcuRepLoadArg::GetFullArgId() const
-{
-    return fullArgId;
-}
-
-bool CcuRepLoadArg::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepLoadArg::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     this->instrId = instrId;
     translated    = true;
 
-    if (dep.isFuncBlock) {
-        // Xn(var) = Xn(loadXnId) + 0
-        LoadXXInstr(instr++, var.Id(), dep.loadXnId, dep.reserveXnId);
-    } else {
-        LoadSqeArgsToXnInstr(instr++, var.Id(), argId);
-    }
+    CHK_RET_THROW(Hccl::CcuApiException,
+        Hccl::StringFormat("[CcuRepLoadArg][%s] failed to translate repLoadArg for instrId[%u] ", __func__, instrId),
+            insGeneratorPtr_->CcuRepLoadArgTranslate(ccuKernel, instr, instrId, this, dep));
 
     instrId += instrCount;
 

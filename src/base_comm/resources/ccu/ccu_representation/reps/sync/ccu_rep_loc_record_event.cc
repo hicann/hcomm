@@ -9,30 +9,28 @@
  */
 
 #include "ccu_rep_loc_record_event.h"
-
 #include <climits>
-
-#include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
+#include "ccu_ins_generater_base.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLocRecordEvent::CcuRepLocRecordEvent(const CompletedEvent &event, uint32_t mask)
-    : event_(event), mask_(mask)
+CcuRepLocRecordEvent::CcuRepLocRecordEvent(CcuInsGeneraterBase* insGenPtr, const CompletedEvent &event, uint32_t mask)
+    : insGenPtr(insGenPtr), event_(event), mask_(mask)
 {
     type       = CcuRepType::LOC_RECORD_EVENT;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
-bool CcuRepLocRecordEvent::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepLocRecordEvent::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     this->instrId = instrId;
     translated    = true;
 
-    SetCKEInstr(instr++, event_.Id(), mask_, 0, 0, 1);
-
+    insGenPtr->CcuRepLocRecordEventTranslate(ccuKernel, instr, this);
+    
     CHK_PRT_THROW(instrId > USHRT_MAX - instrCount,
         HCCL_ERROR("[CcuRepLocRecordEvent][Translate] instrId[%u] + instrCount[%u] "
             "exceeds the maximum value of unsigned short int.", instrId, instrCount),

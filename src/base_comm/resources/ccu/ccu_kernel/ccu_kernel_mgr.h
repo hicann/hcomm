@@ -20,6 +20,8 @@
 #include "ccu_dev_mgr_imp.h"
 #include "../ccu_representation/reps/translator/ccu_rep_translator_v1.h"
 
+#include "ccu_ins_generater_base.h"
+
 namespace hcomm {
 
 using namespace CcuRep;
@@ -55,6 +57,7 @@ private:
     };
 
 private:
+    CcuResult PrepareConstValueResources();
     CcuResult AllocRes(CcuResPack &resPack);
 
     HcclResult InstantiationTranslator(const uint16_t dieId);
@@ -74,12 +77,12 @@ private:
     std::unordered_map<CcuKernelHandle, std::unique_ptr<CcuKernel>> kernelMap_{};
     void *instructionLoadDevMem_{nullptr};
 
-    std::unordered_map<uint16_t, std::unordered_map<uint16_t, std::shared_ptr<CcuRepTranslator>>> translators;
-    std::unordered_map<uint16_t, std::unordered_map<uint16_t, std::shared_ptr<CcuRepReferenceManager>>> referenceMgrs;
+    std::unordered_map<uint16_t, std::unordered_map<uint16_t, std::shared_ptr<CcuRep::CcuRepTranslator>>> translators;
+    std::unordered_map<uint16_t, std::unordered_map<uint16_t, std::shared_ptr<CcuRep::CcuRepReferenceManager>>> referenceMgrs;
     CcuTranslatResPack translatorResPack{};
-
     std::unique_ptr<CcuKernel> currKernel_{nullptr};
+    std::shared_ptr<CcuInsGeneraterBase> insGenePtr;
+    CcuVersion ccuVersion_{CcuVersion::CCU_INVALID};
 };
 }; // namespace hcomm
-
 #endif // HCOMM_CCU_KERNEL_MGR_IMP_H

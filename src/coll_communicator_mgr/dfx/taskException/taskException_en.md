@@ -27,11 +27,18 @@ taskException/
 │   ├── hcclCommTaskException.h              # TaskExceptionHost / TaskExceptionHostManager class declarations
 │   ├── hcclCommTaskException.cc             # Host-side general exception handling implementation + callback registration management
 │   ├── ccuTaskException.h                   # CcuTaskException class declaration
-│   ├── ccuTaskException.cc                  # CCU task exception handling implementation (instruction parsing, register reading, error information generation)
-│   └── ccu_error_info_v1.h                  # CCU error information data structure definitions (CcuErrorInfo, CcuLoopContext, CcuMissionContext, and so on)
+│   └── ccuTaskException.cc                  # CCU task exception handling implementation (instruction parsing, register reading, error information generation)
 └── aicpu/                                   # AICPU-side exception handling
     ├── hcclCommTaskExceptionLite.h          # HcclCommTaskExceptionLite class declaration
     └── hcclCommTaskExceptionLite.cc         # AICPU-side exception detection, CQE parsing, and error reporting implementation
+```
+
+```text
+ccu_dfx/ (located at base_comm/resources/ccu/ccu_dfx/)
+├── ccu_error_info_v1.h                  # Ascend 950 error information data structure definitions (CcuErrorInfo, CcuLoopContext, CcuMissionContext, etc.)
+├── ccu_error_info_v2.h                  # Ascend 960 error information data structure definitions (CcuLoopContextV2, CcuMissionContextV2)
+├── ccu_dfx_schema.h                     # V1/V2 schema dispatch interface declarations (CcuVersionOps, GetCcuOps)
+└── ccu_dfx_schema.cc                    # V1/V2 schema dispatch implementation (selects decode/print implementation by device type 950->V1 / 960->V2)
 ```
 
 ### File Relationships
@@ -40,7 +47,10 @@ taskException/
 |------|------|----------|
 | `hcclCommTaskException.h/.cc` | Host-side main entry point, registers Runtime exception callbacks, distributes to general or CCU exception handling | Depends on `ccuTaskException.h` for CCU type exception handling; depends on `global_mirror_tasks.h` for finding TaskInfo; obtains ErrorMessageReport from the AICPU side through callbacks |
 | `ccuTaskException.h/.cc` | CCU task exception-specific handling, parses CcuRep instruction representation, reads hardware registers | Depends on data structures in `ccu_error_info_v1.h`; depends on `ccu_kernel_mgr.h` for CcuRepContext; depends on `ccu_urma_channel.h` for channel information |
-| `ccu_error_info_v1.h` | CCU error information data structure definitions | Referenced by `ccuTaskException.h/.cc`; depends on `ccu_rep_type_v1.h` for the CcuRepType enum definition |
+| `ccu_error_info_v1.h` (located at `base_comm/resources/ccu/ccu_dfx/`) | Ascend 950 error information data structure definitions (CcuErrorInfo, CcuLoopContext, CcuMissionContext, etc.) | Referenced by `ccuTaskException.h/.cc`; depends on `ccu_rep_type_v1.h` for the CcuRepType enum definition |
+| `ccu_error_info_v2.h` (located at `base_comm/resources/ccu/ccu_dfx/`) | Ascend 960 error information data structure definitions (CcuLoopContextV2, CcuMissionContextV2) | Referenced by `ccuTaskException.h`; zero external dependencies |
+| `ccu_dfx_schema.h` (located at `base_comm/resources/ccu/ccu_dfx/`) | V1/V2 schema dispatch interface declarations, defines CcuMissionInfo/CcuLoopInfo semantic output structures and CcuVersionOps dispatch table entry, declares GetCcuOps entry | Depends on `hccl_types.h` for HcclResult; implemented by `ccu_dfx_schema.cc` and referenced by `ccuTaskException.cc` (GetCcuOps called by ProcessCcuException / PrintPanicLogInfo / DecodeRawMissionInfo / FetchAndDecodeLoopInfo) |
+| `ccu_dfx_schema.cc` (located at `base_comm/resources/ccu/ccu_dfx/`) | V1/V2 schema dispatch implementation, selects corresponding Mission/Loop context decode and CCUM DFX register print implementation by device type (950->V1 / 960->V2) | Depends on `ccu_dfx_schema.h` interface; depends on `ccu_error_info_v1.h` for CcuMissionContext / CcuLoopContext; depends on `ccu_error_info_v2.h` for CcuMissionContextV2 / CcuLoopContextV2; depends on `adapter_rts_common.h` for hrtGetDeviceType to obtain device type |
 | `hcclCommTaskExceptionLite.h/.cc` | AICPU-side daemon thread, detects CQE exceptions and reports to Host | Depends on `coll_comm_aicpu.h` for the AICPU communication domain; depends on `error_message_v2.h` for organizing ErrorMessageReport and reporting to the Host through HDC |
 
 ### TaskException File Interaction

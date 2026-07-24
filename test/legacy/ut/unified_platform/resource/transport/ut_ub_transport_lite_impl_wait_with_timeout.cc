@@ -154,6 +154,9 @@ protected:
         data1.insert(data1.end(), rmtNotify1.begin(), rmtNotify1.end());
         binaryStream << data1;
 
+        std::vector<char> emptyData;
+        binaryStream << emptyData; // locBufferUniqueIds
+
         std::vector<char> data2;
         data2.insert(data2.end(), rmtBuffer0.begin(), rmtBuffer0.end());
         data2.insert(data2.end(), rmtBuffer1.begin(), rmtBuffer1.end());

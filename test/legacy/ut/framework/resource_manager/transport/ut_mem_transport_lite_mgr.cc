@@ -67,9 +67,16 @@ protected:
         BinaryStream binaryStream;
         u32 type = (u32)TransportType::UB;
         binaryStream << type;
-        binaryStream << (u32)0; // notifyNum=0, skip ParseLocNotifyVec
-        binaryStream << (u32)0; // bufferNum=0, skip ParseRmtBufferVec
+        binaryStream << (u32)0; // notifyNum=0
+        binaryStream << (u32)0; // bufferNum=0
+        binaryStream << (u32)0; // rmtbufferNum=0
         binaryStream << (u32)0; // connNum=0, skip ParseConnVec
+        std::vector<char> emptyVec;
+        binaryStream << emptyVec; // notifyUniqueIds
+        binaryStream << emptyVec; // rmtNotifyUniqueIds
+        binaryStream << emptyVec; // locBufferUniqueIds
+        binaryStream << emptyVec; // rmtBufferUniqueIds
+        binaryStream << emptyVec; // connUniqueIds
         std::vector<char> liteData;
         binaryStream.Dump(liteData);
         return liteData;

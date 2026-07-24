@@ -1,3 +1,13 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
 #include "gtest/gtest.h"
 #include <mockcpp/mockcpp.hpp>
 #include <iostream>
@@ -176,7 +186,7 @@ TEST_F(SymmetricMemoryAgentTest, ut_ExchangeInfo_When_Link_Is_Failed_Expect_Retu
     int input_temp = 0;
     std::vector<int> output_temp(3, -1);
     ret = symmetricMemoryAgent.ExchangeInfo((void*)&input_temp, (void*)output_temp.data(), sizeof(int));
-    EXPECT_EQ(ret,HCCL_E_INTERNAL);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
 }
 
 TEST_F(SymmetricMemoryAgentTest, ut_ExchangeInfo_When_TimeOut_Expect_ReturnHCCL_E_TCP_TRANSFER)
@@ -293,7 +303,7 @@ TEST_F(SymmetricMemoryAgentTest, ut_ExchangeInfo_When_SendIsFailed_Expect_Return
     MOCKER_CPP(GetExternalInputHcclLinkTimeOut)
         .stubs()
         .will(returnValue(1));
-        
+    
     int input_temp = 0;
     std::vector<int> output_temp(3, -1);
     ret = symmetricMemoryAgent.ExchangeInfo((void*)&input_temp, (void*)output_temp.data(), sizeof(int));

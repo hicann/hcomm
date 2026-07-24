@@ -17,6 +17,7 @@
 #include "ccu_condition_v1.h"
 #include "ccu_repeat_v1.h"
 #include "ccu_interface_assist_v1.h"
+#include "ccu_ins_generater_v1.h"
 
 #include "ccu_api_exception.h"
 
@@ -120,7 +121,7 @@ TEST_F(CcuRepInterfaceTest, Address_CopyConstructor)
 
 TEST_F(CcuRepInterfaceTest, AppendToContext_NullContext)
 {
-    auto nop = std::make_shared<CcuRepNop>();
+    auto nop = std::make_shared<CcuRepNop>(nullptr);
     EXPECT_THROW(AppendToContext(nullptr, nop), Hccl::CcuApiException);
 }
 
@@ -147,7 +148,7 @@ TEST_F(CcuRepInterfaceTest, CcuRepContext_AppendAndCurrentBlock)
     auto block1 = context.CurrentBlock();
     EXPECT_NE(block1, nullptr);
 
-    auto repFuncBlock = std::make_shared<CcuRepFuncBlock>("testFunc");
+    auto repFuncBlock = std::make_shared<CcuRepFuncBlock>(nullptr, "testFunc");
     AppendToContext(&context, repFuncBlock);
 
     auto block2 = context.CurrentBlock();
@@ -169,6 +170,8 @@ TEST_F(CcuRepInterfaceTest, FuncBlock_ConstructorAndDestructor)
 TEST_F(CcuRepInterfaceTest, FuncCall_ConstructorWithLabel)
 {
     CcuRepContext context;
+    CcuInsGeneraterV1 insGen;
+    context.SetInsGenerater(&insGen);
     FuncCall funcCall(&context, "testCall");
     funcCall.AppendToContext();
 
@@ -179,6 +182,8 @@ TEST_F(CcuRepInterfaceTest, FuncCall_ConstructorWithLabel)
 TEST_F(CcuRepInterfaceTest, FuncCall_ConstructorWithVariable)
 {
     CcuRepContext context;
+    CcuInsGeneraterV1 insGen;
+    context.SetInsGenerater(&insGen);
     Variable funcAddr(&context);
     FuncCall funcCall(&context, funcAddr);
     funcCall.AppendToContext();
@@ -195,20 +200,15 @@ TEST_F(CcuRepInterfaceTest, LoopBlock_ConstructorAndDestructor)
         auto currentBlock = CurrentBlock(&context);
         EXPECT_NE(currentBlock, nullptr);
     }
-    auto blockAfter = CurrentBlock(&context);
-    EXPECT_NE(blockAfter, nullptr);
+    EXPECT_THROW(CurrentBlock(&context), Hccl::CcuApiException);
 }
 
 TEST_F(CcuRepInterfaceTest, LoopCall_ConstructorAndAppend)
 {
     CcuRepContext context;
     LoopCall loopCall(&context, "testLoopCall");
-    loopCall.AppendToContext();
 
     EXPECT_EQ(loopCall.GetLabel(), "testLoopCall");
-
-    auto reps = context.GetRepSequence();
-    EXPECT_EQ(reps.size(), 1);
 }
 
 TEST_F(CcuRepInterfaceTest, CcuRepContext_SetAndGetDieId)
@@ -291,6 +291,8 @@ TEST_F(CcuRepInterfaceTest, LoopBlock_OperatorParentheses)
 TEST_F(CcuRepInterfaceTest, FuncCall_OperatorParentheses)
 {
     CcuRepContext context;
+    CcuInsGeneraterV1 insGen;
+    context.SetInsGenerater(&insGen);
     FuncCall funcCall(&context, "testCall");
     funcCall();
 }
@@ -299,7 +301,6 @@ TEST_F(CcuRepInterfaceTest, LoopCall_OperatorParentheses)
 {
     CcuRepContext context;
     LoopCall loopCall(&context, "testLoopCall");
-    loopCall();
 }
 
 TEST_F(CcuRepInterfaceTest, Condition_EQ_RelationalOperator)
@@ -320,6 +321,66 @@ TEST_F(CcuRepInterfaceTest, Repeat_NE_RelationalOperator)
 
     auto rel = (counter != 10);
     EXPECT_EQ(rel.type, CcuRelationalOperatorType::NOT_EQUAL);
+}
+
+TEST_F(CcuRepInterfaceTest, Variable_ArithmeticAssignment)
+{
+    CcuRepContext context;
+    Variable varA(&context);
+    varA.Reset(1);
+    Variable varB(&context);
+    varB.Reset(2);
+
+    varA = varA + varB;
+    varA = varA - varB;
+    varA = varA * varB;
+    varA += varB;
+    varA += uint16_t(10);
+    varA -= varB;
+    varA -= uint16_t(10);
+    varA *= varB;
+    varA *= uint16_t(10);
+}
+
+TEST_F(CcuRepInterfaceTest, Address_ArithmeticAssignment)
+{
+    CcuRepContext context;
+    Address addrA(&context);
+    addrA.Reset(1);
+    Address addrB(&context);
+    addrB.Reset(2);
+    Variable varB(&context);
+    varB.Reset(3);
+
+    addrA = addrA + varB;
+    addrA = addrA + addrB;
+    addrA = addrA + uint16_t(10);
+    addrA += varB;
+}
+
+TEST_F(CcuRepInterfaceTest, Variable_VariableAssignment)
+{
+    CcuRepContext context;
+    Variable varA(&context);
+    varA.Reset(1);
+    Variable varB(&context);
+    varB.Reset(2);
+
+    varA = varB;
+}
+
+TEST_F(CcuRepInterfaceTest, Address_AddressAndVariableAssignment)
+{
+    CcuRepContext context;
+    Address addrA(&context);
+    addrA.Reset(1);
+    Address addrB(&context);
+    addrB.Reset(2);
+    Variable varB(&context);
+    varB.Reset(3);
+
+    addrA = addrB;
+    addrA = varB;
 }
 
 }

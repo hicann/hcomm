@@ -7,37 +7,30 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
+#include "ccu_rep_v1.h"
 #include "ccu_rep_loc_wait_notify.h"
-
 #include <climits>
-
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-
+#include "ccu_ins_generater_v1.h"
+#include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLocWaitNotify::CcuRepLocWaitNotify(const LocalNotify &notify, const uint32_t mask, bool isProfiling)
-    : notify_(notify), mask_(mask), isProfiling_(isProfiling)
+CcuRepLocWaitNotify::CcuRepLocWaitNotify(CcuInsGeneraterBase* insGenPtr, const LocalNotify &notify, const uint32_t mask, bool isProfiling)
+    : insGenPtr(insGenPtr), notify_(notify), mask_(mask), isProfiling_(isProfiling)
 {
-    type       = CcuRepType::LOC_WAIT_EVENT;
-    instrCount = 1;
+    type       = CcuRepType::LOC_WAIT_NOTIFY;
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
-bool CcuRepLocWaitNotify::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepLocWaitNotify::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     this->instrId = instrId;
     translated    = true;
 
-    // SetCKEInstr支持硬件profiling功能
-    if (isProfiling_) {
-        SetCKEInstr(instr++, 0, 0, notify_.Id(), mask_, 1);
-    } else {
-        ClearCKEInstr(instr++, 0, 0, notify_.Id(), mask_, 1);
-    }
-
+    insGenPtr->CcuRepLocWaitNotifyTranslate(ccuKernel, instr, this);
     CHK_PRT_THROW((instrId > UINT16_MAX - instrCount),
         HCCL_ERROR("[CcuRepLocWaitNotify::Translate]uint16 integer overflow occurs, "
             "instrId = [%hu], instrCount = [%hu]", instrId, instrCount),

@@ -10,7 +10,7 @@
 
 #include <cstdint>
 #include <string>
-
+#include <unordered_map>
 namespace hcomm {
 namespace CcuRep {
 
@@ -487,6 +487,9 @@ struct TransMemConfig {
     uint16_t splitMode;
     uint16_t se;
     uint16_t rmtJettyType;
+    uint16_t src_mode;
+    uint16_t dst_mode;
+    uint16_t msIdMode;
 };
 
 #pragma pack(push, 1)
@@ -521,8 +524,10 @@ struct CcuInstrLoadStoreX {
 };
 
 struct CcuInstrClearX {
-    uint16_t xnId;
-    uint16_t xmId;
+    uint16_t xnId : 15;
+    uint16_t xnIdMode : 1;
+    uint16_t xmId : 15;
+    uint16_t xmIdMode : 1;
     uint16_t reserved[11];
     uint16_t setCKEId;
     uint16_t setCKEMask;
@@ -631,13 +636,14 @@ struct CcuInstrJmp {
     uint16_t conditionXnId;
     uint16_t relTarInstrXnId;
     uint16_t conditionType : 4;
-    uint16_t reserved : 12;
+    uint16_t jumpMode : 1;
+    uint16_t reserved : 11;
     uint16_t reserved1[11];
 };
 
 struct CcuInstrWait {
-    uint16_t expectedXnId;
-    uint16_t conditionXnId;
+    uint16_t conditionXnId;  //Xn
+    uint16_t expectedXnId;  //Xm
     uint16_t conditionType : 4;
     uint16_t reserved : 12;
     uint16_t reserved1[12];
@@ -726,7 +732,10 @@ struct CcuInstrTransMem {
     uint16_t splitMode : 1;
     uint16_t se : 1;           // Solicited Event，Responder基于se来判断生成CQE时是否产生Completion Event
     uint16_t rmtJettyType : 2; // 00: JFR, 01: Jetty，10: JettyGroup，11: reserved
-    uint16_t reserved : 5;
+    uint16_t src_mode : 1;
+    uint16_t dst_mode : 1;
+    uint16_t msIdMode : 1;  // 标记是否使用transmem的msId模式
+    uint16_t reserved : 2;
     uint16_t targetHint : 8;
     uint16_t setCKEId;
     uint16_t setCKEMask;
@@ -768,13 +777,14 @@ struct CcuInstrSyncAtX {
 // max和min: castEn保持默认为0
 struct CcuInstrReduce {
     uint16_t msId[CCU_REDUCE_MAX_MS];
-    uint16_t reserved[2];
-    uint16_t clearType : 1;
+    uint16_t XnIdLength;
+    uint16_t reserved;
+    uint16_t reserved1 : 1;
     uint16_t count : 3;
     uint16_t castEn : 2;
-    uint16_t reserved1 : 5;
+    uint16_t reserved2 : 5;
     uint16_t dataType : 5;
-    uint16_t reserved2[2];
+    uint16_t reserved3[2];
     uint16_t setCKEId;
     uint16_t setCKEMask;
 };
@@ -897,17 +907,34 @@ void Nop(CcuInstr *instr);
 
 void LoadSqeArgsToX(CcuInstr *instr, uint16_t xnId, uint16_t sqeArgsId, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
 void LoadImdToXn(CcuInstr *instr, uint16_t xnId, uint64_t immediate, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void ClearX(CcuInstr *instr, uint16_t xnId, uint16_t xmId, uint16_t xnIdMode = 0, uint16_t xmIdMode = 0,
+            uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
 void LoadXFromMem(CcuInstr *instr, uint16_t dst, uint16_t src, uint16_t srcToken, uint16_t len,
                   const CacheConfig &cacheConfig, uint16_t setCKEId, uint16_t setCKEMask);
 void StoreXToMem(CcuInstr *instr, uint16_t dst, uint16_t dstToken, uint16_t src, uint16_t len,
                  const CacheConfig &cacheConfig, uint16_t setCKEId, uint16_t setCKEMask);
+void HSCBStoreXToMem(CcuInstr *instr, uint16_t dst, uint16_t src, uint16_t len,
+                     const CacheConfig &cacheConfig, uint16_t setCKEId, uint16_t setCKEMask);
 
 void Assign(CcuInstr *instr, uint16_t result, uint16_t operand, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void AssignI(CcuInstr *instr, uint16_t result, uint64_t operand, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
 
 void Add(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
 void AddI(CcuInstr *instr, uint16_t result, uint16_t operand, uint16_t imm, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void Sub(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void SubI(CcuInstr *instr, uint16_t result, uint16_t operand, uint16_t imm, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
 void Mul(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
 void MulI(CcuInstr *instr, uint16_t result, uint16_t operand, uint16_t imm, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+
+void And(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void Or(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void Xor(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void Not(CcuInstr *instr, uint16_t result, uint16_t operand, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+
+void SLL(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void SRL(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void SLA(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
+void SRA(CcuInstr *instr, uint16_t result, uint16_t operand1, uint16_t operand2, uint16_t setCKEId = 0, uint16_t setCKEMask = 0);
 
 void Loop(CcuInstr *instr, uint16_t startInstrId, uint16_t endInstrId, uint16_t iterNum, uint16_t offset,
           uint16_t contextId);
@@ -915,7 +942,8 @@ void LoopGroup(CcuInstr *instr, uint16_t startLoopInstrId, uint16_t loopGroupCon
                uint16_t xnOffset);
 void Jump(CcuInstr *instr, uint16_t relTarInstrXnId, uint16_t conditionXnId, uint16_t expectedXnId,
           uint16_t conditionType);
-
+void Wait(CcuInstr *instr, uint16_t conditionXnId, uint16_t expectedXnId, uint16_t conditionType);
+void Fence(CcuInstr *instr);
 void SetCKE(CcuInstr *instr, uint16_t setCKEId, uint16_t setCKEMask, uint16_t waitCKEId, uint16_t waitCKEMask,
             uint16_t clearType);
 void ClearCKE(CcuInstr *instr, uint16_t clearCKEId, uint16_t clearMask, uint16_t waitCKEId, uint16_t waitCKEMask,
@@ -926,28 +954,28 @@ void TransLocMemToLocMS(CcuInstr *instr, uint16_t ms, uint16_t src, uint16_t src
 void TransLocMSToLocMem(CcuInstr *instr, uint16_t dst, uint16_t dstToken, uint16_t ms, uint16_t len, uint16_t offset,
                         uint16_t setCKEId, uint16_t setCKEMask, const CacheConfig &cacheConfig);
 void TransLocMemToLocMem(CcuInstr *instr, uint16_t dst, uint16_t dstToken, uint16_t src, uint16_t srcToken,
-                         uint16_t len, uint16_t usedMSId, uint16_t setCKEId, uint16_t setCKEMask,
+                         uint16_t len, uint16_t usedMSId, uint16_t usedMSNum, uint16_t setCKEId, uint16_t setCKEMask,
                          const CacheConfig &srcCacheConfig, const CacheConfig &dstcacheConfig);
 void TransMem(CcuInstr *instr, uint16_t dst, uint16_t dstToken, uint16_t src, uint16_t srcToken, uint16_t len,
               uint16_t channel, const TransMemNotifyInfo &notify, const TransMemReduceInfo &reduce,
               const TransMemConfig &config, uint16_t setCKEId, uint16_t setCKEMask);
-void SyncWtX(CcuInstr *instr, uint16_t dst, uint16_t dstToken, uint16_t xn, uint16_t channelId, uint16_t setCKEId,
-             uint16_t setCKEMask);
 void SyncWtX(CcuInstr *instr, const TransMemNotifyInfo &notify, uint16_t channelId, uint16_t setCKEId,
              uint16_t setCKEMask);
 void SyncWtX(CcuInstr *instr, uint16_t dst, uint16_t dstToken, uint16_t xn, uint16_t channelId,
              const TransMemNotifyInfo &notify, uint16_t setCKEId, uint16_t setCKEMask);
-void SyncAtX(CcuInstr *instr, uint16_t dst, uint16_t dstToken, uint16_t mask, uint16_t channelId, uint16_t setCKEId,
+void SyncAtX(CcuInstr *instr, uint16_t dstAddr, uint16_t dstToken, uint16_t srcId, uint16_t channelId, uint16_t setCKEId,
              uint16_t setCKEMask);
 void ReduceAdd(CcuInstr *instr, uint16_t *ms, uint16_t count, uint16_t castEn, uint16_t dataType, uint16_t setCKEId,
-               uint16_t setCKEMask);
+               uint16_t setCKEMask, uint16_t XnIdLength);
 void ReduceMax(CcuInstr *instr, uint16_t *ms, uint16_t count, uint16_t dataType, uint16_t setCKEId,
-               uint16_t setCKEMask);
+               uint16_t setCKEMask, uint16_t XnIdLength);
 void ReduceMin(CcuInstr *instr, uint16_t *ms, uint16_t count, uint16_t dataType, uint16_t setCKEId,
-               uint16_t setCKEMask);
+               uint16_t setCKEMask, uint16_t XnIdLength);
+void RelJmp(CcuInstr *instr, uint16_t targetXnId, uint32_t jmpInstrId, uint16_t xn0, uint16_t xn1);
+std::string                               ParseInstrV2(const CcuInstr *instr);
 }; // namespace CcuV2
 
 }; // namespace CcuRep
 }; // namespace hcomm
 
-#endif // _CCU_MICROCODE_H
+#endif // CCU_MICROCODE_H

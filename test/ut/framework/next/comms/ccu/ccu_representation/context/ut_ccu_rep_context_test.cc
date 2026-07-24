@@ -10,6 +10,7 @@
 
 #include "ccu_rep_context_v1.h"
 #include "ccu_rep_loopgroup_bundle_v1.h"
+#include "ccu_ins_generater_v1.h"
 #include "ccu_types.h"
 #include <gtest/gtest.h>
 #include <memory>
@@ -21,6 +22,7 @@ namespace {
 
 class CcuRepContextTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {}
 };
 
@@ -41,7 +43,7 @@ TEST_F(CcuRepContextTest, CurrentBlock_InitiallyMainBlock)
 TEST_F(CcuRepContextTest, SetCurrentBlock)
 {
     CcuRepContext context;
-    auto newBlock = std::make_shared<CcuRepBlock>("newBlock");
+    auto newBlock = std::make_shared<CcuRepBlock>(&insGen, "newBlock");
     context.SetCurrentBlock(newBlock);
     EXPECT_EQ(context.CurrentBlock(), newBlock);
 }
@@ -49,7 +51,7 @@ TEST_F(CcuRepContextTest, SetCurrentBlock)
 TEST_F(CcuRepContextTest, Append_SingleRep)
 {
     CcuRepContext context;
-    auto nop = std::make_shared<CcuRepNop>();
+    auto nop = std::make_shared<CcuRepNop>(&insGen);
     context.Append(nop);
     EXPECT_EQ(context.GetRepSequence().size(), 1U);
 }
@@ -57,8 +59,8 @@ TEST_F(CcuRepContextTest, Append_SingleRep)
 TEST_F(CcuRepContextTest, Append_MultipleReps)
 {
     CcuRepContext context;
-    auto nop1 = std::make_shared<CcuRepNop>();
-    auto nop2 = std::make_shared<CcuRepNop>();
+    auto nop1 = std::make_shared<CcuRepNop>(&insGen);
+    auto nop2 = std::make_shared<CcuRepNop>(&insGen);
     context.Append(nop1);
     context.Append(nop2);
     EXPECT_EQ(context.GetRepSequence().size(), 2U);
@@ -86,7 +88,7 @@ TEST_F(CcuRepContextTest, DumpReprestation_NoCrash)
 TEST_F(CcuRepContextTest, DumpReprestation_WithReps)
 {
     CcuRepContext context;
-    auto nop = std::make_shared<CcuRepNop>();
+    auto nop = std::make_shared<CcuRepNop>(&insGen);
     context.Append(nop);
     EXPECT_NO_FATAL_FAILURE(context.DumpReprestation());
 }
@@ -145,7 +147,7 @@ TEST_F(CcuRepContextTest, CollectProfilingReps_Assign_NotVarToVar)
 {
     CcuRepContext context;
     Variable varA(nullptr);
-    CcuRepAssign assign(varA, 100);
+    CcuRepAssign assign(&insGen, varA, 100);
     assign.subType = AssignSubType::IMD_TO_VARIABLE;
     auto assignPtr = std::make_shared<CcuRepAssign>(assign);
     context.CollectProfilingReps(assignPtr);
@@ -157,7 +159,7 @@ TEST_F(CcuRepContextTest, CollectProfilingReps_Assign_VarToVar)
     CcuRepContext context;
     Variable varA(nullptr);
     Variable varB(nullptr);
-    CcuRepAssign assign(varB, varA);
+    CcuRepAssign assign(&insGen, varB, varA);
     assign.subType = AssignSubType::VAR_TO_VAR;
     auto assignPtr = std::make_shared<CcuRepAssign>(assign);
     context.CollectProfilingReps(assignPtr);
@@ -170,7 +172,7 @@ TEST_F(CcuRepContextTest, CollectProfilingReps_LoopGroup)
     CcuLoopGroupConfig grpCfg{};
     Variable parallelParam(nullptr);
     Variable offsetParam(nullptr);
-    auto loopGroupPtr = std::make_shared<CcuRepLoopGroupBundle>(grpCfg, parallelParam, offsetParam);
+    auto loopGroupPtr = std::make_shared<CcuRepLoopGroupBundle>(&insGen, grpCfg, parallelParam, offsetParam);
     context.CollectProfilingReps(loopGroupPtr);
     EXPECT_EQ(context.GetLGProfilingInfo().lgProfilingReps.size(), 1U);
 }
@@ -202,7 +204,7 @@ TEST_F(CcuRepContextTest, Append_CollectsProfilingReps)
     CcuRepContext context;
     Variable varA(nullptr);
     Variable varB(nullptr);
-    CcuRepAssign assign(varB, varA);
+    CcuRepAssign assign(&insGen, varB, varA);
     assign.subType = AssignSubType::VAR_TO_VAR;
     auto assignPtr = std::make_shared<CcuRepAssign>(assign);
     context.Append(assignPtr);
@@ -212,7 +214,7 @@ TEST_F(CcuRepContextTest, Append_CollectsProfilingReps)
 TEST_F(CcuRepContextTest, SetCurrentBlock_ToNullBlock)
 {
     CcuRepContext context;
-    auto nullBlock = std::make_shared<CcuRepBlock>();
+    auto nullBlock = std::make_shared<CcuRepBlock>(&insGen);
     context.SetCurrentBlock(nullBlock);
     EXPECT_EQ(context.CurrentBlock(), nullBlock);
 }
@@ -220,7 +222,7 @@ TEST_F(CcuRepContextTest, SetCurrentBlock_ToNullBlock)
 TEST_F(CcuRepContextTest, GetRepSequence_ReturnsMainBlockReps)
 {
     CcuRepContext context;
-    auto nop = std::make_shared<CcuRepNop>();
+    auto nop = std::make_shared<CcuRepNop>(&insGen);
     context.Append(nop);
     const auto& reps = context.GetRepSequence();
     EXPECT_EQ(reps.size(), 1U);
@@ -229,15 +231,15 @@ TEST_F(CcuRepContextTest, GetRepSequence_ReturnsMainBlockReps)
 TEST_F(CcuRepContextTest, MultipleBlocks_SetCurrentBlock)
 {
     CcuRepContext context;
-    auto block1 = std::make_shared<CcuRepBlock>("block1");
-    auto block2 = std::make_shared<CcuRepBlock>("block2");
+    auto block1 = std::make_shared<CcuRepBlock>(&insGen, "block1");
+    auto block2 = std::make_shared<CcuRepBlock>(&insGen, "block2");
 
     context.SetCurrentBlock(block1);
-    auto nop1 = std::make_shared<CcuRepNop>();
+    auto nop1 = std::make_shared<CcuRepNop>(&insGen);
     context.Append(nop1);
 
     context.SetCurrentBlock(block2);
-    auto nop2 = std::make_shared<CcuRepNop>();
+    auto nop2 = std::make_shared<CcuRepNop>(&insGen);
     context.Append(nop2);
 
     EXPECT_EQ(block1->GetReps().size(), 1U);

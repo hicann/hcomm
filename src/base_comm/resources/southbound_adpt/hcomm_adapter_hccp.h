@@ -30,7 +30,6 @@ constexpr uint32_t URMA_EID_LEN = 16;
 MAKE_ENUM(HrtNetworkMode, PEER, HDC);
 
 using Eid = HccpEid; // 使用hccp定义的union表示eid
-
 // 当前支持编译定义，后续考虑直接使用hccp数据结构
 struct DevEidInfo {
     std::string name{};

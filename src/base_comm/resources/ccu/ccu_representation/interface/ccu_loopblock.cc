@@ -16,14 +16,6 @@ namespace CcuRep {
 
 LoopBlock::LoopBlock(CcuRepContext *context, std::string label) : context(context), label(label)
 {
-    repLoopBlock = std::make_shared<CcuRepLoopBlock>(label);
-    AppendToContext(context, repLoopBlock);
-
-    curActiveBlock = CurrentBlock(context);
-
-    SetCurrentBlock(context, repLoopBlock);
-
-    HCCL_INFO("Enter block %s, last block %s", repLoopBlock->Describe().c_str(), curActiveBlock->Describe().c_str());
 }
 
 LoopBlock::~LoopBlock()

@@ -14,13 +14,14 @@
 
 #include "hcomm_c_adpt.h"  // 需优化
 #include "../../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"  // 需优化
+#include "ccu_dev_mgr_imp.h"
 
 namespace hcomm {
 namespace CcuRep {
 
 CcuRepContext::CcuRepContext()
 {
-    mainBlock   = std::make_shared<CcuRep::CcuRepBlock>();
+    mainBlock   = std::make_shared<CcuRep::CcuRepBlock>(insGenerator);
     activeBlock = mainBlock;
 }
 
@@ -49,7 +50,7 @@ void CcuRepContext::CollectProfilingReps(std::shared_ptr<CcuRep::CcuRepBase> rep
 {
     if (rep->Type() == CcuRepType::ASSIGN) {
         auto assignRep = dynamic_cast<CcuRepAssign *>(rep.get());
-        if (assignRep->subType == AssignSubType::VAR_TO_VAR) {
+        if (assignRep->GetSubType() == AssignSubType::VAR_TO_VAR) {
             lgProfilingInfo.assignProfilingReps.push_back(rep);
         }
     } else if (CurrentBlock()->Type() != CcuRep::CcuRepType::LOOP_BLOCK
@@ -74,7 +75,7 @@ const std::vector<std::shared_ptr<CcuRep::CcuRepBase>> &CcuRepContext::GetRepSeq
 
 std::shared_ptr<CcuRep::CcuRepBase> CcuRepContext::GetRepByInstrId(uint16_t instrId)
 {
-    for (const auto& rep : GetRepSequence()) {
+    for (const auto &rep : GetRepSequence()) {
         CHK_PRT_RET(rep == nullptr, HCCL_ERROR("[%s]fail, rep is nullptr", __func__), nullptr);
         const uint16_t repInstrCount = rep->InstrCount();
         if (repInstrCount == 0) {

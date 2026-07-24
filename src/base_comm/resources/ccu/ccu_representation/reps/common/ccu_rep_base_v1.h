@@ -9,12 +9,19 @@
 
 #include <string>
 
+#include "ccu_common.h"
 #include "ccu_microcode_v1.h"
 #include "ccu_rep_type_v1.h"
 #include "hcomm_primitives.h"
 
 namespace hcomm {
+
+class CcuKernel;
+
 namespace CcuRep {
+
+class CcuInsGeneraterBase;
+class CcuInsGeneraterV1;
 
 struct TransDep {
     int32_t  logicalId;
@@ -23,7 +30,7 @@ struct TransDep {
     uint16_t reserveGsaId;
     uint16_t reserveCkeId;
     uint16_t reserveChannalId[2]; //  0: selfLoopBack; 1: inter die, 0xffff为无效值，rep翻译时检查
-    uint64_t xnBaseAddr;
+    uint64_t xnBaseAddr[CCU_MAX_IODIE_NUM];
     uint64_t ccuResSpaceTokenInfo;
     uint64_t memTokenInfo;
     uint16_t commXn[3]; // 3个Xn
@@ -37,8 +44,8 @@ class CcuRepBase {
 public:
     explicit CcuRepBase();
     virtual ~CcuRepBase();
-    virtual bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) = 0;
-    virtual std::string Describe()                                     = 0;
+    virtual bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) = 0;
+    virtual std::string Describe() = 0;
     virtual uint32_t GetId() {
         return 0;
     }

@@ -15,10 +15,10 @@ namespace CcuRep {
 
 class CcuRepWrite : public CcuRepBase {
 public:
-    CcuRepWrite(const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, CompletedEvent sem, uint16_t mask);
-    CcuRepWrite(const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, uint16_t dataType, uint16_t opType,
+    CcuRepWrite(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, CompletedEvent sem, uint16_t mask);
+    CcuRepWrite(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, uint16_t dataType, uint16_t opType,
                 CompletedEvent sem, uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
 
     uint16_t GetLocAddrId() { return loc.addr.Id(); }
@@ -27,10 +27,19 @@ public:
     uint16_t GetRemTokenId() { return rem.token.Id(); }
     uint16_t GetLenId() { return len.Id(); }
     uint16_t GetSemId() { return sem.Id(); }
-    uint32_t GetMask() { return mask; }
     uint32_t GetChannelId() { return channelId; }
+    ChannelHandle GetChannel() { return channel; }
+    LocalAddr GetLoc() { return loc; }
+    RemoteAddr GetRem() { return rem; }
+    Variable GetLen() { return len; }
+    CompletedEvent GetSem() { return sem; }
+    uint16_t GetMask() { return mask; }
+    uint16_t GetDataType() { return dataType; }
+    uint16_t GetOpType() { return opType; }
+    uint16_t GetReduceFlag() { return reduceFlag; }
 
 private:
+    CcuInsGeneraterBase* insGenPtr{nullptr};
     ChannelHandle channel;
     uint32_t channelId{0};
     RemoteAddr   rem;

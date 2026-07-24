@@ -16,8 +16,8 @@ namespace CcuRep {
 
 class CcuRepFuncBlock : public CcuRepBlock {
 public:
-    explicit CcuRepFuncBlock(const std::string &label);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    explicit CcuRepFuncBlock(CcuInsGeneraterBase* insGenPtr, const std::string &label);
+    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint16_t InstrCount() override;
  
@@ -27,11 +27,27 @@ public:
     void DefineOutArg(const Variable &var);
     void DefineInArg(const std::vector<Variable> &varList);
     void DefineOutArg(const std::vector<Variable> &varList);
-
-    std::vector<Variable> GetInArgVars() const;
-
+ 
     void     SetCallLayer(uint16_t callLayer);
     uint16_t GetCallLayer() const;
+    std::vector<Variable> GetInArgVars() const;
+
+    CcuRepReferenceManager* GetFuncManager()
+    {
+        return funcManager;
+    }
+ 
+    std::vector<CcuRepArg>& GetInArgs()
+    {
+        return inArgs;
+    }
+ 
+    std::vector<CcuRepArg>& GetOutArgs()
+    {
+        return outArgs;
+    }
+ 
+    uint16_t GetCallLayer() { return callLayer; }
  
 private:
     CcuRepReferenceManager *funcManager{nullptr};

@@ -17,9 +17,9 @@ namespace CcuRep {
 
 class CcuRepBufReduce : public CcuRepBase {
 public:
-    CcuRepBufReduce(const std::vector<CcuBuf> &mem, uint16_t count, uint16_t dataType, uint16_t outputDataType,
+    CcuRepBufReduce(CcuInsGeneraterBase* insGenPtr, const std::vector<CcuBuf> &mem, uint16_t count, uint16_t dataType, uint16_t outputDataType,
                     uint16_t opType, CompletedEvent sem, const CcuRep::Variable &len, uint16_t mask = 1);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     const std::vector<CcuBuf>& GetMem() { return mem; }
     uint16_t GetCount() { return count; }
@@ -30,14 +30,19 @@ public:
     uint16_t GetMask() { return mask; }
     uint16_t GetSemId() { return sem.Id(); }
 
+    CompletedEvent GetSem() { return sem; }
+    CcuRep::Variable GetXnIdLength() { return xnIdLength_; }
+
 private:
-    std::vector<CcuBuf> mem;
+    CcuInsGeneraterBase*   insGenPtr;
+    std::vector<CcuBuf>    mem;
     uint16_t               count;
     uint16_t               dataType;
     uint16_t               outputDataType;
     uint16_t               opType;
     CompletedEvent         sem;
     CcuRep::Variable       xnIdLength_;
+
     uint16_t               mask{0};
 };
 

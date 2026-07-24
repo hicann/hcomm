@@ -8,29 +8,37 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  * Description: ccu representation store var header file
  */
-
-#ifndef HCOMM_CCU_REP_STORE_VAR_H
-#define HCOMM_CCU_REP_STORE_VAR_H
-
+ 
+#ifndef HCOMM_CCU_REPRESENTATION_STORE_VAR_H_V1
+#define HCOMM_CCU_REPRESENTATION_STORE_VAR_H_V1
+ 
 #include "ccu_rep_base_v1.h"
 #include "ccu_datatype_v1.h"
-
+ 
 namespace hcomm {
 namespace CcuRep {
-
+ 
 class CcuRepStoreVar : public CcuRepBase {
 public:
-    CcuRepStoreVar(const Variable &var, const Variable &dst, uint32_t num = 1);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    CcuRepStoreVar(CcuInsGeneraterBase* insGeneratorPtr, const Variable &var, const Variable &dst, uint32_t num = 1, bool hscbFlag = false);
+    bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
-
+ 
+    Variable GetVar() { return var; }
+    Variable GetDst() { return dst; }
+    uint32_t GetNum() { return num; }
+    uint16_t GetMask() { return mask; }
+    bool GetHscbFlag() { return hscbFlag; }
+ 
 private:
+    CcuInsGeneraterBase* insGeneratorPtr_{nullptr};
     Variable var;
     Variable dst;
     uint32_t num;
     uint16_t mask{1};
+    bool     hscbFlag{false};
 };
-
+ 
 }; // namespace CcuRep
-}; // namespace hcomm
-#endif // HCOMM_CCU_REP_STORE_VAR_H
+}; // namespace Hccl
+#endif // HCCL_CCU_REPRESENTATION_STORE_VAR_H

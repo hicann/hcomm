@@ -355,6 +355,7 @@ set(UT_COMMON_INCLUDE_LIST
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels/aiv/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_kernel/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_instance/
+    ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_dfx
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation/interface

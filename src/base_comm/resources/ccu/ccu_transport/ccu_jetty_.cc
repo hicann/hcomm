@@ -59,7 +59,9 @@ HcclResult CcuJetty::Init()
     const auto _tokenIdHandle = tokenInfo.first;
     const TokenIdHandle tokenIdHandle = reinterpret_cast<TokenIdHandle>(_tokenIdHandle);
     const auto tokenValue = Hccl::GetUbToken();
-    const auto jettyMode = HrtJettyMode::CCU_CCUM_CACHE; // 当前仅支持该模式
+    const auto jettyMode = jettyInfo_.jettyType == CcuJettyType::CCUM_CACHED_JETTY ?
+        HrtJettyMode::CCU_CCUM_CACHE : HrtJettyMode::CCU_TA_CACHE;
+
     inParam_ = HrtRaUbCreateJettyParam{jfcHandle, jfcHandle, tokenValue,
         tokenIdHandle, jettyMode, jettyInfo_.taJettyId, jettyInfo_.sqBufVa,
         jettyInfo_.sqBufSize, jettyInfo_.wqeBBStartId, jettyInfo_.sqDepth}; // CTP默认为8s

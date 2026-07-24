@@ -18,6 +18,7 @@
 #include "ccu_rep_loccpy_v1.h"
 #include "ccu_rep_remMem_v1.h"
 #include "ccu_api_exception.h"
+#include "ccu_ins_generater_v1.h"
 
 #include "hcomm_c_adpt.h"
 
@@ -69,6 +70,7 @@ void ResetStubs()
 
 class CcuRepReadTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -83,6 +85,7 @@ protected:
 
 class CcuRepWriteTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -97,6 +100,7 @@ protected:
 
 class CcuRepBufReadTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -111,6 +115,7 @@ protected:
 
 class CcuRepBufWriteTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -125,12 +130,14 @@ protected:
 
 class CcuRepBufLocReadTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {}
     void TearDown() override {}
 };
 
 class CcuRepBufLocWriteTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {}
     void TearDown() override {}
 };
@@ -139,16 +146,19 @@ class CcuRepBufReduceTest : public ::testing::Test {
 protected:
     void SetUp() override {}
     void TearDown() override {}
+    CcuInsGeneraterV1 insGen {};
 };
 
 class CcuRepLocCpyTest : public ::testing::Test {
 protected:
     void SetUp() override {}
     void TearDown() override {}
+    CcuInsGeneraterV1 insGen {};
 };
 
 class CcuRepRemMemTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -171,7 +181,7 @@ TEST_F(CcuRepReadTest, Constructor_Basic)
     LocalAddr loc{addr, token};
     RemoteAddr rem{addr, token};
 
-    CcuRepRead rep(0, loc, rem, len, sem, 0xF);
+    CcuRepRead rep(&insGen, 0, loc, rem, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::READ);
     EXPECT_EQ(rep.GetMask(), 0xF);
     EXPECT_EQ(rep.GetSemId(), sem.Id());
@@ -187,7 +197,7 @@ TEST_F(CcuRepReadTest, Constructor_WithDataType)
     LocalAddr loc{addr, token};
     RemoteAddr rem{addr, token};
 
-    CcuRepRead rep(0, loc, rem, len, 1, 2, sem, 0xA);
+    CcuRepRead rep(&insGen, 0, loc, rem, len, 1, 2, sem, 0xA);
     EXPECT_EQ(rep.Type(), CcuRepType::READ);
     EXPECT_EQ(rep.GetMask(), 0xA);
 }
@@ -202,7 +212,7 @@ TEST_F(CcuRepReadTest, Describe)
     LocalAddr loc{addr, token};
     RemoteAddr rem{addr, token};
 
-    CcuRepRead rep(0, loc, rem, len, sem, 0xF);
+    CcuRepRead rep(&insGen, 0, loc, rem, len, sem, 0xF);
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Read"), std::string::npos);
 }
@@ -217,7 +227,7 @@ TEST_F(CcuRepReadTest, Translate)
     LocalAddr loc{addr, token};
     RemoteAddr rem{addr, token};
 
-    CcuRepRead rep(0, loc, rem, len, sem, 0xF);
+    CcuRepRead rep(&insGen, 0, loc, rem, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::READ);
 }
 
@@ -231,7 +241,7 @@ TEST_F(CcuRepWriteTest, Constructor_Basic)
     LocalAddr loc{addr, token};
     RemoteAddr rem{addr, token};
 
-    CcuRepWrite rep(0, rem, loc, len, sem, 0xF);
+    CcuRepWrite rep(&insGen, 0, rem, loc, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::WRITE);
     EXPECT_EQ(rep.GetMask(), 0xF);
 }
@@ -246,7 +256,7 @@ TEST_F(CcuRepWriteTest, Constructor_WithDataType)
     LocalAddr loc{addr, token};
     RemoteAddr rem{addr, token};
 
-    CcuRepWrite rep(0, rem, loc, len, 1, 2, sem, 0xA);
+    CcuRepWrite rep(&insGen, 0, rem, loc, len, 1, 2, sem, 0xA);
     EXPECT_EQ(rep.Type(), CcuRepType::WRITE);
 }
 
@@ -260,7 +270,7 @@ TEST_F(CcuRepWriteTest, Describe)
     LocalAddr loc{addr, token};
     RemoteAddr rem{addr, token};
 
-    CcuRepWrite rep(0, rem, loc, len, sem, 0xF);
+    CcuRepWrite rep(&insGen, 0, rem, loc, len, sem, 0xF);
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Write"), std::string::npos);
 }
@@ -275,7 +285,7 @@ TEST_F(CcuRepWriteTest, Translate)
     LocalAddr loc{addr, token};
     RemoteAddr rem{addr, token};
 
-    CcuRepWrite rep(0, rem, loc, len, sem, 0xF);
+    CcuRepWrite rep(&insGen, 0, rem, loc, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::WRITE);
 }
 
@@ -289,7 +299,7 @@ TEST_F(CcuRepBufReadTest, Constructor)
     RemoteAddr src{addr, token};
     CcuBuf dst{&context};
 
-    CcuRepBufRead rep(0, src, dst, len, sem, 0xF);
+    CcuRepBufRead rep(&insGen, 0, src, dst, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::BUF_READ);
     EXPECT_EQ(rep.GetMask(), 0xF);
 }
@@ -304,7 +314,7 @@ TEST_F(CcuRepBufReadTest, Describe)
     RemoteAddr src{addr, token};
     CcuBuf dst{&context};
 
-    CcuRepBufRead rep(0, src, dst, len, sem, 0xF);
+    CcuRepBufRead rep(&insGen, 0, src, dst, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::BUF_READ);
 }
 
@@ -318,7 +328,7 @@ TEST_F(CcuRepBufReadTest, Translate)
     RemoteAddr src{addr, token};
     CcuBuf dst{&context};
 
-    CcuRepBufRead rep(0, src, dst, len, sem, 0xF);
+    CcuRepBufRead rep(&insGen, 0, src, dst, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::BUF_READ);
 }
 
@@ -332,7 +342,7 @@ TEST_F(CcuRepBufWriteTest, Constructor)
     Variable token;
     RemoteAddr dst{addr, token};
 
-    CcuRepBufWrite rep(0, src, dst, len, sem, 0xF);
+    CcuRepBufWrite rep(&insGen, 0, src, dst, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::BUF_WRITE);
     EXPECT_EQ(rep.GetMask(), 0xF);
 }
@@ -347,7 +357,7 @@ TEST_F(CcuRepBufWriteTest, Describe)
     Variable token;
     RemoteAddr dst{addr, token};
 
-    CcuRepBufWrite rep(0, src, dst, len, sem, 0xF);
+    CcuRepBufWrite rep(&insGen, 0, src, dst, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::BUF_WRITE);
 }
 
@@ -361,7 +371,7 @@ TEST_F(CcuRepBufWriteTest, Translate)
     Variable token;
     RemoteAddr dst{addr, token};
 
-    CcuRepBufWrite rep(0, src, dst, len, sem, 0xF);
+    CcuRepBufWrite rep(&insGen, 0, src, dst, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::BUF_WRITE);
 }
 
@@ -375,7 +385,7 @@ TEST_F(CcuRepBufLocReadTest, Constructor)
     LocalAddr src{addr, token};
     CcuBuf dst{&context};
 
-    CcuRepBufLocRead rep(src, dst, len, sem, 0xF);
+    CcuRepBufLocRead rep(&insGen, src, dst, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::BUF_LOC_READ);
     EXPECT_EQ(rep.GetMask(), 0xF);
 }
@@ -390,13 +400,14 @@ TEST_F(CcuRepBufLocReadTest, Describe)
     LocalAddr src{addr, token};
     CcuBuf dst{&context};
 
-    CcuRepBufLocRead rep(src, dst, len, sem, 0xF);
+    CcuRepBufLocRead rep(&insGen, src, dst, len, sem, 0xF);
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Read"), std::string::npos);
 }
 
 TEST_F(CcuRepBufLocReadTest, Translate)
 {
+    CcuInsGeneraterV1 insGen;
     CcuRepContext context;
     Variable len{&context};
     CompletedEvent sem{&context};
@@ -405,14 +416,14 @@ TEST_F(CcuRepBufLocReadTest, Translate)
     LocalAddr src{addr, token};
     CcuBuf dst{&context};
 
-    CcuRepBufLocRead rep(src, dst, len, sem, 0xF);
+    CcuRepBufLocRead rep(&insGen, src, dst, len, sem, 0xF);
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
     dep.reserveChannalId[0] = 1;
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
 }
@@ -427,7 +438,7 @@ TEST_F(CcuRepBufLocWriteTest, Constructor)
     Variable token;
     LocalAddr dst{addr, token};
 
-    CcuRepBufLocWrite rep(src, dst, len, sem, 0xF);
+    CcuRepBufLocWrite rep(&insGen, src, dst, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::BUF_LOC_WRITE);
     EXPECT_EQ(rep.GetMask(), 0xF);
 }
@@ -442,13 +453,14 @@ TEST_F(CcuRepBufLocWriteTest, Describe)
     Variable token;
     LocalAddr dst{addr, token};
 
-    CcuRepBufLocWrite rep(src, dst, len, sem, 0xF);
+    CcuRepBufLocWrite rep(&insGen, src, dst, len, sem, 0xF);
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Write"), std::string::npos);
 }
 
 TEST_F(CcuRepBufLocWriteTest, Translate)
 {
+    CcuInsGeneraterV1 insGen;
     CcuRepContext context;
     Variable len{&context};
     CompletedEvent sem{&context};
@@ -457,14 +469,14 @@ TEST_F(CcuRepBufLocWriteTest, Translate)
     Variable token;
     LocalAddr dst{addr, token};
 
-    CcuRepBufLocWrite rep(src, dst, len, sem, 0xF);
+    CcuRepBufLocWrite rep(&insGen, src, dst, len, sem, 0xF);
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
     dep.reserveChannalId[0] = 1;
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
 }
@@ -476,7 +488,7 @@ TEST_F(CcuRepBufReduceTest, Constructor)
     Variable len{&context};
     CompletedEvent sem{&context};
 
-    CcuRepBufReduce rep(mem, 4, 1, 1, 0, sem, len, 1);
+    CcuRepBufReduce rep(&insGen, mem, 4, 1, 1, 0, sem, len, 1);
     EXPECT_EQ(rep.Type(), CcuRepType::BUF_REDUCE);
     EXPECT_EQ(rep.GetCount(), 4);
     EXPECT_EQ(rep.GetDataType(), 1);
@@ -490,7 +502,7 @@ TEST_F(CcuRepBufReduceTest, Describe)
     Variable len{&context};
     CompletedEvent sem{&context};
 
-    CcuRepBufReduce rep(mem, 2, 1, 1, 0, sem, len, 1);
+    CcuRepBufReduce rep(&insGen, mem, 2, 1, 1, 0, sem, len, 1);
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Reduce"), std::string::npos);
 }
@@ -502,13 +514,13 @@ TEST_F(CcuRepBufReduceTest, Translate_Sum)
     Variable len{&context};
     CompletedEvent sem{&context};
 
-    CcuRepBufReduce rep(mem, 4, 1, 1, 0, sem, len, 1);
+    CcuRepBufReduce rep(&insGen, mem, 4, 1, 1, 0, sem, len, 1);
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
 }
@@ -520,13 +532,13 @@ TEST_F(CcuRepBufReduceTest, Translate_Max)
     Variable len{&context};
     CompletedEvent sem{&context};
 
-    CcuRepBufReduce rep(mem, 4, 1, 1, 1, sem, len, 1);
+    CcuRepBufReduce rep(&insGen, mem, 4, 1, 1, 1, sem, len, 1);
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_TRUE(result);
 }
 
@@ -537,13 +549,13 @@ TEST_F(CcuRepBufReduceTest, Translate_Min)
     Variable len{&context};
     CompletedEvent sem{&context};
 
-    CcuRepBufReduce rep(mem, 4, 1, 1, 2, sem, len, 1);
+    CcuRepBufReduce rep(&insGen, mem, 4, 1, 1, 2, sem, len, 1);
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_TRUE(result);
 }
 
@@ -554,13 +566,14 @@ TEST_F(CcuRepBufReduceTest, Translate_CountLessThanMin)
     Variable len{&context};
     CompletedEvent sem{&context};
 
-    CcuRepBufReduce rep(mem, 1, 1, 1, 0, sem, len, 1);
+    CcuRepBufReduce rep(&insGen, mem, 1, 1, 1, 0, sem, len, 1);
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
 
-    EXPECT_THROW(rep.Translate(instrPtr, instrId, dep), Hccl::CcuApiException);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
+    EXPECT_TRUE(result);
 }
 
 TEST_F(CcuRepLocCpyTest, Constructor_Basic)
@@ -575,7 +588,7 @@ TEST_F(CcuRepLocCpyTest, Constructor_Basic)
     LocalAddr dst{addr1, token1};
     LocalAddr src{addr2, token2};
 
-    CcuRepLocCpy rep(dst, src, len, sem, 0xF);
+    CcuRepLocCpy rep(&insGen, dst, src, len, sem, 0xF);
     EXPECT_EQ(rep.Type(), CcuRepType::LOCAL_CPY);
     EXPECT_EQ(rep.GetMask(), 0xF);
 }
@@ -592,7 +605,7 @@ TEST_F(CcuRepLocCpyTest, Constructor_WithDataType)
     LocalAddr dst{addr1, token1};
     LocalAddr src{addr2, token2};
 
-    CcuRepLocCpy rep(dst, src, len, 1, 2, sem, 0xA);
+    CcuRepLocCpy rep(&insGen, dst, src, len, 1, 2, sem, 0xA);
     EXPECT_EQ(rep.Type(), CcuRepType::LOCAL_REDUCE);
 }
 
@@ -608,7 +621,7 @@ TEST_F(CcuRepLocCpyTest, Describe)
     LocalAddr dst{addr1, token1};
     LocalAddr src{addr2, token2};
 
-    CcuRepLocCpy rep(dst, src, len, sem, 0xF);
+    CcuRepLocCpy rep(&insGen, dst, src, len, sem, 0xF);
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("LocalAddr"), std::string::npos);
 }
@@ -625,14 +638,14 @@ TEST_F(CcuRepLocCpyTest, Translate_LocalCpy)
     LocalAddr dst{addr1, token1};
     LocalAddr src{addr2, token2};
 
-    CcuRepLocCpy rep(dst, src, len, sem, 0xF);
+    CcuRepLocCpy rep(&insGen, dst, src, len, sem, 0xF);
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
     dep.reserveChannalId[0] = 1;
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
 }
@@ -649,14 +662,14 @@ TEST_F(CcuRepLocCpyTest, Translate_LocalReduce)
     LocalAddr dst{addr1, token1};
     LocalAddr src{addr2, token2};
 
-    CcuRepLocCpy rep(dst, src, len, 1, 2, sem, 0xF);
+    CcuRepLocCpy rep(&insGen, dst, src, len, 1, 2, sem, 0xF);
     CcuInstr instr;
     CcuInstr* instrPtr = &instr;
     uint16_t instrId = 0;
     TransDep dep = {};
     dep.reserveChannalId[0] = 1;
 
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_TRUE(result);
 }
 
@@ -665,7 +678,7 @@ TEST_F(CcuRepRemMemTest, Constructor)
     Address addr;
     Variable token;
     RemoteAddr rem{addr, token};
-    CcuRepRemMem rep(0, rem);
+    CcuRepRemMem rep(&insGen, 0, rem);
     EXPECT_EQ(rep.Type(), CcuRepType::REM_MEM);
 }
 
@@ -674,7 +687,7 @@ TEST_F(CcuRepRemMemTest, Translate)
     Address addr;
     Variable token;
     RemoteAddr rem{addr, token};
-    CcuRepRemMem rep(0, rem);
+    CcuRepRemMem rep(&insGen, 0, rem);
     EXPECT_EQ(rep.Type(), CcuRepType::REM_MEM);
 }
 

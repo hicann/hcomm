@@ -13,6 +13,9 @@
 #include <mockcpp/mokc.h>
 
 
+#include "orion_adapter_hccp.h"
+#include "hccp_tlv_hdc_manager.h"
+
 #define private public
 #define protected public
 #include "ccu_dfx.h"
@@ -83,6 +86,10 @@ TEST_F(CcuDfxTest, get_ccu_error_msg_should_fail_when_throw_exception)
     MOCKER_CPP(&CtxMgrImp::Init).stubs();
     CcuContext* ctx{nullptr};
     MOCKER_CPP(&CtxMgrImp::GetCtx).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(ctx));
+
+    MOCKER_CPP(&HccpTlvHdcManager::GetTlvHandle).stubs().with(mockcpp::any())
+        .will(returnValue(reinterpret_cast<void *>(0x1)));
+    MOCKER(HrtRaTlvRequestForCustomChannel).stubs();
     
     EXPECT_EQ(GetCcuErrorMsg(1, status, ccuTaskParam, errorInfo), HcclResult::HCCL_E_INTERNAL);
 }

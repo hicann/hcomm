@@ -22,6 +22,8 @@
 using namespace hccl;
 using namespace hcomm;
 
+constexpr size_t CCU_CTX_RAW_CAPACITY = 64;
+
 class CcuTaskExceptionTest : public BaseInit {
 public:
     void SetUp() override {
@@ -199,7 +201,11 @@ TEST_F(CcuTaskExceptionTest, GetMissContectF) {
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
-    CcuMissionContext result = CcuTaskException::GetCcuMissionContext(0, 0, 0);
+    uint8_t raw[CCU_CTX_RAW_CAPACITY] = {0};
+    size_t copiedLen = 0;
+    EXPECT_EQ(CcuTaskException::GetCcuMissionContextRaw(0, 0, 0, raw, sizeof(raw), copiedLen), HCCL_SUCCESS);
+    CcuMissionContext result{};
+    ASSERT_EQ(memcpy_s(&result, sizeof(result), raw, sizeof(result)), EOK);
     EXPECT_EQ(result.part0.value, 0u);
 }
 
@@ -209,7 +215,11 @@ TEST_F(CcuTaskExceptionTest, GetDevidFail) {
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_E_PARA));
 
-    CcuMissionContext result = CcuTaskException::GetCcuMissionContext(0, 0, 0);
+    uint8_t raw[CCU_CTX_RAW_CAPACITY] = {0};
+    size_t copiedLen = 0;
+    EXPECT_EQ(CcuTaskException::GetCcuMissionContextRaw(0, 0, 0, raw, sizeof(raw), copiedLen), HCCL_E_PARA);
+    CcuMissionContext result{};
+    ASSERT_EQ(memcpy_s(&result, sizeof(result), raw, sizeof(result)), EOK);
     EXPECT_EQ(result.part0.value, 0u);
 }
 
@@ -219,7 +229,11 @@ TEST_F(CcuTaskExceptionTest, GetMissContectFail) {
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_E_PARA));
 
-    CcuMissionContext result = CcuTaskException::GetCcuMissionContext(0, 0, 0);
+    uint8_t raw[CCU_CTX_RAW_CAPACITY] = {0};
+    size_t copiedLen = 0;
+    EXPECT_NE(CcuTaskException::GetCcuMissionContextRaw(0, 0, 0, raw, sizeof(raw), copiedLen), HCCL_SUCCESS);
+    CcuMissionContext result{};
+    ASSERT_EQ(memcpy_s(&result, sizeof(result), raw, sizeof(result)), EOK);
     EXPECT_EQ(result.part0.value, 0u);
 }
 
@@ -313,7 +327,11 @@ TEST_F(CcuTaskExceptionTest, GetCcuLoopContext_Normal) {
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
-    CcuLoopContext result = CcuTaskException::GetCcuLoopContext(0, 0, 0);
+    uint8_t raw[CCU_CTX_RAW_CAPACITY] = {0};
+    size_t copiedLen = 0;
+    EXPECT_EQ(CcuTaskException::GetCcuLoopContextRaw(0, 0, 0, raw, sizeof(raw), copiedLen), HCCL_SUCCESS);
+    CcuLoopContext result{};
+    ASSERT_EQ(memcpy_s(&result, sizeof(result), raw, sizeof(result)), EOK);
     EXPECT_EQ(result.part0.value, 0u);
 }
 
@@ -322,7 +340,11 @@ TEST_F(CcuTaskExceptionTest, GetCcuLoopContext_GetDevicePhyIdFail) {
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_E_PARA));
-    CcuLoopContext result = CcuTaskException::GetCcuLoopContext(0, 0, 0);
+    uint8_t raw[CCU_CTX_RAW_CAPACITY] = {0};
+    size_t copiedLen = 0;
+    EXPECT_EQ(CcuTaskException::GetCcuLoopContextRaw(0, 0, 0, raw, sizeof(raw), copiedLen), HCCL_E_PARA);
+    CcuLoopContext result{};
+    ASSERT_EQ(memcpy_s(&result, sizeof(result), raw, sizeof(result)), EOK);
     EXPECT_EQ(result.part0.value, 0u);
 }
 

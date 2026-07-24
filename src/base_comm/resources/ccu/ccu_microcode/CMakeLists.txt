@@ -12,7 +12,6 @@ if(TARGET hcomm)
     target_sources(hcomm
         PRIVATE
         ccu_microcode.cc
-        ccu_microcode_v2_.cc
         ccu_assist.cc
     )
     target_include_directories(hcomm PRIVATE

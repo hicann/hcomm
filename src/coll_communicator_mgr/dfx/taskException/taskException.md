@@ -27,11 +27,18 @@ taskException/
 │   ├── hcclCommTaskException.h              # TaskExceptionHost / TaskExceptionHostManager 类声明
 │   ├── hcclCommTaskException.cc             # Host 侧通用异常处理实现 + 回调注册管理
 │   ├── ccuTaskException.h                   # CcuTaskException 类声明
-│   ├── ccuTaskException.cc                  # CCU 任务异常处理实现（指令解析、寄存器读取、错误信息生成）
-│   └── ccu_error_info_v1.h                  # CCU 错误信息数据结构定义（CcuErrorInfo、CcuLoopContext、CcuMissionContext 等）
+│   └── ccuTaskException.cc                  # CCU 任务异常处理实现（指令解析、寄存器读取、错误信息生成）
 └── aicpu/                                   # AICPU 侧异常处理
     ├── hcclCommTaskExceptionLite.h          # HcclCommTaskExceptionLite 类声明
     └── hcclCommTaskExceptionLite.cc         # AICPU 侧异常检测、CQE 解析、错误上报实现
+```
+
+```text
+ccu_dfx/（位于 base_comm/resources/ccu/ccu_dfx/）
+├── ccu_error_info_v1.h                  # Ascend 950 错误信息数据结构定义（CcuErrorInfo、CcuLoopContext、CcuMissionContext 等）
+├── ccu_error_info_v2.h                  # Ascend 960 错误信息数据结构定义（CcuLoopContextV2、CcuMissionContextV2）
+├── ccu_dfx_schema.h                     # V1/V2 schema 分派接口声明（CcuVersionOps、GetCcuOps）
+└── ccu_dfx_schema.cc                    # V1/V2 schema 分派实现（按设备类型 950→V1 / 960→V2 选取解码与打印实现）
 ```
 
 ### 文件间关系
@@ -40,7 +47,10 @@ taskException/
 |------|------|----------|
 | `hcclCommTaskException.h/.cc` | Host 侧主入口，注册 Runtime 异常回调，分发到通用/CCU 异常处理 | 依赖 `ccuTaskException.h` 处理 CCU 类型异常；依赖 `global_mirror_tasks.h` 查找 TaskInfo；通过回调从 AICPU 侧获取 ErrorMessageReport |
 | `ccuTaskException.h/.cc` | CCU 任务异常专用处理，解析 CcuRep 指令表示、读取硬件寄存器 | 依赖 `ccu_error_info_v1.h` 的数据结构；依赖 `ccu_kernel_mgr.h` 获取 CcuRepContext；依赖 `ccu_urma_channel.h` 获取通道信息 |
-| `ccu_error_info_v1.h` | CCU 错误信息数据结构定义 | 被 `ccuTaskException.h/.cc` 引用；依赖 `ccu_rep_type_v1.h` 定义 CcuRepType 枚举 |
+| `ccu_error_info_v1.h`（位于 `base_comm/resources/ccu/ccu_dfx/`） | Ascend 950 错误信息数据结构定义（CcuErrorInfo、CcuLoopContext、CcuMissionContext 等） | 被 `ccuTaskException.h/.cc` 引用；依赖 `ccu_rep_type_v1.h` 定义 CcuRepType 枚举 |
+| `ccu_error_info_v2.h`（位于 `base_comm/resources/ccu/ccu_dfx/`） | Ascend 960 错误信息数据结构定义（CcuLoopContextV2、CcuMissionContextV2） | 被 `ccuTaskException.h` 引用；零外部依赖 |
+| `ccu_dfx_schema.h`（位于 `base_comm/resources/ccu/ccu_dfx/`） | V1/V2 schema 分派接口声明，定义 CcuMissionInfo/CcuLoopInfo 语义输出结构与 CcuVersionOps 分派表项，声明 GetCcuOps 入口 | 依赖 `hccl_types.h` 定义 HcclResult；被 `ccu_dfx_schema.cc` 实现并被 `ccuTaskException.cc` 引用（GetCcuOps 被 ProcessCcuException / PrintPanicLogInfo / DecodeRawMissionInfo / FetchAndDecodeLoopInfo 调用） |
+| `ccu_dfx_schema.cc`（位于 `base_comm/resources/ccu/ccu_dfx/`） | V1/V2 schema 分派实现，按设备类型（950→V1 / 960→V2）选取对应的 Mission/Loop 上下文解码与 CCUM DFX 寄存器打印实现 | 依赖 `ccu_dfx_schema.h` 接口；依赖 `ccu_error_info_v1.h` 的 CcuMissionContext / CcuLoopContext；依赖 `ccu_error_info_v2.h` 的 CcuMissionContextV2 / CcuLoopContextV2；依赖 `adapter_rts_common.h` 的 hrtGetDeviceType 获取设备类型 |
 | `hcclCommTaskExceptionLite.h/.cc` | AICPU 侧守护线程，检测 CQE 异常并上报 Host | 依赖 `coll_comm_aicpu.h` 获取 AICPU 通信域；依赖 `error_message_v2.h` 组织 ErrorMessageReport 并通过 HDC 上报 Host |
 
 ### TaskException文件交互

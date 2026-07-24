@@ -96,6 +96,9 @@ target_include_directories(hccl_utest_test_next_resource PRIVATE
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/group_schedule_mgr/
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/endpoints
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/remote/rank_pairs
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine_reses/notify
 )
 
 target_compile_definitions(hccl_utest_test_next_resource PRIVATE
@@ -179,3 +182,5 @@ add_dependencies(hccl_utest_test_next_resource_a3 hccl_llt)
 
 enable_testing()
 add_test(NAME hccl_utest_test_next_resource_a3 COMMAND hccl_utest_test_next_resource_a3)
+
+add_subdirectory(coll_comms/common/loggers)

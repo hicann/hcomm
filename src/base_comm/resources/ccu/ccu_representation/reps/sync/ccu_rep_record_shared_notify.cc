@@ -9,31 +9,25 @@
  */
 
 #include "ccu_rep_v1.h"
-
 #include "string_util.h"
-
+#include "ccu_ins_generater_v1.h"
+#include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRecordSharedNotify::CcuRepRecordSharedNotify(const LocalNotify &notify, uint16_t mask)
-    : notify_(notify), mask_(mask)
+CcuRepRecordSharedNotify::CcuRepRecordSharedNotify(CcuInsGeneraterBase* insGenPtr, const LocalNotify &notify, uint16_t mask)
+    : insGenPtr(insGenPtr), notify_(notify), mask_(mask)
 {
     type       = CcuRepType::RECORD_SHARED_NOTIFY;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
-bool CcuRepRecordSharedNotify::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepRecordSharedNotify::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     this->instrId = instrId;
     translated    = true;
 
-    // 非本die时利用环回访问
-    if (notify_.DieId() != dep.dieId) {
-        SyncCKEInstr(instr++, notify_.Id(), dep.reserveCkeId, mask_,
-            dep.reserveChannalId[1], 0, 0, 0, 0, 1);
-    } else {
-        SetCKEInstr(instr++, notify_.Id(), mask_, 0, 0, 1);
-    }
+    insGenPtr->CcuRepRecordSharedNotifyTranslate(ccuKernel, instr, this, dep);
     CHK_PRT_THROW((instrId > UINT16_MAX - instrCount),
         HCCL_ERROR("[CcuRepRecordSharedNotify::Translate]uint16 integer overflow occurs, "
             "instrId = [%hu], instrCount = [%hu]", instrId, instrCount),

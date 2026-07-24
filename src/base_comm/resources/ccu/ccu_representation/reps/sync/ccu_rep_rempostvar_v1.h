@@ -15,18 +15,21 @@ namespace CcuRep {
 
 class CcuRepRemPostVar : public CcuRepBase {
 public:
-    CcuRepRemPostVar(Variable param, const ChannelHandle channel, uint16_t paramIndex, uint16_t semIndex,
+    CcuRepRemPostVar(CcuInsGeneraterBase* insGenPtr, Variable param, const ChannelHandle channel, uint16_t paramIndex, uint16_t semIndex,
                        uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
-    uint32_t    GetMask() { return mask; }
     uint32_t    GetRmtXnId() { return rmtXnId; }
     uint32_t    GetRmtCkeId() { return rmtCkeId; }
     uint16_t    GetParamIndex() { return paramIndex; }
     Variable    GetParam() { return param; }
     uint32_t    GetChannelId() { return channelId; }
 
+    ChannelHandle GetChannel() { return channel; }
+    uint16_t GetSemIndex() { return semIndex; }
+    uint16_t GetMask() { return mask; }
 private:
+    CcuInsGeneraterBase* insGenPtr{nullptr};
     Variable                      param;
     ChannelHandle                 channel;
     uint16_t                      paramIndex{0};

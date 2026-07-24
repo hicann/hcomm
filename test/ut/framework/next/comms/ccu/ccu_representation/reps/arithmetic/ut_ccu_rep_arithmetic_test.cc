@@ -15,6 +15,9 @@
 #include "ccu_rep_base_v1.h"
 #include "ccu_rep_type_v1.h"
 #include "ccu_operator_v1.h"
+#include "ccu_rep_mul_v1.h"
+#include "ccu_rep_sub_v1.h"
+#include "ccu_ins_generater_v1.h"
 #include <gtest/gtest.h>
 #include <string>
 
@@ -24,6 +27,7 @@ namespace {
 
 class CcuRepAddTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     CcuInstr instr {};
     uint16_t instrId {0};
     TransDep dep {};
@@ -44,9 +48,9 @@ TEST_F(CcuRepAddTest, Constructor_AddrPlusVarToAddr)
     addrC.Reset(1);
     addrA.Reset(2);
     varB.Reset(3);
-    CcuRepAdd rep(addrC, addrA, varB);
+    CcuRepAdd rep(&insGen, addrC, addrA, varB);
 
-    EXPECT_EQ(rep.subType, AddSubType::ADDR_PLUS_VAR_TO_ADDR);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::ADDR_PLUS_VAR_TO_ADDR);
     EXPECT_EQ(rep.Type(), CcuRepType::ADD);
 }
 
@@ -58,9 +62,9 @@ TEST_F(CcuRepAddTest, Constructor_AddrPlusAddrToAddr)
     addrC.Reset(1);
     addrA.Reset(2);
     addrB.Reset(3);
-    CcuRepAdd rep(addrC, addrA, addrB);
+    CcuRepAdd rep(&insGen, addrC, addrA, addrB);
 
-    EXPECT_EQ(rep.subType, AddSubType::ADDR_PLUS_ADDR_TO_ADDR);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::ADDR_PLUS_ADDR_TO_ADDR);
     EXPECT_EQ(rep.Type(), CcuRepType::ADD);
 }
 
@@ -72,9 +76,9 @@ TEST_F(CcuRepAddTest, Constructor_VarPlusVarToVar)
     varC.Reset(1);
     varA.Reset(2);
     varB.Reset(3);
-    CcuRepAdd rep(varC, varA, varB);
+    CcuRepAdd rep(&insGen, varC, varA, varB);
 
-    EXPECT_EQ(rep.subType, AddSubType::VAR_PLUS_VAR_TO_VAR);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::VAR_PLUS_VAR_TO_VAR);
     EXPECT_EQ(rep.Type(), CcuRepType::ADD);
 }
 
@@ -84,9 +88,9 @@ TEST_F(CcuRepAddTest, Constructor_SelfAddAddress)
     Variable offset;
     addrA.Reset(1);
     offset.Reset(2);
-    CcuRepAdd rep(addrA, offset);
+    CcuRepAdd rep(&insGen, addrA, offset);
 
-    EXPECT_EQ(rep.subType, AddSubType::SELF_ADD_ADDRESS);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::SELF_ADD_ADDRESS);
     EXPECT_EQ(rep.Type(), CcuRepType::ADD);
 }
 
@@ -96,9 +100,9 @@ TEST_F(CcuRepAddTest, Constructor_SelfAddVariable)
     Variable offset;
     varA.Reset(1);
     offset.Reset(2);
-    CcuRepAdd rep(varA, offset);
+    CcuRepAdd rep(&insGen, varA, offset);
 
-    EXPECT_EQ(rep.subType, AddSubType::SELF_ADD_VARIABLE);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::SELF_ADD_VARIABLE);
     EXPECT_EQ(rep.Type(), CcuRepType::ADD);
 }
 
@@ -110,10 +114,10 @@ TEST_F(CcuRepAddTest, Translate_AddrPlusVarToAddr)
     addrC.Reset(5);
     addrA.Reset(3);
     varB.Reset(7);
-    CcuRepAdd rep(addrC, addrA, varB);
+    CcuRepAdd rep(&insGen, addrC, addrA, varB);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
@@ -132,10 +136,10 @@ TEST_F(CcuRepAddTest, Translate_AddrPlusAddrToAddr)
     addrC.Reset(5);
     addrA.Reset(3);
     addrB.Reset(7);
-    CcuRepAdd rep(addrC, addrA, addrB);
+    CcuRepAdd rep(&insGen, addrC, addrA, addrB);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instr.v1.loadGSAGSA.gsAdId, addrC.Id());
@@ -153,10 +157,10 @@ TEST_F(CcuRepAddTest, Translate_VarPlusVarToVar)
     varC.Reset(5);
     varA.Reset(3);
     varB.Reset(7);
-    CcuRepAdd rep(varC, varA, varB);
+    CcuRepAdd rep(&insGen, varC, varA, varB);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instr.v1.loadXX.xdId, varC.Id());
@@ -172,10 +176,10 @@ TEST_F(CcuRepAddTest, Translate_SelfAddAddress)
     Variable offset;
     addrA.Reset(5);
     offset.Reset(7);
-    CcuRepAdd rep(addrA, offset);
+    CcuRepAdd rep(&insGen, addrA, offset);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instr.v1.loadGSAXn.gsAdId, addrA.Id());
@@ -189,10 +193,10 @@ TEST_F(CcuRepAddTest, Translate_SelfAddVariable)
     Variable offset;
     varA.Reset(5);
     offset.Reset(7);
-    CcuRepAdd rep(varA, offset);
+    CcuRepAdd rep(&insGen, varA, offset);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instr.v1.loadXX.xdId, varA.Id());
@@ -208,7 +212,7 @@ TEST_F(CcuRepAddTest, Describe_AddrPlusVarToAddr)
     addrC.Reset(1);
     addrA.Reset(2);
     varB.Reset(3);
-    CcuRepAdd rep(addrC, addrA, varB);
+    CcuRepAdd rep(&insGen, addrC, addrA, varB);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Address[1]"), std::string::npos);
@@ -224,7 +228,7 @@ TEST_F(CcuRepAddTest, Describe_AddrPlusAddrToAddr)
     addrC.Reset(1);
     addrA.Reset(2);
     addrB.Reset(3);
-    CcuRepAdd rep(addrC, addrA, addrB);
+    CcuRepAdd rep(&insGen, addrC, addrA, addrB);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Address[1]"), std::string::npos);
@@ -240,7 +244,7 @@ TEST_F(CcuRepAddTest, Describe_VarPlusVarToVar)
     varC.Reset(1);
     varA.Reset(2);
     varB.Reset(3);
-    CcuRepAdd rep(varC, varA, varB);
+    CcuRepAdd rep(&insGen, varC, varA, varB);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Variable[1]"), std::string::npos);
@@ -254,7 +258,7 @@ TEST_F(CcuRepAddTest, Describe_SelfAddAddress)
     Variable offset;
     addrA.Reset(5);
     offset.Reset(7);
-    CcuRepAdd rep(addrA, offset);
+    CcuRepAdd rep(&insGen, addrA, offset);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Address[5]"), std::string::npos);
@@ -267,7 +271,7 @@ TEST_F(CcuRepAddTest, Describe_SelfAddVariable)
     Variable offset;
     varA.Reset(5);
     offset.Reset(7);
-    CcuRepAdd rep(varA, offset);
+    CcuRepAdd rep(&insGen, varA, offset);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Variable[5]"), std::string::npos);
@@ -276,6 +280,7 @@ TEST_F(CcuRepAddTest, Describe_SelfAddVariable)
 
 class CcuRepAssignTest : public ::testing::Test {
 protected:
+    CcuInsGeneraterV1 insGen {};
     CcuInstr instr {};
     uint16_t instrId {0};
     TransDep dep {};
@@ -293,11 +298,11 @@ TEST_F(CcuRepAssignTest, Constructor_ImdToVariable)
     Variable varA;
     varA.Reset(1);
     uint64_t immediate = 100;
-    CcuRepAssign rep(varA, immediate);
+    CcuRepAssign rep(&insGen, varA, immediate);
 
-    EXPECT_EQ(rep.subType, AssignSubType::IMD_TO_VARIABLE);
+    EXPECT_EQ(rep.GetSubType(), AssignSubType::IMD_TO_VARIABLE);
     EXPECT_EQ(rep.Type(), CcuRepType::ASSIGN);
-    EXPECT_EQ(rep.immediate, immediate);
+    EXPECT_EQ(rep.GetImmed(), immediate);
 }
 
 TEST_F(CcuRepAssignTest, Constructor_ImdToAddr)
@@ -305,11 +310,11 @@ TEST_F(CcuRepAssignTest, Constructor_ImdToAddr)
     Address addrA;
     addrA.Reset(1);
     uint64_t immediate = 200;
-    CcuRepAssign rep(addrA, immediate);
+    CcuRepAssign rep(&insGen, addrA, immediate);
 
-    EXPECT_EQ(rep.subType, AssignSubType::IMD_TO_ADDR);
+    EXPECT_EQ(rep.GetSubType(), AssignSubType::IMD_TO_ADDR);
     EXPECT_EQ(rep.Type(), CcuRepType::ASSIGN);
-    EXPECT_EQ(rep.immediate, immediate);
+    EXPECT_EQ(rep.GetImmed(), immediate);
 }
 
 TEST_F(CcuRepAssignTest, Constructor_VarToAddr)
@@ -318,9 +323,9 @@ TEST_F(CcuRepAssignTest, Constructor_VarToAddr)
     Variable varA;
     addrA.Reset(1);
     varA.Reset(2);
-    CcuRepAssign rep(addrA, varA);
+    CcuRepAssign rep(&insGen, addrA, varA);
 
-    EXPECT_EQ(rep.subType, AssignSubType::VAR_TO_ADDR);
+    EXPECT_EQ(rep.GetSubType(), AssignSubType::VAR_TO_ADDR);
     EXPECT_EQ(rep.Type(), CcuRepType::ASSIGN);
 }
 
@@ -330,9 +335,9 @@ TEST_F(CcuRepAssignTest, Constructor_AddrToAddr)
     Address addrA;
     addrB.Reset(1);
     addrA.Reset(2);
-    CcuRepAssign rep(addrB, addrA);
+    CcuRepAssign rep(&insGen, addrB, addrA);
 
-    EXPECT_EQ(rep.subType, AssignSubType::ADDR_TO_ADDR);
+    EXPECT_EQ(rep.GetSubType(), AssignSubType::ADDR_TO_ADDR);
     EXPECT_EQ(rep.Type(), CcuRepType::ASSIGN);
 }
 
@@ -342,9 +347,9 @@ TEST_F(CcuRepAssignTest, Constructor_VarToVar)
     Variable varA;
     varB.Reset(1);
     varA.Reset(2);
-    CcuRepAssign rep(varB, varA);
+    CcuRepAssign rep(&insGen, varB, varA);
 
-    EXPECT_EQ(rep.subType, AssignSubType::VAR_TO_VAR);
+    EXPECT_EQ(rep.GetSubType(), AssignSubType::VAR_TO_VAR);
     EXPECT_EQ(rep.Type(), CcuRepType::ASSIGN);
 }
 
@@ -353,10 +358,10 @@ TEST_F(CcuRepAssignTest, Translate_ImdToVariable)
     Variable varA;
     varA.Reset(5);
     uint64_t immediate = 0x12345678ABCD;
-    CcuRepAssign rep(varA, immediate);
+    CcuRepAssign rep(&insGen, varA, immediate);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_TRUE(rep.Translated());
@@ -371,10 +376,10 @@ TEST_F(CcuRepAssignTest, Translate_ImdToAddr)
     Address addrA;
     addrA.Reset(5);
     uint64_t immediate = 0xDEADBEEF;
-    CcuRepAssign rep(addrA, immediate);
+    CcuRepAssign rep(&insGen, addrA, immediate);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instr.v1.loadImdToGSA.gsaId, addrA.Id());
@@ -389,10 +394,10 @@ TEST_F(CcuRepAssignTest, Translate_VarToAddr)
     Variable varA;
     addrA.Reset(5);
     varA.Reset(7);
-    CcuRepAssign rep(addrA, varA);
+    CcuRepAssign rep(&insGen, addrA, varA);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instr.v1.loadGSAXn.gsAdId, addrA.Id());
@@ -406,10 +411,10 @@ TEST_F(CcuRepAssignTest, Translate_AddrToAddr)
     Address addrA;
     addrB.Reset(5);
     addrA.Reset(7);
-    CcuRepAssign rep(addrB, addrA);
+    CcuRepAssign rep(&insGen, addrB, addrA);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instr.v1.loadGSAGSA.gsAdId, addrB.Id());
@@ -423,10 +428,10 @@ TEST_F(CcuRepAssignTest, Translate_VarToVar)
     Variable varA;
     varB.Reset(5);
     varA.Reset(7);
-    CcuRepAssign rep(varB, varA);
+    CcuRepAssign rep(&insGen, varB, varA);
 
     CcuInstr* instrPtr = &instr;
-    bool result = rep.Translate(instrPtr, instrId, dep);
+    bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
 
     EXPECT_TRUE(result);
     EXPECT_EQ(instr.v1.loadXX.xdId, varB.Id());
@@ -438,7 +443,7 @@ TEST_F(CcuRepAssignTest, Describe_ImdToVariable)
 {
     Variable varA;
     varA.Reset(1);
-    CcuRepAssign rep(varA, 100);
+    CcuRepAssign rep(&insGen, varA, 100);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Variable[1]"), std::string::npos);
@@ -449,7 +454,7 @@ TEST_F(CcuRepAssignTest, Describe_ImdToAddr)
 {
     Address addrA;
     addrA.Reset(1);
-    CcuRepAssign rep(addrA, 200);
+    CcuRepAssign rep(&insGen, addrA, 200);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Address[1]"), std::string::npos);
@@ -462,7 +467,7 @@ TEST_F(CcuRepAssignTest, Describe_VarToAddr)
     Variable varA;
     addrA.Reset(1);
     varA.Reset(2);
-    CcuRepAssign rep(addrA, varA);
+    CcuRepAssign rep(&insGen, addrA, varA);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Address[1]"), std::string::npos);
@@ -475,7 +480,7 @@ TEST_F(CcuRepAssignTest, Describe_AddrToAddr)
     Address addrA;
     addrB.Reset(1);
     addrA.Reset(2);
-    CcuRepAssign rep(addrB, addrA);
+    CcuRepAssign rep(&insGen, addrB, addrA);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Address[1]"), std::string::npos);
@@ -488,7 +493,7 @@ TEST_F(CcuRepAssignTest, Describe_VarToVar)
     Variable varA;
     varB.Reset(1);
     varA.Reset(2);
-    CcuRepAssign rep(varB, varA);
+    CcuRepAssign rep(&insGen, varB, varA);
 
     std::string desc = rep.Describe();
     EXPECT_NE(desc.find("Var[1]"), std::string::npos);
@@ -570,6 +575,241 @@ TEST_F(CcuOperatorTest, VariableEqualImmediate)
     EXPECT_EQ(op.type, CcuRelationalOperatorType::EQUAL);
     EXPECT_EQ(op.lhs.Id(), varA.Id());
     EXPECT_EQ(op.rhs, 200);
+}
+
+class CcuRepMulTest : public ::testing::Test {
+protected:
+    CcuInsGeneraterV1 insGen {};
+    void SetUp() override {}
+};
+
+TEST_F(CcuRepMulTest, Constructor_AllSubTypes)
+{
+    Variable varA, varB, varC;
+    varA.Reset(1); varB.Reset(2); varC.Reset(3);
+    Address addrA, addrB, addrC;
+    addrA.Reset(4); addrB.Reset(5); addrC.Reset(6);
+
+    CcuRepMul m1(&insGen, varC, varA, varB);
+    EXPECT_EQ(m1.GetSubType(), MulSubType::VAR_MUL_VAR_TO_VAR);
+    EXPECT_EQ(m1.Type(), CcuRepType::MUL);
+
+    CcuRepMul m2(&insGen, varC, varA, uint16_t(10));
+    EXPECT_EQ(m2.GetSubType(), MulSubType::VAR_MUL_IMMED_TO_VAR);
+
+    CcuRepMul m3(&insGen, varA, varB);
+    EXPECT_EQ(m3.GetSubType(), MulSubType::SELF_MUL_VAR_VARIABLE);
+
+    CcuRepMul m4(&insGen, varA, uint16_t(10));
+    EXPECT_EQ(m4.GetSubType(), MulSubType::SELF_MUL_IMMED_VARIABLE);
+
+    CcuRepMul m5(&insGen, addrC, varA, varB);
+    EXPECT_EQ(m5.GetSubType(), MulSubType::VAR_MUL_VAR_TO_ADDR);
+
+    CcuRepMul m6(&insGen, addrC, varA, addrB);
+    EXPECT_EQ(m6.GetSubType(), MulSubType::VAR_MUL_ADDR_TO_ADDR);
+
+    CcuRepMul m7(&insGen, addrA, varB);
+    EXPECT_EQ(m7.GetSubType(), MulSubType::SELF_MUL_VAR_ADDRESS);
+
+    CcuRepMul m8(&insGen, addrC, addrA, uint16_t(10));
+    EXPECT_EQ(m8.GetSubType(), MulSubType::ADDR_MUL_IMMED_TO_ADDR);
+
+    CcuRepMul m9(&insGen, addrC, varA, uint16_t(10));
+    EXPECT_EQ(m9.GetSubType(), MulSubType::VAR_MUL_IMMED_TO_ADDR);
+
+    CcuRepMul m10(&insGen, addrA, uint16_t(10));
+    EXPECT_EQ(m10.GetSubType(), MulSubType::SELF_MUL_IMMED_ADDRESS);
+
+    CcuRepMul m11(&insGen, varC, addrA, uint16_t(10));
+    EXPECT_EQ(m11.GetSubType(), MulSubType::ADDR_MUL_IMMED_TO_VAR);
+}
+
+TEST_F(CcuRepMulTest, Describe_AllSubTypes)
+{
+    Variable varA, varB, varC;
+    varA.Reset(1); varB.Reset(2); varC.Reset(3);
+    Address addrA, addrB, addrC;
+    addrA.Reset(4); addrB.Reset(5); addrC.Reset(6);
+
+    EXPECT_NE(CcuRepMul(&insGen, varC, varA, varB).Describe().find("*"), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, varC, varA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, varA, varB).Describe().find("*="), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, varA, uint16_t(10)).Describe().find("*="), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, addrC, varA, varB).Describe().find("Address"), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, addrC, varA, addrB).Describe().find("Address"), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, addrA, varB).Describe().find("*="), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, addrC, addrA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, addrC, varA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, addrA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+    EXPECT_NE(CcuRepMul(&insGen, varC, addrA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+}
+
+TEST_F(CcuRepMulTest, Getters)
+{
+    Variable varA, varB, varC;
+    varA.Reset(1); varB.Reset(2); varC.Reset(3);
+    Address addrA, addrB, addrC;
+    addrA.Reset(4); addrB.Reset(5); addrC.Reset(6);
+
+    CcuRepMul mVarVar(&insGen, varC, varA, varB);
+    EXPECT_EQ(mVarVar.GetVarA().Id(), varA.Id());
+    EXPECT_EQ(mVarVar.GetVarB().Id(), varB.Id());
+    EXPECT_EQ(mVarVar.GetVarC().Id(), varC.Id());
+
+    CcuRepMul mAddrAddr(&insGen, addrC, varA, addrB);
+    EXPECT_EQ(mAddrAddr.GetAddrB().Id(), addrB.Id());
+    EXPECT_EQ(mAddrAddr.GetAddrC().Id(), addrC.Id());
+    EXPECT_EQ(mAddrAddr.GetVarA().Id(), varA.Id());
+
+    CcuRepMul mImmed(&insGen, varC, varA, uint16_t(10));
+    EXPECT_EQ(mImmed.GetImmedB(), uint16_t(10));
+
+    CcuRepMul mAddrA(&insGen, addrC, addrA, uint16_t(10));
+    EXPECT_EQ(mAddrA.GetAddrA().Id(), addrA.Id());
+    EXPECT_EQ(mAddrA.GetAddrC().Id(), addrC.Id());
+}
+
+class CcuRepSubTest : public ::testing::Test {
+protected:
+    CcuInsGeneraterV1 insGen {};
+    void SetUp() override {}
+};
+
+TEST_F(CcuRepSubTest, Constructor_AllSubTypes)
+{
+    Variable varA, varB, varC;
+    varA.Reset(1); varB.Reset(2); varC.Reset(3);
+    Address addrA, addrB, addrC;
+    addrA.Reset(4); addrB.Reset(5); addrC.Reset(6);
+
+    CcuRepSub s1(&insGen, varC, varA, varB);
+    EXPECT_EQ(s1.GetSubType(), MinusSubType::VAR_MINUS_VAR_TO_VAR);
+    EXPECT_EQ(s1.Type(), CcuRepType::SUB);
+
+    CcuRepSub s2(&insGen, varC, varA, uint16_t(10));
+    EXPECT_EQ(s2.GetSubType(), MinusSubType::VAR_MINUS_IMMED_TO_VAR);
+
+    CcuRepSub s3(&insGen, varA, varB);
+    EXPECT_EQ(s3.GetSubType(), MinusSubType::SELF_SUB_VAR_VARIABLE);
+
+    CcuRepSub s4(&insGen, varA, uint16_t(10));
+    EXPECT_EQ(s4.GetSubType(), MinusSubType::SELF_SUB_IMMED_VARIABLE);
+
+    CcuRepSub s5(&insGen, addrC, addrA, varB);
+    EXPECT_EQ(s5.GetSubType(), MinusSubType::ADDR_MINUS_VAR_TO_ADDR);
+
+    CcuRepSub s6(&insGen, addrC, addrA, uint16_t(10));
+    EXPECT_EQ(s6.GetSubType(), MinusSubType::ADDR_MINUS_IMMED_TO_ADDR);
+
+    CcuRepSub s7(&insGen, addrA, varB);
+    EXPECT_EQ(s7.GetSubType(), MinusSubType::SELF_SUB_VAR_ADDRESS);
+
+    CcuRepSub s8(&insGen, addrA, uint16_t(10));
+    EXPECT_EQ(s8.GetSubType(), MinusSubType::SELF_SUB_IMMED_ADDRESS);
+
+    CcuRepSub s9(&insGen, addrC, varA, uint16_t(10));
+    EXPECT_EQ(s9.GetSubType(), MinusSubType::VAR_MINUS_IMMED_TO_ADDR);
+
+    CcuRepSub s10(&insGen, varC, addrA, uint16_t(10));
+    EXPECT_EQ(s10.GetSubType(), MinusSubType::ADDR_MINUS_IMMED_TO_VAR);
+}
+
+TEST_F(CcuRepSubTest, Describe_AllSubTypes)
+{
+    Variable varA, varB, varC;
+    varA.Reset(1); varB.Reset(2); varC.Reset(3);
+    Address addrA, addrB, addrC;
+    addrA.Reset(4); addrB.Reset(5); addrC.Reset(6);
+
+    EXPECT_NE(CcuRepSub(&insGen, varC, varA, varB).Describe().find("-"), std::string::npos);
+    EXPECT_NE(CcuRepSub(&insGen, varC, varA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+    EXPECT_NE(CcuRepSub(&insGen, varA, varB).Describe().find("-="), std::string::npos);
+    EXPECT_NE(CcuRepSub(&insGen, varA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+    EXPECT_NE(CcuRepSub(&insGen, addrC, addrA, varB).Describe().find("Variable"), std::string::npos);
+    EXPECT_NE(CcuRepSub(&insGen, addrC, addrA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+    EXPECT_NE(CcuRepSub(&insGen, addrA, varB).Describe().find("-="), std::string::npos);
+    EXPECT_NE(CcuRepSub(&insGen, addrA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+    EXPECT_NE(CcuRepSub(&insGen, addrC, varA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+    EXPECT_NE(CcuRepSub(&insGen, varC, addrA, uint16_t(10)).Describe().find("Immed"), std::string::npos);
+}
+
+TEST_F(CcuRepSubTest, Getters)
+{
+    Variable varA, varB, varC;
+    varA.Reset(1); varB.Reset(2); varC.Reset(3);
+    Address addrA, addrB, addrC;
+    addrA.Reset(4); addrB.Reset(5); addrC.Reset(6);
+
+    CcuRepSub sVarVar(&insGen, varC, varA, varB);
+    EXPECT_EQ(sVarVar.GetVarA().Id(), varA.Id());
+    EXPECT_EQ(sVarVar.GetVarB().Id(), varB.Id());
+    EXPECT_EQ(sVarVar.GetVarC().Id(), varC.Id());
+
+    CcuRepSub sAddrVar(&insGen, addrC, addrA, varB);
+    EXPECT_EQ(sAddrVar.GetAddrA().Id(), addrA.Id());
+    EXPECT_EQ(sAddrVar.GetAddrC().Id(), addrC.Id());
+    EXPECT_EQ(sAddrVar.GetVarB().Id(), varB.Id());
+
+    CcuRepSub sImmed(&insGen, varC, varA, uint16_t(10));
+    EXPECT_EQ(sImmed.GetImmedB(), uint16_t(10));
+
+    CcuRepSub sAddrImmed(&insGen, addrA, uint16_t(10));
+    EXPECT_EQ(sAddrImmed.GetAddrA().Id(), addrA.Id());
+}
+
+TEST_F(CcuRepMulTest, Translate_AllSubTypes)
+{
+    Variable varA, varB, varC;
+    varA.Reset(1); varB.Reset(2); varC.Reset(3);
+    Address addrA, addrB, addrC;
+    addrA.Reset(4); addrB.Reset(5); addrC.Reset(6);
+
+    CcuInstr instr[20] = {};
+    CcuInstr *instrPtr = instr;
+    uint16_t instrId = 0;
+    TransDep dep = {};
+    dep.reserveGsaId = 1;
+    dep.reserveXnId = 2;
+
+    CcuRepMul m1(&insGen, varC, varA, varB);
+    EXPECT_ANY_THROW(m1.Translate(nullptr, instrPtr, instrId, dep));
+
+    CcuRepMul m2(&insGen, addrC, varA, varB);
+    EXPECT_ANY_THROW(m2.Translate(nullptr, instrPtr, instrId, dep));
+
+    CcuRepMul m3(&insGen, addrA, varB);
+    EXPECT_ANY_THROW(m3.Translate(nullptr, instrPtr, instrId, dep));
+
+    CcuRepMul m4(&insGen, varC, addrA, uint16_t(10));
+    EXPECT_ANY_THROW(m4.Translate(nullptr, instrPtr, instrId, dep));
+}
+
+TEST_F(CcuRepSubTest, Translate_AllSubTypes)
+{
+    Variable varA, varB, varC;
+    varA.Reset(1); varB.Reset(2); varC.Reset(3);
+    Address addrA, addrB, addrC;
+    addrA.Reset(4); addrB.Reset(5); addrC.Reset(6);
+
+    CcuInstr instr[20] = {};
+    CcuInstr *instrPtr = instr;
+    uint16_t instrId = 0;
+    TransDep dep = {};
+    dep.reserveGsaId = 1;
+    dep.reserveXnId = 2;
+
+    CcuRepSub s1(&insGen, varC, varA, varB);
+    EXPECT_ANY_THROW(s1.Translate(nullptr, instrPtr, instrId, dep));
+
+    CcuRepSub s2(&insGen, addrC, addrA, varB);
+    EXPECT_ANY_THROW(s2.Translate(nullptr, instrPtr, instrId, dep));
+
+    CcuRepSub s3(&insGen, addrA, varB);
+    EXPECT_ANY_THROW(s3.Translate(nullptr, instrPtr, instrId, dep));
+
+    CcuRepSub s4(&insGen, varC, addrA, uint16_t(10));
+    EXPECT_ANY_THROW(s4.Translate(nullptr, instrPtr, instrId, dep));
 }
 
 }

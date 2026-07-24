@@ -24,7 +24,9 @@ if(TARGET hcomm)
         ${CMAKE_CURRENT_SOURCE_DIR}/reps/common
         ${CMAKE_CURRENT_SOURCE_DIR}/reps/control
         ${CMAKE_CURRENT_SOURCE_DIR}/reps/data
+        ${CMAKE_CURRENT_SOURCE_DIR}/reps/logical
         ${CMAKE_CURRENT_SOURCE_DIR}/reps/loop
+        ${CMAKE_CURRENT_SOURCE_DIR}/reps/shift
         ${CMAKE_CURRENT_SOURCE_DIR}/reps/sync
         ${CMAKE_CURRENT_SOURCE_DIR}/reps/translator
         ${CMAKE_CURRENT_SOURCE_DIR}/../ccu_microcode

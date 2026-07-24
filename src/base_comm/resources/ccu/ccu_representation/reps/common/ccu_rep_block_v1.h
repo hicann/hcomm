@@ -17,14 +17,17 @@ namespace CcuRep {
 
 class CcuRepBlock : public CcuRepBase {
 public:
-    explicit CcuRepBlock(const std::string &label = "");
-    bool                Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    explicit CcuRepBlock(CcuInsGeneraterBase* insGenPtr, const std::string &label = "");
+    bool                Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint16_t InstrCount() override;
     const std::string &GetLabel() const;
     std::vector<std::shared_ptr<CcuRepBase>> &GetReps();
     void                                      Append(std::shared_ptr<CcuRepBase> rep);
     std::shared_ptr<CcuRepBase> GetRepByInstrId(uint16_t instrId);
+
+protected:
+    CcuInsGeneraterBase* insGeneratorPtr_{nullptr};
 
 private:
     std::string label;

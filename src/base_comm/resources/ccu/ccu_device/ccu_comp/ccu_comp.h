@@ -27,7 +27,6 @@
 #include "ccu_res_allocator.h"
 #include "ccu_res_specs.h"
 #include "ccu_channel_ctx_mgr.h"
-#include "ccuTaskException.h"
 
 // 暂时引入orion仓
 #include "local_ub_rma_buffer.h"
@@ -155,10 +154,10 @@ private:
     CcuTaskKillStatus status{CcuTaskKillStatus::INVALID};
 
     struct CntXnBlock {
-        ResInfo resInfo{};                    // cntXn resInfo
-        std::stack<uint32_t>   wishCntXns;  // wishCntXn Id
-        uint32_t totalCntXn{0};                // totalCntXn Id
-        uint32_t blockIdx{0};                  // wishCntXn和totalCntXn绑定时的idx
+        ResInfo resInfo{};                 // cntXn resInfo
+        std::stack<uint32_t>   wishCntXns; // wishCntXn Id
+        uint32_t totalCntXn{0};            // totalCntXn Id
+        uint32_t blockIdx{0};              // wishCntXn和totalCntXn绑定时的idx
     };
     std::mutex cntXnBlockMutex_;
     std::unordered_map<uint8_t, std::unordered_map<std::string, struct CntXnBlock>> cntXnBlocks_;  // {dieId, {resGroupTag, CntXnBlock}}

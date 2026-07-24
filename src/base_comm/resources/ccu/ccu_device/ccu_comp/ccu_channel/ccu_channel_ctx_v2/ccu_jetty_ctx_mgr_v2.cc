@@ -112,7 +112,7 @@ HcclResult CcuJettyCtxMgrV2::Alloc(const uint32_t feId, const uint32_t jettyNum,
     jettyInfos.resize(jettyNum);
 
     uint32_t allocSqSize = sqSize;
-    if(allocSqSize != CCU_V2_FIXED_SQ_SIZE){
+    if (allocSqSize != CCU_V2_FIXED_SQ_SIZE) {
         HCCL_RUN_WARNING("[CcuJettyCtxMgr][%s] failed, sqSize is not equal 32, "
             "sqSize is [%u]", __func__, allocSqSize);
         allocSqSize = CCU_V2_FIXED_SQ_SIZE;

@@ -18,19 +18,6 @@ namespace CcuRep {
 Condition::Condition(CcuRepContext *context, CcuRelationalOperator<Variable, uint64_t> rel) : context(context)
 {
     std::string label = "Condition";
-    endLabel          = std::make_shared<CcuRepJumpLabel>(label);
-
-    // 当传入条件为真时, 执行Block, 对应不执行Jump
-    if (rel.type == CcuRelationalOperatorType::NOT_EQUAL) {
-        jump = std::make_shared<CcuRepJumpEQ>(label, CreateVariable(context), rel.lhs, rel.rhs);
-    } else if (rel.type == CcuRelationalOperatorType::EQUAL) {
-        jump = std::make_shared<CcuRepJumpNE>(label, CreateVariable(context), rel.lhs, rel.rhs);
-    } else {
-        Hccl::THROW<Hccl::CcuApiException>("Unsupported relational operation");
-    }
-    jump->Reference(endLabel);
-
-    AppendToContext(context, jump);
 }
 
 Condition::~Condition()

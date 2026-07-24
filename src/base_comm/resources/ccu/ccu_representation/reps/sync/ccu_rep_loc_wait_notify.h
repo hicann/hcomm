@@ -10,7 +10,6 @@
 
 #ifndef HCOMM_CCU_REPRESENTATION_LOC_WAIT_NOTIFY_H
 #define HCOMM_CCU_REPRESENTATION_LOC_WAIT_NOTIFY_H
-
 #include "ccu_datatype_v1.h"
 #include "ccu_rep_base_v1.h"
 
@@ -19,12 +18,24 @@ namespace CcuRep {
 
 class CcuRepLocWaitNotify : public CcuRepBase {
 public:
-    CcuRepLocWaitNotify(const LocalNotify &notify, const uint32_t mask, bool isProfiling=true);
-    bool Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    CcuRepLocWaitNotify(CcuInsGeneraterBase* insGenPtr, const LocalNotify &notify, const uint32_t mask, bool isProfiling=true);
+    bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint32_t GetMask() { return mask_; };
     uint16_t GetNotifyId() { return notify_.Id(); };
+
+    LocalNotify GetNotify()
+    {
+        return notify_;
+    }
+
+    bool GetIsProfiling()
+    {
+        return isProfiling_;
+    }
+
 private:
+    CcuInsGeneraterBase* insGenPtr{nullptr};
     LocalNotify notify_{};
     uint32_t mask_{0};
     bool isProfiling_{true};

@@ -8,48 +8,46 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  * Description: ccu representation store var implementation file
  */
-
-#include "ccu_rep_v1.h"
+ 
+#include "ccu_rep_store_var_v1.h"
 #include "string_util.h"
+#include "ccu_rep_v1.h"
+#include "exception_util.h"
+#include "ccu_api_exception.h"
 
+#include "ccu_ins_generater_base.h"
+#include "ccu_kernel.h"
+ 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepStoreVar::CcuRepStoreVar(const Variable &var, const Variable &dst, uint32_t num)
-    : var(var), dst(dst), num(num)
+using namespace Hccl;
+ 
+CcuRepStoreVar::CcuRepStoreVar(CcuInsGeneraterBase* insGeneratorPtr, const Variable &var, const Variable &dst, uint32_t num, bool hscbFlag) :
+    insGeneratorPtr_(insGeneratorPtr), var(var), dst(dst), num(num), hscbFlag(hscbFlag)
 {
-    type       = CcuRepType::STORE_VAR;
-    instrCount = 7; // 7: Store包含7条指令
+    // for A6 only
+    type = CcuRepType::STORE_VAR;
+    instrCount = insGeneratorPtr_->GetInstrCount(type);
 }
-
-bool CcuRepStoreVar::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+ 
+bool CcuRepStoreVar::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
-    Hccl::CHECK_NULLPTR(instr, "[CcuRepStoreVar::Translate] instr is nullptr!");
     this->instrId    = instrId;
     translated       = true;
-    uint64_t varAddr = dep.xnBaseAddr + CCU_RESOURCE_XN_PER_SIZE * var.Id();
-
-    LoadGSAXnInstr(instr++, dep.commGsa[0], dep.reserveGsaId, dst.Id());
-    LoadImdToGSAInstr(instr++, dep.commGsa[1], varAddr);
-    LoadImdToXnInstr(instr++, dep.commXn[0], dep.memTokenInfo, CCU_LOAD_TO_XN_SEC_INFO);
-    LoadImdToXnInstr(instr++, dep.commXn[1], dep.ccuResSpaceTokenInfo, CCU_LOAD_TO_XN_SEC_INFO);
-    LoadImdToXnInstr(instr++, dep.commXn[2], CCU_RESOURCE_XN_PER_SIZE * num);
-    TransLocMemToLocMemInstr(instr++, dep.commGsa[0], dep.commXn[0], dep.commGsa[1], dep.commXn[1], dep.commXn[2],
-                             dep.reserveChannalId[0], dep.commSignal, mask, 0, 0, 1, 1);
-    SetCKEInstr(instr++, 0, 0, dep.commSignal, mask, 1);
-    CHK_PRT_THROW((instrId > UINT16_MAX - instrCount),
-                  HCCL_ERROR("[CcuRepStoreVar::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]",
-                             instrId, instrCount),
-                  Hccl::InternalException, "integer overflow");
+ 
+    CHK_RET_THROW(Hccl::CcuApiException,
+        Hccl::StringFormat("[CcuRepStoreVar][%s] failed to translate repStoreVar for instrId[%u] ", __func__, instrId),
+            insGeneratorPtr_->CcuRepStoreVarTranslate(ccuKernel, instr, instrId, this, dep));
+ 
     instrId += instrCount;
-
     return translated;
 }
-
+ 
 std::string CcuRepStoreVar::Describe()
 {
     return Hccl::StringFormat("Store Var([%u], [%u], [%u])", var.Id(), dst.Id(), num);
 }
-
+ 
 }; // namespace CcuRep
 }; // namespace hcomm

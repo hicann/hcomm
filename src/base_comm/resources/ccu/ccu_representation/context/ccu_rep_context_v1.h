@@ -80,15 +80,27 @@ public:
     LoopGroupProfilingInfo lgProfilingInfo; // LoopGroup相关profiling缓存信息
     std::vector<std::shared_ptr<CcuRepBase>> waitCkeProfilingReps; // waitCKE相关REP缓存
     std::vector<CcuProfilingInfo> profilingInfo; // context全部profiling缓存信息
+    // 需要校验返回值是否为nullptr
+    CcuInsGeneraterBase* GetInsGenerator()
+    {
+        return insGenerator;
+    }
+
+    void SetInsGenerater(CcuInsGeneraterBase* insGeneraterBase)
+    {
+        insGenerator = insGeneraterBase;
+    }
+
 protected:
     std::set<std::string> registeredLoop;
+    CcuInsGeneraterBase* insGenerator{nullptr};
     std::unordered_map<uint32_t, std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>>> depInfo;
 
 private:
     std::shared_ptr<CcuRep::CcuRepBlock> activeBlock{nullptr};
     std::shared_ptr<CcuRep::CcuRepBlock> mainBlock{nullptr};
 
-    uint32_t             dieId{CCU_MAX_IODIE_NUM};
+    uint32_t             dieId{UINT32_MAX};
     uint32_t             missionId{UINT32_MAX};
     uint32_t             missionKey{0};
 };

@@ -6,15 +6,18 @@
  */
 
 #include "ccu_rep_v1.h"
-
+#include "ccu_ins_generater_base.h"
 #include "string_util.h"
+#include "ccu_kernel.h"
 
 namespace hcomm{
 namespace CcuRep {
 
-CcuRepBlock::CcuRepBlock(const std::string &label) : label(label)
+CcuRepBlock::CcuRepBlock(CcuInsGeneraterBase* insGenPtr, const std::string &label) :
+    insGeneratorPtr_(insGenPtr), label(label)
 {
     type = CcuRepType::BLOCK;
+    instrCount = 0;
 }
 
 std::vector<std::shared_ptr<CcuRepBase>> &CcuRepBlock::GetReps()
@@ -33,7 +36,7 @@ const std::string &CcuRepBlock::GetLabel() const
 }
 
 uint16_t CcuRepBlock::InstrCount()
-{
+{   
     instrCount = 0;
     for (const auto &repInBlock : repVec) {
         instrCount += repInBlock->InstrCount();
@@ -41,13 +44,18 @@ uint16_t CcuRepBlock::InstrCount()
     return instrCount;
 }
 
-bool CcuRepBlock::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
+bool CcuRepBlock::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
 {
     this->instrId = instrId;
     translated    = true;
 
-    for (const auto &repInBlock : GetReps()) {
-        repInBlock->Translate(instr, instrId, dep);
+    constexpr uint16_t numberTwo = 2;  // 暂定repBlock中的rep遍历2次，后续优化
+    for (uint16_t i = 0; i < numberTwo; i++) {
+        for (const auto &repInBlock : GetReps()) {
+            if (!repInBlock->Translated()) {
+                repInBlock->Translate(ccuKernel, instr, instrId, dep);
+            }
+        }
     }
 
     return translated;

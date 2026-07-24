@@ -15,7 +15,7 @@ namespace CcuRep {
 
 class CcuRepLoopBlock : public CcuRepBlock {
 public:
-    explicit CcuRepLoopBlock(const std::string &label);
+    explicit CcuRepLoopBlock(CcuInsGeneraterBase* insGenPtr, const std::string &label);
     std::string Describe() override;
  
     void DefineArg(Variable var);

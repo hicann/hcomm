@@ -19,14 +19,18 @@ namespace CcuRep {
 
 class CcuRepLocRecordEvent : public CcuRepBase {
 public:
-    // mask 由调用方显式传入（与 CompletedEvent 解耦）。
-    CcuRepLocRecordEvent(const CompletedEvent &event, uint32_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
+    CcuRepLocRecordEvent(CcuInsGeneraterBase* insGenPtr, const CompletedEvent &event, uint32_t mask);
+    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint16_t GetEventId() { return event_.Id(); }
     uint32_t GetMask() { return mask_; }
 
+    CompletedEvent GetEvent()
+    {
+        return event_;
+    }
 private:
+    CcuInsGeneraterBase* insGenPtr{nullptr};
     CompletedEvent event_{};
     uint32_t       mask_{1};
 };
