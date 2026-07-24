@@ -103,6 +103,32 @@ protected:
         return payload;
     }
 
+    static std::vector<uint8_t> BuildBatchSendRecvPayload(uint32_t itemNum) {
+        std::vector<uint8_t> payload;
+        payload.reserve(sizeof(itemNum));
+        AppendVParamField(payload, itemNum);
+        return payload;
+    }
+
+    HcclResult ReportBatchSendRecvRank(uint32_t rankId, uint32_t rankSize, uint64_t peerCount,
+                                       uint32_t itemNum) {
+        sim::OpDetailTab detailTab{};
+        detailTab.rankId = rankId;
+        detailTab.rankSize = rankSize;
+        detailTab.opExtInfo = BuildBatchSendRecvPayload(itemNum);
+
+        ::OpDetails detail{};
+        detail.opType = static_cast<uint16_t>(HcclCMDType::HCCL_CMD_BATCH_SEND_RECV);
+        detail.dataType = static_cast<uint16_t>(HCCL_DATA_TYPE_INT32);
+        detail.opV1.count = peerCount;
+        detail.opV1.dataType = static_cast<uint16_t>(HCCL_DATA_TYPE_INT32);
+        return StorageManager::GetInstance().Trans2CheckerParam(detailTab, detail);
+    }
+
+    HcclResult ReportBatchSendRecvRank(uint32_t rankId, uint32_t rankSize, uint64_t peerCount) {
+        return ReportBatchSendRecvRank(rankId, rankSize, peerCount, rankSize * 2U);
+    }
+
     HcclResult ReportVRank(HcclCMDType cmdType, uint32_t rankId, uint32_t rankSize,
                            uint64_t localCount, const std::vector<uint64_t>& counts,
                            const std::vector<uint64_t>& displs,
@@ -335,6 +361,74 @@ TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_Default) {
     CheckerParam param = StorageManager::GetInstance().GetCheckerParam();
     EXPECT_EQ(param.rankSize, 0);
     EXPECT_EQ(param.dataCount, 0);
+}
+
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_BatchSendRecvBuildsCanonicalParameters) {
+    constexpr uint32_t kRankSize = 4;
+    constexpr uint64_t kPeerCount = 128;
+    StorageManager& storage = StorageManager::GetInstance();
+
+    storage.BeginOpGroup();
+    for (uint32_t rankId = 0; rankId < kRankSize; ++rankId) {
+        ASSERT_EQ(ReportBatchSendRecvRank(rankId, kRankSize, kPeerCount), HcclResult::HCCL_SUCCESS);
+    }
+
+    ASSERT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_SUCCESS);
+    const CheckerParam param = storage.GetCheckerParam();
+    EXPECT_EQ(param.cmdType, HcclCMDType::HCCL_CMD_BATCH_SEND_RECV);
+    EXPECT_EQ(param.rankSize, kRankSize);
+    EXPECT_EQ(param.dataCount, kPeerCount);
+    EXPECT_EQ(param.dataType, HCCL_DATA_TYPE_INT32);
+    ASSERT_EQ(param.batchSendRecvRankParams.size(), kRankSize);
+    for (const auto& rankParam : param.batchSendRecvRankParams) {
+        EXPECT_EQ(rankParam.itemNum, kRankSize * 2U);
+        EXPECT_EQ(rankParam.peerCount, kPeerCount);
+    }
+}
+
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsMalformedBatchSendRecvExtInfo) {
+    StorageManager& storage = StorageManager::GetInstance();
+    storage.BeginOpGroup();
+
+    sim::OpDetailTab detailTab{};
+    detailTab.rankId = 0;
+    detailTab.rankSize = 2;
+    detailTab.opExtInfo = BuildBatchSendRecvPayload(4);
+    detailTab.opExtInfo.pop_back();
+    ::OpDetails detail{};
+    detail.opType = static_cast<uint16_t>(HcclCMDType::HCCL_CMD_BATCH_SEND_RECV);
+    detail.dataType = static_cast<uint16_t>(HCCL_DATA_TYPE_INT32);
+    detail.opV1.count = 128;
+    detail.opV1.dataType = static_cast<uint16_t>(HCCL_DATA_TYPE_INT32);
+
+    EXPECT_EQ(storage.Trans2CheckerParam(detailTab, detail), HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsInvalidBatchSendRecvItemNum) {
+    StorageManager::GetInstance().BeginOpGroup();
+    EXPECT_EQ(ReportBatchSendRecvRank(0, 2, 128, 3),
+              HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsDuplicateBatchSendRecvRank) {
+    StorageManager::GetInstance().BeginOpGroup();
+    ASSERT_EQ(ReportBatchSendRecvRank(0, 2, 128), HcclResult::HCCL_SUCCESS);
+    EXPECT_EQ(ReportBatchSendRecvRank(0, 2, 128), HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsMissingBatchSendRecvRank) {
+    StorageManager& storage = StorageManager::GetInstance();
+    storage.BeginOpGroup();
+    ASSERT_EQ(ReportBatchSendRecvRank(0, 2, 128), HcclResult::HCCL_SUCCESS);
+    EXPECT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsInconsistentBatchSendRecvRanks) {
+    StorageManager& storage = StorageManager::GetInstance();
+    storage.BeginOpGroup();
+    ASSERT_EQ(ReportBatchSendRecvRank(0, 2, 128), HcclResult::HCCL_SUCCESS);
+    ASSERT_EQ(ReportBatchSendRecvRank(1, 2, 64), HcclResult::HCCL_SUCCESS);
+    EXPECT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_E_PARA);
 }
 
 TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVBuildsCanonicalDataDescriptor) {

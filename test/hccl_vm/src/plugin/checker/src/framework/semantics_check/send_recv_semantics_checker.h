@@ -13,10 +13,13 @@
 
 #include "check_utils.h"
 #include "hccl_types.h"
+#include "utils/storage_manager.h"
 
 namespace HcclSim {
 HcclResult TaskCheckSendRecvSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics, u64 dataSize,
                                       RankId srcRank, RankId dstRank);
+HcclResult TaskCheckSendRecvGroupSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics,
+    u64 dataSize, const std::vector<SendRecvPairParam> &pairs);
 }
 
 #endif

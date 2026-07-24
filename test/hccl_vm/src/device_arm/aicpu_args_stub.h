@@ -21,6 +21,25 @@ constexpr uint32_t LOCAL_BUFFER_SIZE = 28;
 constexpr uint32_t REMOTE_BUFFER_SIZE = 28;
 constexpr uint32_t HCOMID_MAX_SIZE = 128;
 
+constexpr uint32_t P2P_MAX_ARG_SIZE_STUB = 8192;
+
+// HcclP2pKernelParam
+struct HcclP2pKernelParamStub {
+    uint64_t sendRecvThread;
+    uint8_t opParams[P2P_MAX_ARG_SIZE_STUB];
+};
+
+struct ThreadNotifyRecordParam {
+    uint64_t thread;
+    uint64_t dstThread;
+    uint32_t dstNotifyIdx;
+};
+
+struct ThreadNotifyWaitParam {
+    uint64_t thread;
+    uint32_t notifyIdx;
+};
+
 struct HDCommunicateParams {
     uint64_t hostAddr{ 0 };
     uint64_t deviceAddr{ 0 };

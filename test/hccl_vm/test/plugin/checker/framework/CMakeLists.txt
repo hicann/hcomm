@@ -365,3 +365,23 @@ target_link_libraries(test_task_graph_generator PRIVATE
 set_target_properties(test_task_graph_generator PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
 )
+
+add_executable(test_task_graph_sync_conflict_v3 task_graph_generator_v3/task_graph_sync_conflict_v3_test.cc main.cc)
+target_sources(test_task_graph_sync_conflict_v3 PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/task_graph_generator_v3/task_graph_sync_conflict_v3.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/task_graph_generator_v3/task_def_v3.cc
+    ${CHECKER_LOG_SRC}
+)
+target_include_directories(test_task_graph_sync_conflict_v3 BEFORE PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/task_graph_generator_v3
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/utils
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/log
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/header/internal
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/header/external
+)
+target_link_libraries(test_task_graph_sync_conflict_v3 PRIVATE
+    ${CHECKER_LIBC_SEC}
+)
+set_target_properties(test_task_graph_sync_conflict_v3 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
+)

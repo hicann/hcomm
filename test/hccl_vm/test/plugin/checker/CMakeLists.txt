@@ -66,6 +66,7 @@ target_sources(test_checker PRIVATE
     ${CHECKER_SRC}/framework/task_graph_generator/type_conversion.cc
     ${CHECKER_SRC}/framework/task_graph_generator_v3/task_graph_generator_v3.cc
     ${CHECKER_SRC}/framework/task_graph_generator_v3/task_graph_mem_conflict_v3.cc
+    ${CHECKER_SRC}/framework/task_graph_generator_v3/task_graph_sync_conflict_v3.cc
     ${CHECKER_SRC}/framework/task_graph_generator_v3/task_graph_reachability_v3.cc
     ${CHECKER_SRC}/framework/task_graph_generator_v3/task_graph_semantic_check_v3.cc
     ${CHECKER_SRC}/framework/task_graph_generator_v3/task_graph_single_task_check_v3.cc

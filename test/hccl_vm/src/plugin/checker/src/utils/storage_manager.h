@@ -38,6 +38,18 @@ struct VRankParam {
     std::vector<uint64_t> displs;
 };
 
+struct SendRecvPairParam {
+    uint32_t srcRank = 0;
+    uint32_t dstRank = 0;
+    bool sendSeen = false;
+    bool recvSeen = false;
+};
+
+struct BatchSendRecvRankParam {
+    uint32_t itemNum = 0;
+    uint64_t peerCount = 0;
+};
+
 struct CheckerParam {
     HcclCMDType cmdType = static_cast<HcclCMDType>(0);
     uint32_t rankSize = 0;
@@ -49,6 +61,8 @@ struct CheckerParam {
     uint32_t srcRank = 0;
     uint32_t dstRank = 0;
     uint32_t root = 0;
+    std::vector<SendRecvPairParam> sendRecvPairs;
+    std::vector<BatchSendRecvRankParam> batchSendRecvRankParams;
 
     VDataDesTagInner vDataDes;
     std::vector<VRankParam> vRankParams;

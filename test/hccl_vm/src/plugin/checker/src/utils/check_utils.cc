@@ -51,7 +51,7 @@ void CalcInputOutputSize(HcclCMDType opType, uint32_t rankSize, uint64_t count, 
     VDataDesTagInner vDataDes, All2AllDataDesTagInner all2AllDataDes)
 {
     u32 unitSize = 0;
-    if (!IsAllToAllSeries(opType) && opType != HcclCMDType::HCCL_CMD_BATCH_SEND_RECV &&
+    if (!IsAllToAllSeries(opType) &&
         opType != HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V && opType != HcclCMDType::HCCL_CMD_ALLGATHER_V) {
         unitSize = CHECK_SIZE_TABLE[dataType];
     }

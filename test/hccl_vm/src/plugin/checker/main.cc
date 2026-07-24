@@ -296,7 +296,7 @@ static HcclResult ProcessOneOpGroup(
     HcclSim::SettingManager &settingManager = HcclSim::SettingManager::GetInstance();
     bool enableNewChecker = settingManager.IsNewCheckerEnabled();
     bool enableOldChecker = settingManager.IsOldCheckerEnabled();
-    bool isAivOp = false;
+    bool usesAivExpansionMode = false;
 
     HCCL_VM_INFO("Start checking one op group, opGroupSize={}", opGroup.size());
     storage.BeginOpGroup();
@@ -305,7 +305,7 @@ static HcclResult ProcessOneOpGroup(
         uint32_t rankId = entry.first;
         HCCL_VM_INFO("Load one rank from this op group, rankId={}", rankId);
         sim::CompositeOpDetail& op = entry.second;
-        isAivOp = isAivOp || IsAivOpExpansionMode(op.detail.opExpansionMode);
+        usesAivExpansionMode = usesAivExpansionMode || IsAivOpExpansionMode(op.detail.opExpansionMode);
         allTasks.push_back(op.tasks);
         HcclResult ret = LoadOpDataForOneRank(storage, channels, instrRes, rankId, op);
         if (ret != HcclResult::HCCL_SUCCESS) {
@@ -343,7 +343,8 @@ static HcclResult ProcessOneOpGroup(
                       HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR));
         return ret;
     }
-    isAivOp = isAivOp || HasAivGraphTask(allTasks);
+    const bool hasAivGraphTask = HasAivGraphTask(allTasks);
+    const bool isAivOp = usesAivExpansionMode || hasAivGraphTask;
     if (isAivOp) {
         if (!enableNewChecker) {
             HCCL_VM_ERROR("{} This AIV op requires the V3 checker, but V3 is disabled by configuration, "
@@ -370,7 +371,8 @@ static HcclResult ProcessOneOpGroup(
                 << ", reduceType=" << HcclReduceOpToString(checkerParamBrief.reduceType);
         AppendApplicableRoleFields(summary, checkerParamBrief);
         summary << ", opGroupSize=" << opGroup.size()
-                << ", containsAivTask=" << isAivOp;
+                << ", usesAivExpansionMode=" << usesAivExpansionMode
+                << ", hasAivGraphTask=" << hasAivGraphTask;
         HCCL_VM_INFO("{}", summary.str());
     }
 

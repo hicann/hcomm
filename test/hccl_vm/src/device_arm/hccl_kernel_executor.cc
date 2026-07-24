@@ -34,7 +34,10 @@ uint32_t (*runAicpuIndOpThreadInitPtr)(void *args) = nullptr;
 uint32_t (*runAicpuIndOpChannelInitV2Ptr)(void *args) = nullptr;
 uint32_t (*runAicpuDfxOpInfoInitV2Ptr)(void *args) = nullptr;
 uint32_t (*runAicpuThreadSupplementNotifyPtr)(void* args) = nullptr;
+uint32_t (*runAicpuNotifyWaitPtr)(void *args) = nullptr;
+uint32_t (*runAicpuNotifyRecordPtr)(void *args) = nullptr;
 unsigned int (*hcclLaunchAicpuKernelPtr)(OpParam *param) = nullptr;
+unsigned int (*hcclLaunchP2pAicpuKernelPtr)(void *args) = nullptr;
 
 uint64_t d2hAddr = 0;
 
@@ -96,6 +99,8 @@ void ExecuteAicpuKernel(uint32_t rankId, const std::string &kernelName, uint64_t
                             COMMON_DATA_SIZE + header->notifyNum * NOTIFY_BUFFER_SIZE +
                             COMMON_DATA_SIZE + header->bufferNum * LOCAL_BUFFER_SIZE +
                             COMMON_DATA_SIZE + header->rmtBufferNum * REMOTE_BUFFER_SIZE;
+            uint64_t *drainUnqueIdSize = reinterpret_cast<uint64_t *>(startAddr + startOffset + UNIQUEID_HEADER_OFFSET + UNIQUEID_HEADER_SIZE + offset);
+            offset += sizeof(uint64_t) + *drainUnqueIdSize;
             ConnUniqueBlock *block = reinterpret_cast<ConnUniqueBlock *>(startAddr + startOffset + UNIQUEID_HEADER_OFFSET + UNIQUEID_HEADER_SIZE + offset);
             for (auto j = 0; j < header->connNum; ++j) {
                 block->conn[j].sqBuffVa = reinterpret_cast<uint64_t>(GetRealPtrByDevPtr(reinterpret_cast<void *>(block->conn[j].sqBuffVa)));
@@ -108,6 +113,16 @@ void ExecuteAicpuKernel(uint32_t rankId, const std::string &kernelName, uint64_t
         opParam->resCtx = GetRealPtrByDevPtr(opParam->resCtx);
         hcclLaunchAicpuKernelPtr(opParam);
         UpdataKfcStatus(d2hAddr);
+    } else if (kernelName == "RunAicpuNotifyWait") {
+        runAicpuNotifyWaitPtr(realPtr);
+    } else if (kernelName == "HcclLaunchP2pAicpuKernel") {
+        auto *p2pParam = reinterpret_cast<HcclP2pKernelParamStub *>(realPtr);
+        OpParam *opParam = reinterpret_cast<OpParam *>(p2pParam->opParams);
+        opParam->resCtx = GetRealPtrByDevPtr(opParam->resCtx);
+        hcclLaunchP2pAicpuKernelPtr(p2pParam);
+        UpdataKfcStatus(d2hAddr);
+    } else if (kernelName == "RunAicpuNotifyRecord") {
+        runAicpuNotifyRecordPtr(realPtr);
     } else {
         HCCL_VM_ERROR("rankId[{}] kernel[{}] not support.", rankId, kernelName);
     }
@@ -147,14 +162,18 @@ bool InitKernelFuncHandle()
     runAicpuIndOpChannelInitV2Ptr = reinterpret_cast<uint32_t (*)(void *)>(dlsym(gHcommHandle, "RunAicpuIndOpChannelInitV2"));
     runAicpuDfxOpInfoInitV2Ptr = reinterpret_cast<uint32_t (*)(void *)>(dlsym(gHcommHandle, "RunAicpuDfxOpInfoInitV2"));
     runAicpuThreadSupplementNotifyPtr = reinterpret_cast<uint32_t (*)(void *)>(dlsym(gHcommHandle, "RunAicpuThreadSupplementNotify"));
+    runAicpuNotifyWaitPtr = reinterpret_cast<uint32_t (*)(void *)>(dlsym(gHcommHandle, "RunAicpuNotifyWait"));
+    runAicpuNotifyRecordPtr = reinterpret_cast<uint32_t (*)(void *)>(dlsym(gHcommHandle, "RunAicpuNotifyRecord"));
     hcclLaunchAicpuKernelPtr = reinterpret_cast<unsigned int (*)(OpParam *)>(dlsym(gHcclKerHandle, "HcclLaunchAicpuKernel"));
+    hcclLaunchP2pAicpuKernelPtr = reinterpret_cast<unsigned int (*)(void *)>(dlsym(gHcclKerHandle, "HcclLaunchP2pAicpuKernel"));
     if (runAicpuIndOpCommInitPtr == nullptr || runAicpuIndOpThreadInitPtr == nullptr || runAicpuIndOpChannelInitV2Ptr == nullptr ||
-        runAicpuDfxOpInfoInitV2Ptr == nullptr || runAicpuThreadSupplementNotifyPtr == nullptr) {
+        runAicpuDfxOpInfoInitV2Ptr == nullptr || runAicpuThreadSupplementNotifyPtr == nullptr ||
+        runAicpuNotifyWaitPtr == nullptr || runAicpuNotifyRecordPtr == nullptr) {
         HCCL_VM_ERROR("Failed to get kernel func handle in gHcommHandle.");
         return false;
     }
 
-    if (hcclLaunchAicpuKernelPtr == nullptr) {
+    if (hcclLaunchAicpuKernelPtr == nullptr || hcclLaunchP2pAicpuKernelPtr == nullptr) {
         HCCL_VM_ERROR("[InitKernelFuncHandle] Failed to get kernel func handle in gHcclKerHandle.");
         return false;
     }

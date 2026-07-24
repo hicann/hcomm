@@ -22,13 +22,9 @@ namespace HcclSim {
 HcclResult TaskCheckSendRecvSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics, u64 dataSize,
                                       RankId srcRank, RankId dstRank)
 {
-    u32 rankSize = allRankMemSemantics.size();
-
-    // 对应的rank不存在需要报错
-    if (allRankMemSemantics.size() != 2) {
-        HCCL_VM_ERROR("{} Send/Recv final output validation supports exactly 2 ranks, but got {} "
-            "(sourceRank={}, targetRank={}).",
-            MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_CHECK_FAILED), rankSize, srcRank, dstRank);
+    if (allRankMemSemantics.count(srcRank) == 0 || allRankMemSemantics.count(dstRank) == 0) {
+        HCCL_VM_ERROR("{} Send/Recv pair references a missing rank (sourceRank={}, targetRank={}).",
+            MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_CHECK_FAILED), srcRank, dstRank);
         return HcclResult::HCCL_E_PARA;
     }
 
@@ -92,6 +88,19 @@ HcclResult TaskCheckSendRecvSemantics(std::map<RankId, RankMemorySemantics> &all
         return HcclResult::HCCL_E_PARA;
     }
 
+    return HcclResult::HCCL_SUCCESS;
+}
+
+HcclResult TaskCheckSendRecvGroupSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics,
+    u64 dataSize, const std::vector<SendRecvPairParam> &pairs)
+{
+    for (const auto &pair : pairs) {
+        const HcclResult ret = TaskCheckSendRecvSemantics(
+            allRankMemSemantics, dataSize, pair.srcRank, pair.dstRank);
+        if (ret != HcclResult::HCCL_SUCCESS) {
+            return ret;
+        }
+    }
     return HcclResult::HCCL_SUCCESS;
 }
 } // namespace HcclSim

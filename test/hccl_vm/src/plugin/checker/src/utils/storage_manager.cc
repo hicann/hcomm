@@ -10,7 +10,9 @@
 
 #include "storage_manager.h"
 
+#include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <cstdlib> // strtoull
 #include <cstring>
 #include <iostream>
@@ -90,6 +92,15 @@ bool ReadVParamExtInfo(const std::vector<uint8_t> &data, uint32_t rankSize, VRan
     return true;
 }
 
+bool ReadBatchSendRecvExtInfo(const std::vector<uint8_t> &data, BatchSendRecvRankParam &param)
+{
+    if (data.size() != sizeof(uint32_t)) {
+        return false;
+    }
+    std::memcpy(&param.itemNum, data.data(), sizeof(param.itemNum));
+    return true;
+}
+
 HcclResult FinalizeVDataDes(CheckerParam &checkerParam, bool isAllGatherV)
 {
     const uint32_t rankSize = checkerParam.rankSize;
@@ -145,6 +156,30 @@ HcclResult FinalizeVDataDes(CheckerParam &checkerParam, bool isAllGatherV)
     checkerParam.vDataDes.displs = std::move(displs);
     return HcclResult::HCCL_SUCCESS;
 }
+
+HcclResult FinalizeBatchSendRecv(CheckerParam &checkerParam)
+{
+    const uint32_t rankSize = checkerParam.rankSize;
+    if (rankSize == 0 || checkerParam.batchSendRecvRankParams.size() != rankSize) {
+        HCCL_VM_ERROR("Invalid BatchSendRecv report set, rankSize={}, reportedRanks={}",
+            rankSize, checkerParam.batchSendRecvRankParams.size());
+        return HcclResult::HCCL_E_PARA;
+    }
+
+    const uint64_t expectedItemNum = static_cast<uint64_t>(rankSize) * 2U;
+    const uint64_t peerCount = checkerParam.batchSendRecvRankParams[0].peerCount;
+    for (uint32_t rankId = 0; rankId < rankSize; ++rankId) {
+        const BatchSendRecvRankParam &current = checkerParam.batchSendRecvRankParams[rankId];
+        if (static_cast<uint64_t>(current.itemNum) != expectedItemNum || current.peerCount != peerCount) {
+            HCCL_VM_ERROR("Invalid BatchSendRecv all-to-all parameters at rank {}: itemNum={} vs {}, "
+                "peerCount={} vs {}", rankId, current.itemNum, expectedItemNum, current.peerCount, peerCount);
+            return HcclResult::HCCL_E_PARA;
+        }
+    }
+
+    checkerParam.dataCount = peerCount;
+    return HcclResult::HCCL_SUCCESS;
+}
 } // namespace
 
 void StorageManager::Reset()
@@ -172,8 +207,13 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
     devType_ = static_cast<DevType>(detailTab.devType);
     AllRankParamRecorder::Global()->devType_ = devType_;
     auto vRankParams = std::move(m_checker_param.vRankParams);
+    auto sendRecvPairs = std::move(m_checker_param.sendRecvPairs);
+    auto batchSendRecvRankParams = std::move(m_checker_param.batchSendRecvRankParams);
+    const CheckerParam previousParam = m_checker_param;
     m_checker_param = CheckerParam{};
     m_checker_param.vRankParams = std::move(vRankParams);
+    m_checker_param.sendRecvPairs = std::move(sendRecvPairs);
+    m_checker_param.batchSendRecvRankParams = std::move(batchSendRecvRankParams);
     m_checker_param.cmdType = static_cast<HcclCMDType>(detail.opType);
     m_checker_param.rankSize = detailTab.rankSize;
     m_checker_param.dataType = static_cast<HcclDataType>(detail.dataType);
@@ -189,6 +229,61 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
     m_checker_param.all2AllDataDes.count = 0;
 
     HcclCMDType curCmdType = static_cast<HcclCMDType>(detail.opType);
+    const bool isSendRecv = curCmdType == HcclCMDType::HCCL_CMD_SEND ||
+                            curCmdType == HcclCMDType::HCCL_CMD_RECEIVE;
+    if (isSendRecv) {
+        if (!m_checker_param.sendRecvPairs.empty() &&
+            (previousParam.rankSize != detailTab.rankSize || previousParam.dataType != m_checker_param.dataType ||
+             previousParam.dataCount != m_checker_param.dataCount)) {
+            HCCL_VM_ERROR("Inconsistent Send/Recv parameters in one op group, rankId={}", detailTab.rankId);
+            return HcclResult::HCCL_E_PARA;
+        }
+        auto pair = std::find_if(m_checker_param.sendRecvPairs.begin(), m_checker_param.sendRecvPairs.end(),
+            [&detailTab](const SendRecvPairParam &value) {
+                return value.srcRank == detailTab.srcRank && value.dstRank == detailTab.dstRank;
+            });
+        if (pair == m_checker_param.sendRecvPairs.end()) {
+            m_checker_param.sendRecvPairs.push_back({detailTab.srcRank, detailTab.dstRank, false, false});
+            pair = std::prev(m_checker_param.sendRecvPairs.end());
+        }
+        bool &seen = curCmdType == HcclCMDType::HCCL_CMD_SEND ? pair->sendSeen : pair->recvSeen;
+        if (seen) {
+            HCCL_VM_ERROR("Duplicate {} report for Send/Recv pair {} -> {}",
+                curCmdType == HcclCMDType::HCCL_CMD_SEND ? "Send" : "Recv", pair->srcRank, pair->dstRank);
+            return HcclResult::HCCL_E_PARA;
+        }
+        seen = true;
+        // A group contains both entry types; use SEND as the canonical group type.
+        m_checker_param.cmdType = HcclCMDType::HCCL_CMD_SEND;
+    }
+    if (curCmdType == HcclCMDType::HCCL_CMD_BATCH_SEND_RECV) {
+        if (detailTab.rankSize == 0 || detailTab.rankId >= detailTab.rankSize) {
+            HCCL_VM_ERROR("Invalid BatchSendRecv rank id {}, rankSize={}", detailTab.rankId, detailTab.rankSize);
+            return HcclResult::HCCL_E_PARA;
+        }
+        if (m_checker_param.batchSendRecvRankParams.size() < detailTab.rankSize) {
+            m_checker_param.batchSendRecvRankParams.resize(detailTab.rankSize);
+        }
+        if (m_checker_param.batchSendRecvRankParams[detailTab.rankId].itemNum != 0) {
+            HCCL_VM_ERROR("Duplicate BatchSendRecv parameter report from rank {}", detailTab.rankId);
+            return HcclResult::HCCL_E_PARA;
+        }
+
+        BatchSendRecvRankParam rankParam;
+        if (!ReadBatchSendRecvExtInfo(detailTab.opExtInfo, rankParam)) {
+            HCCL_VM_ERROR("Invalid BatchSendRecv opExtInfo, rankId={}, payloadSize={}",
+                detailTab.rankId, detailTab.opExtInfo.size());
+            return HcclResult::HCCL_E_PARA;
+        }
+        if (static_cast<uint64_t>(rankParam.itemNum) != static_cast<uint64_t>(detailTab.rankSize) * 2U) {
+            HCCL_VM_ERROR("BatchSendRecv is not a complete all-to-all at rank {}: itemNum={}, rankSize={}",
+                detailTab.rankId, rankParam.itemNum, detailTab.rankSize);
+            return HcclResult::HCCL_E_PARA;
+        }
+        rankParam.peerCount = detail.opV1.count;
+        m_checker_param.batchSendRecvRankParams[detailTab.rankId] = rankParam;
+    }
+
     const bool isVOp = curCmdType == HcclCMDType::HCCL_CMD_ALLGATHER_V ||
                        curCmdType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V;
     if (isVOp) {
@@ -255,6 +350,24 @@ HcclResult StorageManager::FinalizeOpGroup()
             return FinalizeVDataDes(m_checker_param, true);
         case HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V:
             return FinalizeVDataDes(m_checker_param, false);
+        case HcclCMDType::HCCL_CMD_BATCH_SEND_RECV:
+            return FinalizeBatchSendRecv(m_checker_param);
+        case HcclCMDType::HCCL_CMD_SEND:
+        case HcclCMDType::HCCL_CMD_RECEIVE:
+            for (const auto &pair : m_checker_param.sendRecvPairs) {
+                if (!pair.sendSeen || !pair.recvSeen || pair.srcRank == pair.dstRank ||
+                    pair.srcRank >= m_checker_param.rankSize || pair.dstRank >= m_checker_param.rankSize) {
+                    HCCL_VM_ERROR("Incomplete or invalid Send/Recv pair {} -> {} (sendSeen={}, recvSeen={})",
+                        pair.srcRank, pair.dstRank, pair.sendSeen, pair.recvSeen);
+                    return HcclResult::HCCL_E_PARA;
+                }
+            }
+            if (m_checker_param.sendRecvPairs.empty()) {
+                return HcclResult::HCCL_E_PARA;
+            }
+            m_checker_param.srcRank = m_checker_param.sendRecvPairs.front().srcRank;
+            m_checker_param.dstRank = m_checker_param.sendRecvPairs.front().dstRank;
+            return HcclResult::HCCL_SUCCESS;
         default:
             return HcclResult::HCCL_SUCCESS;
     }

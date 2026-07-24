@@ -145,12 +145,16 @@ enum CcuVersion {
 
 // AIV communication information buffer layout shared by the proxy, runner and checker.
 namespace AivCommInfoLayout {
-constexpr uint64_t SIZE_BYTES = 33ULL * 1024ULL * 1024ULL;
+constexpr uint64_t SIZE_BYTES = 65ULL * 1024ULL * 1024ULL;
 constexpr uint64_t GM_IN_TABLE_OFFSET = 0;
 constexpr uint64_t GM_OUT_TABLE_OFFSET = 16ULL * 1024ULL;
-constexpr uint64_t FLAG_ADDR_OFFSET = 40ULL * 1024ULL;
-constexpr uint64_t TAG_OFFSET = 16ULL * 1024ULL * 1024ULL;
-constexpr uint64_t EMPTY_CLEAR_OFFSET = 17ULL * 1024ULL * 1024ULL;
+constexpr uint64_t TAG_OFFSET = 512ULL * 1024ULL;
+constexpr uint64_t FLAG1_OFFSET = 1ULL * 1024ULL * 1024ULL;
+constexpr uint64_t FLAG2_OFFSET = 5ULL * 1024ULL * 1024ULL;
+constexpr uint64_t BASE_FLAG_OFFSET = 9ULL * 1024ULL * 1024ULL;
+constexpr uint64_t EMPTY_CLEAR_OFFSET = 10ULL * 1024ULL * 1024ULL;
+constexpr uint64_t PING_OFFSET = 18ULL * 1024ULL * 1024ULL;
+constexpr uint64_t PONG_OFFSET = 34ULL * 1024ULL * 1024ULL;
 constexpr uint64_t SYNC_CELL_BYTES = 128ULL;
 constexpr uint32_t FIXED_TAG = 1;
 } // namespace AivCommInfoLayout

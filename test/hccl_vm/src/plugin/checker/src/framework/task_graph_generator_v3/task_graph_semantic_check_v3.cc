@@ -299,8 +299,17 @@ HcclResult InitState(SemanticState &state)
     }
     CalcDataSize(state.param.cmdType, state.param.dataCount, state.param.dataType, state.dataSize);
     for (RankId rankId = 0; rankId < state.param.rankSize; ++rankId) {
+        RankId srcRank = state.param.srcRank;
+        RankId dstRank = state.param.dstRank;
+        for (const auto &pair : state.param.sendRecvPairs) {
+            if (pair.srcRank == rankId || pair.dstRank == rankId) {
+                srcRank = pair.srcRank;
+                dstRank = pair.dstRank;
+                break;
+            }
+        }
         CalcInputOutputSize(state.param.cmdType, state.param.rankSize, state.param.dataCount, state.param.dataType,
-            state.inputSize, state.outputSize, rankId, state.param.srcRank, state.param.dstRank, state.param.vDataDes,
+            state.inputSize, state.outputSize, rankId, srcRank, dstRank, state.param.vDataDes,
             state.param.all2AllDataDes);
         const bool initInput = !(state.param.cmdType == HCCL_CMD_BROADCAST || state.param.cmdType == HCCL_CMD_SCATTER) ||
             rankId == state.param.root;
@@ -932,8 +941,8 @@ HcclResult CheckFinalOutput(const SemanticState &state)
         }
         case HCCL_CMD_SEND:
         case HCCL_CMD_RECEIVE:
-            return TaskCheckSendRecvSemantics(allRankMemSemantics, state.dataSize, state.param.srcRank,
-                state.param.dstRank);
+            return TaskCheckSendRecvGroupSemantics(allRankMemSemantics, state.dataSize,
+                state.param.sendRecvPairs);
         case HCCL_CMD_BROADCAST:
             return TaskCheckBroadcastSemantics(allRankMemSemantics, state.dataSize, state.param.root);
         case HCCL_CMD_REDUCE:
@@ -942,7 +951,7 @@ HcclResult CheckFinalOutput(const SemanticState &state)
         case HCCL_CMD_SCATTER:
             return TaskCheckScatterSemantics(allRankMemSemantics, state.dataSize, state.param.root);
         case HCCL_CMD_BATCH_SEND_RECV:
-            return TaskCheckBatchSendRecvSemantics(allRankMemSemantics, state.dataSize);
+            return TaskCheckBatchSendRecvSemantics(allRankMemSemantics, state.param.rankSize, state.dataSize);
         default:
             HCCL_VM_WARN("{} Final output validation does not support this collective type yet, "
                 "collectiveType={}, rankCount={}, dataType={}, elementCount={}, reduceType={}",

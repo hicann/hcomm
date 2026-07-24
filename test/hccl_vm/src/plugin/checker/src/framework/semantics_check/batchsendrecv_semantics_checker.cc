@@ -19,18 +19,23 @@
 #include "utils/error_codes.h"
 
 namespace HcclSim {
-HcclResult TaskCheckBatchSendRecvSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics, u64 dataSize)
+HcclResult TaskCheckBatchSendRecvSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics,
+    u32 expectedRankSize, u64 dataSize)
 {
-    u32 rankSize = allRankMemSemantics.size();
+    if (expectedRankSize == 0 || allRankMemSemantics.size() != expectedRankSize) {
+        HCCL_VM_ERROR("{} BatchSendRecv rank set size mismatch: expected {}, actual {}.",
+            MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), expectedRankSize, allRankMemSemantics.size());
+        return HcclResult::HCCL_E_PARA;
+    }
 
-    for (RankId rankId = 0; rankId < rankSize; rankId++) {
+    for (RankId rankId = 0; rankId < expectedRankSize; rankId++) {
         // 对应的rank不存在需要报错
         if (allRankMemSemantics.count(rankId) == 0) {
             HCCL_VM_ERROR("{} BatchSendRecv produced no result data for rank {}, but this rank is "
                 "expected to receive one segment from each of the {} participating ranks "
                 "(expected total size 0x{:x}).",
                 MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), rankId,
-                rankSize, dataSize * rankSize);
+                expectedRankSize, dataSize * expectedRankSize);
             return HcclResult::HCCL_E_PARA;
         }
 
@@ -105,10 +110,11 @@ HcclResult TaskCheckBatchSendRecvSemantics(std::map<RankId, RankMemorySemantics>
             totalSize += ele.size;
         }
         // 如果curRankId等于rankSize，表示已经接受到其他所有rank的数据
-        if (curRankId != rankSize) {
+        if (curRankId != expectedRankSize) {
             HCCL_VM_ERROR("{} BatchSendRecv output for rank {} ends too early. The checker has "
                 "validated 0x{:x} bytes in total, but the expected total size is 0x{:x}.",
-                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), rankId, totalSize, dataSize * rankSize);
+                MakeErrorCodeText(ErrorCode::SEMANTIC_FINAL_MISSING), rankId, totalSize,
+                dataSize * expectedRankSize);
             return HcclResult::HCCL_E_PARA;
         }
     }

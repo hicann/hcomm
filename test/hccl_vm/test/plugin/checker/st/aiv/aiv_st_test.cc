@@ -71,12 +71,12 @@ constexpr uint32_t PIPE_MTE3 = 2;
 constexpr uint32_t PIPE_ALL = 3;
 constexpr uint64_t DEFAULT_BUFFER_SIZE = 1ULL << 20;
 constexpr uint64_t AIV_COMM_INFO_SIZE = AivCommInfoLayout::SIZE_BYTES;
-constexpr uint64_t AIV_COMM_INFO_FLAG_ADDR_OFFSET = AivCommInfoLayout::FLAG_ADDR_OFFSET;
+constexpr uint64_t AIV_COMM_INFO_FLAG1_OFFSET = AivCommInfoLayout::FLAG1_OFFSET;
 constexpr uint64_t AIV_COMM_INFO_SYNC_CELL_BYTES = AivCommInfoLayout::SYNC_CELL_BYTES;
 
 uint64_t AivCommInfoFlagOffset(uint64_t cellIndex)
 {
-    return AIV_COMM_INFO_FLAG_ADDR_OFFSET + cellIndex * AIV_COMM_INFO_SYNC_CELL_BYTES;
+    return AIV_COMM_INFO_FLAG1_OFFSET + cellIndex * AIV_COMM_INFO_SYNC_CELL_BYTES;
 }
 
 void EnsureDir(const std::string &path)
@@ -443,7 +443,7 @@ Json CpGm2GMSnapshot(uint32_t rank, uint32_t rankSize, uint64_t launch, uint32_t
     const uint64_t sliceSize = 64;
     const uint32_t extSrcType = flagMem ? BUFFER_AIV_COMM_INFO : BUFFER_INPUT;
     const uint32_t extDstType = flagMem ? BUFFER_AIV_COMM_INFO : BUFFER_OUTPUT;
-    const uint64_t externalOffsetBase = flagMem ? AIV_COMM_INFO_FLAG_ADDR_OFFSET : 0;
+    const uint64_t externalOffsetBase = flagMem ? AIV_COMM_INFO_FLAG1_OFFSET : 0;
     for (uint32_t index = 0; index < iterationCount; ++index) {
         const uint32_t base = 100 + index * 6;
         const uint64_t offset = externalOffsetBase +

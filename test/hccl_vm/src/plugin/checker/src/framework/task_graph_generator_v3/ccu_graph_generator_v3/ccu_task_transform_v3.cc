@@ -1388,7 +1388,7 @@ HcclResult ExpandCcuGraphsV3(const CcuGraphsGenerateInputV3 &input, CcuGraphGene
     // 这样在 queue 并行化改拓扑之前，跨 rank 依赖已经完整可见。
     CHK_RET(GenerateRawCcuGraphsV3(input, runtimes, output));
     // 如需排查并行化改造前的全 rank 状态，可放开这一行打印。
-    // PrintGeneratedCcuGraphsV3(runtimes);
+    PrintGeneratedCcuGraphsV3(runtimes);
     // 第二阶段负责重连 queue，并把每个展开后的子图重新挂回主图。
     CHK_RET(FinalizeGeneratedCcuGraphsV3(*input.graph, runtimes, output));
     CHK_RET(AllRankParamRecorder::Global()->CheckAllPostMatch());

@@ -52,11 +52,12 @@ int main(int argc, char *argv[])
 
         std::atomic_thread_fence(std::memory_order_acquire);
         std::string kernelName(aicpuData->task[rankId].kernelName);
-        if (kernelName == "HcclLaunchAicpuKernel") {
+        if (kernelName == "HcclLaunchAicpuKernel" || kernelName == "RunAicpuNotifyWait" ||
+            kernelName == "HcclLaunchP2pAicpuKernel" || kernelName == "RunAicpuNotifyRecord") {
             uint32_t opDetailId = 0;
             int ret = sim::QueryNewestOpDeatailIdByPid(getppid(), opDetailId);
             if (ret != 0) {
-                HCCL_VM_ERROR("rankId[{}] QueryNewestOpDeatailIdByPid failed.", rankId);
+                HCCL_VM_ERROR("rankId[{}] kernel[{}] QueryNewestOpDeatailIdByPid failed.", rankId, kernelName);
             }
             sim::g_currOpDetailId = opDetailId;
         }

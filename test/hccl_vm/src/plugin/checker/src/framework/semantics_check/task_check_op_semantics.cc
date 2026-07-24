@@ -1085,7 +1085,7 @@ HcclResult TaskCheckOpSemantics::Execute()
     } else if (opType_ == HcclCMDType::HCCL_CMD_SCATTER) {
         ret = TaskCheckScatterSemantics(allRankMemSemantics_, dataSize_, root_);
     } else if (opType_ == HcclCMDType::HCCL_CMD_BATCH_SEND_RECV) {
-        ret = TaskCheckBatchSendRecvSemantics(allRankMemSemantics_, dataSize_);
+        ret = TaskCheckBatchSendRecvSemantics(allRankMemSemantics_, rankSize_, dataSize_);
     } else {
         HCCL_ERROR("unsupported op type[%d]", opType_);
         ret = HcclResult::HCCL_E_NOT_SUPPORT;

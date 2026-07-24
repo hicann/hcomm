@@ -50,6 +50,9 @@ enum class ErrorCode {
 
     DUMP_FAILED = 501,
 
+    SYNC_DAG_INVALID = 601,
+    SYNC_RESOURCE_CONFLICT = 602,
+
     CHECKER_RUNTIME_ERROR = 901,
     SETTING_WARNING = 902
 };

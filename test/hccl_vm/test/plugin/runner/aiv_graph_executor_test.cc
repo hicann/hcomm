@@ -256,9 +256,9 @@ TEST_F(AivGraphExecutorTest, Execute_MemCopyAivCommInfo_Success) {
     auto *resource = const_cast<AivRankResource*>(AivResourceManager::GetInstance().GetRankResource(0));
     ASSERT_NE(resource, nullptr);
     auto *commInfo = static_cast<uint8_t*>(resource->aivCommInfoBuffer.realAddr);
-    constexpr uint64_t tagOffset = AivCommInfoLayout::TAG_OFFSET;
-    commInfo[tagOffset] = 0x5a;
-    auto srcDs = MakeDataSlice(4, tagOffset, 1);
+    constexpr uint64_t pongOffset = AivCommInfoLayout::PONG_OFFSET;
+    commInfo[pongOffset] = 0x5a;
+    auto srcDs = MakeDataSlice(4, pongOffset, 1);
     auto dstDs = MakeDataSlice(1, 0, 1);
     auto task = MakeTaskJson(0, 1, 0, 0, 0, MakeMemCopyPayload(0, 0, srcDs, dstDs));
     auto block = MakeBlockJson(0, json::array({task}));
@@ -944,7 +944,7 @@ TEST_F(AivGraphExecutorTest, Execute_SendRecvFlagVerify) {
     SetupRankResource(0, 4096, 4096, 4096);
     auto* commInfoBytes = static_cast<uint8_t*>(
         const_cast<AivRankResource*>(AivResourceManager::GetInstance().GetRankResource(0))->aivCommInfoBuffer.realAddr);
-    constexpr uint64_t commInfoOffset = AivCommInfoLayout::FLAG_ADDR_OFFSET +
+    constexpr uint64_t commInfoOffset = AivCommInfoLayout::FLAG2_OFFSET +
         5ULL * AivCommInfoLayout::SYNC_CELL_BYTES;
 
     auto sendFlag = MakeTaskJson(6, 1, 0, 0, 0, MakeSendFlagPayload(0, commInfoOffset, 42));

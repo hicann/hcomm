@@ -54,7 +54,7 @@ TEST_F(BatchSendRecvSemanticsCheckerTest, ValidSemantics_TwoRanks) {
     
     CreateValidBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     
-    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, dataSize);
+    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     EXPECT_EQ(result, HcclResult::HCCL_SUCCESS);
 }
 
@@ -66,7 +66,7 @@ TEST_F(BatchSendRecvSemanticsCheckerTest, ValidSemantics_FourRanks) {
     
     CreateValidBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     
-    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, dataSize);
+    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     EXPECT_EQ(result, HcclResult::HCCL_SUCCESS);
 }
 
@@ -78,7 +78,7 @@ TEST_F(BatchSendRecvSemanticsCheckerTest, ValidSemantics_SingleRank) {
     
     CreateValidBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     
-    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, dataSize);
+    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     EXPECT_EQ(result, HcclResult::HCCL_SUCCESS);
 }
 
@@ -105,7 +105,7 @@ TEST_F(BatchSendRecvSemanticsCheckerTest, ValidSemantics_ZeroDataSize) {
         allRankMemSemantics[rankId] = rankMemSemantics;
     }
 
-    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, dataSize);
+    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     EXPECT_EQ(result, HcclResult::HCCL_SUCCESS);
 }
 
@@ -130,8 +130,22 @@ TEST_F(BatchSendRecvSemanticsCheckerTest, Abnormal_MissingRank) {
     rankMemSemantics[BufferType::OUTPUT] = outputSemantics;
     allRankMemSemantics[0] = rankMemSemantics;
     
-    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, dataSize);
+    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     EXPECT_EQ(result, HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(BatchSendRecvSemanticsCheckerTest, Abnormal_ExpectedRankSetIsNotInferredFromActualMap) {
+    std::map<RankId, RankMemorySemantics> allRankMemSemantics;
+    constexpr u64 dataSize = 1024;
+
+    RankMemorySemantics rankMemSemantics;
+    BufferSemantic output(0, dataSize);
+    output.srcBufs.insert(SrcBufDes(0, BufferType::INPUT, 0));
+    rankMemSemantics[BufferType::OUTPUT].insert(output);
+    allRankMemSemantics[0] = rankMemSemantics;
+
+    EXPECT_EQ(TaskCheckBatchSendRecvSemantics(allRankMemSemantics, 2, dataSize),
+        HcclResult::HCCL_E_PARA);
 }
 
 // Test abnormal case: wrong source rank
@@ -155,7 +169,7 @@ TEST_F(BatchSendRecvSemanticsCheckerTest, Abnormal_WrongSourceRank) {
     allRankMemSemantics[0] = rankMemSemantics;
     allRankMemSemantics[1] = rankMemSemantics;
     
-    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, dataSize);
+    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     EXPECT_EQ(result, HcclResult::HCCL_E_PARA);
 }
 
@@ -180,7 +194,7 @@ TEST_F(BatchSendRecvSemanticsCheckerTest, Abnormal_WrongBufferType) {
     allRankMemSemantics[0] = rankMemSemantics;
     allRankMemSemantics[1] = rankMemSemantics;
     
-    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, dataSize);
+    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     EXPECT_EQ(result, HcclResult::HCCL_E_PARA);
 }
 
@@ -192,7 +206,7 @@ TEST_F(BatchSendRecvSemanticsCheckerTest, ValidSemantics_LargeRankSize) {
     
     CreateValidBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     
-    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, dataSize);
+    HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     EXPECT_EQ(result, HcclResult::HCCL_SUCCESS);
 }
 }

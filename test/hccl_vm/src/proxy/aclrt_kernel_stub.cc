@@ -566,10 +566,13 @@ constexpr int32_t AIV_STUB_TOPO_LEN = AIV_STUB_MAX_RANK_SIZE;
 constexpr uint64_t AIV_STUB_GM_IN_TABLE_OFFSET = AivCommInfoLayout::GM_IN_TABLE_OFFSET;
 constexpr uint64_t AIV_STUB_GM_OUT_TABLE_OFFSET = AivCommInfoLayout::GM_OUT_TABLE_OFFSET;
 constexpr uint64_t AIV_STUB_TOPO_OFFSET = 32 * 1024;
-constexpr uint64_t AIV_STUB_FLAG_ADDR_OFFSET = AivCommInfoLayout::FLAG_ADDR_OFFSET;
+constexpr uint64_t AIV_STUB_FLAG1_OFFSET = AivCommInfoLayout::FLAG1_OFFSET;
+constexpr uint64_t AIV_STUB_FLAG2_OFFSET = AivCommInfoLayout::FLAG2_OFFSET;
 constexpr uint64_t AIV_STUB_TAG_CLEAR_OFFSET = AivCommInfoLayout::TAG_OFFSET;
-constexpr uint64_t AIV_STUB_BASE_FLAG_OFFSET = (AIV_STUB_TAG_CLEAR_OFFSET - AIV_STUB_FLAG_ADDR_OFFSET) - AIV_STUB_MAX_RANK_SIZE * 128ULL;
+constexpr uint64_t AIV_STUB_BASE_FLAG_OFFSET = AivCommInfoLayout::BASE_FLAG_OFFSET;
 constexpr uint64_t AIV_STUB_FLAG_EMPTY_OFFSET = AivCommInfoLayout::EMPTY_CLEAR_OFFSET;
+constexpr uint64_t AIV_STUB_GM_OUT_PING_OFFSET = AivCommInfoLayout::PING_OFFSET;
+constexpr uint64_t AIV_STUB_GM_OUT_PONG_OFFSET = AivCommInfoLayout::PONG_OFFSET;
 constexpr uint64_t AIV_STUB_COMM_INFO_SIZE = AivCommInfoLayout::SIZE_BYTES;
 constexpr uint64_t AIV_STUB_UB_ALIGN_SIZE = 32;
 constexpr uint64_t AIV_STUB_FLAG_SLOT_SIZE = 128;
@@ -965,10 +968,10 @@ static void DumpBuffersInParsedDeviceView(const void *buffersInDev, uint32_t ran
     const auto *gmInTable = reinterpret_cast<const uint64_t *>(buffersInHost + AIV_STUB_GM_IN_TABLE_OFFSET);
     const auto *gmOutTable = reinterpret_cast<const uint64_t *>(buffersInHost + AIV_STUB_GM_OUT_TABLE_OFFSET);
     const auto *topoTable = reinterpret_cast<const uint64_t *>(buffersInHost + AIV_STUB_TOPO_OFFSET);
-    const auto *flagBase = buffersInHost + AIV_STUB_FLAG_ADDR_OFFSET;
+    const auto *flag1Base = buffersInHost + AIV_STUB_FLAG1_OFFSET;
     const auto *tagTable = reinterpret_cast<const int32_t *>(buffersInHost + AIV_STUB_TAG_CLEAR_OFFSET);
     const auto *emptyClearTable = reinterpret_cast<const int32_t *>(buffersInHost + AIV_STUB_FLAG_EMPTY_OFFSET);
-    const uint64_t absoluteBaseFlagOffset = AIV_STUB_FLAG_ADDR_OFFSET + AIV_STUB_BASE_FLAG_OFFSET;
+    const uint64_t nonPingpongBaseFlagOffset = AIV_STUB_BASE_FLAG_OFFSET - AIV_STUB_FLAG1_OFFSET;
 
     oss << "  [buffersIn-parse] device-side parsed results from buffersIn (not a raw buffersIn pointer dump):\n";
     oss << "    AIV comm layout: commInfoSize=0x" << std::hex
@@ -976,9 +979,12 @@ static void DumpBuffersInParsedDeviceView(const void *buffersInDev, uint32_t ran
         << ", GM_OUT_TABLE=0x" << static_cast<unsigned long long>(AIV_STUB_GM_OUT_TABLE_OFFSET)
         << ", TOPO=0x" << static_cast<unsigned long long>(AIV_STUB_TOPO_OFFSET)
         << ", TAG/CLEAR=0x" << static_cast<unsigned long long>(AIV_STUB_TAG_CLEAR_OFFSET)
-        << ", FLAG=0x" << static_cast<unsigned long long>(AIV_STUB_FLAG_ADDR_OFFSET)
-        << ", BASE_FLAG(relative GM_OUT)=0x" << static_cast<unsigned long long>(AIV_STUB_BASE_FLAG_OFFSET)
+        << ", FLAG1=0x" << static_cast<unsigned long long>(AIV_STUB_FLAG1_OFFSET)
+        << ", FLAG2=0x" << static_cast<unsigned long long>(AIV_STUB_FLAG2_OFFSET)
+        << ", BASE_FLAG=0x" << static_cast<unsigned long long>(AIV_STUB_BASE_FLAG_OFFSET)
         << ", EMPTY_CLEAR=0x" << static_cast<unsigned long long>(AIV_STUB_FLAG_EMPTY_OFFSET)
+        << ", PING=0x" << static_cast<unsigned long long>(AIV_STUB_GM_OUT_PING_OFFSET)
+        << ", PONG=0x" << static_cast<unsigned long long>(AIV_STUB_GM_OUT_PONG_OFFSET)
         << std::dec << '\n';
     oss << "    Checker AIV mode models the complete per-rank aivCommInfo region.\n";
     oss << "    GM_IN parsed entries count=" << parsedRankSize
@@ -994,11 +1000,11 @@ static void DumpBuffersInParsedDeviceView(const void *buffersInDev, uint32_t ran
 
     oss << "    GM_OUT parsed entries count=" << parsedRankSize
         << " from (+0x" << std::hex << static_cast<unsigned long long>(AIV_STUB_GM_OUT_TABLE_OFFSET)
-        << " table) + FLAG_ADDR_OFFSET(0x" << static_cast<unsigned long long>(AIV_STUB_FLAG_ADDR_OFFSET) << ')'
+        << " table) + FLAG1_OFFSET(0x" << static_cast<unsigned long long>(AIV_STUB_FLAG1_OFFSET) << ')'
         << std::dec << '\n';
     for (uint32_t i = 0; i < parsedRankSize; ++i) {
         const uint64_t commInfoDev = gmOutTable[i];
-        const uint64_t flagDev = (commInfoDev == 0) ? 0 : (commInfoDev + AIV_STUB_FLAG_ADDR_OFFSET);
+        const uint64_t flagDev = (commInfoDev == 0) ? 0 : (commInfoDev + AIV_STUB_FLAG1_OFFSET);
         oss << "      GM_OUT[" << i << "] dev=0x" << std::hex << static_cast<unsigned long long>(flagDev)
             << " (src commInfoDev=0x" << std::hex << static_cast<unsigned long long>(commInfoDev)
             << std::dec << ")\n";
@@ -1016,24 +1022,28 @@ static void DumpBuffersInParsedDeviceView(const void *buffersInDev, uint32_t ran
     const uint32_t barrierSlotPrintNum =
         (rankSize < AIV_STUB_MAX_RANK_SIZE) ? rankSize : AIV_STUB_MAX_RANK_SIZE;
     oss << "  [buffersIn-parse] follow-up work areas derived from the same base:\n";
-    oss << "    Non-pingpong GM_OUT flag base @ +0x" << std::hex
-        << static_cast<unsigned long long>(AIV_STUB_FLAG_ADDR_OFFSET)
+    oss << "    FLAG1 non-pingpong GM_OUT @ +0x" << std::hex
+        << static_cast<unsigned long long>(AIV_STUB_FLAG1_OFFSET)
         << ", flagSlotSize=" << std::dec << AIV_STUB_FLAG_SLOT_SIZE
         << ", baseFlagOffset relative to GM_OUT=0x" << std::hex
-        << static_cast<unsigned long long>(AIV_STUB_BASE_FLAG_OFFSET)
-        << ", absoluteBaseFlag=0x" << static_cast<unsigned long long>(absoluteBaseFlagOffset)
+        << static_cast<unsigned long long>(nonPingpongBaseFlagOffset)
+        << ", absoluteBaseFlag=0x" << static_cast<unsigned long long>(AIV_STUB_BASE_FLAG_OFFSET)
         << std::dec << '\n';
-    oss << "    GM_OUT flag region bytes=[0x0, 0x"
-        << std::hex << static_cast<unsigned long long>(AIV_STUB_TAG_CLEAR_OFFSET - AIV_STUB_FLAG_ADDR_OFFSET) << ')'
+    oss << "    FLAG2 pingpong alt @ +0x" << std::hex << static_cast<unsigned long long>(AIV_STUB_FLAG2_OFFSET)
+        << ", PING data @ +0x" << static_cast<unsigned long long>(AIV_STUB_GM_OUT_PING_OFFSET)
+        << ", PONG data @ +0x" << static_cast<unsigned long long>(AIV_STUB_GM_OUT_PONG_OFFSET)
+        << std::dec << '\n';
+    oss << "    FLAG1 bytes=[0x0, 0x"
+        << std::hex << static_cast<unsigned long long>(AIV_STUB_FLAG_EMPTY_OFFSET - AIV_STUB_FLAG1_OFFSET) << ')'
         << ", flagSlotSize=" << std::dec << AIV_STUB_FLAG_SLOT_SIZE
         << std::dec << '\n';
-    DumpFlagSlots(oss, flagBase, 0, AIV_STUB_FLAG_SLOT_PRINT_NUM, "operator flag slots[0..15]");
-    DumpFlagSlots(oss, flagBase, AIV_STUB_BASE_FLAG_OFFSET, barrierSlotPrintNum,
-        "BASE_FLAG_OFFSET barrier slots");
+    DumpFlagSlots(oss, flag1Base, 0, AIV_STUB_FLAG_SLOT_PRINT_NUM, "FLAG1 operator slots[0..15]");
+    DumpFlagSlots(oss, flag1Base, nonPingpongBaseFlagOffset, barrierSlotPrintNum,
+        "BASE_FLAG_OFFSET - FLAG1_OFFSET barrier slots");
 
     oss << "    TAG/CLEAR ints[0.." << (AIV_STUB_TAG_PRINT_NUM - 1)
         << "] @ +0x" << std::hex << static_cast<unsigned long long>(AIV_STUB_TAG_CLEAR_OFFSET) << std::dec << '\n';
-    oss << "      Non-pingpong mode reads this tag, increments it, and resets 1000 to 1.\n";
+    oss << "      Checker AIV mode keeps tag_ fixed at 1; ping-pong kernels therefore select FLAG2 and PONG.\n";
     for (uint32_t i = 0; i < AIV_STUB_TAG_PRINT_NUM; ++i) {
         oss << "      TAG_CLEAR[" << i << "] = " << tagTable[i] << '\n';
     }

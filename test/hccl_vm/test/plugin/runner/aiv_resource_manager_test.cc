@@ -17,9 +17,13 @@
 #include "sim_common_defs.h"
 
 namespace {
-constexpr uint64_t EXPECTED_AIV_COMM_INFO_SIZE = 33ULL * 1024ULL * 1024ULL;
+constexpr uint64_t EXPECTED_AIV_COMM_INFO_SIZE = 65ULL * 1024ULL * 1024ULL;
 static_assert(AivCommInfoLayout::SIZE_BYTES == EXPECTED_AIV_COMM_INFO_SIZE,
-    "AIV commInfo size must match the non-pingpong HCCL protocol.");
+    "AIV commInfo size must match the HCCL ping-pong protocol.");
+static_assert(AivCommInfoLayout::PING_OFFSET < AivCommInfoLayout::PONG_OFFSET,
+    "AIV ping buffer must precede the pong buffer.");
+static_assert(AivCommInfoLayout::PONG_OFFSET < AivCommInfoLayout::SIZE_BYTES,
+    "AIV pong buffer must fit in commInfo.");
 
 sim::OpMemInfoTab EmptyOpMemInfo()
 {

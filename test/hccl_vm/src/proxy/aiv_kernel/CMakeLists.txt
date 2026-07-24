@@ -53,7 +53,9 @@ add_library(hccl_aiv_kernel SHARED
         $<TARGET_OBJECTS:hccl_aiv_broadcast_op>
         $<TARGET_OBJECTS:hccl_aiv_reduce_op>
         $<TARGET_OBJECTS:hccl_aiv_reduce_scatter_op>
+        $<TARGET_OBJECTS:hccl_aiv_recv_op>
         $<TARGET_OBJECTS:hccl_aiv_scatter_op>
+        $<TARGET_OBJECTS:hccl_aiv_send_op>
 
         ${HCCL_VM_SRC}/utils/sim_common_api.cc
 )
