@@ -80,7 +80,7 @@ config-based构造使用的参数结构，字段如下：
 - body的`Func`lambda必须无入参，有入参时构造抛出异常。
 - Loop body内有以下禁忌：
   - 会被拒绝（返回`CCU_E_NOT_SUPPORT`）：[EventRecord](../synchronization/EventRecord.md)的两个重载——`EventRecord(Event)`与`EventRecord(const char*)`（即[LocalNotifyRecord](../synchronization/LocalNotifyRecord.md)），二者在body内都不可用。
-  - 会抛异常（错误码`CCU_E_INTERNAL`）：在body内调用[Func](Func.md)（`ccu::CallFunc<F>`）。
+  - 会抛异常（错误码`CCU_E_INTERNAL`）：在body内调用[CallFunc](CallFunc.md)（`ccu::CallFunc<F>`）。
   - 不允许在body内嵌套[CCU_IF](CCU_IF.md)、[CCU_WHILE](CCU_WHILE.md)、[CCU_DO](CCU_DO.md)等软件控制流宏。
   - 建议避免在body内调用[NotifyRecord](../synchronization/NotifyRecord.md)、[WriteVariableWithNotify](../synchronization/WriteVariableWithNotify.md)：这两个接口在body内不会报错，但Loop body会被并行展开，远端notify语义在并行环境中不唯一，应谨慎使用。
 - `ccu::Loop`必须加入`ccu::LoopGroup`才能下发硬件循环指令（详见[功能说明](#功能说明)），不要单独使用。
