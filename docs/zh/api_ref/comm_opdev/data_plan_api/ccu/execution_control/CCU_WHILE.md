@@ -41,7 +41,7 @@ CCU_DO {
 | --- | --- |
 | condExpr | 条件表达式，类型为`AscendC::ccu::CondExpr`。通过`ccu::Variable`的`operator==(uint64_t)`或`operator!=(uint64_t)`产生。条件在运行期由CCU硬件计算。 |
 
-`CondExpr`的定义与生成方式请参见[CCU_IF](CCU_IF.md#condexpr)。
+`CondExpr`的定义与生成方式请参见[CCU_IF](CCU_IF.md#参数说明)。
 
 ## 返回值
 

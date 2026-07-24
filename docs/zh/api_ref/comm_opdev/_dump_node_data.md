@@ -4,5 +4,5 @@
 
 ## 子模块
 
-- [CPU-CPU_TS-AICPU_TS](./data_plane_api/cpu-cpu_ts-aicpu_ts/README.md)
-- [CCU接口](./data_plane_api/ccu/index.md)
+- [CPU-CPU_TS-AICPU_TS](./data_plan_api/cpu-cpu_ts-aicpu_ts/README.md)
+- [CCU接口](./data_plan_api/ccu/index.md)

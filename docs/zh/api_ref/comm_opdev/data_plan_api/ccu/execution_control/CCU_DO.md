@@ -35,7 +35,7 @@ CCU_DO {
 
 ## 参数说明
 
-`CCU_DO`无参数。`CCU_WHILE(condExpr)`的`condExpr`定义与生成方式请参见[CCU_IF](CCU_IF.md#condexpr)。
+`CCU_DO`无参数。`CCU_WHILE(condExpr)`的`condExpr`定义与生成方式请参见[CCU_IF](CCU_IF.md#参数说明)。
 
 ## 返回值
 
