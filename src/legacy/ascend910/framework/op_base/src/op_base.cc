@@ -3411,13 +3411,13 @@ HcclResult HcclConfigGetInfo(HcclComm comm, HcclConfigType cfgType,
     CHK_PTR_NULL(info);
 
     if (cfgType != HcclConfigType::HCCL_CONFIG_TYPE_OP_EXPANSION_MODE) {
-        HCCL_ERROR("[%s] cfgType[%d] is not supported yet.", __func__, cfgType);
-        return HcclResult::HCCL_E_NOT_SUPPORT;
+        HCCL_ERROR("[%s] cfgType[%d] is invalid.", __func__, cfgType);
+        return HcclResult::HCCL_E_PARA;
     }
 
     constexpr size_t infoExpectedLen = sizeof(HcclConfigTypeOpExpansionMode);
     if (static_cast<size_t>(infoLen) != infoExpectedLen) {
-        HCCL_ERROR("[%s] cfgType[%d] infoLen[%u] is less than expected[%zu].",
+        HCCL_ERROR("[%s] cfgType[%d] infoLen[%u] is not equal to expected[%zu].",
             __func__, cfgType, infoLen, infoExpectedLen);
         return HcclResult::HCCL_E_PARA;
     }
