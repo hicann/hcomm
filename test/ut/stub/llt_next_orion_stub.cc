@@ -2204,6 +2204,11 @@ u32 Hccl::HcclCommunicator::GetDeviceLogicId() const
     return 0;
 }
 
+HcclResult Hccl::HcclCommunicator::GetCclBufferSharedPtr(std::shared_ptr<Hccl::DevBuffer> &cclBuffer)
+{
+    return HCCL_SUCCESS;
+}
+
 HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId)
 {
     return HCCL_SUCCESS;

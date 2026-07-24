@@ -570,3 +570,48 @@ TEST_F(HcclCommunicatorTest, Ut_GetStreamId_When_StreamIdZero_Expect_ReturnSucce
     EXPECT_EQ(HCCL_SUCCESS, res);
     EXPECT_EQ(0U, streamId);
 }
+
+TEST_F(HcclCommunicatorTest, Ut_HcclGetCclBufferSharedPtr_When_CommImplIsNull_Expect_ReturnHCCL_E_PTR)
+{
+    CommParams commParams;
+    auto comm = std::make_unique<HcclCommunicator>(commParams);
+    comm->Init("ranktable.json");
+
+    // 模拟CommunicatorImpl为空
+    CommunicatorImpl* commImpl = nullptr;
+    MOCKER_CPP(&HcclCommunicator::GetCommImpl).stubs().will(returnValue(commImpl));
+
+    std::shared_ptr<Hccl::DevBuffer> resultBuffer = nullptr;
+    HcclResult ret = comm->GetCclBufferSharedPtr(resultBuffer);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(HcclCommunicatorTest, Ut_HcclGetCclBufferSharedPtr_When_ValidComm_Expect_ReturnHCCL_SUCCESS)
+{
+    CommParams commParams;
+    auto comm = std::make_unique<HcclCommunicator>(commParams);
+    comm->Init("ranktable.json");
+
+    // 在CommunicatorImpl中设置一个有效的cclBuffer
+    auto testBuffer = std::make_shared<Hccl::DevBuffer>(1024);
+    MOCKER_CPP(&CommunicatorImpl::GetCclBuffer).stubs().will(returnValue(testBuffer));
+
+    std::shared_ptr<Hccl::DevBuffer> resultBuffer = nullptr;
+    HcclResult ret = comm->GetCclBufferSharedPtr(resultBuffer);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(resultBuffer, testBuffer);
+}
+
+TEST_F(HcclCommunicatorTest, Ut_HcclGetCclBufferSharedPtr_When_CclBufferIsNull_Expect_ReturnHCCL_SUCCESS)
+{
+    CommParams commParams;
+    auto comm = std::make_unique<HcclCommunicator>(commParams);
+    comm->Init("ranktable.json");
+
+    std::shared_ptr<Hccl::DevBuffer> testBuffer = nullptr;
+    MOCKER_CPP(&CommunicatorImpl::GetCclBuffer).stubs().will(returnValue(testBuffer));
+    std::shared_ptr<Hccl::DevBuffer> resultBuffer = nullptr;
+    HcclResult ret = comm->GetCclBufferSharedPtr(resultBuffer);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(resultBuffer, nullptr);
+}

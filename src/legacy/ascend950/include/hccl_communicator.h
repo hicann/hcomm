@@ -25,6 +25,7 @@
 namespace Hccl {
 class CommunicatorImpl;
 class HcclOneSidedService;
+class DevBuffer;
 class HcclCommunicator {
 public:
     explicit HcclCommunicator(const CommParams &commParams);
@@ -114,6 +115,8 @@ public:
  
     HcclResult GetRankGraphV2(void *&rankGraph);
     HcclResult HcclGetCclBuffer(uintptr_t &cclBufferAddr, size_t &cclBufferSize, HcclMemType &cclBufferMemType);
+    // 获取cclBuffer的shared_ptr，用于延长其生命周期
+    HcclResult GetCclBufferSharedPtr(std::shared_ptr<DevBuffer> &cclBuffer);
     HcclResult GetConfigInCCLbufferSize(uint64_t *cclBufSize);
     HcclResult GetNetLayers(uint32_t **netLayers, uint32_t *netLayerNum);
     HcclResult GetInstSizeByNetLayer(uint32_t netLayer, uint32_t *rankNum);

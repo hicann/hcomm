@@ -2428,7 +2428,6 @@ CommunicatorImpl::~CommunicatorImpl()
     ccuDrvHandle = nullptr;
 
     DeInitPreResource();
-    HCCL_RUN_INFO("[~CommunicatorImpl] cclBuffer free, commId[%s] ", id.c_str());
 }
 
 HcclResult CommunicatorImpl::DestroyDpuKernelResource()
@@ -3486,14 +3485,12 @@ HcclResult CommunicatorImpl::DestroyKFCWorkSpaceVA()
     }
 
     // 必须先halHostUnregister解除映射，再释放设备内存，否则HrtFree会因内存被pin住而异常
-    if (accessVA_ != nullptr) {
-        HcclResult ret = HrtHalHostUnregister(accessVA_, deviceLogicId);
+    if (va_ != nullptr) {
+        HcclResult ret = HrtHalHostUnregister(va_, deviceLogicId);
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR("[HcclCommunicator::%s] HrtHalHostUnregister failed, ret[%d]", __func__, ret);
         }
-    }
 
-    if (va_ != nullptr) {
         if (connectType_ == HOST_DEVICE_CONNECT_TYPE_PCIE) {
             DECTOR_TRY_CATCH("CommunicatorImpl", HrtFree(va_));
         } else if (connectType_ == HOST_DEVICE_CONNECT_TYPE_UB) {

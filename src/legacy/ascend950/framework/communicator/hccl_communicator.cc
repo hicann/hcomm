@@ -157,6 +157,22 @@ HcclResult HcclCommunicator::HcclGetCclBuffer(uintptr_t &cclBufferAddr, size_t &
     return HCCL_SUCCESS;
 }
 
+// 后续会整改把cclbuffer等资源的申请放到collcomm中
+HcclResult HcclCommunicator::GetCclBufferSharedPtr(std::shared_ptr<DevBuffer> &cclBuffer)
+{
+    auto commImpl = GetCommImpl();
+    if (commImpl == nullptr) {
+        HCCL_ERROR("[HcclCommunicator][%s] commImpl is null.", __func__);
+        return HcclResult::HCCL_E_PTR;
+    }
+    cclBuffer = commImpl->GetCclBuffer();
+    if (cclBuffer == nullptr) {
+        HCCL_WARNING(
+            "[HcclCommunicator][%s] cclBuffer is nullptr, ranksize is %u.", __func__, commImpl->GetRankSize());
+    }
+    return HcclResult::HCCL_SUCCESS;
+}
+
 HcclResult HcclCommunicator::GetRankId(uint32_t &rankId)
 {
     rankId = pimpl->GetMyRank();
