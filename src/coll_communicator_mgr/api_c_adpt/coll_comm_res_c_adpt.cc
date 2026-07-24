@@ -477,7 +477,7 @@ HcclResult RegisterToClusterMonitor(HcclComm comm)
     hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
     CHK_RET(CollCommMgr::GetInstance()->GetClusterMonitor(collComm->GetDeviceLogicId()).RegisterToClusterMonitor(comm));
-    HCCL_RUN_INFO("%s Success", __func__);
+    HCCL_INFO("%s Success", __func__);
     return HCCL_SUCCESS;
 }
 

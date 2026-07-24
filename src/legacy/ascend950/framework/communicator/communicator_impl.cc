@@ -1472,7 +1472,7 @@ void CommunicatorImpl::InitHccpHdc() const
 void CommunicatorImpl::TryInitCcuFeature() const
 {
     TpManager::GetInstance(devLogicId).Init();
-    HCCL_RUN_INFO("[CommunicatorImpl][%s] passed, "
+    HCCL_INFO("[CommunicatorImpl][%s] passed, "
         "will use open source ccu feature.", __func__);
     return;
 }

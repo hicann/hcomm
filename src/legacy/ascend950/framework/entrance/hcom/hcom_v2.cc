@@ -1381,13 +1381,13 @@ HcclResult HcomMc2AiCpuStreamAllocAndGetV2(const char *group, u32 streamMode, rt
 
 HcclResult HcomSetAttachedStreamV2()
 {
-    HCCL_RUN_INFO("HcomSetAttachedStreamV2 does not support!");
+    HCCL_WARNING("HcomSetAttachedStreamV2 does not support!");
     return HCCL_SUCCESS;
 }
 
 HcclResult HcomReleaseSubCommsV2()
 {
-    HCCL_RUN_INFO("HcomReleaseSubCommsV2 does not support!");
+    HCCL_WARNING("HcomReleaseSubCommsV2 does not support!");
     return HCCL_SUCCESS;
 }
 

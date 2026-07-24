@@ -186,7 +186,7 @@ HcclResult AivUbMemTransport::BufferPack(Hccl::BinaryStream &binaryStream, std::
 {
     u32 vecSize = bufferVec.size();
     binaryStream << vecSize;
-    HCCL_RUN_INFO("BufferPack vecSize=%u", vecSize);
+    HCCL_INFO("BufferPack vecSize=%u", vecSize);
 
     for (uint32_t i = 0; i < vecSize; ++i) {
         std::unique_ptr<Hccl::Serializable> dto = bufferVec[i]->GetExchangeDto();
@@ -222,7 +222,7 @@ void AivUbMemTransport::RmtBufferUnpackProc(Hccl::BinaryStream &binaryStream)
 {
     u32 vecSize{0};
     binaryStream >> vecSize;
-    HCCL_RUN_INFO("vecSize=%u", vecSize);
+    HCCL_INFO("vecSize=%u", vecSize);
     uint32_t totalBufferNum = rmtBufferVec_.size() + vecSize;
     if (UNLIKELY(totalBufferNum > MAX_BUFFER_NUM)) {
         EXCEPTION_THROW_IF_ERR(HCCL_E_PARA, "[AivUbMemTransport][RmtBufferUnpackProc] vecSize exceeds limit.");
