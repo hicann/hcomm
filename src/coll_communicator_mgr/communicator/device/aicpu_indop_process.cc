@@ -81,11 +81,11 @@ HcclResult AicpuIndopProcess::AicpuIndOpThreadInit(ThreadMgrAicpuParam *param)
     CollCommAicpuMgr *collCommAicpuMgr = AicpuIndopProcess::AicpuGetCommMgrbyGroup(group);
     CHK_PRT_RET(collCommAicpuMgr == nullptr, HCCL_ERROR("%s collCommAicpuMgr is null, group[%s]", __func__, group.c_str()), HCCL_E_PTR);
     HcclResult ret = collCommAicpuMgr->InitThreads(param);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
+    CHK_PRT_CONT(ret != HCCL_SUCCESS,
         HCCL_ERROR("[AicpuIndopProcess][AicpuIndOpThreadInit]errNo[0x%016llx] Failed to init threads group[%s]",
-        HCCL_ERROR_CODE(ret), group.c_str()), ret);
+        HCCL_ERROR_CODE(ret), group.c_str()));
     AicpuReleaseCommMgrbyGroup(group);
-    return HCCL_SUCCESS;
+    return ret;
 }
 
 CollCommAicpuMgr *AicpuIndopProcess::AicpuGetCommMgrbyGroup(const std::string &group)
@@ -173,14 +173,14 @@ HcclResult AicpuIndopProcess::AicpuIndOpChannelInit(HcclChannelUrmaRes *commPara
     CHK_PRT_RET(collCommAicpuMgr == nullptr, HCCL_ERROR("%s collCommAicpuMgr is null, group[%s]", __func__, group.c_str()), HCCL_E_PTR);
 
     HcclResult ret = collCommAicpuMgr->AllocChannelResource(commParam);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
+    CHK_PRT_CONT(ret != HCCL_SUCCESS,
         HCCL_ERROR("[AicpuIndopProcess][AicpuIndOpChannelInit]errNo[0x%016llx] Failed to init channels group[%s]",
-        HCCL_ERROR_CODE(ret), group.c_str()), ret);
+        HCCL_ERROR_CODE(ret), group.c_str()));
 
     AicpuReleaseCommMgrbyGroup(group);
     HCCL_INFO("[AicpuIndopProcess][%s] aicpuTask End.", __func__);
 
-    return HCCL_SUCCESS;
+    return ret;
 }
 
 HcclResult AicpuIndopProcess::AicpuIndOpChannelUpdate(HcclChannelUrmaRes *commParam)
@@ -195,14 +195,14 @@ HcclResult AicpuIndopProcess::AicpuIndOpChannelUpdate(HcclChannelUrmaRes *commPa
     CHK_PRT_RET(collCommAicpuMgr == nullptr, HCCL_ERROR("%s collCommAicpuMgr is null, group[%s]", __func__, group.c_str()), HCCL_E_PTR);
 
     HcclResult ret = collCommAicpuMgr->UpdateChannelResource(commParam);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
+    CHK_PRT_CONT(ret != HCCL_SUCCESS,
         HCCL_ERROR("[AicpuIndopProcess][UpdateChannelResource]errNo[0x%016llx] Failed to update channels group[%s]",
-        HCCL_ERROR_CODE(ret), group.c_str()), ret);
+        HCCL_ERROR_CODE(ret), group.c_str()));
 
     AicpuReleaseCommMgrbyGroup(group);
     HCCL_INFO("[AicpuIndopProcess][%s] aicpuTask End.", __func__);
 
-    return HCCL_SUCCESS;
+    return ret;
 }
 
 HcclResult AicpuIndopProcess::AicpuIndOpNotifyInit(NotifyMgrAicpuParam *param)
@@ -217,20 +217,20 @@ HcclResult AicpuIndopProcess::AicpuIndOpNotifyInit(NotifyMgrAicpuParam *param)
     HcclResult ret = HCCL_E_INTERNAL;
     if (param->freeFlag) {
         ret = collCommAicpuMgr->NotifyFree(param);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
+        CHK_PRT_CONT(ret != HCCL_SUCCESS,
             HCCL_ERROR("[AicpuIndopProcess][%s]errNo[0x%016llx] Failed to free notifys group[%s]",
-            __func__, HCCL_ERROR_CODE(ret), group.c_str()), ret);
+            __func__, HCCL_ERROR_CODE(ret), group.c_str()));
     } else {
         ret = collCommAicpuMgr->NotifyAlloc(param);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
+        CHK_PRT_CONT(ret != HCCL_SUCCESS,
             HCCL_ERROR("[AicpuIndopProcess][%s]errNo[0x%016llx] Failed to alloc notifys group[%s]",
-            __func__, HCCL_ERROR_CODE(ret), group.c_str()), ret);
+            __func__, HCCL_ERROR_CODE(ret), group.c_str()));
     }
 
-    HCCL_INFO("[AicpuIndopProcess][%s] comm identifier[%s], notify op[%u] success, num[%u]",
+    HCCL_INFO("[AicpuIndopProcess][%s] comm identifier[%s], notify op[%u] end, num[%u]",
         __func__, group.c_str(), param->freeFlag, param->notifyNum);
     AicpuReleaseCommMgrbyGroup(group);
-    return HCCL_SUCCESS;
+    return ret;
 }
 
 HcclResult AicpuIndopProcess::AicpuGetCommAll(std::vector<std::pair<std::string, CollCommAicpuMgr *>> &aicpuCommInfo)
