@@ -20,10 +20,10 @@ HcclResult HcclThreadAcquire(HcclComm comm, CommEngine engine, uint32_t threadNu
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| comm | 输入 | 通信域。<br>HcclComm类型的定义如下：<br>typedef void *HcclComm; |
+| comm | 输入 | 通信域句柄。<br>HcclComm类型的定义可参见[HcclComm](../../../comm_mgr_c/data_type_definition/HcclComm.md)。 |
 | engine | 输入 | 通信引擎类型。<br>CommEngine类型的定义可参见[CommEngine](../../datatype_definition/CommEngine.md)。 |
 | threadNum | 输入 | 通信线程数量。 |
-| notifyNumPerThread | 输入 | 每个通信线程中的同步资源（Notify）数量。 |
+| notifyNumPerThread | 输入 | 每个通信线程中的同步资源（Notify）数量。取值范围为：\[0, 65535\]，具体数量限制由具体产品限定。建议根据业务场景合理配置，避免资源不足或浪费。 |
 | threads | 输出 | 返回的通信线程句柄。需传入threadNum大小的ThreadHandle类型数组。<br>ThreadHandle类型的定义可参见[ThreadHandle](../../datatype_definition/ThreadHandle.md)。 |
 
 ## 返回值
@@ -55,10 +55,11 @@ HcclResult HcclThreadAcquire(HcclComm comm, CommEngine engine, uint32_t threadNu
 创建线程资源示例如下：
 
 ```c
+// 通信域句柄
 HcclComm comm;
+// 申请5条AICPU_TS类型的thread通信线程，每条thread包含2个notify
 CommEngine engine = COMM_ENGINE_AICPU_TS;
 ThreadHandle threads[5];
-// 申请5条流，每条流2个notify
 HcclThreadAcquire(comm, engine, 5, 2, threads);
 ```
 
@@ -80,7 +81,7 @@ aclrtSynchronizeStream(stream);
 同步AICPU线程资源示例如下：
 
 ```c
-// --host侧调用流程--
+// --Host侧调用流程--
 // 申请1条host流
 aclrtStream stream;
 aclrtCreateStream(&stream);
@@ -107,7 +108,7 @@ uint32_t timeout = 1;
 // 等待同步信号
 HcommThreadNotifyWaitOnThread(cpuThread, 0, timeout);
 
-// --aicpu侧调用流程--
+// --Device侧调用流程--
 // 等待同步信号
 uint32_t timeout = 1;
 HcommThreadNotifyWaitOnThread(aicpuThread, 0, timeout);
@@ -116,6 +117,7 @@ HcommThreadNotifyWaitOnThread(aicpuThread, 0, timeout);
 // 发送同步信号
 HcommThreadNotifyRecordOnThread(aicpuThread, exportedAicpuThread, 0);
 
+// --Host侧调用流程--
 // 流同步
 aclrtSynchronizeStream(stream);
 ```

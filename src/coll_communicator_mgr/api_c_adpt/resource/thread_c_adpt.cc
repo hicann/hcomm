@@ -201,7 +201,7 @@ HcclResult HcclThreadAcquire(HcclComm comm, CommEngine engine, uint32_t threadNu
     CHK_PTR_NULL(config);
     CHK_PRT_RET(ThreadConfigInit(config.get(), threadNum) != 0,
         HCCL_ERROR("[%s] ThreadConfigInit failed", __func__), HCCL_E_INTERNAL);
-    CHK_PRT_RET(notifyNumPerThread > HCCL_THREAD_NOTIFY_MAX_NUM,
+    CHK_PRT_RET(notifyNumPerThread >= HCCL_THREAD_NOTIFY_MAX_NUM,
         HCCL_ERROR("[%s] notifyNumPerThread[%u] exceeds HCCL_THREAD_NOTIFY_MAX_NUM", __func__, notifyNumPerThread), HCCL_E_PARA);
     for (u32 i = 0; i < threadNum; i++) {
         config[i].notifyNumPerThread = static_cast<uint16_t>(notifyNumPerThread);
