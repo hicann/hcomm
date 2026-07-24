@@ -32,7 +32,7 @@ bool HasIntersect(const vector<BufferKey<uintptr_t, u64>> &bufKeys, const Buffer
     // 遍历bufKeys, 若bufKeys中存在和inputBufKey相交的bufKey则返回true, 否则fasle
     auto it = std::find_if(bufKeys.begin(), bufKeys.end(), 
                            [inputBufKey](const auto &curBufKeyInVec) { 
-                                return inputBufKey.IsPartialIntersect(curBufKeyInVec);
+                                return inputBufKey.IsIntersect(curBufKeyInVec);
                            });
     return it != bufKeys.end();
 }
