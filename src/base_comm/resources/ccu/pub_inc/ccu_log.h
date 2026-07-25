@@ -39,8 +39,8 @@
 #define CCU_CHK_PTR_NULL(ptr)                                                                               \
     do {                                                                                                           \
         if (UNLIKELY((ptr) == nullptr)) {                  \
-            HCCL_ERROR("[%s]errNo[0x%016llx]ptr [%s] is nullptr, return HCCL_E_PTR", \
-            __func__, HCCL_ERROR_CODE(HCCL_E_PTR), #ptr); \
+            HCCL_ERROR("[%s]errNo[0x%016llx]ptr [%s] is nullptr, return CCU_E_PTR", \
+            __func__, HCCL_ERROR_CODE(CCU_E_PTR), #ptr); \
             return CCU_E_PTR;                                                                                     \
         }                                                                                                          \
     } while (0)

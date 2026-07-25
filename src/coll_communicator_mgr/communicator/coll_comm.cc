@@ -338,8 +338,8 @@ HcclResult CollComm::DestroyAicpuComm()
                 HCCL_RUN_INFO("[%s]get Hccl::KfcStatus[%d] success", __func__, opInfo.kfcStatus);
                 return HCCL_SUCCESS;
             } else if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
-                HCCL_ERROR("[%s]timeout, maxTime[%u ms] and get the opExecStatus is [%u].",
-                    __func__, WAIT_CMD_TIMEOUT, opInfo.kfcStatus);
+                HCCL_ERROR("[%s]timeout, maxTime[%u ms] and get the opExecStatus is [%s].",
+                    __func__, WAIT_CMD_TIMEOUT, opInfo.kfcStatus.Describe().c_str());
                 return HCCL_E_TIMEOUT;
             }
             usleep(TEN_MILLISECOND_OF_USLEEP);

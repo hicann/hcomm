@@ -1254,7 +1254,7 @@ bool ProfilingHandler::GetHcclL1State() const
 uint64_t ProfilingHandler::GetProfHashId(const char *name, uint32_t len) const
 {
     if (name == nullptr || len == 0) {
-        HCCL_WARNING("HashData is empty.  name:%s, len:%u", name, len);
+        HCCL_WARNING("HashData is empty. name:%s, len:%u", name, len);
         return INVALID_U64;
     }
     if (DlProfFunction::GetInstance().dlMsprofStr2Id == nullptr) {

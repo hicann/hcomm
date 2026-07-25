@@ -115,7 +115,7 @@ void ChannelLogger::PrintErrorInfo(
             break;
     }
 
-    HCCL_ERROR("   | %5u | %9u | %35s | %10u | %35s | 0x%08llx | %26s | %15s | %5d | %7llu |",
+    HCCL_ERROR("   | %5u | %9u | %35s | %10u | %35s | 0x%08llx | %26s | %15s | %5d | %7llu ms |",
         idx,
         localRank,
         localAddr.c_str(),
