@@ -8,7 +8,7 @@
 
 ## 功能说明
 
-基于通信域获取通信线程。
+基于通信域获取通信线程，并为每条通信线程分配指定数量的同步资源（Notify）。相关概念可参见[通信算子开发指南-并发模型](../../../../comm_op_dev_guide/prog_models_concepts/concurrency_model.md)章节。
 
 ## 函数原型
 

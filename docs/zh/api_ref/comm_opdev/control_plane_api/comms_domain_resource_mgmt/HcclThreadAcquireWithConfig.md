@@ -8,7 +8,10 @@
 
 ## 功能说明
 
-基于通信域和线程配置获取通信线程资源。与[HcclThreadAcquire](HcclThreadAcquire.md)相比，该接口支持通过ThreadConfig结构体逐线程配置同步资源数量，适用于不同线程需要不同数量Notify的场景。
+基于通信域和线程配置获取通信线程，并为每条通信线程分配指定数量的同步资源（Notify）。相关概念可参见[通信算子开发指南-并发模型](../../../../comm_op_dev_guide/prog_models_concepts/concurrency_model.md)章节。
+
+> [!NOTE]说明
+> 与[HcclThreadAcquire](./HcclThreadAcquire.md)相比，该接口支持通过ThreadConfig结构体逐线程配置同步资源（Notify）数量，适用于不同线程需要不同Notify数量的场景。
 
 ## 函数原型
 
