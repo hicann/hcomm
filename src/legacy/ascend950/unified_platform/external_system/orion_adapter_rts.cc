@@ -418,7 +418,7 @@ void *HrtMalloc(u64 size, aclrtMemType_t memType)
                 ret, size, memType, devPtr);
     if (ret == ACL_ERROR_RT_MEMORY_ALLOCATION) {
         RPT_INPUT_ERR(true, "EI0007", std::vector<std::string>({"resource_type", "resource_info"}),
-                            std::vector<std::string>({"DeviceMemory", std::string("aclrtMallocWithCfg, size:") + std::to_string(size) + " bytes"}));
+                            std::vector<std::string>({"DeviceMemory", std::string("MallocWithCfg, size:") + std::to_string(size) + " bytes"}));
         string msg = StringFormat("[Malloc][Mem]errNo[0x%016llx] aclrtMallocWithCfg failed, "
                    "Reason: out of memory, return[%d], para: devPtrAddr[%p], size[%llu]",
                    HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, devPtr, size);
@@ -426,7 +426,7 @@ void *HrtMalloc(u64 size, aclrtMemType_t memType)
     }
     if (ret != ACL_SUCCESS) {
         RPT_INPUT_ERR(true, "EI0007", std::vector<std::string>({"resource_type", "resource_info"}),
-                            std::vector<std::string>({"DeviceMemory", std::string("aclrtMallocWithCfg, size:") + std::to_string(size)+ " bytes"}));
+                            std::vector<std::string>({"DeviceMemory", std::string("MallocWithCfg, size:") + std::to_string(size)+ " bytes"}));
         string msg = StringFormat("[Malloc][Mem]errNo[0x%016llx] aclrtMallocWithCfg failed, "
                    "return[%d], para: devPtrAddr[%p], size[%llu]",
                    HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, devPtr, size);
@@ -652,7 +652,7 @@ void *HrtMallocHost(u64 size)
                 ret, hostPtr, size);
     if (ret != ACL_SUCCESS) {
         RPT_INPUT_ERR(true, "EI0007", std::vector<std::string>({"resource_type", "resource_info"}),
-                            std::vector<std::string>({"HostMemory", std::string("aclrtMallocHostWithCfg, size:") + std::to_string(size)+ " bytes"}));
+                            std::vector<std::string>({"HostMemory", std::string("MallocHostWithCfg, size:") + std::to_string(size)+ " bytes"}));
         string msg = StringFormat("[Malloc][Host]errNo[0x%016llx] rt malloc host fail. return[%d], "
                                 "para: size[%llu].",
                                 HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, size);

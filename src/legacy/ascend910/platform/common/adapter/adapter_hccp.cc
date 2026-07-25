@@ -165,7 +165,7 @@ HcclResult hrtRaTypicalQpCreate(RdmaHandle rdmaHandle, int flag,
     CHK_OOM_RET(ret, qpInfoStr.c_str());
 
     RPT_ENV_ERR(ret != 0 || (qpHandle == nullptr), "EI0007",
-        std::vector<std::string>({"resource_type", "resource_info"}), std::vector<std::string>({"qp", qpInfoStr}));
+        std::vector<std::string>({"resource_type", "resource_info"}), std::vector<std::string>({"qp", "CreateQp"}));
 
     CHK_PRT_RET(ret != 0 || (qpHandle == nullptr), HCCL_ERROR("[%s][%s]errNo[0x%016llx] ra qp create fail. "\
         "params: flag[%d], qpMode[%d]. return: ret[%d]", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), 
@@ -215,7 +215,7 @@ HcclResult hrtRaTypicalQpModify(QpHandle qpHandle, struct TypicalQp* localQpInfo
 
     s32 ret = DlRaFunction::GetInstance().dlRaTypicalQpModify(qpHandle, localQpInfo, remoteQpInfo);
     RPT_ENV_ERR(ret != 0, "EI0007",
-        std::vector<std::string>({"resource_type", "resource_info"}), std::vector<std::string>({"qp", qpInfo}));
+        std::vector<std::string>({"resource_type", "resource_info"}), std::vector<std::string>({"qp", "ModifyQp"}));
 
     CHK_PRT_RET(ret == ROCE_EOPENSRC , HCCL_RUN_WARNING("[%s][%s]ra qp modify need retry.",
         LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str()), HCCL_E_AGAIN);

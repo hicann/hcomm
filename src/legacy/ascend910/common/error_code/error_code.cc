@@ -113,7 +113,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "device_id,reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Use the following hccn_tool commands to check whether the port link is down. (The scope of i represents the number of NPUs of each node. 8 is used as an example.) \r\n 1. for i in {0..7}; do hccn_tool -i $i -optical -g; done | grep present: Check whether the optical module is in position. \r\n 2. for i in {0..7}; do hccn_tool -i $i -ip -g; done. Check whether the IP address is configured. \r\n 3. for i in {0..7}; do hccn_tool -i $i -lldp -g: Check whether the switch is connected."
+        "Solution": "Use the following hccn_tool commands to check whether the port link is down. (The scope of i represents the number of NPUs of each node. 8 is used as an example.)\r\n1. Check whether the optical module is in position: for i in {0..7}; do hccn_tool -i $i -optical -g; done | grep present.\r\n2. Check whether the IP address is configured: for i in {0..7}; do hccn_tool -i $i -ip -g; done.\r\n3. Check whether the switch is connected: for i in {0..7}; do hccn_tool -i $i -lldp -g; done."
       }
     },
     {
@@ -131,7 +131,7 @@ const std::string hcomm_g_msg = R"(
       "errClass": "HCCL Errors",
       "errTitle": "Resource_Error_Insufficient_Device_Memory",
       "ErrCode": "EI0011",
-      "ErrMessage": "Failed to allocate [%s] bytes of NPU memory.",
+      "ErrMessage": "Failed to allocate %s bytes of NPU memory.",
       "Arglist": "memory_size",
       "suggestion": {
         "Possible Cause": "Allocation failure due to insufficient NPU memory.",
@@ -142,11 +142,11 @@ const std::string hcomm_g_msg = R"(
       "errClass": "HCCL Errors",
       "errTitle": "Execution_Error_SDMA",
       "ErrCode": "EI0012",
-      "ErrMessage": "SDMA memory copy task exception occurred. Remote rank: [%s]. Base information: [%s]. Task information: [%s]. Communicator information: [%s].",
+      "ErrMessage": "SDMA memory copy task exception occurred. Remote rank: %s. Base information: %s. Task information: %s. Communicator information: %s.",
       "Arglist": "remote_rankid, base_information, task_information, group_rank_content",
       "suggestion": {
-        "Possible Cause": "1. Network connection exception occurred during the SDMA task execution. \r\n2. The peer process exits abnormally. \r\n3. The input or output memory address is not allocated, the actual allocated size is smaller than the input data size, or the memory is freed before the operator execution is complete.",
-        "Solution": "1. Check whether the network link is abnormal during the execution. \r\n2. Check whether a process in the cluster exits before an error is reported. If yes, locate the cause of the process exit. \r\n3. Check whether the input/output memory size is correct and whether the memory or communicator is released prematurely."
+        "Possible Cause": "1. Network connection exception occurred during the SDMA task execution.\r\n2. The peer process exits abnormally.\r\n3. The input or output memory address is not allocated, the actual allocated size is smaller than the input data size, or the memory is freed before the operator execution is complete.",
+        "Solution": "1. Check whether the network link is abnormal during the execution.\r\n2. Check whether a process in the cluster exits before an error is reported. If yes, locate the cause of the process exit.\r\n3. Check whether the input/output memory size is correct and whether the memory or communicator is released prematurely."
       }
     },
     {
