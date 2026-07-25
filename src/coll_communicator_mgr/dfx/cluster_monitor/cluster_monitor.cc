@@ -713,8 +713,19 @@ HcclResult ClusterMonitor::DeInit()
     }
     {
         std::unique_lock<std::mutex> lock(threadLock_);
+        for (SocketHandle handler : pendingDestroySockets_) {
+            if (handler == nullptr) {
+                continue;
+            }
+            HcclResult ret = SocketDestroy(handler);
+            if (ret != HCCL_SUCCESS) {
+                HCCL_WARNING("[DeInit] pending SocketDestroy failed, ret[%d]", ret);
+            }
+        }
+        pendingDestroySockets_.clear();
+
         for (auto iter = uid2SocketRefMap_.begin(); iter != uid2SocketRefMap_.end(); iter++) {
-            HcclResult ret = (SocketDestroy(iter->second.socketHandler)); // 销毁socket句柄不判断返回值
+            HcclResult ret = SocketDestroy(iter->second.socketHandler);
             if (ret != HCCL_SUCCESS) {
                 HCCL_WARNING("[DeInit] SocketDestroy failed, ret[%d]", ret);
             }
@@ -730,54 +741,66 @@ HcclResult ClusterMonitor::DeInit()
     return HCCL_SUCCESS;
 }
 
-HcclResult ClusterMonitor::UnRegisterToClusterMonitor(hccl::CollComm* collComm)
+void ClusterMonitor::ClearClusterLinkContext(const std::string &commId, std::set<ClusterUIDType> &remInQueue)
 {
-    CHK_PRT_RET(initialized_ == false, HCCL_WARNING("Heartbeat has been destroyed, or not initialized"), HCCL_SUCCESS);
-    std::set<ClusterUIDType> remInQueue;
     std::unique_lock<std::mutex> linkCtxlock(clusertMonitorLinkMtx_);
-    const std::string &commId = collComm->GetCommId();
-    if (clusterLinkContext_.find(commId) != clusterLinkContext_.end()) {
-        while (!clusterLinkContext_[commId].empty()) {
-            remInQueue.insert(clusterLinkContext_[commId].front().first); // uid出队存入set中
-            clusterLinkContext_[commId].pop();
+    auto ctxIter = clusterLinkContext_.find(commId);
+    if (ctxIter != clusterLinkContext_.end()) {
+        while (!ctxIter->second.empty()) {
+            remInQueue.insert(ctxIter->second.front().first); // uid出队存入set中
+            ctxIter->second.pop();
         }
     }
     clusterLinkContext_.erase(commId);
-    linkCtxlock.unlock();
+}
 
-    {
-        std::unique_lock<std::mutex> lock(threadLock_);
+bool ClusterMonitor::UnregisterCommIdFromMaps(const std::string &commId, const std::set<ClusterUIDType> &remInQueue)
+{
+    std::unique_lock<std::mutex> lock(threadLock_);
 
-        for (const auto &rem : remInQueue) {
-            if (monitorLinkStatusMap_[rem] == MonitorLinkStatus::MONITOR_LINK_BUILDING) {
-                monitorLinkStatusMap_[rem] = MonitorLinkStatus::MONITOR_LINK_NOT_START;
-                HCCL_INFO("[%s] commId[%s] rem[%s] is in clusterLinkContext_ deque. Status change to not start", __func__,
-                    commId.c_str(), GetUID(rem).c_str());
-            }
+    for (const auto &rem : remInQueue) {
+        if (monitorLinkStatusMap_[rem] == MonitorLinkStatus::MONITOR_LINK_BUILDING) {
+            monitorLinkStatusMap_[rem] = MonitorLinkStatus::MONITOR_LINK_NOT_START;
+            HCCL_INFO("[%s] commId[%s] rem[%s] is in clusterLinkContext_ deque. Status change to not start", __func__,
+                commId.c_str(), GetUID(rem).c_str());
         }
-        auto iter = commIdMap_.find(commId);
-        if (iter == commIdMap_.end()) {
-            HCCL_INFO("commId[%s] hasn't Registered, skip", commId.c_str());
-            return HCCL_SUCCESS;
-        }
-
-        for (const auto& remRank : commIdMap_[commId]) {
-            ClusterUIDType rem = remRank.first;
-            uid2FrameStatusMap_.erase(rem);
-            if (remRank.second) {
-                if (uid2SocketRefMap_.count(rem) == 1) {
-                    CHK_RET(SocketDestroy(uid2SocketRefMap_[rem].socketHandler));
-                    monitorLinkStatusMap_[rem] = MonitorLinkStatus::MONITOR_LINK_NOT_START;
-                }
-                HCCL_INFO("[%s]commId[%s] socket erase remote:%s", __func__, commId.c_str(), GetUID(rem).c_str());
-                uid2SocketRefMap_.erase(rem);
-            }
-            HCCL_INFO("[%s]commId[%s] status erase remote:%s", __func__, commId.c_str(), GetUID(rem).c_str());
-        }
-        commIdMap_.erase(iter);
-        HCCL_INFO("[%s]commId[%s] UnregisterRanks Completed.", __func__, commId.c_str());
     }
+    auto iter = commIdMap_.find(commId);
+    if (iter == commIdMap_.end()) {
+        HCCL_INFO("commId[%s] hasn't Registered, skip", commId.c_str());
+        return false;
+    }
+    for (const auto& remRank : commIdMap_[commId]) {
+        ClusterUIDType rem = remRank.first;
+        uid2FrameStatusMap_.erase(rem);
+        if (remRank.second) {
+            if (uid2SocketRefMap_.count(rem) == 1) {
+                // 不在此处 SocketDestroy；摘入 pending，等 DeInit join 后再销毁
+                SocketHandle handler = uid2SocketRefMap_[rem].socketHandler;
+                if (handler != nullptr) {
+                    pendingDestroySockets_.push_back(handler);
+                }
+                monitorLinkStatusMap_[rem] = MonitorLinkStatus::MONITOR_LINK_NOT_START;
+            }
+            HCCL_INFO("[%s]commId[%s] socket erase remote:%s", __func__, commId.c_str(), GetUID(rem).c_str());
+            uid2SocketRefMap_.erase(rem);
+        }
+        HCCL_INFO("[%s]commId[%s] status erase remote:%s", __func__, commId.c_str(), GetUID(rem).c_str());
+    }
+    commIdMap_.erase(iter);
+    HCCL_INFO("[%s]commId[%s] UnregisterRanks Completed.", __func__, commId.c_str());
+    return true;
+}
 
+HcclResult ClusterMonitor::UnRegisterToClusterMonitor(const hccl::CollComm* collComm)
+{
+    CHK_PRT_RET(initialized_ == false, HCCL_WARNING("Heartbeat has been destroyed, or not initialized"), HCCL_SUCCESS);
+    const std::string &commId = collComm->GetCommId();
+    std::set<ClusterUIDType> remInQueue;
+    ClearClusterLinkContext(commId, remInQueue);
+    if (!UnregisterCommIdFromMaps(commId, remInQueue)) {
+        return HCCL_SUCCESS;
+    }
     if (commIdMap_.size() == 0) {
         HCCL_RUN_INFO("[%s]Entry HeartBeat DeInit.", __func__);
         CHK_RET(DeInit());

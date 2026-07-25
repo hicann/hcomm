@@ -158,7 +158,7 @@ struct ClusterUIDCxt {
 class ClusterMonitor {
 public:
     HcclResult RegisterToClusterMonitor(HcclComm comm);
-    HcclResult UnRegisterToClusterMonitor(hccl::CollComm* collComm);
+    HcclResult UnRegisterToClusterMonitor(const hccl::CollComm* collComm);
     ClusterUIDType FormatUID(ClusterUIDCxt cxt);
     std::string GetUID(const ClusterUIDType &uid) const;
     std::string FormatConnTag(HcommSocketRole role, std::pair<ClusterUIDType, ClusterUIDType> uidPair);
@@ -187,7 +187,8 @@ public:
 private:
     HcclResult GetRemEndpointDescs(HcclComm comm, std::map<uint32_t, std::vector<UIDContext>> &uidCtxs,
         std::vector<uint32_t> &netLayersVector);
-    
+    void ClearClusterLinkContext(const std::string &commId, std::set<ClusterUIDType> &remInQueue);
+    bool UnregisterCommIdFromMaps(const std::string &commId, const std::set<ClusterUIDType> &remInQueue);
     HcclResult CreateTransportHandle(ClusterMonitorSocketCtx &info);
 
     void CreateLinkWithRemotePonit(std::string commId, ClusterUIDType rem, ClusterMonitorSocketCtx needConnectRank);
@@ -241,7 +242,10 @@ private:
     
     // uid与thread的维护关系，不同的remote起不同的异步建链线程，原linkThreadMap_
     std::map<ClusterUIDType, std::unique_ptr<std::thread>> linkThreadMap_{};
-    
+
+    // UnRegister 摘下、延后到 DeInit(join 之后) 再 SocketDestroy 的句柄
+    std::vector<SocketHandle> pendingDestroySockets_;
+
     // 保存错误的节点
     std::queue<ClusterUIDType> errRankQueue_;
 
