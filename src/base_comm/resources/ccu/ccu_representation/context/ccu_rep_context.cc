@@ -267,7 +267,7 @@ void CcuRepContext::SetDependencyInfo(uint32_t id, uint32_t mask, const std::sha
     auto &inner = depInfo[id];
     for (uint32_t i = 0; i < CCU_CKE_BIT_NUM; i++) {
         uint32_t bit = 1u << i;
-        if (mask & bit) {
+        if ((mask & bit) != 0u) {
             inner[bit].push_back(rep);
         }
     }
