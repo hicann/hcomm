@@ -31,7 +31,7 @@ public:
     HcclResult Init();
     Hccl::TransportStatus GetStatus();
     HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos);
-    HcclResult CheckSocketStatus(std::string socketOpreator);
+    HcclResult CheckSocketStatus(std::string socketOperator);
     HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum);
 
 private:

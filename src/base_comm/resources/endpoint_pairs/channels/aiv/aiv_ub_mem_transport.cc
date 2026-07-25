@@ -253,7 +253,7 @@ HcclResult AivUbMemTransport::GetRemoteMems(uint32_t *memNum, CommMem **remoteMe
     return HCCL_SUCCESS;
 }
 
-HcclResult AivUbMemTransport::CheckSocketStatus(std::string socketOpreator)
+HcclResult AivUbMemTransport::CheckSocketStatus(std::string socketOperator)
 {
     CHK_PTR_NULL(socket_);
     auto timeout = std::chrono::seconds(Hccl::EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
@@ -266,7 +266,7 @@ HcclResult AivUbMemTransport::CheckSocketStatus(std::string socketOpreator)
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - startTime).count();
             HCCL_INFO("[AivUbMemTransport][%s] socket transport operation[%s] success, elapsed[%lld]ms, retryCount[%u]",
-                __func__, socketOpreator.c_str(), elapsed, retryCount);
+                __func__, socketOperator.c_str(), elapsed, retryCount);
             break;
         }
         if ((std::chrono::steady_clock::now() - startTime) >= timeout ||
@@ -274,7 +274,7 @@ HcclResult AivUbMemTransport::CheckSocketStatus(std::string socketOpreator)
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - startTime).count();
             HCCL_ERROR("[AivUbMemTransport][%s] socket transport operation[%s] timeout after %lld sec, elapsed[%lld]ms, retryCount[%u]",
-                __func__, socketOpreator.c_str(), timeout, elapsed, retryCount);
+                __func__, socketOperator.c_str(), timeout, elapsed, retryCount);
             return HCCL_E_TIMEOUT;
         }
         EXCEPTION_HANDLE_END
