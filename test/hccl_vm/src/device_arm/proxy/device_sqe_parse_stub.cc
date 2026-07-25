@@ -170,7 +170,7 @@ uint32_t CalculateCiValue(uint64_t wqeBuffer, uint32_t piValue)
 
         // 继续向前查找两个WQE
         prePiVal = (piValue >= 2) ? piValue - 2 : 0;
-        wqeAddr = wqeBuffer + piValue * HCCL_WQE_SIZE;
+        wqeAddr = wqeBuffer + prePiVal * HCCL_WQE_SIZE;
         ubCommon = reinterpret_cast<UdmaSqeCommon *>(wqeAddr);
     }
     
