@@ -89,7 +89,9 @@ private:
         [](const std::string& s) -> u32 {
             static std::regex validFormat(R"(^\d+(\.\d{1,2})?$)");
             if (!std::regex_match(s, validFormat)) {
-                THROW<InvalidParamsException>(StringFormat("Invalid config value, execTimeOutStr[%s]", s.c_str()));
+                THROW<InvalidParamsException>(StringFormat(
+                    "Invalid config value, execTimeOutStr[%s], up to two decimal places",
+                    s.c_str()));
             }
             return String2T<u32>(s);
         },
@@ -103,7 +105,9 @@ private:
         [](const std::string& s) -> double {
             static std::regex validFormat(R"(^\d+(\.\d{1,2})?$)");
             if (!std::regex_match(s, validFormat)) {
-                THROW<InvalidParamsException>(StringFormat("Invalid config value, execTimeOutStr[%s]", s.c_str()));
+                THROW<InvalidParamsException>(StringFormat(
+                    "Invalid config value, execTimeOutStr[%s], up to two decimal places",
+                    s.c_str()));
             }
             return String2T<double>(s);
         },
