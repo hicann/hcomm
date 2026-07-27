@@ -155,3 +155,67 @@ inline CcuResult CcuEventRecordInLoopInvalidDemoKernel(CcuKernelArg arg)
     Loop loop(dummyCfg, body);
     return CcuResult::CCU_SUCCESS;
 }
+
+// 全组合覆盖：group 类型（config / var） × loop 类型（config / var / 混用）。
+// 校验点（按 group 创建顺序在日志中出现 LoopGroupBundle[loops=N, totalLoopNum=M]）：
+//   - config 型 group：无论内部 loop 是 config / var / 混用，totalLoopNum 必须等于 loop 总数；
+//   - var 型 group：parallelParam 走运行期寄存器，bundle 的 totalLoopNum 不参与，保持 0。
+CcuResult CcuLoopCfgDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    (void)arg;
+
+    Variable a{}, b{};
+    a = 3;
+    b = 4;
+
+    // 每个 Loop 各自 compose 一份独立 body
+    Variable s1{}, s2{}, s3{}, s4{}, s5{}, s6{};
+    Func body1([&]() { s1 = a + b; });
+    Func body2([&]() { s2 = a + b; });
+    Func body3([&]() { s3 = a + b; });
+    Func body4([&]() { s4 = a + b; });
+    Func body5([&]() { s5 = a + b; });
+    Func body6([&]() { s6 = a + b; });
+
+    // config 型 loop
+    LoopConfig cfg = {.addrOffset = 0, .iterNum = 2};
+    Loop lc1(cfg, body1);
+    Loop lc2(cfg, body2);
+    Loop lc3(cfg, body3);
+
+    // var 型 loop
+    Variable lp1{}, lp2{}, lp3{};
+    lp1 = 2;
+    lp2 = 2;
+    lp3 = 2;
+    Loop lv1(lp1, body4);
+    Loop lv2(lp2, body5);
+    Loop lv3(lp3, body6);
+
+    LoopGroupConfig cfgGrp = {
+        .cloneNum = 0, .cloneLoopOffset = 0,
+        .addrOffset = 0, .ccuBufferOffset = 0, .eventOffset = 0
+    };
+
+    // ===== config 型 group（totalLoopNum 以立即数编码，必须等于 loop 总数）=====
+    // 1) config group + config loops  -> loops=2, totalLoopNum=2
+    LoopGroup g1(cfgGrp, /*maxLoopNum=*/2, {lc1, lc2});
+    // 2) config group + var loops      -> loops=3, totalLoopNum=3（
+    LoopGroup g2(cfgGrp, /*maxLoopNum=*/3, {lv1, lv2, lv3});
+    // 3) config group + mixed loops    -> loops=2, totalLoopNum=2
+    LoopGroup g3(cfgGrp, /*maxLoopNum=*/2, {lc1, lv1});
+
+    // ===== var 型 group（parallel/offset 走运行期寄存器，bundle totalLoopNum 保持 0）=====
+    Variable par{}, off{};
+    par = 0x0002000100020000ULL;
+    off = 0x1000000100010000ULL;
+    // 4) var group + var loops         -> loops=2, totalLoopNum=0
+    LoopGroup g4(par, off, /*maxLoopNum=*/2, {lv1, lv2});
+    // 5) var group + config loops      -> loops=3, totalLoopNum=0
+    LoopGroup g5(par, off, /*maxLoopNum=*/3, {lc1, lc2, lc3});
+    // 6) var group + mixed loops       -> loops=2, totalLoopNum=0
+    LoopGroup g6(par, off, /*maxLoopNum=*/2, {lc1, lv1});
+
+    return CcuResult::CCU_SUCCESS;
+}

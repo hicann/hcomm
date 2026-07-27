@@ -199,6 +199,7 @@ CCU_FUNC_KERNEL_TEST(Ut_NotifyRecordInLoop_Expect_Fail, CcuNotifyRecordInLoopInv
 CCU_FUNC_KERNEL_TEST(Ut_WriteVarWithNotifyInLoop_Expect_Fail, CcuWriteVarWithNotifyInLoopInvalidDemoKernel, false)
 CCU_FUNC_KERNEL_TEST(Ut_EventRecordTagInLoop_Expect_Fail, CcuEventRecordTagInLoopInvalidDemoKernel, false)
 CCU_FUNC_KERNEL_TEST(Ut_EventRecordInLoop_Expect_Fail, CcuEventRecordInLoopInvalidDemoKernel, false)
+CCU_FUNC_KERNEL_TEST(Ut_LoopCfgDemo_Expect_Success, CcuLoopCfgDemoKernel, true)
 
 TEST_F(HcommCcuControlApiTest, Ut_LoopObjectApi_Expect_Success)
 {

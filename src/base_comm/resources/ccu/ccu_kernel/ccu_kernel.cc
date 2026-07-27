@@ -2004,8 +2004,6 @@ CcuResult CcuKernel::LoopGroupAddLoopFromVar(CcuLoopGroup group,
     CcuRep::Variable *loopParamVarPtr = nullptr;
     CCU_CHK_RET(GetVariableByHandle(loopParamVarHandle, &loopParamVarPtr));
 
-    grpDesc.loopCount++;
-
     CcuRep::CcuRepLoopGroupBundle::LoopEntry entry;
     entry.executor = loopEnginePool[loopIdx];
     entry.repLoopBlock = loopDesc.repLoopBlock;
@@ -2014,6 +2012,14 @@ CcuResult CcuKernel::LoopGroupAddLoopFromVar(CcuLoopGroup group,
 
     auto bundle = std::static_pointer_cast<CcuRep::CcuRepLoopGroupBundle>(grpDesc.bundleRep);
     bundle->AddLoop(entry);
+
+    // 计数放在入 bundle 之后统一更新：totalLoopNum 仅供 config 组同步编码使用，与 AddLoop 无先后依赖。
+    grpDesc.loopCount++;
+    grpDesc.totalLoopNum = grpDesc.loopCount;
+    if (!grpDesc.isVarBased) {
+        bundle->SetRepeatLoopIdx(grpDesc.config.cloneLoopOffset);
+        bundle->SetTotalLoopNum(grpDesc.totalLoopNum);
+    }
 
     return CcuResult::CCU_SUCCESS;
 }
