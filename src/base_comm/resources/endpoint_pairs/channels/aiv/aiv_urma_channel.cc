@@ -11,6 +11,7 @@
 #include "aiv_urma_channel.h"
 #include "endpoint.h"
 #include "orion_adpt_utils.h"
+#include "acl_device_slab_guard.h"
 
 #include "hcomm_c_adpt.h"
 
@@ -19,6 +20,7 @@
 #include "virtual_topo.h"
 #include "makebufs_helper.h"
 #include "orion_adapter_hccp.h"
+#include "adapter_rts.h"
 #include "acl/acl_rt.h"
 
 #include <algorithm>
@@ -51,38 +53,6 @@ struct DeviceChannelEntityLayout {
     DeviceEntitySection cqPiSection;
     DeviceEntitySection cqCiSection;
     size_t slabSize{0};
-};
-
-class AclDeviceSlabGuard {
-public:
-    AclDeviceSlabGuard() = default;
-    ~AclDeviceSlabGuard()
-    {
-        if (ptr_ != nullptr) {
-            aclError ret = aclrtFree(ptr_);
-            if (ret != ACL_SUCCESS) {
-                HCCL_WARNING("[AclDeviceSlabGuard] aclrtFree failed, ptr[%p], size[%zu], ret[%d]", ptr_, size_, ret);
-            }
-        }
-    }
-
-    void Reset(void *ptr, size_t size)
-    {
-        ptr_ = ptr;
-        size_ = size;
-    }
-
-    void *Release()
-    {
-        void *ptr = ptr_;
-        ptr_ = nullptr;
-        size_ = 0;
-        return ptr;
-    }
-
-private:
-    void *ptr_{nullptr};
-    size_t size_{0};
 };
 
 HcclResult SecureMemset(void *dest, size_t destMax, int value, size_t count, const char *fieldName)
@@ -198,10 +168,10 @@ HcclResult BuildDeviceChannelEntityLayout(const ChannelEntity &hostChannel, Devi
 
 HcclResult AllocDeviceEntitySlab(size_t slabSize, AclDeviceSlabGuard &slabGuard, void *&slabPtr)
 {
-    aclError aclRet = aclrtMalloc(&slabPtr, slabSize, static_cast<aclrtMemMallocPolicy>(ACL_MEM_MALLOC_HUGE_ONLY));
-    CHK_PRT_RET(aclRet != ACL_SUCCESS || slabPtr == nullptr,
-        HCCL_ERROR("[AivUrmaChannel::%s] aclrtMalloc huge-only slab failed, ret[%d], size[%zu]",
-            __func__, aclRet, slabSize), HCCL_E_MEMORY);
+    HcclResult ret = hrtMalloc(&slabPtr, slabSize);
+    CHK_PRT_RET(ret != HCCL_SUCCESS || slabPtr == nullptr,
+        HCCL_ERROR("[AivUrmaChannel::%s] hrtMalloc slab failed, ret[%d], size[%zu]",
+            __func__, ret, slabSize), HCCL_E_MEMORY);
     slabGuard.Reset(slabPtr, slabSize);
     return HCCL_SUCCESS;
 }
@@ -298,9 +268,9 @@ void AivUrmaChannel::PutSocketIfNeeded()
 void AivUrmaChannel::ReleaseDeviceChannelEntity()
 {
     if (devChannelEntitySlab_ != nullptr) {
-        aclError ret = aclrtFree(devChannelEntitySlab_);
-        if (ret != ACL_SUCCESS) {
-            HCCL_WARNING("[AivUrmaChannel::%s] aclrtFree devChannelEntitySlab failed, ptr[%p], size[%zu], ret[%d]",
+        HcclResult ret = hrtFree(devChannelEntitySlab_);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_WARNING("[AivUrmaChannel::%s] hrtFree devChannelEntitySlab failed, ptr[%p], size[%zu], ret[%d]",
                 __func__, devChannelEntitySlab_, devChannelEntitySlabSize_, ret);
         }
         devChannelEntitySlab_ = nullptr;

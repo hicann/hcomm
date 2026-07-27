@@ -857,7 +857,7 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_Normal_Expect_Print
 
     // 打桩ACL函数
     void* mockFlagBuff = malloc(flagMemSize);
-    MOCKER(aclrtMallocHost).stubs().will(returnValue(ACL_SUCCESS));
+    MOCKER(aclrtMallocHostWithCfg).stubs().will(returnValue(ACL_SUCCESS));
     MOCKER(aclrtMemcpy).stubs().will(returnValue(ACL_SUCCESS));
     MOCKER(aclrtFreeHost).stubs().will(returnValue(ACL_SUCCESS));
 
@@ -895,7 +895,7 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_MallocFailure_Expec
     taskInfo->taskParam_.taskPara.Aiv.flagMemSize = 1024;
 
     // 打桩aclrtMallocHost失败
-    MOCKER(aclrtMallocHost).stubs().will(returnValue(ACL_ERROR_BAD_ALLOC));
+    MOCKER(aclrtMallocHostWithCfg).stubs().will(returnValue(ACL_ERROR_BAD_ALLOC));
 
     // 构造异常信息
     rtExceptionInfo_t exceptionInfo{};
@@ -925,7 +925,7 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_MemcpyFailure_Expec
     taskInfo->taskParam_.taskPara.Aiv.flagMemSize = 1024;
 
     // 打桩aclrtMallocHost成功，但aclrtMemcpy失败
-    MOCKER(aclrtMallocHost).stubs().will(returnValue(ACL_SUCCESS));
+    MOCKER(aclrtMallocHostWithCfg).stubs().will(returnValue(ACL_SUCCESS));
     MOCKER(aclrtMemcpy).stubs().will(returnValue(ACL_ERROR_RT_MEMORY_FREE));
     MOCKER(aclrtFreeHost).stubs().will(returnValue(ACL_SUCCESS));
 

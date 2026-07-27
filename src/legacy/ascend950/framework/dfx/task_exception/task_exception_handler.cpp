@@ -20,6 +20,8 @@
 #include <adapter_error_manager_pub.h>
 #include "hccl_common_v2.h"
 #include "hal.h"
+#include "orion_adapter_rts.h"
+#include "runtime_api_exception.h"
 
 namespace Hccl {
 
@@ -240,16 +242,16 @@ void TaskExceptionHandler::ProcessAivException(rtExceptionInfo_t* exceptionInfo,
 
     // 打印算子flag 区域, flag区域比较大，需要通过LOG_TMPBUF_SIZE控制打印的长度
     void *flag_buff_temp = nullptr;
-    aclError aclRet = 0;
-    aclRet = aclrtMallocHost(&flag_buff_temp, taskInfo.taskParam_.taskPara.Aiv.flagMemSize);
-    if (aclRet != ACL_SUCCESS) {
-        HCCL_ERROR("[TaskExceptionHandler] [%s] error[%d].", __func__, aclRet);
-        return;
-    }
-    aclRet = aclrtMemcpy(flag_buff_temp, taskInfo.taskParam_.taskPara.Aiv.flagMemSize, taskInfo.taskParam_.taskPara.Aiv.flagMem, taskInfo.taskParam_.taskPara.Aiv.flagMemSize, ACL_MEMCPY_DEVICE_TO_HOST);
-    if (aclRet != ACL_SUCCESS) {
-        HCCL_ERROR("[TaskExceptionHandler] [%s] error[%d].", __func__, aclRet);
-        aclrtFreeHost(flag_buff_temp);
+    try {
+        flag_buff_temp = HrtMallocHost(taskInfo.taskParam_.taskPara.Aiv.flagMemSize);
+        HrtMemcpy(flag_buff_temp, taskInfo.taskParam_.taskPara.Aiv.flagMemSize,
+            taskInfo.taskParam_.taskPara.Aiv.flagMem, taskInfo.taskParam_.taskPara.Aiv.flagMemSize,
+            RT_MEMCPY_DEVICE_TO_HOST);
+    } catch (const RuntimeApiException &e) {
+        HCCL_ERROR("[TaskExceptionHandler] [%s] host memory operation fail: %s", __func__, e.what());
+        if (flag_buff_temp != nullptr) {
+            HrtFreeHost(flag_buff_temp);
+        }
         return;
     }
 
@@ -269,11 +271,7 @@ void TaskExceptionHandler::ProcessAivException(rtExceptionInfo_t* exceptionInfo,
     HCCL_ERROR(flagStr.str().c_str());
     
     if (flag_buff_temp != nullptr) {
-        aclRet = aclrtFreeHost(flag_buff_temp);
-        if (aclRet != ACL_SUCCESS) {
-            HCCL_ERROR("[TaskExceptionHandler] [%s] error[%d].", __func__, aclRet);
-            return;
-        }
+        HrtFreeHost(flag_buff_temp);
     }
     PrintAivPreviousTaskException(exceptionInfo);
 }

@@ -13,6 +13,7 @@
 #include "hcomm_c_adpt.h"
 #include "endpoint.h"
 #include "exchange_ub_buffer_dto.h"
+#include "runtime_api_exception.h"
 
 using namespace hcomm;
 using namespace Hccl;
@@ -73,7 +74,7 @@ static hccl::DeviceMem StubDeviceMemAlloc(u64 size, bool /*level2Address*/)
     return hccl::DeviceMem(ptr, size, false);
 }
 
-aclError StubAclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy /*policy*/)
+aclError StubAclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy /*policy*/, aclrtMallocConfig *)
 {
     if (devPtr == nullptr) {
         return ACL_ERROR_RT_PARAM_INVALID;
@@ -82,7 +83,7 @@ aclError StubAclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy /*poli
     return (*devPtr == nullptr) ? ACL_ERROR_RT_MEMORY_ALLOCATION : ACL_SUCCESS;
 }
 
-aclError StubAclrtMallocFail(void **devPtr, size_t, aclrtMemMallocPolicy)
+aclError StubAclrtMallocFail(void **devPtr, size_t, aclrtMemMallocPolicy, aclrtMallocConfig *)
 {
     if (devPtr != nullptr) {
         *devPtr = nullptr;
@@ -419,7 +420,7 @@ TEST_F(AivUrmaChannelTest, Ut_BuildChannelEntityToDevice_WhenTransportReady_Retu
     DevUbCtpConnection conn(reinterpret_cast<RdmaHandle>(0x1), IpAddress(), IpAddress(), OpMode::OPBASE);
     BuildReadyTransport(ch, conn);
 
-    MOCKER(aclrtMalloc)
+    MOCKER(aclrtMallocWithCfg)
         .stubs()
         .will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree)
@@ -460,7 +461,7 @@ TEST_F(AivUrmaChannelTest, Ut_BuildChannelEntityToDevice_WhenAclrtMallocFail_Ret
     DevUbCtpConnection conn(reinterpret_cast<RdmaHandle>(0x1), IpAddress(), IpAddress(), OpMode::OPBASE);
     BuildReadyTransport(ch, conn);
 
-    MOCKER(aclrtMalloc)
+    MOCKER(aclrtMallocWithCfg)
         .stubs()
         .will(invoke(StubAclrtMallocFail));
 
@@ -478,7 +479,7 @@ TEST_F(AivUrmaChannelTest, Ut_Clean_WhenDeviceChannelEntityBuilt_ReleasesSlab)
     DevUbCtpConnection conn(reinterpret_cast<RdmaHandle>(0x1), IpAddress(), IpAddress(), OpMode::OPBASE);
     BuildReadyTransport(ch, conn);
 
-    MOCKER(aclrtMalloc)
+    MOCKER(aclrtMallocWithCfg)
         .stubs()
         .will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree)
@@ -985,7 +986,7 @@ TEST_F(AivUrmaChannelTest, Ut_PreAllocChannelEntityToDevice_When_TransportReady_
     DevUbCtpConnection conn(reinterpret_cast<RdmaHandle>(0x1), IpAddress(), IpAddress(), OpMode::OPBASE);
     BuildReadyTransport(ch, conn);
 
-    MOCKER(aclrtMalloc)
+    MOCKER(aclrtMallocWithCfg)
         .stubs()
         .will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree)
@@ -1008,7 +1009,7 @@ TEST_F(AivUrmaChannelTest, Ut_PreAllocChannelEntityToDevice_When_AlreadyBuilt_Re
     DevUbCtpConnection conn(reinterpret_cast<RdmaHandle>(0x1), IpAddress(), IpAddress(), OpMode::OPBASE);
     BuildReadyTransport(ch, conn);
 
-    MOCKER(aclrtMalloc)
+    MOCKER(aclrtMallocWithCfg)
         .stubs()
         .will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree)
@@ -1030,7 +1031,7 @@ TEST_F(AivUrmaChannelTest, Ut_FillChannelEntityToDevice_When_PreAllocated_Return
     DevUbCtpConnection conn(reinterpret_cast<RdmaHandle>(0x1), IpAddress(), IpAddress(), OpMode::OPBASE);
     BuildReadyTransport(ch, conn);
 
-    MOCKER(aclrtMalloc)
+    MOCKER(aclrtMallocWithCfg)
         .stubs()
         .will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree)

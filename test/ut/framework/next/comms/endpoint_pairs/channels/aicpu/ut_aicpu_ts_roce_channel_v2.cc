@@ -345,7 +345,7 @@ static bool g_slabAllocated = false;
 static void *g_slabPtr = nullptr;
 static size_t g_slabSize = 0;
 
-aclError StubAclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy)
+aclError StubAclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy, aclrtMallocConfig *)
 {
     if (devPtr == nullptr) {
         return ACL_ERROR_RT_PARAM_INVALID;
@@ -360,7 +360,7 @@ aclError StubAclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy)
     return ACL_SUCCESS;
 }
 
-aclError StubAclrtMallocFail(void **devPtr, size_t, aclrtMemMallocPolicy)
+aclError StubAclrtMallocFail(void **devPtr, size_t, aclrtMemMallocPolicy, aclrtMallocConfig *)
 {
     if (devPtr != nullptr) {
         *devPtr = nullptr;
@@ -430,7 +430,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildAndGetDevChannelEntity_Expect_Succ
     channel->channelStatus_ = ChannelStatus::READY;
     channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
 
-    MOCKER(aclrtMalloc).stubs().will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
     using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
@@ -454,7 +454,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildSlab_Expect_Success)
     channel->channelStatus_ = ChannelStatus::READY;
     channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
 
-    MOCKER(aclrtMalloc).stubs().will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
     using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
@@ -488,7 +488,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildSlab_CachedReturn_Expect_SamePtr)
     channel->channelStatus_ = ChannelStatus::READY;
     channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
 
-    MOCKER(aclrtMalloc).stubs().will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
     using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
@@ -521,7 +521,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildSlab_AclrtMallocFail_Expect_Memory
     channel->channelStatus_ = ChannelStatus::READY;
     channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
 
-    MOCKER(aclrtMalloc).stubs().will(invoke(StubAclrtMallocFail));
+    MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMallocFail));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
     using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyVoid)));
@@ -547,7 +547,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_Clean_FreesSlab_CanRebuild)
     channel->channelStatus_ = ChannelStatus::READY;
     channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
 
-    MOCKER(aclrtMalloc).stubs().will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
     using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
@@ -862,7 +862,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_PreAllocDevChannelEntity_When_Normal_Returns
     channel->channelStatus_ = ChannelStatus::READY;
     channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
 
-    MOCKER(aclrtMalloc).stubs().will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
     using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
@@ -884,7 +884,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_PreAllocDevChannelEntity_When_AlreadyBuilt_R
     channel->channelStatus_ = ChannelStatus::READY;
     channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
 
-    MOCKER(aclrtMalloc).stubs().will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
     using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
@@ -909,7 +909,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_FillDevChannelEntity_When_PreAllocatedAndRea
     channel->channelStatus_ = ChannelStatus::READY;
     channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
 
-    MOCKER(aclrtMalloc).stubs().will(invoke(StubAclrtMalloc));
+    MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
     using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
