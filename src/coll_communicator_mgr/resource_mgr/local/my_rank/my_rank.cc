@@ -945,4 +945,3 @@ CollCommConfigConsistency &MyRank::GetCollCommConfigConsistency()
 }
 
 } // namespace hccl
-

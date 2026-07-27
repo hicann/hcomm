@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mockcpp.hpp>
 #include <mockcpp/MockObject.h>
+#include <string>
 #define private public
 #define protected public
 #include "rdma_handle_manager.h"
@@ -28,11 +29,81 @@
 #include "phy_topo_builder.h"
 #include "phy_topo.h"
 #include "detour_service.h"
-#include "ranktable_stub_64_plus_1.h"
 #undef protected
 #undef private
 
 using namespace Hccl;
+
+namespace {
+const std::string RANK_TABLE_4P_FOR_TRANSPORT = R"(
+{
+    "version": "2.0",
+    "rank_count": 4,
+    "rank_list": [
+        {
+            "rank_id": 0,
+            "device_id": 0,
+            "local_id": 0,
+            "level_list": [{
+                "net_layer": 0,
+                "net_instance_id": "az0-rack0",
+                "net_type": "TOPO_FILE_DESC",
+                "net_attr": "",
+                "rank_addr_list": [
+                    {"addr_type": "IPV4", "addr": "192.168.30.1", "ports": ["0/0"]},
+                    {"addr_type": "IPV4", "addr": "192.168.20.1", "ports": ["1/0"]}
+                ]
+            }]
+        },
+        {
+            "rank_id": 1,
+            "device_id": 1,
+            "local_id": 1,
+            "level_list": [{
+                "net_layer": 0,
+                "net_instance_id": "az0-rack0",
+                "net_type": "TOPO_FILE_DESC",
+                "net_attr": "",
+                "rank_addr_list": [
+                    {"addr_type": "IPV4", "addr": "192.168.30.2", "ports": ["0/0"]},
+                    {"addr_type": "IPV4", "addr": "192.168.20.2", "ports": ["1/0"]}
+                ]
+            }]
+        },
+        {
+            "rank_id": 2,
+            "device_id": 2,
+            "local_id": 2,
+            "level_list": [{
+                "net_layer": 0,
+                "net_instance_id": "az0-rack0",
+                "net_type": "TOPO_FILE_DESC",
+                "net_attr": "",
+                "rank_addr_list": [
+                    {"addr_type": "IPV4", "addr": "192.168.30.3", "ports": ["0/0"]},
+                    {"addr_type": "IPV4", "addr": "192.168.20.3", "ports": ["1/0"]}
+                ]
+            }]
+        },
+        {
+            "rank_id": 3,
+            "device_id": 3,
+            "local_id": 3,
+            "level_list": [{
+                "net_layer": 0,
+                "net_instance_id": "az0-rack0",
+                "net_type": "TOPO_FILE_DESC",
+                "net_attr": "",
+                "rank_addr_list": [
+                    {"addr_type": "IPV4", "addr": "192.168.30.4", "ports": ["0/0"]},
+                    {"addr_type": "IPV4", "addr": "192.168.20.4", "ports": ["1/0"]}
+                ]
+            }]
+        }
+    ]
+}
+)";
+} // namespace
 
 class MemTransportManagerTest : public testing::Test {
 protected:
@@ -48,11 +119,13 @@ protected:
 
     virtual void SetUp()
     {
+        PhyTopo::GetInstance()->Clear();
         std::cout << "A Test case in MemTransportManager SetUP" << std::endl;
     }
 
     virtual void TearDown()
     {
+        PhyTopo::GetInstance()->Clear();
         std::cout << "A Test case in MemTransportManager TearDown" << std::endl;
         GlobalMockObject::verify();
     }
@@ -511,8 +584,8 @@ TEST_F(MemTransportManagerTest, MemTransportManager_UT_GetUrmaWqsAndCqs)
     comm.rankSize = 4;
     comm.myRank = 0;
     RankGraphBuilder rankGraphBuilder;
-    string topoFilePath{HCOMM_CODE_ROOT_DIR "/test/legacy/ut/framework/topo/new_topo_builder/rank_graph_64_plus_1/topo_4p.json"};
-    unique_ptr<RankGraph> rankGraph = rankGraphBuilder.Build(RANK_TABLE_4P, topoFilePath, 0);
+    string topoFilePath{HCOMM_CODE_ROOT_DIR "/test/legacy/ut/framework/resource_manager/transport/topo_4p.json"};
+    unique_ptr<RankGraph> rankGraph = rankGraphBuilder.Build(RANK_TABLE_4P_FOR_TRANSPORT, topoFilePath, 0);
     comm.rankGraph = std::move(rankGraph);
     MemTransportManager          transportManager(comm);
     

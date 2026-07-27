@@ -12,6 +12,7 @@ add_subdirectory(common)
 add_subdirectory(resource_mgr)
 add_subdirectory(api_c_adpt)
 add_subdirectory(rank_graph)
+add_subdirectory(rank_info_detect)
 add_subdirectory(dfx)
 add_subdirectory(config_mgr)
 add_subdirectory(communicator)
@@ -21,4 +22,3 @@ if(TARGET hcomm)
         ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif()
-

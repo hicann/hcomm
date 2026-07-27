@@ -88,17 +88,55 @@ set(src_to_test_list
     comms/endpoints/dfx/ut_endpoint_monitor.cc
     coll_comms/rank/ut_exchange_info_mgr.cc
     coll_comms/rank/comm_mems/test_hcclCommMemReg_api.cc
+    coll_comms/rank_graphs/common/ut_conn_interface.cc
+    coll_comms/rank_graphs/common/ut_graph.cc
+    coll_comms/rank_graphs/phy_topo/ut_phy_topo.cc
+    coll_comms/rank_graphs/phy_topo_builder/ut_phy_topo_builder.cc
+    coll_comms/rank_graphs/rank_graph/ut_net_instance.cc
+    coll_comms/rank_graphs/rank_graph/ut_rank_graph.cc
+    coll_comms/rank_graphs/rank_graph_builder/ut_detour_service.cc
+    coll_comms/rank_graphs/rank_graph_builder/ut_rank_graph_builder.cc
+    coll_comms/rank_graphs/rank_graph_builder/ut_updater_for_64_plus_1.cc
+    coll_comms/rank_graphs/rank_table_info/ut_address_info.cc
+    coll_comms/rank_graphs/rank_table_info/ut_control_plane.cc
+    coll_comms/rank_graphs/rank_table_info/ut_new_rank_info.cc
+    coll_comms/rank_graphs/rank_table_info/ut_rank_level_info.cc
+    coll_comms/rank_graphs/rank_table_info/ut_rank_table_info.cc
+    coll_comms/rank_graphs/topo_info/ut_edge_info.cc
+    coll_comms/rank_graphs/topo_info/ut_peer_info.cc
+    coll_comms/rank_graphs/topo_info/ut_topo_info.cc
+    coll_comms/rank_info_detect/ut_bootstrap_ip.cc
+    coll_comms/rank_info_detect/ut_rank_info_detect.cc
+    coll_comms/rank_info_detect/ut_rank_info_detect_client.cc
+    coll_comms/rank_info_detect/ut_rank_info_detect_service.cc
+    coll_comms/rank_info_detect/ut_rankinfo_dispatcher.cc
+    ${HCCL_CODE_ROOT}/test/legacy/ut/framework/env_config/env_config_stub.cc
 )
 
 add_executable(hccl_utest_test_next_resource ${src_to_test_list})
 target_include_directories(hccl_utest_test_next_resource PRIVATE
-    ${UT_COMMON_INCLUDE_LIST}
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/group_schedule_mgr/
+
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/endpoints
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/remote/rank_pairs
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine_reses/notify
+
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/common
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo_builder
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/topo_info
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_info_detect
+    ${UT_COMMON_INCLUDE_LIST}
+    ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/topo/rank_info_detect
+    ${HCCL_CODE_ROOT}/test/legacy/ut/framework/env_config
+    ${CMAKE_CURRENT_SOURCE_DIR}/coll_comms/rank_graphs/common
+    ${CMAKE_CURRENT_SOURCE_DIR}/coll_comms/rank_graphs/rank_graph_64_plus_1
+    ${CMAKE_CURRENT_SOURCE_DIR}/coll_comms/rank_graphs/rank_graph_builder
 )
 
 target_compile_definitions(hccl_utest_test_next_resource PRIVATE

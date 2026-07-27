@@ -10,9 +10,4 @@
 target_sources(hccl_v2_utest
         PUBLIC
         ut_preempt_port_manager.cc
-        ut_rankinfo_dispatcher.cc
-        ut_rank_info_detect.cc
-        ut_bootstrap_ip.cc
-        ut_rank_info_detect_service.cc
-        ut_rank_info_detect_client.cc
 )

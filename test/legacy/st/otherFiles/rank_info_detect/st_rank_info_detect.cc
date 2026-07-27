@@ -37,7 +37,7 @@
 using namespace std;
 using namespace Hccl;
 
-string whitelistFilePath = "llt/ace/comop/hccl/orion/ut/framework/topo/rank_info_detect/whitelist.json";
+string whitelistFilePath = "llt/ace/comop/hccl/orion/st/otherFiles/rank_info_detect/whitelist.json";
 
 const u32 RANKINFO_DETECT_SERVER_STATUS_IDLE = 0;
 const u32 RANKINFO_DETECT_SERVER_STATUS_RUNING = 1;
@@ -263,4 +263,3 @@ TEST_F(RankInfoDetectTest, St_WaitComplete_When_InpSt_Expect_Right)
     // check
     EXPECT_THROW(rankInfoDetect.WaitComplete(4000), TimeoutException);
 }
-

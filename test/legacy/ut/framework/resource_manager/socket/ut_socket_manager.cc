@@ -20,6 +20,7 @@
 #include "preempt_port_manager.h"
 #include "host_socket_handle_manager.h"
 #include "phy_topo.h"
+#include "rank_graph_builder.h"
 #undef protected
 #undef private
 

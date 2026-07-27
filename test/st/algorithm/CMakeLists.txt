@@ -219,12 +219,12 @@ set(HCOMM_LEGACY_INCLUDE_LIST
     ${HCOMM_CODE_LEGACY}/framework/communicator/aicpu
     ${HCOMM_CODE_LEGACY}/framework/resource_manager/socket
     ${HCOMM_CODE_LEGACY}/framework/topo
-    ${HCOMM_CODE_LEGACY}/framework/topo/new_topo_builder/common
-    ${HCOMM_CODE_LEGACY}/framework/topo/new_topo_builder/rank_graph
-    ${HCOMM_CODE_LEGACY}/framework/topo/new_topo_builder/rank_table_info
-    ${HCOMM_CODE_LEGACY}/framework/topo/new_topo_builder/rank_graph_builder
-    ${HCOMM_CODE_LEGACY}/framework/topo/new_topo_builder/phy_topo
-    ${HCOMM_CODE_LEGACY}/framework/topo/new_topo_builder/topo_info
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/common
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/topo_info
     ${HCOMM_CODE_LEGACY}/service/collective
     ${HCOMM_CODE_LEGACY}/service/collective/primitive
     ${HCOMM_CODE_LEGACY}/unified_platform
