@@ -479,12 +479,16 @@ namespace hccl
         // 下kernel进行自定义算子aicpu侧通信域的公共初始化
         std::string kernelName = "RunAicpuIndOpCommInit";
         HCCL_INFO("AicpuAclKernelLaunch start");
-        u16 timeOut = NOTIFY_DEFAULT_WAIT_TIME > std::numeric_limits<uint16_t>::max() ? 
-                        std::numeric_limits<uint16_t>::max() : NOTIFY_DEFAULT_WAIT_TIME;
+        s32 timeout = 1836;
+        if (IsCommunicatorV2()) {
+            timeout = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut() + 25; // 多25s，避免超时
+        } else {
+            timeout = CommConfiger::GetInstance().GetCommConfigExecTimeOut("") + 25; // 多25s，避免超时
+        }
         CHK_RET(AicpuAclKernelLaunch(localStream.ptr(), reinterpret_cast<void *>(&commAicpuParam_),
-            sizeof(commAicpuParam_), binHandle_, kernelName, true, timeOut));
+            sizeof(commAicpuParam_), binHandle_, kernelName, true, timeout));
         HCCL_INFO("AicpuAclKernelLaunch end, hcclStreamSynchronize start");
-        CHK_RET(hcclStreamSynchronize(localStream.ptr(), CommConfiger::GetInstance().GetCommConfigExecTimeOut("")));
+        CHK_RET(hcclStreamSynchronize(localStream.ptr(), timeout));
         HCCL_INFO("[KernelLaunchAicpuCommInit] ReportAicpuCommKernel begin");
         CHK_PTR_NULL(collComm_);
         HcclCommDfx* hcclComDfx = collComm_->GetHcclCommDfx();

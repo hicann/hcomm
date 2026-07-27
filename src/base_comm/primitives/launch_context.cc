@@ -11,7 +11,7 @@
 #include "new/hccl_primitive_local.h"
 
 constexpr u32 THREAD_VECTOR_DEFAULT_SIZE = 128; // 设置vector初始长度，避免频繁扩容
-constexpr u32 NOTIFY_WAIT_TIMEOUT_OFFSET = 50; // AICPU device侧notify等待超时偏移量
+constexpr u32 NOTIFY_WAIT_TIMEOUT_OFFSET = 27; // AICPU device侧notify等待超时偏移量
 
 extern HcclResult CommTaskLaunch(ThreadHandle *threads, uint32_t threadNum); // host ffts+或aicpu stars使用"
 extern HcclResult CommTaskPrepare(char *key, uint32_t keyLen); // host ffts+使用

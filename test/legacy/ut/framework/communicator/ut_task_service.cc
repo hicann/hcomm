@@ -52,7 +52,7 @@ int32_t TaskServiceTest::g_callbackResult = 0;
 
 // ===== Helper: set up TASK_OK payload in shared memory =====
 static void SetupOkTask(uint8_t *base, const std::string &taskType,
-                         uint32_t msgId, uint32_t dataSize)
+                         uint32_t msgId, uint32_t dataSize, uint32_t timeout = 0)
 {
     char *taskTypePtr = reinterpret_cast<char *>(base + 1);
     memset(static_cast<void *>(taskTypePtr), 0, 256);
@@ -64,7 +64,9 @@ static void SetupOkTask(uint8_t *base, const std::string &taskType,
     taskTypePtr[copyLen] = '\0';
     uint32_t *msgIdPtr = reinterpret_cast<uint32_t *>(base + 1 + 256);
     *msgIdPtr = msgId;
-    size_t *dataSizePtr = reinterpret_cast<size_t *>(base + 1 + 256 + sizeof(uint32_t));
+    uint32_t *timeoutPtr = reinterpret_cast<uint32_t *>(base + 1 + 256 + sizeof(uint32_t));
+    *timeoutPtr = timeout;
+    size_t *dataSizePtr = reinterpret_cast<size_t *>(base + 1 + 256 + sizeof(uint32_t) + sizeof(uint32_t));
     *dataSizePtr = static_cast<size_t>(dataSize);
     base[0] = 1; // TASK_OK
 }
@@ -98,7 +100,7 @@ static int32_t FailingCallback(uint64_t /*addr*/, int32_t /*size*/)
 
 TEST_F(TaskServiceTest, Ut_TaskRun_When_DataSizeIsZero_Expect_ReturnError) {
     // shmemSize_ < controlSize => hostSize_ = 0 => TaskRun returns HCCL_E_INTERNAL
-    constexpr int32_t controlSize = sizeof(uint8_t) + sizeof(char) * 256 + sizeof(uint32_t) + sizeof(size_t);
+    constexpr int32_t controlSize = sizeof(uint8_t) + sizeof(char) * 256 + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(size_t);
     constexpr int32_t deviceMemSize = controlSize * 1; // less than controlSize * 2
     constexpr int32_t hostMemSize = 1024;
 
@@ -113,7 +115,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_DataSizeIsZero_Expect_ReturnError) {
 
 TEST_F(TaskServiceTest, Ut_TaskRun_When_DataSizeExceedsHostMemSize_Expect_ReturnError) {
     // 测试 dataSize_ > hostMemSize_ 的情况
-    constexpr int32_t controlSize = sizeof(uint8_t) + sizeof(char) * 256 + sizeof(uint32_t);
+    constexpr int32_t controlSize = sizeof(uint8_t) + sizeof(char) * 256 + sizeof(uint32_t) + sizeof(uint32_t);
     constexpr int32_t deviceMemSize = (controlSize + 2048) * 2; // dataSize_ = 2048
     constexpr int32_t hostMemSize = 1024; // hostMemSize_ < dataSize_
     
@@ -270,7 +272,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkDataTooLarge_Expect_Error)
     constexpr int32_t hostMemSize = 512;
     std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
-    // deviceMemSize=1024 => shmemSize_=512 => leftSize_=512-261=251
+    // deviceMemSize=1024 => shmemSize_=512 => leftSize_=512-273=239
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize);
     taskService.TaskRegister("testTask", TrackingCallback);
@@ -281,7 +283,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkDataTooLarge_Expect_Error)
     });
 
     WaitForTaskRunLoop(deviceMem.data());
-    SetupOkTask(deviceMem.data(), "testTask", 42, 500); // dataSize=500 > leftSize_=251
+    SetupOkTask(deviceMem.data(), "testTask", 42, 500); // dataSize=500 > leftSize_=239
     // flag is now TASK_OK (1) from SetupOkTask
 
     taskThread.join();
@@ -341,7 +343,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkFlow_Expect_Success)
     const uint32_t msgId = 12345;
     const uint32_t dataSize = 16;
     for (uint32_t i = 0; i < dataSize; i++) {
-        deviceMem[269 + i] = static_cast<uint8_t>(i); // fill data area
+        deviceMem[273 + i] = static_cast<uint8_t>(i); // fill data area
     }
     SetupOkTask(deviceMem.data(), taskType, msgId, dataSize);
     // flag is now TASK_OK (1) from SetupOkTask

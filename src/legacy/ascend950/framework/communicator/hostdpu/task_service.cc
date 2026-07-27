@@ -15,11 +15,13 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include "env_config/env_config.h"
 
 namespace Hccl {
 constexpr uint32_t CTRL_HDR_FLAG_LENGTH    = 1;
 constexpr uint32_t TASKTYPE_ADDR_LENGTH    = 256;
 constexpr uint32_t CTRL_HDR_MSG_ID_LEN     = 4;
+constexpr uint32_t TIMEOUT_SIZE_BYTE       = 4; // timeout字段长度为4字节，表示超时时间，单位为秒
 constexpr uint32_t CTRL_HDR_DATA_SIZE_LEN  = 8; // size_t 在不同平台上长度不同，取最大值
 constexpr uint32_t CTRL_HDR_DEFAULT_DATA_LEN  = 512;
 
@@ -32,7 +34,7 @@ constexpr uint8_t  MEMORY_DEVIDE           = 2;
 TaskService::TaskService(void *deviceMem, int32_t deviceMemSize, void *hostMem, int32_t hostMemSize)
     : npu2dpuMem_(deviceMem), shmemSize_(deviceMemSize / MEMORY_DEVIDE), hostMem_(hostMem), hostMemSize_(hostMemSize)
 {
-    int32_t controlSize = sizeof(uint8_t) + sizeof(char) * TASKTYPE_ADDR_LENGTH + sizeof(uint32_t) + CTRL_HDR_DATA_SIZE_LEN;
+    int32_t controlSize = sizeof(uint8_t) + sizeof(char) * TASKTYPE_ADDR_LENGTH + sizeof(uint32_t) + TIMEOUT_SIZE_BYTE + CTRL_HDR_DATA_SIZE_LEN;
     if (shmemSize_ < controlSize) {
         leftSize_ = 0;
     } else {
@@ -139,13 +141,13 @@ HcclResult TaskService::ExecuteTask(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t *
     }
 
     // copy data
-    uint64_t dataLen = *(size_t *)(ctrlHdr + CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN);
+    uint64_t dataLen = *(size_t *)(ctrlHdr + CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + TIMEOUT_SIZE_BYTE);
     if (dataLen > static_cast<uint64_t>(leftSize_) || dataLen > static_cast<uint64_t>(hostMemSize_)) {
         HCCL_ERROR("[TaskService::%s] dataLen[%llu] larger than leftSize[%d] or hostMemSize[%d]", __func__, dataLen,
             leftSize_, hostMemSize_);
         return HCCL_E_PARA;
     }
-    uint32_t ctrlHdrLen = CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + CTRL_HDR_DATA_SIZE_LEN;
+    uint32_t ctrlHdrLen = CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + TIMEOUT_SIZE_BYTE + CTRL_HDR_DATA_SIZE_LEN;
     /* ctrlHdr提前从deviceMem copy一定长度，如果长度够，直接从ctrlHdr copy，减少一次aclmemcpy耗时 */
     if (hdrLen < ctrlHdrLen + dataLen) {
         uint8_t *dataPtr = srcPtr + ctrlHdrLen;
@@ -226,10 +228,14 @@ HcclResult TaskService::TaskRun()
     }
     uint8_t flag{0};
     uint8_t *srcFlagPtr = static_cast<uint8_t *>(npu2dpuMem_);
+    uint8_t *dstTimeoutPtr = static_cast<uint8_t *>(dpu2npuMem_) + sizeof(flag) + sizeof(char) * TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN;
     uint8_t *srcTaskTypePtr = srcFlagPtr + sizeof(flag);
-    uint64_t hdrLen = CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + CTRL_HDR_DATA_SIZE_LEN +
-        CTRL_HDR_DEFAULT_DATA_LEN;
+    uint64_t hdrLen = CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + TIMEOUT_SIZE_BYTE +
+        CTRL_HDR_DATA_SIZE_LEN + CTRL_HDR_DEFAULT_DATA_LEN;
     uint8_t ctrlHdr[hdrLen];
+    u32 timeout = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
+    timeout = timeout > 1 ? timeout - 1 : timeout; // 执行超时时间减1秒，避免aicpu侧超时
+    CHK_SAFETY_FUNC_RET(memcpy_s(dstTimeoutPtr, sizeof(timeout),  &timeout, sizeof(timeout)));
 
     CHK_RET(WriteFlag(srcFlagPtr, TASK_UNSET)); // 初始化重置flag 为 0
 

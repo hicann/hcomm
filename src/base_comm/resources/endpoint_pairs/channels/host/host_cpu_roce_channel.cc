@@ -30,9 +30,9 @@
 #include "../../../../../base_comm/resources/hccp/inc/network/hccp_common.h"
 #include "dlprof_function.h"
 #include "user_remote_mem_getter.h"
+#include "env_config/env_config.h"
 
 namespace hcomm {
-constexpr u32 FENCE_TIMEOUT_MS = 30 * 1000; // 定义最大等待30秒
 constexpr u32 MEM_BLOCK_SIZE = 128;
 constexpr uint16_t DEFAULT_LISTENING_PORT = 60001;
 constexpr u32 SEND_RQE_COUNT = 16;
@@ -1199,7 +1199,8 @@ HcclResult HostCpuRoceChannel::WaitForFenceCompletion()
         return HCCL_SUCCESS;
     }
     
-    auto timeout = std::chrono::milliseconds(FENCE_TIMEOUT_MS);
+    auto timeout = std::chrono::milliseconds(
+        static_cast<uint64_t>(Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut()) * 1000ULL); // 乘1000转为毫秒
     for (uint32_t i = 0; i < qpInfo.size(); i++) {
         std::vector<struct ibv_wc> wc(wqeNums_[i]);
         CHK_PRT_RET(qpInfo[i].sendCq == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] qp[%u] sendCq is null", __func__, i), HCCL_E_INTERNAL);

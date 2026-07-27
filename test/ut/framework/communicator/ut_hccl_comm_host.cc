@@ -3,6 +3,8 @@
 
 #include "hccl_api_base_test.h"
 #include "../../stub/llt_hccl_stub_rank_graph.h"
+#include "launch_aicpu.h"
+#include "adapter_rts.h"
 
 using namespace hccl;
 
@@ -214,4 +216,23 @@ TEST_F(HcclCommHostTest, Ut_BinaryUnLoad_When_BinHandleNotNullAndUnloadSuccess_E
     hcclCommPtr->BinaryUnLoad();
 
     EXPECT_EQ(hcclCommPtr->binHandle_, nullptr);
+}
+
+TEST_F(HcclCommHostTest, Ut_KernelLaunchAicpuCommInit_When_Normal_Expect_ReachesStreamSynchronize)
+{
+    std::shared_ptr<hccl::hcclComm> hcclCommPtr = std::make_shared<hccl::hcclComm>(1, 1, "test_comm");
+    hcclCommPtr->devType_ = DevType::DEV_TYPE_950;
+
+    // Stream 构造: hrtStreamCreateWithFlags 失败使 stream_ 保持为空，避免析构时销毁真实资源
+    MOCKER(hrtStreamCreateWithFlags).stubs().will(returnValue(static_cast<HcclResult>(HCCL_E_RUNTIME)));
+    MOCKER(hrtGetHcclV2Support).stubs().will(returnValue(HCCL_SUCCESS));
+    // KernelLaunchAicpuCommInit 主路径 mock
+    MOCKER(hrtStreamSetMode).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(hccl::AicpuAclKernelLaunch).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(hcclStreamSynchronize).stubs().will(returnValue(HCCL_SUCCESS));
+
+    // 覆盖 line 479 (s32 timeout = 1836) 与 line 488 (hcclStreamSynchronize)；
+    // collComm_ 为空时 line 490 CHK_PTR_NULL 返回 HCCL_E_PTR
+    HcclResult ret = hcclCommPtr->KernelLaunchAicpuCommInit();
+    EXPECT_EQ(ret, HCCL_E_PTR);
 }

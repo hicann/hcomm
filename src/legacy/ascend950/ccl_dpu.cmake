@@ -66,6 +66,7 @@ target_include_directories(ccl_dpu PRIVATE
     ${HCOMM_DIR}/include/hccl
     ${HCOMM_DIR}/pkg_inc
     ${HCOMM_DIR}/src/common
+    ${HCOMM_DIR}/src/legacy/ascend910/common/error_manager
 
     ${CMAKE_CURRENT_SOURCE_DIR}/common
     ${CMAKE_CURRENT_SOURCE_DIR}/common/types
@@ -75,6 +76,8 @@ target_include_directories(ccl_dpu PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/base/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/unified_platform/pub_inc
     ${CMAKE_CURRENT_SOURCE_DIR}/unified_platform/external_system
+    ${CMAKE_CURRENT_SOURCE_DIR}/service/collective/primitive
+    ${CMAKE_CURRENT_SOURCE_DIR}/framework
     ${CMAKE_CURRENT_SOURCE_DIR}/framework/dfx
     ${CMAKE_CURRENT_SOURCE_DIR}/framework/dfx/profiling
 )

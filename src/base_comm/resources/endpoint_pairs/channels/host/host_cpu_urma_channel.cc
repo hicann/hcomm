@@ -20,9 +20,9 @@
 #include "topo_common_types.h"
 #include "virtual_topo.h"
 #include "aicpu_res_package_helper.h"
+#include "env_config/env_config.h"
 
 namespace hcomm {
-constexpr u32 FENCE_TIMEOUT_MS = 30 * 1000; // 定义最大等待30秒
 constexpr u32 MEMORY_BLOCK_SIZE = 128;
 constexpr uint16_t DEFAULT_LISTENING_PORT = 60001;
 
@@ -372,7 +372,8 @@ HcclResult hcomm::HostCpuUrmaChannel::ChannelFence()
     CHK_PRT_RET(wqeNum_ == 0, HCCL_INFO("[HostCpuUrmaChannel::%s] no need to fence since no wqeNum[%u].", __func__), HCCL_SUCCESS);
     std::vector<urma_cr_t> wc(wqeNum_);
 
-    auto timeout = std::chrono::milliseconds(FENCE_TIMEOUT_MS);
+    auto timeout = std::chrono::milliseconds(
+        static_cast<uint64_t>(Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut()) * 1000ULL); // 乘1000转为毫秒
     auto startTime = std::chrono::steady_clock::now();
     while (true) {
         auto actualNum = HrtUrmaPollJfc(reinterpret_cast<urma_jfc_t*>(connections_[0]->GetCqVa()), wqeNum_, wc.data());

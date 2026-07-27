@@ -12,6 +12,7 @@
 #include "coll_comm_aicpu_mgr.h"
 #include "hcclCommOp.h"
 #include "hcclCommDfxLite.h"
+#include "env_config/env_config.h"
 
 using namespace hccl;
 
@@ -95,29 +96,30 @@ CollCommAicpuMgr *AicpuIndopProcess::AicpuGetCommMgrbyGroup(const std::string &g
     HCCL_INFO("[AicpuIndopProcess][%s]start, group[%s]", __func__, group.c_str());
     auto startTime = std::chrono::steady_clock::now();
     constexpr u32 pollIntervalUs = 10; // 轮询间隔10us
-    constexpr u32 pollTimeoutMs = 10000; //临时规避host侧在临时流下发kernel获取锁超时的问题
+    constexpr u32 pollTimeoutMs = 10000; // 等待超过10秒，打印一次日志
     auto waitPollTimeOutMs = std::chrono::milliseconds(pollTimeoutMs);
     ReadWriteLock rwlock(g_commAicpuInfo.commAicpuMgrMapMutex);
 
     while (true) {
         rwlock.readLock();
         auto iter = g_commAicpuInfo.commMgrMap.find(group);
-        if (iter == g_commAicpuInfo.commMgrMap.end()) {
-            HCCL_ERROR("[AicpuIndopProcess] exist group size is [%u]", g_commAicpuInfo.commMgrMap.size());
+        if (iter == g_commAicpuInfo.commMgrMap.end()) { // 通信域未创建
+            HCCL_ERROR("[AicpuIndopProcess][%s] exist group size is [%u]", __func__, g_commAicpuInfo.commMgrMap.size());
             auto curIter = g_commAicpuInfo.commMgrMap.begin();
-            int i = 0;
+
             while (curIter != g_commAicpuInfo.commMgrMap.end()) {
-                HCCL_ERROR("[AicpuIndopProcess] exist group idx is [%d] key[%s] value", i, curIter->first.c_str());
+                HCCL_ERROR("[AicpuIndopProcess][%s] exist group [%s]", __func__, curIter->first.c_str());
                 curIter++;
             }
             rwlock.readUnlock();
             return nullptr;
         }
-        if (iter->second->IsUsed()) {
-            if ((std::chrono::steady_clock::now() - startTime) >= waitPollTimeOutMs) {
-                HCCL_ERROR("[AicpuIndopProcess][%s]poll timeout, comm group [%s] has been used", __func__, group.c_str());
-                rwlock.readUnlock();
-                return nullptr;
+
+        if (iter->second->IsUsed()) { // 通信域被占用
+            auto curTime = std::chrono::steady_clock::now();
+            if ((curTime - startTime) >= waitPollTimeOutMs) {
+                startTime = curTime;
+                HCCL_RUN_INFO("[AicpuIndopProcess][%s]wait, comm group [%s] has been used", __func__, group.c_str());
             }
             rwlock.readUnlock();
             usleep(pollIntervalUs);
