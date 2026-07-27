@@ -21,6 +21,7 @@
 #include "hcclCommTaskExceptionLite.h"
 #include "coll_comm_aicpu_destroy_func.h"
 #include "aicpu_indop_env.h"
+#include "unified_platform/pub_inc/config_plf_log.h"
 
 constexpr u32 NOTIFY_SIZE_EIGHT = 8;
 
@@ -94,8 +95,10 @@ HcclResult CollCommAicpu::InitHDCommunicate(CommAicpuParam *commAicpuParam)
 void CollCommAicpu::InitIndopEnv(CommAicpuParam *commAicpuParam)
 {
     hcomm::SetTaskExceptionEnable(commAicpuParam->commConfig.taskExceptionEnable);
-    HCCL_RUN_INFO("[%s]Env: taskExceptionEnable[%d], notifyWaitTimeout[%u]",
-        __func__, commAicpuParam->commConfig.taskExceptionEnable, commAicpuParam->commConfig.notifyWaitTimeout);
+    Hccl::SetPlfDebugConfigValue(commAicpuParam->commConfig.plfDebugConfig);
+    HCCL_RUN_INFO("[%s]Env: taskExceptionEnable[%d], notifyWaitTimeout[%u], plfDebugConfig[0x%llx]",
+        __func__, commAicpuParam->commConfig.taskExceptionEnable, commAicpuParam->commConfig.notifyWaitTimeout,
+        commAicpuParam->commConfig.plfDebugConfig);
 }
 
 void CollCommAicpu::SetCommmStatus(HcclCommStatus status)

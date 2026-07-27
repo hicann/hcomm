@@ -29,6 +29,9 @@ void MirrorTaskManagerLite::RegGetRemoteRankCallBack(std::function<u32(u64)> cal
 
 HcclResult MirrorTaskManagerLite::AddTaskInfo(u32 streamId, u32 taskId, const Hccl::TaskParam &taskParam, u64 handle)
 {
+    u32 remoteRankId = getRemoteRankCallback_ ? getRemoteRankCallback_(handle) : INVALID_U32;
+    PrintTaskLog(streamId, taskId, taskParam, remoteRankId);
+
     auto it = streamQueues_.find(streamId);
     if (UNLIKELY(it == streamQueues_.end())) {
         auto cq = std::make_unique<CircularQueue<std::unique_ptr<TaskInfo>>>(MAX_AICPU_CIRCULAR_QUEUE_LENGTH);

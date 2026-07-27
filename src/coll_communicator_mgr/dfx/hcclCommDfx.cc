@@ -9,6 +9,7 @@
  */
 #include "hcclCommDfx.h"
 #include "ccu_rep_context_v1.h"
+#include "task_info.h"
 
 namespace hccl {
 
@@ -87,6 +88,9 @@ HcclResult HcclCommDfx::AddTaskInfoCallback(u32 streamId, u32 taskId, const Hccl
     if (handle != INVALID_U64) {
         CHK_RET(GetChannelRemoteRankId(commTag_, handle, remoteRankId));
     }
+
+    Hccl::PrintTaskLog(streamId, taskId, taskParam, remoteRankId);
+
     if (taskParam.taskType == Hccl::TaskParamType::TASK_CCU && taskParam.ccuDetailInfo != nullptr) {
         std::shared_lock<std::shared_mutex> rwLock(baseLock_);
         auto commIt = channelRemoteRankId_.find(commTag_);

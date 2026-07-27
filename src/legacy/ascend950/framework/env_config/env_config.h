@@ -11,6 +11,7 @@
 #define HCCLV2_ENV_CONFIG_H
 
 #include "base_config.h"
+#include "plf_debug_config.h"
 
 namespace Hccl {
 
@@ -35,6 +36,8 @@ public:
 
     const EnvDetourConfig &GetDetourConfig();
 
+    const EnvPlfDebugConfig &GetPlfDebugConfig();
+
     EnvConfig(const EnvConfig &envConfig) = delete;
 
     EnvConfig &operator=(const EnvConfig &envConfig) = delete;
@@ -49,6 +52,7 @@ private:
     EnvAlgoConfig          algoCfg;
     EnvLogConfig           logCfg;
     EnvDetourConfig        detourCfg;
+    EnvPlfDebugConfig      plfDebugCfg;
     EnvConfig();
 };
 

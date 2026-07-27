@@ -88,6 +88,8 @@ private:
     std::string GetReduceOp() const;
 };
 
+void PrintTaskLog(u32 streamId, u32 taskId, const TaskParam &taskParam, u32 remoteRankId);
+
 } // namespace Hccl
 
 #endif

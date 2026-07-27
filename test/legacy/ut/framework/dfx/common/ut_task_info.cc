@@ -273,3 +273,38 @@ TEST_F(TaskInfoTest, Ut_GetOpInfo_When_DfxOpInfoValid_Expect_ReturnOpInfo)
     EXPECT_NE(result.find("commIndex[5]"), std::string::npos);
     EXPECT_NE(result.find("count[100]"), std::string::npos);
 }
+
+TEST_F(TaskInfoTest, Ut_PrintTaskLog_When_TaskTypeSdma_Expect_NoCrash)
+{
+    TaskParam taskParam{};
+    taskParam.taskType = TaskParamType::TASK_SDMA;
+    taskParam.taskPara.DMA.src = reinterpret_cast<void*>(0x1234);
+    taskParam.taskPara.DMA.dst = reinterpret_cast<void*>(0x5678);
+    taskParam.taskPara.DMA.size = 1024;
+    taskParam.taskPara.DMA.notifyID = 999;
+    PrintTaskLog(0, 0, taskParam, 0);
+    SUCCEED();
+}
+
+TEST_F(TaskInfoTest, Ut_PrintTaskLog_When_TaskTypeReduce_Expect_NoCrash)
+{
+    TaskParam taskParam{};
+    taskParam.taskType = TaskParamType::TASK_REDUCE_INLINE;
+    taskParam.taskPara.Reduce.src = reinterpret_cast<void*>(0x1234);
+    taskParam.taskPara.Reduce.dst = reinterpret_cast<void*>(0x5678);
+    taskParam.taskPara.Reduce.size = 1024;
+    taskParam.taskPara.Reduce.notifyID = 999;
+    taskParam.taskPara.Reduce.dataType = HcclDataType::HCCL_DATA_TYPE_INT32;
+    taskParam.taskPara.Reduce.reduceOp = HcclReduceOp::HCCL_REDUCE_SUM;
+    PrintTaskLog(0, 0, taskParam, 0);
+    SUCCEED();
+}
+
+TEST_F(TaskInfoTest, Ut_PrintTaskLog_When_TaskTypeNotify_Expect_NoCrash)
+{
+    TaskParam taskParam{};
+    taskParam.taskType = TaskParamType::TASK_NOTIFY_RECORD;
+    taskParam.taskPara.Notify.notifyID = 888;
+    PrintTaskLog(0, 0, taskParam, 0);
+    SUCCEED();
+}

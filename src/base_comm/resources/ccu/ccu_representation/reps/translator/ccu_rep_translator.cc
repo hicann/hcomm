@@ -24,8 +24,12 @@
 #include "ccu_ins_generater_v1.h"
 #include "../../../ccu_device/ccu_res_specs.h"
 
+#include "unified_platform/pub_inc/config_plf_log.h"
+
 namespace hcomm {
 namespace CcuRep {
+
+using Hccl::PLF_TASK;
 
 CcuVersion CcuRepTranslator::ccuVersion = CcuVersion::CCU_INVALID;
 
@@ -333,7 +337,7 @@ void CcuRepTranslator::DumpInstruction(const CcuInstrInfo &instrInfo) const
 void CcuRepTranslator::DumpRep(const std::vector<std::shared_ptr<CcuRepBase>> &repVec,
                                const CcuInstrInfo                             &instrInfo) const
 {
-    HCCL_INFO("Translated Ccu Rep:");
+    PLF_CONFIG_INFO(PLF_TASK, "Translated Ccu Rep:");
     for (uint32_t index = 0; index < repVec.size(); index++) {
         uint16_t startInstrId = repVec[index]->StartInstrId();
         uint32_t sum = static_cast<uint32_t>(startInstrId) + repVec[index]->InstrCount();
@@ -343,14 +347,14 @@ void CcuRepTranslator::DumpRep(const std::vector<std::shared_ptr<CcuRepBase>> &r
             continue;
         }
         uint16_t endInstrId = static_cast<uint16_t>(sum);
-        HCCL_INFO("rep[%u]: %s Instr[%u--%u]", index, repVec[index]->Describe().c_str(), startInstrId, endInstrId);
+        PLF_CONFIG_INFO(PLF_TASK, "rep[%u]: %s Instr[%u--%u]", index, repVec[index]->Describe().c_str(), startInstrId, endInstrId);
         for (uint16_t instrId = startInstrId; instrId < endInstrId; instrId++) {
             if (instrId < instrInfo.startInstrId) {
                 HCCL_ERROR("instrId[%u] less than startInstrId[%u]", instrId, instrInfo.startInstrId);
                 continue;
             }
-            HCCL_INFO("microcode[%u]: %s", instrId,
-                      ParseInstr(instrInfo.instrVec.data() + (instrId - instrInfo.startInstrId)).c_str());
+            PLF_CONFIG_INFO(PLF_TASK, "microcode[%u]: %s", instrId,
+                ParseInstr(instrInfo.instrVec.data() + (instrId - instrInfo.startInstrId)).c_str());
         }
     }
 }

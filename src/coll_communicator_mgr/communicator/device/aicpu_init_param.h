@@ -18,6 +18,7 @@ constexpr uint32_t HCOMID_MAX_SIZE = 128;
 struct DevAicpuCommConfig {
     bool taskExceptionEnable{true};
     u32 notifyWaitTimeout{1836};
+    u64 plfDebugConfig{0};
     // 如要新增配置类字段，在此处添加
 };
 

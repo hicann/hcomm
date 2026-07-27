@@ -364,12 +364,13 @@ namespace hccl
         commAicpuParam_.userRankSize = collComm_->GetRankSize();
         commAicpuParam_.commConfig.taskExceptionEnable = Hccl::EnvConfig::GetInstance().GetLogConfig().GetDfsConfig().taskExceptionEnable;
         commAicpuParam_.commConfig.notifyWaitTimeout = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
+        commAicpuParam_.commConfig.plfDebugConfig = Hccl::EnvConfig::GetInstance().GetPlfDebugConfig().GetConfigValue();
         const auto opExpansionMode = GetCollCommOpExpansionMode(collComm_.get());
         HCCL_RUN_INFO("[%s]success, commId[%s], deviceLogicId[%u], devicePhyId[%u], devType[%u], "
-            "userRank[%u], userRankSize[%u], opExpansionMode[%u], taskExceptionEnable[%d], notifyWaitTimeout[%u].",
+            "userRank[%u], userRankSize[%u], opExpansionMode[%u], taskExceptionEnable[%d], notifyWaitTimeout[%u], plfDebugConfig[0x%llx].",
             __func__, collComm_->GetCommId().c_str(), commAicpuParam_.deviceLogicId, commAicpuParam_.devicePhyId,
             commAicpuParam_.deviceType, commAicpuParam_.userRank, commAicpuParam_.userRankSize, opExpansionMode,
-            commAicpuParam_.commConfig.taskExceptionEnable, commAicpuParam_.commConfig.notifyWaitTimeout);
+            commAicpuParam_.commConfig.taskExceptionEnable, commAicpuParam_.commConfig.notifyWaitTimeout, commAicpuParam_.commConfig.plfDebugConfig);
 
         // 当前需要支持coll comm与legacy comm混跑，coll comm确定加速模式后，需要设置comm加速模式
         auto *commImplV2 = static_cast<Hccl::HcclCommunicator *>(commV2);

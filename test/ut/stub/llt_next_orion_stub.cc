@@ -2889,3 +2889,24 @@ u32 RankTableCrcBridge::ConsumeRankTableJsonCrc(s32 deviceLogicId)
 {
     return 0;
 }
+
+namespace Hccl {
+
+void EnvPlfDebugConfig::Parse()
+{
+}
+
+u64 EnvPlfDebugConfig::GetConfigValue() const
+{
+    return 0;
+}
+
+void PrintTaskLog(u32 streamId, u32 taskId, const TaskParam &taskParam, u32 remoteRankId)
+{
+    (void)streamId;
+    (void)taskId;
+    (void)taskParam;
+    (void)remoteRankId;
+}
+
+}  // namespace Hccl

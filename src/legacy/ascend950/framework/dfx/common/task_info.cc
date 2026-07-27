@@ -11,6 +11,7 @@
 #include <sstream>
 #include "task_info.h"
 #include "log.h"
+#include "unified_platform/pub_inc/config_plf_log.h"
 #include "string_util.h"
 #include "const_val.h"
 #include "reduce_op.h"
@@ -271,6 +272,57 @@ string TaskInfo::GetParaAiv() const
 u32 TaskInfo::GetRemoteRankId() const
 {
     return getRemoteRankByHandle_ ? getRemoteRankByHandle_(channelHandle_) : remoteRank_;
+}
+
+void PrintTaskLog(u32 streamId, u32 taskId, const TaskParam &taskParam, u32 remoteRankId)
+{
+    switch (taskParam.taskType) {
+        case TaskParamType::TASK_SDMA:
+        case TaskParamType::TASK_RDMA:
+        case TaskParamType::TASK_UB:
+            PLF_CONFIG_INFO(PLF_TASK, "[AddTaskInfo] streamId=%u, taskId=%u, taskType=%s, "
+                "remoteRank=%u, src=%p, dst=%p, size=%llu",
+                streamId, taskId, taskParam.taskType.Describe().c_str(), remoteRankId,
+                taskParam.taskPara.DMA.src, taskParam.taskPara.DMA.dst,
+                static_cast<u64>(taskParam.taskPara.DMA.size));
+            break;
+        case TaskParamType::TASK_UB_INLINE_WRITE:
+        case TaskParamType::TASK_WRITE_WITH_NOTIFY:
+        case TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY:
+        case TaskParamType::TASK_DPU_INLINE_WRITE:
+        case TaskParamType::TASK_DPU_WRITE_WITH_NOTIFY:
+            PLF_CONFIG_INFO(PLF_TASK, "[AddTaskInfo] streamId=%u, taskId=%u, taskType=%s, "
+                "remoteRank=%u, src=%p, dst=%p, size=%llu, notifyId=%llu",
+                streamId, taskId, taskParam.taskType.Describe().c_str(), remoteRankId,
+                taskParam.taskPara.DMA.src, taskParam.taskPara.DMA.dst,
+                static_cast<u64>(taskParam.taskPara.DMA.size), taskParam.taskPara.DMA.notifyID);
+            break;
+        case TaskParamType::TASK_REDUCE_INLINE:
+        case TaskParamType::TASK_UB_REDUCE_INLINE:
+        case TaskParamType::TASK_REDUCE_TBE:
+            PLF_CONFIG_INFO(PLF_TASK, "[AddTaskInfo] streamId=%u, taskId=%u, taskType=%s, "
+                "remoteRank=%u, src=%p, dst=%p, size=%llu, notifyId=%llu, "
+                "dataType=%d, reduceOp=%d",
+                streamId, taskId, taskParam.taskType.Describe().c_str(), remoteRankId,
+                taskParam.taskPara.Reduce.src, taskParam.taskPara.Reduce.dst,
+                static_cast<u64>(taskParam.taskPara.Reduce.size), taskParam.taskPara.Reduce.notifyID,
+                taskParam.taskPara.Reduce.dataType, taskParam.taskPara.Reduce.reduceOp);
+            break;
+        case TaskParamType::TASK_NOTIFY_RECORD:
+        case TaskParamType::TASK_NOTIFY_WAIT:
+        case TaskParamType::TASK_SEND_NOTIFY:
+        case TaskParamType::TASK_DPU_NOTIFY_WAIT:
+        case TaskParamType::TASK_DPU_CHANNEL_FENCE:
+            PLF_CONFIG_INFO(PLF_TASK, "[AddTaskInfo] streamId=%u, taskId=%u, taskType=%s, "
+                "remoteRank=%u, notifyId=%llu",
+                streamId, taskId, taskParam.taskType.Describe().c_str(), remoteRankId,
+                taskParam.taskPara.Notify.notifyID);
+            break;
+        default:
+            PLF_CONFIG_INFO(PLF_TASK, "[AddTaskInfo] streamId=%u, taskId=%u, taskType=%s",
+                streamId, taskId, taskParam.taskType.Describe().c_str());
+            break;
+    }
 }
 
 } // namespace Hccl

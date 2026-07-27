@@ -119,6 +119,7 @@ add_library(hccl_alg_adaption_v2 SHARED
     ${HCOMM_LEGACY_FRAMEWORK}/env_config/env_config.cc
     ${HCOMM_LEGACY_FRAMEWORK}/env_config/env_func.cc
     ${HCOMM_LEGACY_FRAMEWORK}/env_config/base_config.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/env_config/plf_debug_config.cc
 
     ${HCOMM_LEGACY_FRAMEWORK}/misc/json_parser/json_parser.cc
 
@@ -131,6 +132,7 @@ target_include_directories(hccl_alg_adaption_v2 PRIVATE
     ${include_list}
     ${HCOMM_DIR}/src/legacy/ascend910/common
     ${HCOMM_DIR}/src/legacy/ascend910/common/error_manager
+    ${HCOMM_DIR}/src/legacy/ascend950
     ${HCOMM_DIR}/test/stub/depends/pkg_inc/base
 )
 

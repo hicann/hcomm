@@ -35,6 +35,8 @@
 
 #include "ccu_assist_v1.h"
 
+#include "unified_platform/pub_inc/config_plf_log.h"
+using Hccl::PLF_TASK;
 
 CcuResult HcommCcuInsCreateLegacy(const void *resDesc, uint32_t descNum, CcuInsHandle *insHandle)
 {
@@ -264,7 +266,7 @@ static void LogCcuTaskInfo(const std::vector<hcomm::CcuTaskParam> &ccuParams,
     const uint32_t execTimeOutSec = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
     for (u32 idx = 0; idx < ccuParams.size(); idx++) {
         const auto &param = ccuParams[idx];
-        HCCL_INFO("[%s] start ccu task, dieId[%u], missionId[%u], execMissionId[%u], instStartId[%u], instCnt[%u], "
+        PLF_CONFIG_INFO(PLF_TASK, "[%s] start ccu task, dieId[%u], missionId[%u], execMissionId[%u], instStartId[%u], instCnt[%u], "
           "argSize[%u], timeout[%u]s, executeId[0x%llx], ccuKernelHandle[0x%llx]",
           __func__, param.dieId, param.missionId, param.missionId,
           param.instStartId, param.instCnt, param.argSize, execTimeOutSec,
@@ -353,6 +355,8 @@ CcuResult HcommCcuKernelLaunch(ThreadHandle threadHandle,
     CHK_PRT_RET(threadHandle == 0, HCCL_ERROR("[%s] failed, thread handle is empty.", __func__), CcuResult::CCU_E_PARA);
     CHK_PRT_RET(kernelHandle == 0, HCCL_ERROR("[%s] failed, kernel handle is empty.", __func__), CcuResult::CCU_E_PARA);
     CHK_PRT_RET(argNum > 0 && taskArgs == nullptr, HCCL_ERROR("[%s] failed, taskArgs is nullptr while argNum[%u] > 0.", __func__, argNum), CcuResult::CCU_E_PTR);
+
+    PLF_CONFIG_INFO(PLF_TASK, "[HcommCcuKernelLaunch] threadHandle[0x%llx] kernelHandle[0x%llx].", threadHandle, kernelHandle);
 
     const auto *rtsThread = reinterpret_cast<hccl::Thread *>(threadHandle);
     const auto *threadStream = rtsThread->GetStream();

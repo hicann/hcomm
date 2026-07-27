@@ -26,6 +26,9 @@
 #include "hccl_diag.h"
 #include "channel.h"
 #include "aicpu_ts_channel_helper.h"
+#include "unified_platform/pub_inc/config_plf_log.h"
+
+using Hccl::PLF_DATA_OP;
 
 using namespace hccl;
 thread_local LaunchContext g_threadLaunchCtx;
@@ -97,7 +100,7 @@ HcclResult HcclDfxRegOpInfoByCommId(char* commId, void* hcclDfxOpInfo)
 
 int32_t HcommLocalCopyOnThread(ThreadHandle thread, void *dst, const void *src, uint64_t len)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].", __func__, thread, dst, src, len);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].", __func__, thread, dst, src, len);
 
     CHK_PTR_NULL(dst);
     CHK_PTR_NULL(src);
@@ -124,7 +127,7 @@ int32_t HcommLocalCopyOnThread(ThreadHandle thread, void *dst, const void *src, 
 int32_t HcommLocalReduceOnThread(ThreadHandle thread, void *dst, const void *src, uint64_t count,
     HcommDataType dataType, HcommReduceOp reduceOp)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d].", __func__, thread, dst, src, count, dataType, reduceOp);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d].", __func__, thread, dst, src, count, dataType, reduceOp);
 
     CHK_PTR_NULL(dst);
     CHK_PTR_NULL(src);
@@ -155,7 +158,7 @@ int32_t HcommLocalReduceOnThread(ThreadHandle thread, void *dst, const void *src
 
 int32_t HcommThreadNotifyRecordOnThread(ThreadHandle thread, ThreadHandle dstThread, uint32_t dstNotifyIdx)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], dstThread[0x%llx], dstNotifyIdx[%u].", __func__, thread, dstThread, dstNotifyIdx);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], dstThread[0x%llx], dstNotifyIdx[%u].", __func__, thread, dstThread, dstNotifyIdx);
 
     AddThread(thread);
 
@@ -184,7 +187,7 @@ int32_t HcommThreadNotifyRecordOnThread(ThreadHandle thread, ThreadHandle dstThr
 
 int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notifyIdx, uint32_t timeOut)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], notifyIdx[%u], timeOut[%u].", __func__, thread, notifyIdx, timeOut);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], notifyIdx[%u], timeOut[%u].", __func__, thread, notifyIdx, timeOut);
 
     AddThread(thread);
 
@@ -211,7 +214,7 @@ int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notifyIdx, u
 
 int32_t HcommAclrtNotifyRecordOnThread(ThreadHandle thread, uint64_t dstNotifyId)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], dstNotifyId[%llu].", __func__, thread, dstNotifyId);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], dstNotifyId[%llu].", __func__, thread, dstNotifyId);
 
     AddThread(thread);
 
@@ -233,7 +236,7 @@ int32_t HcommAclrtNotifyRecordOnThread(ThreadHandle thread, uint64_t dstNotifyId
 
 int32_t HcommAclrtNotifyWaitOnThread(ThreadHandle thread, uint64_t notifyId, uint32_t timeOut)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], notifyId[%llu], timeOut[%u].", __func__, thread, notifyId, timeOut);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], notifyId[%llu], timeOut[%u].", __func__, thread, notifyId, timeOut);
 
     AddThread(thread);
 
@@ -430,7 +433,7 @@ int32_t HcommThreadNotifyWaitOnThreadWithDefaultTimeout(ThreadHandle thread, uin
 
 int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void *dst, const void *src, uint64_t len)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].",
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].",
         __func__, thread, channel, dst, src, len);
 
     CHK_PTR_NULL(dst);
@@ -475,7 +478,7 @@ int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void *dst
 int32_t HcommWriteReduceOnThread(ThreadHandle thread, ChannelHandle channel, void *dst, const void *src,
     uint64_t count, HcommDataType dataType, HcommReduceOp reduceOp)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d].",
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d].",
         __func__, thread, channel, dst, src, count, dataType, reduceOp);
 
     CHK_PTR_NULL(dst);
@@ -551,7 +554,7 @@ HcclResult CommWriteReduceWithNotify(ThreadHandle thread, ChannelHandle channel,
 int32_t HcommWriteWithNotifyOnThread(ThreadHandle thread, ChannelHandle channel, void *dst, const void *src,
     uint64_t len, uint32_t remoteNotifyIdx)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu], remoteNotifyIdx[%u].",
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu], remoteNotifyIdx[%u].",
         __func__, thread, channel, dst, src, len, remoteNotifyIdx);
 
     CHK_PTR_NULL(dst);
@@ -603,7 +606,7 @@ int32_t HcommWriteReduceWithNotifyOnThread(ThreadHandle thread, ChannelHandle ch
     CHK_PTR_NULL(src);
     CHK_RET(UnwrapChannelHandle(channel));
 
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d], remoteNotifyIdx[%u].", 
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d], remoteNotifyIdx[%u].", 
         __func__, thread, channel, dst, src, count, dataType, reduceOp, remoteNotifyIdx);
 
     AddThread(thread);
@@ -653,7 +656,7 @@ int32_t HcommReadOnThread(ThreadHandle thread, ChannelHandle channel, void *dst,
     CHK_PTR_NULL(src);
     CHK_RET(UnwrapChannelHandle(channel));
 
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].",
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].",
         __func__, thread, channel, dst, src, len);
 
     AddThread(thread);
@@ -699,7 +702,7 @@ int32_t HcommReadReduceOnThread(ThreadHandle thread, ChannelHandle channel, void
     CHK_PTR_NULL(src);
     CHK_RET(UnwrapChannelHandle(channel));
 
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d].",
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d].",
         __func__, thread, channel, dst, src, count, dataType, reduceOp);
 
     AddThread(thread);
@@ -755,7 +758,7 @@ int32_t HcommBatchTransferOnThread(ThreadHandle thread, ChannelHandle channel,
     CHK_PTR_NULL(transferDescs);
     CHK_RET(UnwrapChannelHandle(channel));
 
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx], transferDescNum[%u].",
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], transferDescNum[%u].",
         __func__, thread, channel, transferDescNum);
 
     CHK_PRT_RET(transferDescNum == 0,
@@ -844,7 +847,7 @@ int32_t HcommChannelNotifyRecordOnThread(ThreadHandle thread, ChannelHandle chan
 {
     CHK_RET(UnwrapChannelHandle(channel));
 
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx], remoteNotifyIdx[%u].", __func__, thread, channel, remoteNotifyIdx);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], remoteNotifyIdx[%u].", __func__, thread, channel, remoteNotifyIdx);
 
     AddThread(thread);
 
@@ -882,7 +885,7 @@ int32_t HcommChannelNotifyWaitOnThread(ThreadHandle thread, ChannelHandle channe
 {
     CHK_RET(UnwrapChannelHandle(channel));
 
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx], localNotifyIdx[%u], timeOut[%u].", __func__, thread, channel, localNotifyIdx, timeOut);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], localNotifyIdx[%u], timeOut[%u].", __func__, thread, channel, localNotifyIdx, timeOut);
 
     AddThread(thread);
 

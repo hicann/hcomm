@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include "invalid_params_exception.h"
 #include "env_func.h"
+#include "unified_platform/pub_inc/config_plf_log.h"
 
 using namespace Hccl;
 
@@ -586,4 +587,60 @@ TEST_F(EnvConfigTest, Ut_GetRdmaMultiQpThreshold_OutOfRange_ReturnsException)
     EnvRdmaConfig rdmaConfig;
     EXPECT_THROW(rdmaConfig.Parse(), InvalidParamsException);
     unsetenv("HCCL_MULTI_QP_THRESHOLD");
+}
+
+TEST_F(EnvConfigTest, Ut_EnvPlfDebugConfig_When_SetTask_Expect_PlfTaskBitSet)
+{
+    setenv("HCCL_DEBUG_CONFIG", "task", 1);
+    EnvPlfDebugConfig plfCfg;
+    plfCfg.Parse();
+    EXPECT_EQ(plfCfg.GetConfigValue(), PLF_TASK);
+    unsetenv("HCCL_DEBUG_CONFIG");
+}
+
+TEST_F(EnvConfigTest, Ut_EnvPlfDebugConfig_When_SetDataOp_Expect_PlfDataOpBitSet)
+{
+    setenv("HCOMM_DEBUG_CONFIG", "data_op", 1);
+    EnvPlfDebugConfig plfCfg;
+    plfCfg.Parse();
+    EXPECT_EQ(plfCfg.GetConfigValue(), PLF_DATA_OP);
+    unsetenv("HCOMM_DEBUG_CONFIG");
+}
+
+TEST_F(EnvConfigTest, Ut_EnvPlfDebugConfig_When_SetMultiTokens_Expect_MultiBitsSet)
+{
+    setenv("HCCL_DEBUG_CONFIG", "task", 1);
+    setenv("HCOMM_DEBUG_CONFIG", "data_op", 1);
+    EnvPlfDebugConfig plfCfg;
+    plfCfg.Parse();
+    EXPECT_EQ(plfCfg.GetConfigValue(), PLF_TASK | PLF_DATA_OP);
+    unsetenv("HCCL_DEBUG_CONFIG");
+    unsetenv("HCOMM_DEBUG_CONFIG");
+}
+
+TEST_F(EnvConfigTest, Ut_EnvPlfDebugConfig_When_InvertTask_Expect_AllBitExceptTaskSet)
+{
+    setenv("HCCL_DEBUG_CONFIG", "^task", 1);
+    EnvPlfDebugConfig plfCfg;
+    plfCfg.Parse();
+    EXPECT_EQ(plfCfg.GetConfigValue(), PLF_ALG | PLF_RES);
+    unsetenv("HCCL_DEBUG_CONFIG");
+}
+
+TEST_F(EnvConfigTest, Ut_EnvPlfDebugConfig_When_SetInvalidToken_Expect_ReturnsZero)
+{
+    setenv("HCCL_DEBUG_CONFIG", "INVALID", 1);
+    EnvPlfDebugConfig plfCfg;
+    plfCfg.Parse();
+    EXPECT_EQ(plfCfg.GetConfigValue(), 0ULL);
+    unsetenv("HCCL_DEBUG_CONFIG");
+}
+
+TEST_F(EnvConfigTest, Ut_EnvPlfDebugConfig_When_CaseInsensitive_Expect_SameResult)
+{
+    setenv("HCCL_DEBUG_CONFIG", "TASK", 1);
+    EnvPlfDebugConfig plfCfg;
+    plfCfg.Parse();
+    EXPECT_EQ(plfCfg.GetConfigValue(), PLF_TASK);
+    unsetenv("HCCL_DEBUG_CONFIG");
 }

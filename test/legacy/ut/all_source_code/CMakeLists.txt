@@ -78,6 +78,7 @@ target_sources(hccl_v2_utest
         ${HCCL_V2_CODE_ROOT}/framework/env_config/env_func.cc
         ${HCCL_V2_CODE_ROOT}/framework/env_config/base_config.cc
         ${HCCL_V2_CODE_ROOT}/framework/env_config/env_config.cc
+        ${HCCL_V2_CODE_ROOT}/framework/env_config/plf_debug_config.cc
 
         ${HCCL_V2_CODE_ROOT}/framework/misc/json_parser/json_parser.cc
         ${HCCL_V2_CODE_ROOT}/framework/misc/whitelist/whitelist.cc
