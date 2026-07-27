@@ -560,7 +560,7 @@ thread_local bool g_currentAivContextActive = false;
 
 namespace ops_hccl {
 constexpr uint32_t AIV_STUB_MAX_RANK_SIZE = 512;
-constexpr uint32_t AIV_STUB_MAX_RANK_SIZE_V = 56;
+constexpr uint32_t AIV_STUB_MAX_RANK_SIZE_V = 256;
 constexpr uint32_t AIV_STUB_MAX_NUM_BLOCKS = 48;
 constexpr int32_t AIV_STUB_TOPO_LEN = AIV_STUB_MAX_RANK_SIZE;
 constexpr uint64_t AIV_STUB_GM_IN_TABLE_OFFSET = AivCommInfoLayout::GM_IN_TABLE_OFFSET;

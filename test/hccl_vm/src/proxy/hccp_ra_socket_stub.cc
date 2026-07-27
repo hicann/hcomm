@@ -372,8 +372,8 @@ int RaGetSockets(unsigned int role, struct SocketInfoT conn[], unsigned int num,
 
             if (!pairRes.second) {
                 if (count % 60 == 0) {
-                    HCCL_VM_WARN(" waiting for socket pair local:{:d} peer:{:d} tag_hash:{:d}, attempt:{}/180",
-                                 loadFd, peerFd, tagHash, count);
+                    HCCL_VM_WARN(" waiting for socket pair local:{:d} peer:{:d} tag:{}, attempt:{}/180",
+                                 loadFd, peerFd, conn[i].tag, count);
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 continue;
@@ -398,7 +398,7 @@ int RaGetSockets(unsigned int role, struct SocketInfoT conn[], unsigned int num,
         }
 
         if (!found) {
-            HCCL_VM_ERROR(" get socket failed local:{:d} peerAddr:{} role:{:d}", loadFd, ipAddr, role);
+            HCCL_VM_ERROR("get socket failed tag:{}", conn[i].tag);
         }
     }
     return 0;
@@ -471,7 +471,7 @@ int RaSocketRecv(const void *fdHandle, void *data, unsigned long long size, unsi
         HCCL_VM_WARN(" socket pair:{:d} role:{:d}, key={} read try again",
                         FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        return 0;
+        return SOCK_EAGAIN;
     } else if (ret == -1) {
         HCCL_VM_ERROR(" socket pair:{:d} role:{:d}, key={} recv failed",
                         FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey);

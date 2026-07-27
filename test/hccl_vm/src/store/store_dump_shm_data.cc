@@ -629,7 +629,11 @@ HcclVmResult DumpHcclVmTask(const std::string &dataId)
     }
 
     // 4. 检查任务是否为空
-    if (hvmTaskMeta.task_meta.empty()) {
+    auto allRanks = RunnerDB::GetByPred<sim::Rank>([](const sim::Rank& rank) {
+        return true;
+    });
+    // 单卡流程，hccl业务不会生成任务，不需要报错
+    if (hvmTaskMeta.task_meta.empty() && allRanks.size() > 1) {
         fclose(fp);
         HCCL_VM_ERROR("There is no task.");
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
