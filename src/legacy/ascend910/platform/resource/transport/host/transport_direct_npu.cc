@@ -515,7 +515,7 @@ HcclResult TransportDirectNpu::CreateOneQp(
     }
 
     RPT_ENV_ERR(ret != 0 || (qpHandle == nullptr), "EI0007", vector<string>({ "resource_type", "resource_info" }),
-        vector<string>({ "qp", qpInfo }));
+        vector<string>({ "qp", "CreateOneQp" }));
 
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s][%s]create qp failed, localDeviceId[%d], qpMode[%d]",
         LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), machinePara_.localDeviceId, qpMode),
