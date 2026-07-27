@@ -143,6 +143,7 @@ RankGraph 使用图（Graph）对通信域内不同 Rank 间的连接关系进�
 > **要点**: AICPU 通过 Task 描述符下发通信任务，**不占计算核**，适合大数据高带宽场景
 
 #### 2.4.2 CCU通信引擎
+
 - 专用加速单元执行模式
 
 CCU（Collective Communication Unit，集合通信加速单元）是位于 IO Die 的专用集合通信协处理器，Thread 抽象为 Mission。
@@ -156,6 +157,7 @@ CCU（Collective Communication Unit，集合通信加速单元）是位于 IO Di
 > **要点**: CCU 是专用集合通信加速单元，执行预置的 CCU 指令流（经 URMA 搬运数据）；**高带宽、低时延**且少占计算核与访存带宽，但受片上资源限制、支持的通信域数量有限（Ascend 950PR/950DT）
 
 #### 2.4.3 AIV通信引擎
+
 - Vector Core 执行模式
 
 ![AIV 通信](../comm_op_dev_guide/prog_models_concepts/figures/aiv_communication.png)
@@ -198,6 +200,7 @@ CCU（Collective Communication Unit，集合通信加速单元）是位于 IO Di
 ### 3.2 目标目录结构——与软件架构对应
 
 HCCL仓的目标目录结构：
+
 ```text
 hccl
 │── src                         # HCCL算子源码目录
@@ -225,6 +228,7 @@ hccl
 ```
 
 HCOMM仓的目标目录结构：
+
 ```text
 hcomm
 ├── src                                  # 源码目录
