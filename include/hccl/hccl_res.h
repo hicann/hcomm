@@ -177,6 +177,29 @@ extern HcclResult HcclThreadAcquireWithConfig(HcclComm comm, CommEngine engine, 
 extern HcclResult HcclThreadAcquireWithStream(HcclComm comm, CommEngine engine, aclrtStream stream,
     uint32_t notifyNum, ThreadHandle *thread);
 
+typedef enum { 
+    HCCL_DED_THREAD_TYPE_INVALID = -1,
+    HCCL_DED_THREAD_TYPE_AICPU_LAUNCH = 0,
+    HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE = 1,
+    HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_OPBASE = 2,
+    HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_ACLGRAPH = 3,
+    HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_GE = 4,
+    HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE = 5
+} HcclDedicatedThreadType; 
+
+/** 
+  * @brief 申请专用thread
+  * @param[in] comm 通信域句柄 
+  * @param[in] useType 专用线程使用类型(AICPU_KERNEL等) 
+  * @param[in] notifyNumPerThread 每线程的通知数量
+  * @param[out] thread 返回的线程句柄 
+  * @return HcclResult 执行结果状态码 
+  * @note 内部逻辑：先判断通信域中是否已存在该useType对应的专用线程， 
+  *       若存在则直接返回，不存在则调用HcclThreadAcquire创建并缓存(图模式下不创建直接返回0) 
+  */
+extern HcclResult HcclDedicatedThreadAcquire(
+    HcclComm comm, HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle *thread);
+
 /** @} */  // 通信引擎资源管理
 
 /**

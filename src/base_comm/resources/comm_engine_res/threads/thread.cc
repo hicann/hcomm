@@ -352,6 +352,21 @@ HcclResult FreeThreads(const ThreadHandle *threads, uint32_t threadNum, aclrtBin
     HCCL_INFO("[%s] %u threads freed successfully.", __func__, threadNum);
     return HCCL_SUCCESS;
 }
+
+HcclResult SupplementThreadNotify(ThreadHandle handle, uint32_t notifyNum)
+{
+    lock_guard<mutex> lock(g_ThreadMapMtx);
+    auto it = g_ThreadMap.find(handle);
+    CHK_PRT_RET(it == g_ThreadMap.end(),
+        HCCL_ERROR("[%s] thread handle[0x%llx] not found in g_ThreadMap.", __func__, handle), HCCL_E_NOT_FOUND);
+    if (it->second->GetNotifyNum() >= notifyNum) {
+        return HCCL_SUCCESS;
+    }
+    u32 supplementNum = notifyNum - it->second->GetNotifyNum();
+    HCCL_INFO("[%s] supplement notify num:[%u], current notify num:[%u], target notify num:[%u]", __func__,
+        supplementNum, it->second->GetNotifyNum(), notifyNum);
+    return it->second->SupplementNotify(supplementNum);
+}
 #endif
 
 HcclResult Thread::AddThreadHandleToMap(CommEngine commEngine, ThreadHandle threadHandle)

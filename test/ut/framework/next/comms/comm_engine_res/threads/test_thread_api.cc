@@ -1190,3 +1190,239 @@ TEST_F(TestHcclThread, Ut_ThreadKernelLaunchDestroy)
 //     HcclResult ret = AicpuLaunchMgr::LaunchNotifyKernel(opParam, binCustomHandle);
 //     EXPECT_EQ(ret, HCCL_SUCCESS);
 // }
+
+TEST_F(TestHcclThread, Ut_HcclDedicatedThreadAcquire_When_CommNullptr_Return_HCCL_E_PTR)
+{
+    void *comm = nullptr;
+    ThreadHandle thread;
+    HcclResult ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 2, &thread);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(TestHcclThread, Ut_HcclDedicatedThreadAcquire_When_ThreadNullptr_Return_HCCL_E_PTR)
+{
+    void *comm = (void *)0x1234;
+    ThreadHandle *thread = nullptr;
+    HcclResult ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 2, thread);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(TestHcclThread, Ut_HcclDedicatedThreadAcquire_When_UseTypeInvalid_Return_HCCL_E_PARA)
+{
+    void *comm = (void *)0x1234;
+    ThreadHandle thread;
+    HcclResult ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_INVALID, 2, &thread);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(TestHcclThread, Ut_HcclDedicatedThreadAcquire_When_SingleComm_RepeatedAcquire_Return_SameThreadAndNotifyPlusTwo)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    void *commV2 = (void *)0x2000;
+    RankGraphStub rankGraphStub;
+    std::shared_ptr<Hccl::RankGraph> rankGraphV2 = rankGraphStub.Create2PGraph();
+    u32 rank = 1;
+    HcclMem cclBuffer;
+    cclBuffer.size = 1;
+    cclBuffer.type = HcclMemType::HCCL_MEM_TYPE_HOST;
+    cclBuffer.addr = (void *)0x1000;
+    char commName[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
+    std::shared_ptr<hccl::hcclComm> hcclCommPtr = make_shared<hccl::hcclComm>(1, 1, commName);
+    HcclCommConfig config;
+    UtInitHcclCommConfig(config);
+    config.hcclOpExpansionMode = 1;           // 非CCU模式，避免拉起CCU平台层
+    config.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level
+    HcclResult ret = hcclCommPtr->InitCollComm(commV2, rankGraphV2.get(), rank, cclBuffer, commName, &config);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    void *comm = static_cast<HcclComm>(hcclCommPtr.get());
+
+    ThreadHandle thread1;
+    ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 3, &thread1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(thread1, 0ULL);
+    Thread *threadPtr1 = reinterpret_cast<Thread *>(thread1);
+    EXPECT_EQ(threadPtr1->GetNotifyNum(), 3U);
+
+    ThreadHandle thread2;
+    ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 5, &thread2);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(thread2, thread1);
+    Thread *threadPtr2 = reinterpret_cast<Thread *>(thread2);
+    EXPECT_EQ(threadPtr2->GetNotifyNum(), 5U);
+}
+
+TEST_F(TestHcclThread, Ut_HcclDedicatedThreadAcquire_When_MultiComm_Acquire_Return_DifferentThread)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    void *commV2 = (void *)0x2000;
+    RankGraphStub rankGraphStub;
+    std::shared_ptr<Hccl::RankGraph> rankGraphV2 = rankGraphStub.Create2PGraph();
+    u32 rank = 1;
+    HcclMem cclBuffer;
+    cclBuffer.size = 1;
+    cclBuffer.type = HcclMemType::HCCL_MEM_TYPE_HOST;
+    cclBuffer.addr = (void *)0x1000;
+
+    char commName1[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
+    std::shared_ptr<hccl::hcclComm> hcclCommPtr1 = make_shared<hccl::hcclComm>(1, 1, commName1);
+    HcclCommConfig config1;
+    UtInitHcclCommConfig(config1);
+    config1.hcclOpExpansionMode = 1;           // 非CCU模式，避免拉起CCU平台层
+    config1.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
+    config1.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level
+    HcclResult ret = hcclCommPtr1->InitCollComm(commV2, rankGraphV2.get(), rank, cclBuffer, commName1, &config1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    void *comm1 = static_cast<HcclComm>(hcclCommPtr1.get());
+
+    char commName2[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
+    std::shared_ptr<hccl::hcclComm> hcclCommPtr2 = make_shared<hccl::hcclComm>(1, 1, commName2);
+    HcclCommConfig config2;
+    UtInitHcclCommConfig(config2);
+    config2.hcclOpExpansionMode = 1;           // 非CCU模式，避免拉起CCU平台层
+    config2.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
+    config2.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level
+    ret = hcclCommPtr2->InitCollComm(commV2, rankGraphV2.get(), rank, cclBuffer, commName2, &config2);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    void *comm2 = static_cast<HcclComm>(hcclCommPtr2.get());
+
+    ThreadHandle thread1;
+    ret = HcclDedicatedThreadAcquire(comm1, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 3, &thread1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(thread1, 0ULL);
+
+    ThreadHandle thread2;
+    ret = HcclDedicatedThreadAcquire(comm2, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 3, &thread2);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(thread2, 0ULL);
+    EXPECT_NE(thread1, thread2);
+}
+
+TEST_F(TestHcclThread, Ut_HcclDedicatedThreadAcquire_When_UseTypeAicpuUnfoldGe_NotInMap_Return_HCCL_SUCCESS)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    void *commV2 = (void *)0x2000;
+    RankGraphStub rankGraphStub;
+    std::shared_ptr<Hccl::RankGraph> rankGraphV2 = rankGraphStub.Create2PGraph();
+    u32 rank = 1;
+    HcclMem cclBuffer;
+    cclBuffer.size = 1;
+    cclBuffer.type = HcclMemType::HCCL_MEM_TYPE_HOST;
+    cclBuffer.addr = (void *)0x1000;
+    char commName[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
+    std::shared_ptr<hccl::hcclComm> hcclCommPtr = make_shared<hccl::hcclComm>(1, 1, commName);
+    HcclCommConfig config;
+    UtInitHcclCommConfig(config);
+    config.hcclOpExpansionMode = 1;           // 非CCU模式，避免拉起CCU平台层
+    config.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level
+    HcclResult ret = hcclCommPtr->InitCollComm(commV2, rankGraphV2.get(), rank, cclBuffer, commName, &config);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    void *comm = static_cast<HcclComm>(hcclCommPtr.get());
+
+    ThreadHandle thread;
+    ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE, 3, &thread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(TestHcclThread, Ut_HcclDedicatedThreadAcquire_When_UseTypeAicpuUnfoldGe_InMap_Return_SameThread)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    void *commV2 = (void *)0x2000;
+    RankGraphStub rankGraphStub;
+    std::shared_ptr<Hccl::RankGraph> rankGraphV2 = rankGraphStub.Create2PGraph();
+    u32 rank = 1;
+    HcclMem cclBuffer;
+    cclBuffer.size = 1;
+    cclBuffer.type = HcclMemType::HCCL_MEM_TYPE_HOST;
+    cclBuffer.addr = (void *)0x1000;
+    char commName[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
+    std::shared_ptr<hccl::hcclComm> hcclCommPtr = make_shared<hccl::hcclComm>(1, 1, commName);
+    HcclCommConfig config;
+    UtInitHcclCommConfig(config);
+    config.hcclOpExpansionMode = 1;           // 非CCU模式，避免拉起CCU平台层
+    config.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level
+    HcclResult ret = hcclCommPtr->InitCollComm(commV2, rankGraphV2.get(), rank, cclBuffer, commName, &config);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    void *comm = static_cast<HcclComm>(hcclCommPtr.get());
+
+    // 先通过 AICPU_UNFOLD 创建专用线程，再将句柄复制到 AICPU_UNFOLD_GE 槽位，模拟已存在场景
+    ThreadHandle unfoldThread;
+    ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 3, &unfoldThread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(unfoldThread, 0ULL);
+
+    hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
+    auto *threadMgr = hcclComm->GetCollComm()->GetCommEngineResMgr()->threadMgr_.get();
+    threadMgr->dedicatedThreadMap_[HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE] = unfoldThread;
+
+    ThreadHandle thread;
+    ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE, 3, &thread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(thread, unfoldThread);
+}
+
+TEST_F(TestHcclThread, Ut_HcclDedicatedThreadAcquire_When_UseTypeAicpuUnfoldGe_RepeatedAcquire_Return_SameThreadAndNotifyPlus)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    void *commV2 = (void *)0x2000;
+    RankGraphStub rankGraphStub;
+    std::shared_ptr<Hccl::RankGraph> rankGraphV2 = rankGraphStub.Create2PGraph();
+    u32 rank = 1;
+    HcclMem cclBuffer;
+    cclBuffer.size = 1;
+    cclBuffer.type = HcclMemType::HCCL_MEM_TYPE_HOST;
+    cclBuffer.addr = (void *)0x1000;
+    char commName[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
+    std::shared_ptr<hccl::hcclComm> hcclCommPtr = make_shared<hccl::hcclComm>(1, 1, commName);
+    HcclCommConfig config;
+    UtInitHcclCommConfig(config);
+    config.hcclOpExpansionMode = 1;           // 非CCU模式，避免拉起CCU平台层
+    config.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level
+    HcclResult ret = hcclCommPtr->InitCollComm(commV2, rankGraphV2.get(), rank, cclBuffer, commName, &config);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    void *comm = static_cast<HcclComm>(hcclCommPtr.get());
+
+    // 先通过 AICPU_UNFOLD 创建专用线程（notifyNum=2），再将句柄复制到 AICPU_UNFOLD_GE 槽位
+    ThreadHandle unfoldThread;
+    ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 2, &unfoldThread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(unfoldThread, 0ULL);
+
+    hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
+    auto *threadMgr = hcclComm->GetCollComm()->GetCommEngineResMgr()->threadMgr_.get();
+    threadMgr->dedicatedThreadMap_[HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE] = unfoldThread;
+
+    // 第一次获取 GE 线程，notifyNum=3，需补充1个notify
+    ThreadHandle thread1;
+    ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE, 3, &thread1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(thread1, unfoldThread);
+    Thread *threadPtr1 = reinterpret_cast<Thread *>(thread1);
+    EXPECT_EQ(threadPtr1->GetNotifyNum(), 3U);
+
+    // 第二次获取 GE 线程，notifyNum=5，需补充2个notify
+    ThreadHandle thread2;
+    ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE, 5, &thread2);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(thread2, thread1);
+    Thread *threadPtr2 = reinterpret_cast<Thread *>(thread2);
+    EXPECT_EQ(threadPtr2->GetNotifyNum(), 5U);
+}

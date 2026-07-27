@@ -13,6 +13,7 @@
 #include "aicpu_launch_manager.h"
 #include "independent_op.h"
 #include "comm_engine_utils.h"
+#include "hcomm_res.h"
 
 namespace hccl {
 
@@ -20,6 +21,15 @@ namespace hccl {
 ThreadMgr::ThreadMgr(uint32_t threadNum, uint32_t notifyNumPerThread, std::string commId, 
     aclrtBinHandle binHandle, const ManagerCallbacks& callbacks) : threadNum_(threadNum), notifyNumPerThread_(notifyNumPerThread), 
     commId_(commId), binHandle_(binHandle), callbacks_(callbacks){}
+
+ThreadMgr::~ThreadMgr()
+{
+    auto it = dedicatedThreadMap_.find(HCCL_DED_THREAD_TYPE_AICPU_LAUNCH);
+    if (it != dedicatedThreadMap_.end()) {
+        ThreadHandle thread = it->second;
+        HcommThreadFree(&thread, 1);
+    }
+}
 
 uint64_t ThreadMgr::GetMaxNotifyTotal()
 {
@@ -554,4 +564,48 @@ HcclResult ThreadMgr::HcclThreadResGetInfo(ThreadHandle thread, ThreadResType re
     return HCCL_SUCCESS;
 }
 
+HcclResult ThreadMgr::HcclUnfoldThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle *thread)
+{
+    CHK_PRT_RET(thread == nullptr, HCCL_ERROR("[%s] thread is null", __func__), HCCL_E_PTR);
+    auto it = dedicatedThreadMap_.find(useType);
+    if (it != dedicatedThreadMap_.end()) {
+        *thread = it->second;
+        HCCL_INFO("[%s] reuse dedicated thread, dedThreadType[%u], thread[0x%llx]", __func__, useType, *thread);
+        CHK_RET(SupplementThreadNotify(*thread, notifyNumPerThread));
+    } else {
+        if (useType == HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE) {
+            *thread = 0;
+            HCCL_WARNING("[%s] dedicated thread not found, dedThreadType[%u], return threadHandle[0]", __func__, useType);
+            return HCCL_SUCCESS;
+        }
+        CommEngine engine = CommEngine::COMM_ENGINE_CPU;
+        uint32_t notifyNumPerThreadVec[1] = { notifyNumPerThread };
+        HcclResult ret = static_cast<HcclResult>(HcommThreadAlloc(engine, 1, notifyNumPerThreadVec, thread));
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR("[%s] Failed to cache dedicated thread, dedThreadType[%u], ret[%d]", __func__, useType, ret);
+            return ret;
+        }
+        dedicatedThreadMap_[useType] = *thread;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult ThreadMgr::HcclDedicatedThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle *thread) 
+{ 
+    CHK_PRT_RET(thread == nullptr, HCCL_ERROR("[%s] thread is null", __func__), HCCL_E_PTR);
+    CHK_PRT_RET(useType == HCCL_DED_THREAD_TYPE_INVALID, HCCL_ERROR("[%s] dedThreadType is invalid", __func__), HCCL_E_PARA);
+    HCCL_INFO("Entry-%s: dedThreadType[%u] notifyNumPerThread[%u]", __func__, useType, notifyNumPerThread); 
+
+    std::lock_guard<std::mutex> lock(dedicatedThreadMutex_);
+    if (useType == HCCL_DED_THREAD_TYPE_AICPU_LAUNCH || useType == HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE) {
+        CHK_RET(HcclUnfoldThreadAcquire(useType, notifyNumPerThread, thread));
+    } else {
+        HCCL_ERROR("[%s] unsupport dedThreadType[%u]", __func__, useType);
+        return HCCL_E_NOT_SUPPORT;
+    }
+
+    HCCL_INFO("[%s] success, useType[%u], thread[0x%llx], notifyNumPerThread[%u]", __func__, useType, *thread, 
+        notifyNumPerThread); 
+    return HCCL_SUCCESS; 
+}
 }

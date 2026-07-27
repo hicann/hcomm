@@ -308,6 +308,28 @@ HcclResult HcclThreadAcquireWithStream(HcclComm comm, CommEngine engine,
     return HCCL_SUCCESS;
 }
 
+HcclResult HcclDedicatedThreadAcquire(
+    HcclComm comm, HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle *thread)
+{
+    CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
+    CHK_PRT_RET(thread == nullptr, HCCL_ERROR("[%s] thread is null", __func__), HCCL_E_PTR);
+    CHK_PRT_RET(useType == HCCL_DED_THREAD_TYPE_INVALID, HCCL_ERROR("[%s] dedThreadType is invalid", __func__), HCCL_E_PARA);
+
+    auto *hcclComm = static_cast<hccl::hcclComm *>(comm);
+    const std::string& commId = hcclComm->GetIdentifier();
+    HCCL_INFO("Entry-%s:comm[%s] dedThreadType[%u] notifyNumPerThread[%u]", __func__, commId.c_str(), useType,
+        notifyNumPerThread);
+    hccl::CollComm *collComm = hcclComm->GetCollComm();
+    CHK_PTR_NULL(collComm);
+    CommEngineResMgr *engineResMgr = collComm->GetCommEngineResMgr();
+    CHK_PTR_NULL(engineResMgr);
+    CHK_RET(engineResMgr->HcclDedicatedThreadAcquire(useType, notifyNumPerThread, thread));
+    HCCL_INFO("[%s] success, dedThreadType[%u], thread[0x%llx], notifyNumPerThread[%u]", __func__, useType, *thread,
+        notifyNumPerThread);
+
+    return HCCL_SUCCESS;
+}
+
 HcclResult HcclAllocNotify(HcclComm comm, CommEngine commEngine, ::NotifyType notifyType, uint32_t notifyNum,
     NotifyHandle **notifyHandleList)
 {

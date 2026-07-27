@@ -26,7 +26,7 @@ namespace hccl {
 class ThreadMgr {
 public:
     ThreadMgr(uint32_t threadNum, uint32_t notifyNumPerThread, std::string commId, aclrtBinHandle binHandle, const ManagerCallbacks& callbacks);
-    ~ThreadMgr() = default;
+    ~ThreadMgr();
     HcclResult HcclThreadAcquire(CommEngine engine, uint32_t threadNum, ThreadType type,
         const ThreadConfig *config, ThreadHandle *threads, std::vector<uint32_t> &threadId);
     HcclResult HcclThreadAcquireV2(CommEngine engine, uint32_t threadNum, ThreadType type,
@@ -36,7 +36,7 @@ public:
     HcclResult HcclGetNotifyNumInThread(ThreadHandle thread, uint32_t *notifyNum);
     HcclResult HcclThreadExportToCommEngine(uint32_t threadNum, const ThreadHandle *threads, CommEngine dstCommEngine, ThreadHandle *exportedThreads);
     HcclResult HcclThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void **info);
-
+    HcclResult HcclDedicatedThreadAcquire( HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle *thread);
     u32 GetThreadNum() const { return threadNum_; }
     u32 GetNotifyNumPerThread() const { return notifyNumPerThread_; }
 
@@ -60,6 +60,8 @@ private:
     HcclResult StoreThreadsAndBuildHandleMap(CommEngine engine,
         std::vector<std::shared_ptr<Thread>> &newThreads,
         std::unique_ptr<ThreadHandle[]> &hostHandle);
+    HcclResult HcclUnfoldThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle *thread);
+
     u32 threadNum_ = 0;
     u32 notifyNumPerThread_ = 0;
     std::string commId_;
@@ -82,6 +84,9 @@ private:
 
     std::mutex threadhandleToThreadMutex_;
     std::unordered_map<ThreadHandle, std::shared_ptr<Thread>> threadMap_;
+
+    std::mutex dedicatedThreadMutex_; 
+    std::unordered_map<HcclDedicatedThreadType, ThreadHandle> dedicatedThreadMap_;
 };
 }
 #endif
