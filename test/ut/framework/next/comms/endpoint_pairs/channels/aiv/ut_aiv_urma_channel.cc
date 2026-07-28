@@ -19,6 +19,14 @@ using namespace hcomm;
 using namespace Hccl;
 
 namespace {
+uint32_t g_listenPort = 0;
+
+HcommResult StubEndpointStartListen(EndpointHandle, uint32_t port, HcommEndpointListenConfig *)
+{
+    g_listenPort = port;
+    return static_cast<HcommResult>(HCCL_SUCCESS);
+}
+
 LinkData MakeDefaultLinkData()
 {
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::PCIE);
@@ -191,6 +199,9 @@ TEST_F(AivUrmaChannelTest, Ut_Init_WhenBuildsMocked_Returns_SUCCESS)
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&AivUrmaChannel::StartListen, HcclResult(AivUrmaChannel::*)())
+        .expects(once())
+        .will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&AivUrmaChannel::BuildSocket, HcclResult(AivUrmaChannel::*)())
         .stubs()
         .with(mockcpp::any())
@@ -237,7 +248,10 @@ TEST_F(AivUrmaChannelTest, Ut_BuildSocket_WhenSocketExists_Returns_SUCCESS)
 TEST_F(AivUrmaChannelTest, Ut_BuildSocket_WhenSocketNull_GetsSocketFromSocketMgr)
 {
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
-    AivUrmaChannel ch(ep, MakeDefaultDesc());
+    HcommChannelDesc desc = MakeDefaultDesc();
+    desc.port = 61001;
+    desc.role = HCOMM_SOCKET_ROLE_SERVER;
+    AivUrmaChannel ch(ep, desc);
     Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
     ch.socket_ = nullptr;
     ch.localEp_.loc.device.devPhyId = 3;
@@ -251,7 +265,102 @@ TEST_F(AivUrmaChannelTest, Ut_BuildSocket_WhenSocketNull_GetsSocketFromSocketMgr
     EXPECT_EQ(ch.socket_, &socket);
     ASSERT_NE(ch.socketConfigHolder_, nullptr);
     EXPECT_EQ(ch.socketConfig_, ch.socketConfigHolder_.get());
+    EXPECT_EQ(ch.socketConfig_->listeningPort, desc.port);
+    EXPECT_EQ(ch.socketConfig_->GetRole(), SocketRole::SERVER);
     ch.socket_ = nullptr;
+}
+
+TEST_F(AivUrmaChannelTest, Ut_BuildSocket_WhenRoleReserved_PreservesNoRankIdMatching)
+{
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    HcommChannelDesc desc = MakeDefaultDesc();
+    desc.port = 61002;
+    desc.role = HCOMM_SOCKET_ROLE_RESERVED;
+    AivUrmaChannel ch(ep, desc);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    ch.socket_ = nullptr;
+    ch.localEp_.loc.device.devPhyId = 3;
+
+    MOCKER_CPP(&SocketMgr::GetSocket)
+        .stubs()
+        .with(mockcpp::any(), outBound(&socket))
+        .will(returnValue(HCCL_SUCCESS));
+
+    EXPECT_EQ(ch.BuildSocket(), HCCL_SUCCESS);
+    EXPECT_EQ(ch.socket_, &socket);
+    ASSERT_NE(ch.socketConfigHolder_, nullptr);
+    EXPECT_TRUE(ch.socketConfig_->noRankId);
+    EXPECT_EQ(ch.socketConfig_->listeningPort, desc.port);
+    SocketRole expectedRole = ch.socketConfig_->link.GetLocalAddr() < ch.socketConfig_->link.GetRemoteAddr()
+        ? SocketRole::SERVER : SocketRole::CLIENT;
+    EXPECT_EQ(ch.socketConfig_->GetRole(), expectedRole);
+    ch.socket_ = nullptr;
+}
+
+TEST_F(AivUrmaChannelTest, Ut_StartListen_WhenPortConfigured_UsesConfiguredPort)
+{
+    HcommChannelDesc desc = MakeDefaultDesc();
+    desc.port = 61001;
+    desc.role = HCOMM_SOCKET_ROLE_SERVER;
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, desc);
+    g_listenPort = 0;
+
+    MOCKER(HcommEndpointStartListen)
+        .stubs()
+        .will(invoke(StubEndpointStartListen));
+
+    EXPECT_EQ(ch.StartListen(), HCCL_SUCCESS);
+    EXPECT_EQ(g_listenPort, desc.port);
+}
+
+TEST_F(AivUrmaChannelTest, Ut_StartListen_WhenPortZero_UsesDefaultPort)
+{
+    HcommChannelDesc desc = MakeDefaultDesc();
+    desc.port = 0;
+    desc.role = HCOMM_SOCKET_ROLE_SERVER;
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, desc);
+    g_listenPort = 0;
+
+    MOCKER(HcommEndpointStartListen)
+        .stubs()
+        .will(invoke(StubEndpointStartListen));
+
+    EXPECT_EQ(ch.StartListen(), HCCL_SUCCESS);
+    EXPECT_EQ(g_listenPort, 60001);
+}
+
+TEST_F(AivUrmaChannelTest, Ut_StartListen_WhenRoleClient_DoesNotStartListen)
+{
+    HcommChannelDesc desc = MakeDefaultDesc();
+    desc.port = 61001;
+    desc.role = HCOMM_SOCKET_ROLE_CLIENT;
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, desc);
+    g_listenPort = 0;
+
+    MOCKER(HcommEndpointStartListen)
+        .expects(never());
+
+    EXPECT_EQ(ch.StartListen(), HCCL_SUCCESS);
+    EXPECT_EQ(g_listenPort, 0);
+}
+
+TEST_F(AivUrmaChannelTest, Ut_StartListen_WhenRoleReserved_DoesNotStartListen)
+{
+    HcommChannelDesc desc = MakeDefaultDesc();
+    desc.port = 61002;
+    desc.role = HCOMM_SOCKET_ROLE_RESERVED;
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    AivUrmaChannel ch(ep, desc);
+    g_listenPort = 0;
+
+    MOCKER(HcommEndpointStartListen)
+        .expects(never());
+
+    EXPECT_EQ(ch.StartListen(), HCCL_SUCCESS);
+    EXPECT_EQ(g_listenPort, 0);
 }
 
 TEST_F(AivUrmaChannelTest, Ut_PutSocketIfNeeded_WhenCalledTwice_OnlyKeepsSocketNull)

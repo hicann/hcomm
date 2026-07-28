@@ -47,6 +47,7 @@ public:
 
 private:
     HcclResult ParseInputParam();
+    HcclResult StartListen();
     HcclResult BuildSocket();
     HcclResult BuildAttr();
     HcclResult BuildConnection();
@@ -75,7 +76,6 @@ private:
     void *devChannelEntitySlab_{nullptr};
     size_t devChannelEntitySlabSize_{0};
     std::vector<hccl::DeviceMem> deviceMemories_{};
-    std::unique_ptr<Hccl::Socket> serverSocket_;
     std::unique_ptr<Hccl::SocketConfig> socketConfigHolder_{nullptr};
     const Hccl::SocketConfig* socketConfig_{nullptr};
     uint32_t devicePhyId_{};

@@ -321,30 +321,49 @@ HcclResult AivUrmaChannel::BuildSocket()
         return HCCL_SUCCESS;
     }
     HCCL_INFO("[AivUrmaChannel][%s] socket ptr is NULL, rebuildSocket", __func__);
-    
-    Hccl::IpAddress ipAddr{};
-    CHK_RET(CommAddrToIpAddress(localEp_.commAddr, ipAddr));
-    Hccl::DevNetPortType type = Hccl::DevNetPortType(Hccl::ConnectProtoType::UB);
-    Hccl::PortData localPort = Hccl::PortData(static_cast<Hccl::RankId>(localEp_.loc.device.devPhyId), type, 0, ipAddr);
-    Hccl::SocketHandle socketHandle
-        = Hccl::SocketHandleManager::GetInstance().Create(localEp_.loc.device.devPhyId, localPort);
-    EXCEPTION_CATCH(serverSocket_ = std::make_unique<Hccl::Socket>(socketHandle, ipAddr, DEFAULT_LISTENING_PORT, ipAddr,
-                         "server", Hccl::SocketRole::SERVER, Hccl::NicType::DEVICE_NIC_TYPE),
-        return HCCL_E_PARA);
-    HCCL_INFO("[AivUrmaChannel][%s] listen_socket_info[%s]", __func__, serverSocket_->Describe().c_str());
-    EXCEPTION_CATCH(serverSocket_->Listen(), return HCCL_E_INTERNAL);
 
     Hccl::LinkData linkData = BuildDefaultLinkData();
     CHK_RET(EndpointDescPairToLinkData(localEp_, remoteEp_, linkData));
     HCCL_INFO("[AivUrmaChannel][%s] built linkData: %s", __func__, linkData.Describe().c_str());
+    uint16_t port = channelDesc_.port;
+    if (port == 0) {
+        port = DEFAULT_LISTENING_PORT;
+        HCCL_INFO("[AivUrmaChannel::%s] channelDesc port is 0, use default port [%u]", __func__, port);
+    }
     std::string socketTag = (channelDesc_.channelName != nullptr)
         ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
-    bool noRankId = true;
-    EXCEPTION_CATCH(socketConfigHolder_ = std::make_unique<Hccl::SocketConfig>(linkData, socketTag, noRankId),
-        return HCCL_E_PTR);
+    if (channelDesc_.role == HCOMM_SOCKET_ROLE_RESERVED) {
+        EXCEPTION_CATCH(socketConfigHolder_ = std::make_unique<Hccl::SocketConfig>(
+            linkData, port, socketTag),
+            return HCCL_E_PTR);
+        socketConfigHolder_->noRankId = true;
+    } else {
+        bool isServer = (channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER);
+        EXCEPTION_CATCH(socketConfigHolder_ = std::make_unique<Hccl::SocketConfig>(
+            linkData, port, socketTag, isServer),
+            return HCCL_E_PTR);
+    }
     socketConfig_ = socketConfigHolder_.get();
     CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(*socketConfigHolder_, socket_));
+    HCCL_INFO("[AivUrmaChannel::%s] SUCCESS. port[%u].", __func__, port);
+    return HCCL_SUCCESS;
+}
 
+HcclResult AivUrmaChannel::StartListen()
+{
+    if (channelDesc_.role != HCOMM_SOCKET_ROLE_SERVER) {
+        return HCCL_SUCCESS;
+    }
+
+    uint16_t port = channelDesc_.port;
+    HCCL_INFO("[AivUrmaChannel::%s] Start. EndpointHandle[0x%llx], port[%u]", __func__,
+        reinterpret_cast<uint64_t>(endpointHandle_), port);
+    if (port == 0) {
+        port = DEFAULT_LISTENING_PORT;
+        HCCL_INFO("[AivUrmaChannel::%s] channelDesc port is 0, use default port [%u]", __func__, port);
+    }
+    CHK_RET(static_cast<HcclResult>(HcommEndpointStartListen(endpointHandle_, port, nullptr)));
+    HCCL_INFO("[AivUrmaChannel::%s] SUCCESS. port[%u].", __func__, port);
     return HCCL_SUCCESS;
 }
 
@@ -598,6 +617,7 @@ HcclResult AivUrmaChannel::Init()
         Attention: const 和引用
     */
     CHK_RET(ParseInputParam());
+    CHK_RET(StartListen());
     CHK_RET(BuildSocket());
     CHK_RET(BuildAttr());
     CHK_RET(BuildConnection());
