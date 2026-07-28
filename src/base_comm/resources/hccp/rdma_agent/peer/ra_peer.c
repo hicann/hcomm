@@ -1103,7 +1103,7 @@ int RaPeerGetIfnum(unsigned int phyId, unsigned int *num)
     RsSetCtx(phyId);
     ret = RsPeerGetIfnum(phyId, num);
     if (ret) {
-        hccp_err("[get][ra_peer_ifnum]rs_peer_get_ifnum failed(%d)", ret);
+        hccp_err("[get][ra_peer_ifnum]rs_peer_get_ifnum failed(%d) phyId[%u]", ret, phyId);
     } else {
         hccp_info("[get][ra_peer_ifnum]ra_peer_get_ifnum phyId[%u] succ", phyId);
     }
