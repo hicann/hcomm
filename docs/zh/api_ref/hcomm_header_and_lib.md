@@ -1,12 +1,10 @@
-# 概述
+# HCOMM头文件与库文件说明
 
 HCOMM（Huawei Communication，华为通信基础库）是HCCL的通信基础库，提供通信域与通信资源管理能力，是CANN集合通信栈的底层基座。HCCL通过dlsym动态加载HCOMM接口，HCCL与HCOMM独立编译、独立版本演进。
 
 本章节介绍HCOMM对外接口的头文件与库文件说明。
 
-## 头文件和库文件说明
-
-### 接口分类
+## 接口分类
 
 HCOMM对外接口按API分层组织，分层关系与架构约束以[架构简介](../architecture/architecture-brief.md)中「对外API分层关系」与「软件架构约束说明」小节为权威来源：
 
@@ -20,16 +18,16 @@ HCOMM对外接口按API分层组织，分层关系与架构约束以[架构简�
 | 基础资源（L3-res） | 通信库开发者 | Endpoint/Channel/内存注册等资源管理接口。 |
 | CCU算子开发 | CCU算子开发者 | CCU（Collective Communication Unit）资源对象封装与Kernel Launch接口。 |
 
-### 调用接口依赖的头文件和库文件说明
+## 调用接口依赖的头文件和库文件说明
 
 安装固件、驱动及CANN软件包后，编译、运行应用程序时才能引用到HCOMM接口的头文件、库文件。
 
-您需要根据实际使用的HCOMM接口来include依赖的文件，各头文件的用途如下表所示。
-
 HCOMM对外头文件在"${INSTALL_DIR}/include/"目录下的hccl/、hcomm/、hcomm/ccu/子目录中，库文件在"${INSTALL_DIR}/lib64/"目录下。${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root用户安装为例，安装后文件默认存储路径为：/usr/local/Ascend/cann。
 
-> **须知：**
+> [!CAUTION]注意
 > include/目录下的头文件为对外稳定头文件；pkg_inc/目录为HCOMM↔HCCL、GE等包间接口，安装到单独的包间目录，不对外承诺稳定，请勿在对外业务中直接引用。编译接口程序时，请按照include的头文件依赖对应的库文件，如果引用多余的so文件，可能导致版本功能异常或后续版本升级时存在兼容性问题。
+
+您需要根据实际使用的HCOMM接口来include依赖的文件，各头文件的用途如下表所示。
 
 **表2**头文件列表
 
@@ -64,4 +62,6 @@ HCOMM对外头文件在"${INSTALL_DIR}/include/"目录下的hccl/、hcomm/、hco
 
 HCOMM以`cann-hcomm_<version>_linux-<arch>.run`安装包形式发布，包含`libhcomm.so`、对外头文件与`cann-hcomm-compat.tar.gz`兼容升级子包。
 
-源码编译与安装流程详见[构建指南](../build/build.md)；通信域管理与算子开发接口的函数原型、参数与约束详见[通信域创建与管理接口（C语言）](./comm_mgr_c/README.md)、[通信算子开发接口](./comm_opdev/README.md)。
+- 源码编译与安装流程详见[构建指南](../build/build.md)。
+- 通信域管理相关接口的原型定义、参数描述与约束说明详见[通信域创建与管理接口（C语言）](./comm_mgr_c/README.md)。
+- 通信算子开发相关接口的原型定义、参数描述与约束说明详见[通信算子开发接口](./comm_opdev/README.md)。
