@@ -127,6 +127,56 @@ bool RankConsistencyCheckerV2::CompareCrcArrayV2(const u32 *localArray,
     return isDiff;
 }
 
+std::vector<std::string_view> Split(const std::string &str, char delimiter)
+{
+    std::vector<std::string_view> parts;
+    std::string_view sv(str);
+    size_t start = 0;
+    for (size_t i = 0; i <= sv.size(); ++i) {
+        if (i == sv.size() || sv[i] == delimiter) {
+            parts.push_back(sv.substr(start, i - start));
+            start = i + 1;
+        }
+    }
+    return parts;
+}
+
+std::vector<std::string> GetVersionErrMessage(const std::string &localVersion, const std::string &remoteVersion)
+{
+    std::vector<std::string> versionErrMessage;
+    auto localVersionParts = Split(localVersion, '_');
+    auto remoteVersionParts = Split(remoteVersion, '_');
+    std::string localHcommVersion = localVersionParts.size() > 0 ? std::string(localVersionParts[0]) : "empty";
+    std::string localHcclVersion = localVersionParts.size() > 1 ? std::string(localVersionParts[1]) : "empty";
+    std::string remoteHcommVersion = remoteVersionParts.size() > 0 ? std::string(remoteVersionParts[0]) : "empty";
+    std::string remoteHcclVersion = remoteVersionParts.size() > 1 ? std::string(remoteVersionParts[1]) : "empty";
+
+    bool hcommDiff = (localHcommVersion != remoteHcommVersion);
+    bool hcclDiff = (localHcclVersion != remoteHcclVersion);
+    if (hcommDiff && !hcclDiff) {
+        // 将版本号拆分为hcomm版本号和hccl版本号, 构造ErrMessage
+        // The %s versions are inconsistent. The local %s, while the remote %s.
+        versionErrMessage =
+            {"Toolkit (cann-hcomm)", "version is " + localHcommVersion, "version is " + remoteHcommVersion};
+    } else if (!hcommDiff && hcclDiff) {
+        versionErrMessage = {"ops (cann-hccl)", "version is " + localHcclVersion, "version is " + remoteHcclVersion};
+    } else if (hcommDiff && hcclDiff) {
+        versionErrMessage = {
+            "Toolkit (cann-hcomm) and ops (cann-hccl)",
+            "Toolkit (cann-hcomm) version is " + localHcommVersion +
+            " and ops (cann-hccl) version is " + localHcclVersion,
+            "Toolkit (cann-hcomm) version is " + remoteHcommVersion +
+            " and ops (cann-hccl) version is " + remoteHcclVersion
+        };
+    } else {
+        // 拆分版本号字符串失败, 构造为原版的ErrMessage
+        // The HCCL versions are inconsistent. The local version is %s, while the remote version is %s.
+        HCCL_ERROR("[RankConsistentcyChecker][GetVersionErrMessage]Failed to split the version string.");
+        versionErrMessage = {"HCCL", "version is " + localVersion, "version is " + remoteVersion};
+    }
+    return versionErrMessage;
+}
+
 HcclResult RankConsistencyCheckerV2::CompareVersionV2(const CheckFrameV2 &local, const CheckFrameV2 &remote, bool &isDiff) const
 {
     std::string localVer(local.version);
@@ -136,9 +186,11 @@ HcclResult RankConsistencyCheckerV2::CompareVersionV2(const CheckFrameV2 &local,
             localVer.c_str(), remoteVer.c_str());
         return HCCL_SUCCESS;
     } else if (localVer != remoteVer) {
+        auto versionErrMessage = GetVersionErrMessage(localVer, remoteVer);
+        // GetVersionErrMessage函数内部已保证versionErrMessage.size() == 3
         RPT_INPUT_ERR(true, "EI0008",
-            std::vector<std::string>({"local_version", "remote_version"}),
-            std::vector<std::string>({localVer, remoteVer}));
+            std::vector<std::string>({"inconsistent_package", "local_version", "remote_version"}),
+            std::vector<std::string>({versionErrMessage[0], versionErrMessage[1], versionErrMessage[2]}));
         HCCL_ERROR("[RankConsistencyCheckerV2::CompareVersionV2] CANN version mismatch: local[%s], remote[%s].",
             localVer.c_str(), remoteVer.c_str());
         isDiff = true;

@@ -94,3 +94,48 @@ TEST_F(RankConsistentV2Test, Ut_CompareCheckFrameV2_VersionMismatch_Expect_INTER
     HcclResult ret = checker_.CompareCheckFrameV2(localFrame, remoteFrame);
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
 }
+
+TEST_F(RankConsistentV2Test, Ut_CompareVersionV2_Version_Expect_HCCL_SUCCESS)
+{
+    bool isDiff = false;
+    strncpy_s(checker_.cannVersion_, CANN_VERSION_MAX_LEN + 1, "9.1.0_9.1.0", strlen("9.1.0_9.1.0"));
+    CheckFrameV2 localFrame;
+    checker_.GenerateCheckFrameV2(localFrame);
+    CheckFrameV2 remoteFrame = localFrame;
+    HcclResult ret = checker_.CompareVersionV2(localFrame, remoteFrame, isDiff);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(isDiff, false);
+}
+
+TEST_F(RankConsistentV2Test, Ut_CompareVersionV2_VersionMismatch_Expect_HCCL_SUCCESS)
+{
+    bool isDiff = false;
+    std::string oldVersion = "9.0.0";
+    std::string newVersion = "9.1.0";
+    std::string delimiter = "_";
+    std::string localVersion = newVersion + delimiter + newVersion;
+    std::string remoteVersion = oldVersion + delimiter + newVersion;
+
+    strncpy_s(checker_.cannVersion_, CANN_VERSION_MAX_LEN + 1, localVersion.c_str(), localVersion.size());
+    CheckFrameV2 localFrame;
+    checker_.GenerateCheckFrameV2(localFrame);
+    CheckFrameV2 remoteFrame = localFrame;
+    strncpy_s(remoteFrame.version, CANN_VERSION_MAX_LEN + 1, remoteVersion.c_str(), remoteVersion.size());
+    HcclResult ret = checker_.CompareVersionV2(localFrame, remoteFrame, isDiff);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(isDiff, true);
+
+    isDiff = false;
+    remoteVersion = newVersion + delimiter + oldVersion;
+    strncpy_s(remoteFrame.version, CANN_VERSION_MAX_LEN + 1, remoteVersion.c_str(), remoteVersion.size());
+    ret = checker_.CompareVersionV2(localFrame, remoteFrame, isDiff);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(isDiff, true);
+
+    isDiff = false;
+    remoteVersion = oldVersion + delimiter + oldVersion;
+    strncpy_s(remoteFrame.version, CANN_VERSION_MAX_LEN + 1, remoteVersion.c_str(), remoteVersion.size());
+    ret = checker_.CompareVersionV2(localFrame, remoteFrame, isDiff);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(isDiff, true);
+}

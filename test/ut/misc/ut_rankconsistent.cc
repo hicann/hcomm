@@ -79,6 +79,55 @@ TEST_F(RankConSistentTest, ut_Compare_Cann_Version)
 
     delete implObj;
 }
+
+TEST_F(RankConSistentTest, ut_Compare_Toolkit_And_Ops_Version)
+{
+    RankConsistentcyChecker *implObj = new RankConsistentcyChecker();
+    implObj->SetCheckCannVersionSwitch(true);
+
+    bool ret;
+    HcclCheckInfo checkInfo;
+    HcclCheckInfo checkInfoRecv;
+    std::string oldVersion = "9.0.0";
+    std::string newVersion = "9.1.0";
+    std::string delimiter = "_";
+
+    // 一端版本为"9.1.0_9.1.0", 另一端为"9.0.0_9.1.0"
+    std::string localVersion = newVersion + delimiter + newVersion;
+    std::string remoteVersion = oldVersion + delimiter + newVersion;
+    strncpy_s(checkInfo.version, MAX_CANN_VERSION_LEN, localVersion.c_str(), localVersion.size());
+    strncpy_s(checkInfoRecv.version, MAX_CANN_VERSION_LEN, remoteVersion.c_str(), remoteVersion.size());
+    ret = implObj->CompareFrame(checkInfo, checkInfoRecv);
+    EXPECT_EQ(ret, true);
+
+    // 一端版本为"9.1.0_9.1.0", 另一端为"9.1.0_9.0.0"
+    remoteVersion = oldVersion + delimiter + newVersion;
+    strncpy_s(checkInfoRecv.version, MAX_CANN_VERSION_LEN, remoteVersion.c_str(), remoteVersion.size());
+    ret = implObj->CompareFrame(checkInfo, checkInfoRecv);
+    EXPECT_EQ(ret, true);
+
+    // 一端版本为"9.1.0_9.1.0", 另一端为"9.0.0_9.0.0"
+    remoteVersion = oldVersion + delimiter + oldVersion;
+    strncpy_s(checkInfoRecv.version, MAX_CANN_VERSION_LEN, remoteVersion.c_str(), remoteVersion.size());
+    ret = implObj->CompareFrame(checkInfo, checkInfoRecv);
+    EXPECT_EQ(ret, true);
+
+    // 两端均为"9.1.0_9.1.0"
+    remoteVersion = newVersion + delimiter + newVersion;
+    strncpy_s(checkInfoRecv.version, MAX_CANN_VERSION_LEN, remoteVersion.c_str(), remoteVersion.size());
+    ret = implObj->CompareFrame(checkInfo, checkInfoRecv);
+    EXPECT_EQ(ret, false);
+
+    // 一端版本为"9.1.0_9.1.0", 另一端为"9.1.0_9.1.0_9.1.0"
+    remoteVersion = newVersion + delimiter + newVersion + delimiter + newVersion;
+    strncpy_s(checkInfoRecv.version, MAX_CANN_VERSION_LEN, remoteVersion.c_str(), remoteVersion.size());
+    ret = implObj->CompareFrame(checkInfo, checkInfoRecv);
+    EXPECT_EQ(ret, true);
+
+    implObj->SetCheckCannVersionSwitch(false);
+
+    delete implObj;
+}
 #endif
 
 TEST_F(RankConSistentTest, ut_Compare_check_error)
