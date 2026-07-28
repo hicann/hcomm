@@ -8,9 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "flush_manager.h"
+#include "env_config/env_config.h"
 
 namespace Hccl {
-
 FlushManager::FlushManager() {}
 
 FlushManager &FlushManager::GetInstance()
@@ -91,8 +91,10 @@ HcclResult FlushManager::Flush()
             return paramsRet;
         }
         HCCL_DEBUG("[FlushParamPrepare] Posting RDMA_READ operation... ");
+
         // 执行读和轮训操作
-        HcclResult loopQpRet = ExecuteRdmaRead(loopbackqp0, cq, swr);
+        HcclResult loopQpRet = ExecuteRdmaRead(loopbackqp0, cq, swr,
+            Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut());
         if (loopQpRet != HCCL_SUCCESS) {
             HCCL_INFO("[Flush] RDMA_READ operation failed.");
             return loopQpRet;
@@ -119,7 +121,7 @@ HcclResult FlushManager::FlushParamPrepare(std::shared_ptr<FlushHandle> flushHan
     return HCCL_SUCCESS;
 }
 
-HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_send_wr &swr, int max_timeout_ms) const
+HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_send_wr &swr, int timeoutSec) const
 {
     ibv_send_wr *send_wr = nullptr;
     int ret = FlushPostSend(loopbackqp0, &swr, &send_wr);
@@ -134,14 +136,14 @@ HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_se
     struct timespec current;
     clock_gettime(CLOCK_MONOTONIC, &start);
     while (true) {
-        // 计算已流逝时间（毫秒）
+        // 计算已流逝时间（秒）
         clock_gettime(CLOCK_MONOTONIC, &current);
-        int elapsedMs = (current.tv_sec - start.tv_sec) * 1000 + (current.tv_nsec - start.tv_nsec) / 1000000;
+        int elapsedSec = (current.tv_sec - start.tv_sec) + (current.tv_nsec - start.tv_nsec) / 1000000000;
 
         // 超时判断
-        if (elapsedMs >= max_timeout_ms) {
-            HCCL_ERROR("[ExecuteRdmaRead] Failed: Wait for completion queue timeout (elapsed=%d ms, max=%d ms)",
-                       elapsedMs, max_timeout_ms);
+        if (elapsedSec >= timeoutSec) {
+            HCCL_ERROR("[ExecuteRdmaRead] Failed: Wait for completion queue timeout (elapsed=%d s, max=%d s)",
+                        elapsedSec, timeoutSec);
             return HCCL_E_TIMEOUT;
         }
 

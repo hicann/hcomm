@@ -18,6 +18,7 @@
 #include "socket.h"
 #include "urma_api.h"
 #include "dlurma_function.h"
+#include "hcomm_adapter_urma.h"
 
 using namespace hcomm;
 
@@ -299,4 +300,22 @@ TEST_F(HostCpuUrmaChannelTest, Ut_When_Init_WithExchangeAllMems_Expect_Success)
     ASSERT_EQ(impl->Init(), HCCL_SUCCESS);
     ASSERT_EQ(impl->commonRes_.bufferVec.size(), 1U);
     EXPECT_EQ(impl->commonRes_.bufferVec[0]->GetAddr(), 0x730000U);
+}
+
+TEST_F(HostCpuUrmaChannelTest, Ut_When_ChannelFence_HasWqe_PollFails_Expect_NetworkError)
+{
+    MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
+    MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle_));
+    MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
+
+    auto impl = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc);
+    ASSERT_EQ(impl->Init(), HCCL_SUCCESS);
+
+    // wqeNum_ > 0 跳过 line 354 的提前返回，使 line 358 的超时时间计算得以执行
+    impl->wqeNum_ = 1;
+    // Mock HrtUrmaPollJfc 返回负数（错误），触发 line 362-365 快速返回 HCCL_E_NETWORK
+    MOCKER(HrtUrmaPollJfc).stubs().will(returnValue(-1));
+
+    HcclResult ret = impl->ChannelFence();
+    EXPECT_EQ(ret, HCCL_E_NETWORK);
 }

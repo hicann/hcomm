@@ -17,7 +17,6 @@
 
 namespace Hccl {
 
-constexpr int MAX_TIME_VALUE = 30000;
 #define ROCE_WR_FLUSH (static_cast<ibv_wr_opcode>(0x40))
 
 class FlushManager {
@@ -36,7 +35,7 @@ private:
 
     // flush实现
     HcclResult FlushParamPrepare(std::shared_ptr<FlushHandle> flushHandlePtr, ibv_send_wr *swr) const;
-    HcclResult ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_send_wr &swr, int max_timeout_ms = MAX_TIME_VALUE) const;
+    HcclResult ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_send_wr &swr, int timeoutSec) const;
 
     // flush销毁
     HcclResult DestroyAll();

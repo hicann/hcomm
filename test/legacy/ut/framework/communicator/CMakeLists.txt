@@ -26,6 +26,7 @@ target_sources(hccl_v2_utest
         ut_hccl_mc2_ex.cc
         ut_task_service.cc
         ut_flush_handle.cc
+        ut_flush_manager.cc
 
         ${HCCL_V2_CODE_ROOT}/framework/fault_recovery/snap_shot_parse.cc
         ${HCCL_V2_CODE_ROOT}/common/checkcrc.cc
