@@ -1331,7 +1331,7 @@ void ProfilingHandler::ReportHcclMC2CommInfo(const Stream &kfcStream, const Stre
 
 void ProfilingHandler::ReportHcclMC2CommInfoLog([[maybe_unused]] const u32 kfcStreamId,
                             const std::vector<u32> &aicpuStreamsId, const std::string &id,
-                            RankId myRank, u32 rankSize, RankId rankInParentComm) const
+                            [[maybe_unused]] RankId myRank, [[maybe_unused]] u32 rankSize, [[maybe_unused]] RankId rankInParentComm) const
 {
     if (LIKELY(HcclCheckLogLevel(HCCL_LOG_INFO) == 0)) {
         return;
