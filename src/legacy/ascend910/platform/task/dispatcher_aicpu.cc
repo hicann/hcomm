@@ -649,6 +649,10 @@ HcclResult DispatcherAiCpu::LaunchTask(Stream &stream, bool isBlockLaunch)
         // 当前流无法下发，把其他流都launch一遍，避免等待的其他流没有launch
         for (auto it = streamMap_.begin(); it != streamMap_.end(); ++it) {
             if (it->first != streamInfo.actualStreamId) {
+                if (it->second.IsInvalid()) { // 跳过已销毁的stream (streamMap_只增不删, 原stream销毁后副本通过shared invalid标志感知)
+                    HCCL_WARNING("[DispatcherAiCpu][LaunchTask] skip invalid stream in streamMap, streamId:%d", it->first);
+                    continue;
+                }
                 CHK_RET(LaunchTask(it->second, false));
             }
         }
@@ -855,6 +859,10 @@ HcclResult DispatcherAiCpu::LaunchTasksEx(hccl::Stream &stream, std::vector<Stre
 HcclResult DispatcherAiCpu::LaunchAllTasks()
 {
     for (auto it = streamMap_.begin(); it != streamMap_.end(); ++it) {
+        if (it->second.IsInvalid()) { // 跳过已销毁的stream (streamMap_只增不删, 原stream销毁后副本通过shared invalid标志感知)
+            HCCL_WARNING("[DispatcherAiCpu][LaunchAllTasks] skip invalid stream in streamMap, streamId:%d", it->first);
+            continue;
+        }
         HcclResult ret = LaunchTask(it->second, true);
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR("DispatcherAiCpu][LaunchAllTasks] launch task failed, sqid:%u, ret:%u", it->second.sqId(), ret);
@@ -1053,6 +1061,10 @@ HcclResult DispatcherAiCpu::WaitRtsq(Stream& stream, const size_t& sqeCount, con
         // 当前流无法下发，把其他流都launch一遍，避免等待的其他流没有launch
         for (auto it = streamMap_.begin(); it != streamMap_.end(); ++it) {
             if (it->first != streamInfo.actualStreamId) { // 不是当前stream
+                if (it->second.IsInvalid()) { // 跳过已销毁的stream (streamMap_只增不删, 原stream销毁后副本通过shared invalid标志感知)
+                    HCCL_WARNING("[DispatcherAiCpu][WaitRtsq] skip invalid stream in streamMap, streamId:%d", it->first);
+                    continue;
+                }
                 CHK_RET(LaunchTask(it->second, false)); // 非阻塞launch
             }
         }
@@ -1296,9 +1308,14 @@ HcclResult DispatcherAiCpu::AddRetryPreamble(Stream &stream)
 void DispatcherAiCpu::SaveStreamInfo(hccl::Stream &stream)
 {
     const HcclComStreamInfo &streamInfo = stream.GetHcclStreamInfo();
-    if (streamMap_.find(streamInfo.actualStreamId) == streamMap_.end()) {
+    auto it = streamMap_.find(streamInfo.actualStreamId);
+    if (it == streamMap_.end()) {
         streamMap_.insert({streamInfo.actualStreamId, stream});
         HCCL_INFO("[DispatcherAiCpu][SaveStreamInfo] stream id[%d]", streamInfo.actualStreamId);
+    } else if (it->second.IsInvalid()) {
+        // stream id复用: 旧stream已销毁(IsInvalid=true), 用新stream覆盖, 否则dispatcher会一直跳过该id
+        it->second = stream;
+        HCCL_INFO("[DispatcherAiCpu][SaveStreamInfo] refresh invalidated stream id stream id[%d]", streamInfo.actualStreamId);
     }
     return;
 }
