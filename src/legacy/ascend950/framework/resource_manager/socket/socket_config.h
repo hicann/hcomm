@@ -160,6 +160,7 @@ public:
             config.link.GetLocalPort().GetAddr() == otherConfig.link.GetLocalPort().GetAddr() &&
             config.link.GetRemotePort().GetAddr() == otherConfig.link.GetRemotePort().GetAddr() &&
             config.tag == otherConfig.tag &&
+            config.GetHccpTag() == otherConfig.GetHccpTag() &&
             config.listeningPort == otherConfig.listeningPort;
 
         if (config.noRankId && otherConfig.noRankId) {
