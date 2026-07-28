@@ -57,7 +57,6 @@
 #include "socket_manager.h"
 #include "rma_connection.h"
 #include "conn_local_notify_manager.h"
-#include "notify_fixed_value.h"
 #include "exchange_ub_buffer_dto.h"
 #include "exchange_ipc_buffer_dto.h"
 #include "exchange_ipc_notify_dto.h"
@@ -1360,41 +1359,6 @@ TEST(DevCapabilityTest, test_dev_cap_v82)
     EXPECT_EQ(true, devCap.IsSupportDevNetInlineReduce());
     devCap.Load910A3Cap();
     devCap.Load910ACap();
-}
-
-TEST(NotifyFixedValueTest, notify_fixed_value_get_addr_and_size)
-{
-    // Given
-    MOCKER(HrtGetDeviceType).stubs().will(returnValue((DevType)DevType::DEV_TYPE_950));
-
-    void *fakeAddr = new int[1];
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(fakeAddr));
-
-    MOCKER(HrtMemcpy).stubs();
-
-    NotifyFixedValue notifyFixedValue;
-    // when
-    u64 addrRes = notifyFixedValue.GetAddr();
-    u32 sizeRes = notifyFixedValue.GetSize();
-
-    // then
-    EXPECT_EQ(reinterpret_cast<uintptr_t>(fakeAddr), addrRes);
-    EXPECT_EQ(8, sizeRes);
-
-    void *fakeRdmaHandle = new int(0);
-    RdmaHandleManager::GetInstance().tokenInfoMap[fakeRdmaHandle] = make_unique<TokenInfoManager>(0, fakeRdmaHandle);
-
-    HrtRaUbLocalMemRegOutParam localMemRegInfo;
-    localMemRegInfo.targetSegVa = 0;
-    localMemRegInfo.keySize = 100;
-    localMemRegInfo.tokenId = 0;
-    localMemRegInfo.handle = 0;
-    MOCKER(HrtRaUbLocalMemReg).stubs().will(returnValue(localMemRegInfo));
-
-    notifyFixedValue.RegisterMem(fakeRdmaHandle);
-
-    delete fakeRdmaHandle;
-    GlobalMockObject::verify();
 }
 
 TEST(CommunicatorImplTest, should_return_success_when_calling_suspend)

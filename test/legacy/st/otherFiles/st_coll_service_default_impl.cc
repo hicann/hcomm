@@ -314,7 +314,6 @@ TEST(CollServiceDefaultImplTest, test_base_register_offload_buf)
     void *devPtr = nullptr;
     MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtMemset).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
-    MOCKER_CPP(&CommunicatorImpl::InitNotifyFixedValue).stubs().will(ignoreReturnValue());
     GenRankTableFile4p();
     GenTopoFile();
 

@@ -133,7 +133,6 @@ target_sources(hccl_v2_utest
         ${HCCL_V2_CODE_ROOT}/unified_platform/resource/buffer/local_rdma_rma_buffer.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/resource/buffer/local_ub_rma_buffer.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/resource/buffer/remote_rma_buffer.cc
-        ${HCCL_V2_CODE_ROOT}/unified_platform/resource/buffer/notify_fixed_value.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/resource/buffer/host_buffer.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/resource/buffer/dev_buffer.cc
 

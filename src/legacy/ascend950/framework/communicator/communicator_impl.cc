@@ -164,7 +164,6 @@ HcclResult CommunicatorImpl::InitCommResource(const CommParams &commParams)
     InitSocketManager();
     InitRmaConnManager();
     InitDataBufferManager();
-    InitNotifyFixedValue();
     InitMemTransportManager();
     InitHostDeviceSyncNotifyManager();
     InitUbMemoryTransportMgr();
@@ -267,7 +266,6 @@ HcclResult CommunicatorImpl::Init(const CommParams &commParams, std::unique_ptr<
             InitSocketManager();
             InitRmaConnManager();
             InitDataBufferManager();
-            InitNotifyFixedValue();
             InitMemTransportManager();
             InitHostDeviceSyncNotifyManager();
             InitUbMemoryTransportMgr();
@@ -314,7 +312,6 @@ HcclResult CommunicatorImpl::Init(const CommParams &commParams, std::unique_ptr<
             InitSocketManager();
             InitRmaConnManager();
             InitDataBufferManager();
-            InitNotifyFixedValue();
             InitMemTransportManager();
             InitHostDeviceSyncNotifyManager();
             InitTraceManager();
@@ -1597,11 +1594,6 @@ void CommunicatorImpl::InitRmaConnManager()
     rmaConnectionManager = std::make_unique<RmaConnManager>(*this);
 }
 
-void CommunicatorImpl::InitNotifyFixedValue()
-{
-    notifyFixedValue = std::make_unique<NotifyFixedValue>();
-}
-
 void CommunicatorImpl::InitMemTransportManager()
 {
     memTransportManager = std::make_unique<MemTransportManager>(*this);
@@ -1794,11 +1786,6 @@ CollOperator *CommunicatorImpl::GetCurrentCollOperator() const
 {
     CHECK_NULLPTR(currentCollOperator, "currentCollOperator is nullptr!");
     return currentCollOperator.get();
-}
-
-NotifyFixedValue *CommunicatorImpl::GetNotifyFixedValue() const
-{
-    return notifyFixedValue.get();
 }
 
 MemTransportManager *CommunicatorImpl::GetMemTransportManager() const
@@ -2229,7 +2216,6 @@ HcclResult CommunicatorImpl::RecoverComm(SnapShotComm &snapShotComm, u32 stepPar
             InitSocketManager();
             InitRmaConnManager();
             InitDataBufferManager();
-            InitNotifyFixedValue();
             InitMemTransportManager();
             InitHostDeviceSyncNotifyManager();
             InitUbMemoryTransportMgr();
@@ -2293,7 +2279,6 @@ HcclResult CommunicatorImpl::RecoverComm(const SnapShotSubComm &snapShotSubComm,
             InitSocketManager();
             InitRmaConnManager();
             InitDataBufferManager();
-            InitNotifyFixedValue();
             InitMemTransportManager();
             InitHostDeviceSyncNotifyManager();
             InitUbMemoryTransportMgr();

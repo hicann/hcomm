@@ -15,7 +15,6 @@ if(TARGET hccl_v2)
             local_rdma_rma_buffer.cc
             local_ub_rma_buffer.cc
             remote_rma_buffer.cc
-            notify_fixed_value.cc
             dev_buffer.cc
             host_buffer.cc
     )

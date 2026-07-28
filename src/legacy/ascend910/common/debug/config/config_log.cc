@@ -14,7 +14,7 @@
 namespace hccl {
 
 static u64 g_debugConfig = 0ULL;
-bool g_debugConfigInited = false;
+static bool g_debugConfigInited = false;
 
 u64 GetDebugConfig()
 {

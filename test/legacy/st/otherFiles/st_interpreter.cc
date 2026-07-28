@@ -111,11 +111,6 @@ public:
         return currentCollOperator.get();
     }
 
-    NotifyFixedValue *GetNotifyFixedValue() const override
-    {
-        return notifyFixedValue.get();
-    }
-
 private:
     unique_ptr<DataBufManager> dataBufferManager;
     unique_ptr<LocalRmaBufManager> localRmaBufManager;
@@ -129,7 +124,6 @@ private:
     unique_ptr<RmaConnManager> rmaConnectionManager;
     unique_ptr<CollServiceBase> collService;
     unique_ptr<CollOperator> currentCollOperator;
-    unique_ptr<NotifyFixedValue> notifyFixedValue;
 };
 
 class InterpreterTest : public testing::Test {
