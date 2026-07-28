@@ -467,7 +467,6 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(const uint8_t dieId,
 
     const auto &ccuRmaBuffer = rmaBufferIter->second;
     const auto ccuBufTokenValue = ccuRmaBuffer->GetTokenValue();
-    const auto tokenIdHandle = reinterpret_cast<void *>(ccuRmaBuffer->GetTokenIdHandle());
     
     auto &createdVec = createdOutParamMap_[dieId];
     auto &importedVec = importedOutParamMap_[dieId];
@@ -487,7 +486,7 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(const uint8_t dieId,
         const auto jettyImportCfg = GetJettyImportCfg(loopTpInfo, psn);
 
         const auto jettyMode = HrtJettyMode::CCU_CCUM_CACHE; // 当前仅支持该模式
-        HrtRaUbCreateJettyParam req{jfcHandle, jfcHandle, ccuBufTokenValue, tokenIdHandle, jettyMode,
+        HrtRaUbCreateJettyParam req{jfcHandle, jfcHandle, ccuBufTokenValue, 0, jettyMode,
             jettyInfo.taJettyId, jettyInfo.sqBufVa, jettyInfo.sqBufSize, jettyInfo.wqeBBStartId, jettyInfo.sqDepth,
             errTimeout};
         req.qos = loopJettyQos;

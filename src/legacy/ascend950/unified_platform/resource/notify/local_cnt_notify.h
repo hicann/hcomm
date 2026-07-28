@@ -18,6 +18,7 @@
 
 #include "enum_factory.h"
 #include "orion_adapter_hccp.h"
+#include "buffer_key.h"
 
 namespace Hccl {
 
@@ -45,11 +46,13 @@ private:
     u32                           size{0};
     u8                            key[HRT_UB_MEM_KEY_MAX_LEN]{0};
     u32                           tokenId{0};
+    TokenIdHandle                 tokenIdHandle_{0};
     u64                           memHandle{0};
     u32                           keySize{0};
 
     HrtRaUbLocalMemRegOutParam    reqReg;
     void*                         lmemHandle{nullptr};
+    BufferKey<uintptr_t, u64>     bufKey_{0, 0};
 };
 } // namespace Hccl
 #endif // HCCLV2_LOCAL_CNT_NOTIFY_H

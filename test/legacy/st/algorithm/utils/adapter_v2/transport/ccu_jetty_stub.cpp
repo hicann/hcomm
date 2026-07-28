@@ -29,13 +29,11 @@ CcuJetty::CcuJetty(const IpAddress &ipAddr, const CcuJettyInfo &jettyInfo)
     auto &rdmaHandleMgr = RdmaHandleManager::GetInstance();
     rdmaHandle_ = rdmaHandleMgr.GetByIp(devPhyId, ipAddr);
     const auto jfcHandle = 1;
-    const auto &tokenInfo = rdmaHandleMgr.GetTokenIdInfo(rdmaHandle_);
-    const auto tokenIdHandle = tokenInfo.first;
     const auto tokenValue = GetUbToken();
     const auto jettyMode = HrtJettyMode::CCU_CCUM_CACHE; // 当前仅支持该模式
 
     inParam_ = HrtRaUbCreateJettyParam{jfcHandle, jfcHandle, tokenValue,
-        tokenIdHandle, jettyMode, jettyInfo.taJettyId, jettyInfo.sqBufVa,
+        0, jettyMode, jettyInfo.taJettyId, jettyInfo.sqBufVa,
         jettyInfo.sqBufSize, jettyInfo.wqeBBStartId, jettyInfo.sqDepth};
 }
 

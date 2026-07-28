@@ -148,11 +148,6 @@ public:
         return currentCollOperator.get();
     }
 
-    NotifyFixedValue *GetNotifyFixedValue() const override
-    {
-        return notifyFixedValue.get();
-    }
-
     ConnLocalCntNotifyManager &GetConnLocalCntNotifyManager() const override
     {
         return *connLocalCntNotifyManager;
@@ -175,7 +170,6 @@ private:
     unique_ptr<RmaConnManager>             rmaConnectionManager;
     unique_ptr<CollServiceBase>            collService;
     unique_ptr<CollOperator>               currentCollOperator;
-    unique_ptr<NotifyFixedValue>           notifyFixedValue;
     unique_ptr<MemTransportManager>        memTransportManager;
 };
 

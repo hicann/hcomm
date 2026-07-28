@@ -26,7 +26,6 @@
 #include "remote_rma_buf_manager.h"
 #include "rma_conn_manager.h"
 #include "stream_manager.h"
-#include "notify_fixed_value.h"
 #include "queue_wait_group_cnt_notify_manager.h"
 #include "host_device_sync_notify_manager.h"
 #include "queue_bcast_post_cnt_notify_manager.h"
@@ -159,8 +158,6 @@ public:
     virtual const string &GetEstablishLinkSocketTag() const;
 
     virtual CollOperator *GetCurrentCollOperator() const;
-
-    virtual NotifyFixedValue *GetNotifyFixedValue() const;
 
     virtual MemTransportManager *GetMemTransportManager() const;
 
@@ -438,7 +435,6 @@ private:
     unique_ptr<RmaConnManager>                 rmaConnectionManager;
     CollServiceBase                           *collService{nullptr};
     unique_ptr<CollOperator>                   currentCollOperator;
-    unique_ptr<NotifyFixedValue>               notifyFixedValue;
     unique_ptr<HostDeviceSyncNotifyManager>    hostDeviceSyncNotifyManager;
     unique_ptr<Trace>                          trace;
     unique_ptr<MemTransportManager>            memTransportManager{};
@@ -550,7 +546,6 @@ private:
     void DeInitPreResource();
     void InitSocketManager();
     void InitRmaConnManager();
-    void InitNotifyFixedValue();
     void InitMemTransportManager();
     void InitHostDeviceSyncNotifyManager();
     HcclResult InitTraceManager();

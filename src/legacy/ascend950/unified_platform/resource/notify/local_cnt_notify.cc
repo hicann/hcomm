@@ -21,12 +21,13 @@ namespace Hccl {
 LocalCntNotify::LocalCntNotify(RdmaHandle rdmaHandle, RtsCntNotify* notify) : rdmaHandle(rdmaHandle), notify(notify),
     tokenValue(GetUbToken()), addr(notify->GetAddr()), size(notify->GetSize())
 {
-    auto tokenIdInfoPair = RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle);
-    TokenIdHandle tokenIdHandle = tokenIdInfoPair.first;
-    tokenId = tokenIdInfoPair.second;
-    HCCL_INFO("[LocalCntNotify] tokenIdHandle=0x[%llx].", tokenIdHandle);
     std::pair<u64, u64> alignBuf = BufAlign(addr, size);
-    HrtRaUbLocMemRegParam      memRegInput(alignBuf.first, alignBuf.second, tokenValue, tokenIdHandle);
+    bufKey_ = BufferKey<uintptr_t, u64>{alignBuf.first, alignBuf.second};
+    auto tokenIdInfoPair = RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle, bufKey_);
+    tokenIdHandle_ = tokenIdInfoPair.first;
+    tokenId = tokenIdInfoPair.second;
+    HCCL_INFO("[LocalCntNotify] tokenIdHandle=0x[%llx].", tokenIdHandle_);
+    HrtRaUbLocMemRegParam      memRegInput(alignBuf.first, alignBuf.second, tokenValue, tokenIdHandle_);
     reqReg = HrtRaUbLocalMemReg(rdmaHandle, memRegInput);
     keySize         = reqReg.keySize;
     memHandle       = reqReg.handle;
@@ -51,6 +52,10 @@ LocalCntNotify::~LocalCntNotify()
 {
     if (rdmaHandle && memHandle != 0) {
         DECTOR_TRY_CATCH("LocalCntNotify", HrtRaUbLocalMemUnreg(rdmaHandle, memHandle));
+    }
+
+    if (rdmaHandle) {
+        RdmaHandleManager::GetInstance().PutTokenIdInfo(rdmaHandle, bufKey_, tokenIdHandle_);
     }
 }
 } // namespace Hccl

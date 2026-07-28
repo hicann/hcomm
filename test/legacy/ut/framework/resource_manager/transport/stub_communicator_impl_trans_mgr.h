@@ -99,11 +99,6 @@ public:
         return currentCollOperator.get();
     }
 
-    NotifyFixedValue *GetNotifyFixedValue() const override
-    {
-        return notifyFixedValue.get();
-    }
-
     ConnLocalNotifyManager &GetConnLocalNotifyManager() const override
     {
         return *connLocalNotifyManager;
@@ -144,7 +139,6 @@ private:
     std::unique_ptr<RmaConnManager>            rmaConnectionManager;
     std::unique_ptr<CollServiceBase>           collService;
     std::unique_ptr<CollOperator>              currentCollOperator;
-    std::unique_ptr<NotifyFixedValue>          notifyFixedValue;
     std::unique_ptr<MirrorTaskManager>         mirrorTaskManager;
 };
 }

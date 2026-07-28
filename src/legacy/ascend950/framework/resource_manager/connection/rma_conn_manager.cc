@@ -14,7 +14,6 @@
 #include "rdma_handle_manager.h"
 #include "dev_rdma_connection.h"
 #include "dev_ub_connection.h"
-#include "notify_fixed_value.h"
 #include "null_ptr_exception.h"
 #include "exception_util.h"
 #include "socket_manager.h"
@@ -56,12 +55,6 @@ unique_ptr<RmaConnection> RmaConnManager::CreateRdmaConn(Socket *socket, const s
     bufInfo.size   = buffer->GetSize();
     bufInfo.access = static_cast<u32>(RA_ACCESS_LOCAL_WRITE) | static_cast<u32>(RA_ACCESS_REMOTE_WRITE);
     HrtRaMrReg(qpHandle, bufInfo);
-
-    RaMrInfo notifyInfo{};
-    notifyInfo.addr   = reinterpret_cast<void *>((*comm->GetNotifyFixedValue()).GetAddr());
-    notifyInfo.size   = (*comm->GetNotifyFixedValue()).GetSize();
-    notifyInfo.access = static_cast<u32>(RA_ACCESS_LOCAL_WRITE) | static_cast<u32>(RA_ACCESS_REMOTE_WRITE);
-    HrtRaMrReg(qpHandle, notifyInfo);
     return std::unique_ptr<RmaConnection>(rmaNetConn.release());
 }
 

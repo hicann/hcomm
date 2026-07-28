@@ -289,6 +289,26 @@ std::pair<TokenIdHandle, uint32_t> RdmaHandleManager::GetTokenIdInfo(RdmaHandle 
     return tokenInfo;
 }
 
+void RdmaHandleManager::PutTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64> &bufKey,
+                                       TokenIdHandle tokenIdHandle)
+{
+    std::lock_guard<std::mutex> lock(managerMutex);
+
+    if (rdmaHandle == nullptr) {
+        HCCL_WARNING("[RdmaHandleManager::%s]rdmaHandle is nullptr", __func__);
+        return;
+    }
+
+    if (tokenInfoMap.find(rdmaHandle) == tokenInfoMap.end()) {
+        HCCL_WARNING("[RdmaHandleManager::%s]tokenInfoManager is nullptr", __func__);
+        return;
+    }
+
+    tokenInfoMap[rdmaHandle]->PutTokenInfo(bufKey, tokenIdHandle);
+    HCCL_DEBUG("[RdmaHandleManager::%s] Addr[%llu] Size[%llu] rdmahandle[%p]",
+              __func__, bufKey.Addr(), bufKey.Size(), rdmaHandle);
+}
+
 constexpr u32 UB_HANDLE_INDEX   = 3;
 constexpr u32 RDMA_HANDLE_INDEX = 2;
 

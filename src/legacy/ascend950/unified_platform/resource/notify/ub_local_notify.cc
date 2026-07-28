@@ -32,18 +32,19 @@ UbLocalNotify::UbLocalNotify(RdmaHandle rdmaHandle, bool devUsed)
     addr                        = resAddrInfo.address;
     DevCapability::GetInstance().Init(DevType::DEV_TYPE_950); // 单例初始化
     size                        = DevCapability::GetInstance().GetNotifySize();
-    auto tokenIdInfoPair        = RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle);
-    TokenIdHandle tokenIdHandle = tokenIdInfoPair.first;
+    std::pair<u64, u64> alignBuf = BufAlign(addr, size);
+    bufKey_ = BufferKey<uintptr_t, u64>{alignBuf.first, alignBuf.second};
+    auto tokenIdInfoPair        = RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle, bufKey_);
+    tokenIdHandle_              = tokenIdInfoPair.first;
     tokenId                     = tokenIdInfoPair.second;
-    HCCL_INFO("[UbLocalNotify] tokenIdHandle=0x[%llx]", tokenIdHandle);
+    HCCL_INFO("[UbLocalNotify] tokenIdHandle=0x[%llx]", tokenIdHandle_);
     HCCL_INFO("mapped addr=[%llx]", addr);
     HCCL_INFO("UB notify size=[%u]", size);
 
     // halNotifyMap 返回的地址不保证4K对齐，
     // notify的地址还是使用hal接口返回的addr，但是注册mem的时候我们需要自己做向下对齐
     tokenValue = GetUbToken();
-    std::pair<u64, u64> alignBuf = BufAlign(addr, size);
-    HrtRaUbLocMemRegParam lmemReg{alignBuf.first, alignBuf.second, tokenValue, tokenIdHandle, 1};
+    HrtRaUbLocMemRegParam lmemReg{alignBuf.first, alignBuf.second, tokenValue, tokenIdHandle_, 1};
     reqReg = HrtRaUbLocalMemReg(rdmaHandle, lmemReg);
     keySize         = reqReg.keySize;
     memHandle       = reqReg.handle;
@@ -79,6 +80,10 @@ void UbLocalNotify::ReleaseResource() const
 {
     if (rdmaHandle && memHandle != 0) {
         HrtRaUbLocalMemUnreg(rdmaHandle, memHandle);
+    }
+
+    if (rdmaHandle) {
+        RdmaHandleManager::GetInstance().PutTokenIdInfo(rdmaHandle, bufKey_, tokenIdHandle_);
     }
 
     HrtDevResInfo devResInfo;

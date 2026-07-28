@@ -89,6 +89,8 @@ private:
     TokenIdHandle        tokenIdHandle{0};
 
     HrtRaUbLocalMemRegOutParam reqReg{};
+
+    BufferKey<uintptr_t, u64> bufKey_{0, 0};
 };
 u32 GetUbToken(); // 生成伪随机数
 } // namespace Hccl

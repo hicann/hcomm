@@ -405,10 +405,9 @@ void DevUbConnection::CreateJetty(const bool devUsed)
             "UB_SQ_WQEBB_SIZE[%u] overflow uint32 max.", __func__, sqDepth, UB_SQ_WQEBB_SIZE);
     }
     u32 size = static_cast<u32>(sqDepth) * static_cast<u32>(UB_SQ_WQEBB_SIZE) * static_cast<u32>(WQE_NUM_PER_SQE);
-    TokenIdHandle tokenIdHandle = RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle).first;
     HrtRaUbCreateJettyParam req {
         jfcHandle, jfcHandle,
-        GetUbToken(), tokenIdHandle,
+        GetUbToken(), 0,
         HrtJettyMode::HOST_OPBASE, // 默认HOST单算子模式
         0, // HOST展开与AICPU展开传入jetty id为0，申请一个新的jetty
         0, // va由底层分配，此处填0即可。

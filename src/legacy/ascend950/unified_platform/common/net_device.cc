@@ -52,6 +52,13 @@ std::pair<TokenIdHandle, uint32_t> HcclNetDevice::GetTokenIdInfo(const BufferKey
     return std::pair<TokenIdHandle, uint32_t>{};
 }
 
+void HcclNetDevice::PutTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle) const
+{
+    if (ndev_) {
+        ndev_->putTokenIdInfo(bufKey, tokenIdHandle);
+    }
+}
+
 bool HcclNetDevice::IsUB()
 {
     return netDevInfo_.protoType == LinkProtoType::UB;

@@ -1071,7 +1071,6 @@ TEST(CommunicatorImplTest, RecoverComm_NormalCase)
     MOCKER_CPP(&CommunicatorImpl::InitSocketManager).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::InitRmaConnManager).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::InitDataBufferManager).stubs().will(ignoreReturnValue());
-    MOCKER_CPP(&CommunicatorImpl::InitNotifyFixedValue).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::InitHostDeviceSyncNotifyManager).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::ExecAlgSelect).stubs().will(ignoreReturnValue());
@@ -1160,7 +1159,6 @@ TEST(CommunicatorImplTest, RecoverComm_SubCommNormalCase)
     MOCKER_CPP(&CommunicatorImpl::InitSocketManager).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::InitRmaConnManager).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::InitDataBufferManager).stubs().will(ignoreReturnValue());
-    MOCKER_CPP(&CommunicatorImpl::InitNotifyFixedValue).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::InitHostDeviceSyncNotifyManager).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::ExecAlgSelect).stubs().will(ignoreReturnValue());
