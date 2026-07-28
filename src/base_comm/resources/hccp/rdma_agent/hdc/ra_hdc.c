@@ -132,8 +132,14 @@ struct OpcodeInterfaceInfo gRaInterfaceInfoList[] = {
     {RA_RS_GET_SEC_RANDOM, 0},
     {RA_RS_GET_HCCN_CFG, 0},
     {RA_RS_GET_ROCE_API_VERSION, 0},
+    {RA_RS_TYPICAL_CQ_CREATE, 0},
+    {RA_RS_GET_LITE_CQ_ATTR, 0},
+    {RA_RS_QP_CREATE_WITH_CQ_WITH_ATTRS, 0},
+    {RA_RS_TYPICAL_CQ_DESTROY, 0},
 
     // outer opcode version: 2.0
+    {RA_RS_GET_DEV_EID_INFO_NUM, 0},
+    {RA_RS_GET_DEV_EID_INFO_LIST, 0},
     {RA_RS_CTX_INIT, 0},
     {RA_RS_CTX_GET_ASYNC_EVENTS, 0},
     {RA_RS_CTX_DEINIT, 0},
@@ -147,8 +153,6 @@ struct OpcodeInterfaceInfo gRaInterfaceInfoList[] = {
     {RA_RS_LMEM_UNREG, 0},
     {RA_RS_RMEM_IMPORT, 0},
     {RA_RS_RMEM_UNIMPORT, 0},
-    {RA_RS_GET_DEV_EID_INFO_NUM, 0},
-    {RA_RS_GET_DEV_EID_INFO_LIST, 0},
     {RA_RS_CTX_CHAN_CREATE, 0},
     {RA_RS_CTX_CHAN_DESTROY, 0},
     {RA_RS_CTX_CQ_CREATE, 0},
@@ -166,10 +170,6 @@ struct OpcodeInterfaceInfo gRaInterfaceInfoList[] = {
     {RA_RS_CTX_GET_AUX_INFO, 0},
     {RA_RS_CTX_GET_CR_ERR_INFO_LIST, 0},
     {RA_RS_CTX_GET_UB_CONTEXT, 0},
-    {RA_RS_TYPICAL_CQ_CREATE, 0},
-    {RA_RS_GET_LITE_CQ_ATTR, 0},
-    {RA_RS_QP_CREATE_WITH_CQ_WITH_ATTRS, 0},
-    {RA_RS_TYPICAL_CQ_DESTROY, 0},
     {RA_RS_GET_NET_API_VERSION, 0},
 
     // inner opcode version

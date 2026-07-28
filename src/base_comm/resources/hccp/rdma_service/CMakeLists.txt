@@ -74,7 +74,6 @@ target_compile_definitions(rs PRIVATE
     $<$<STREQUAL:${PRODUCT_SIDE},host>:LOG_HOST>
     $<$<STREQUAL:${PRODUCT_SIDE},device>:google=ascend_private>
     $<$<STREQUAL:${PRODUCT_SIDE},device>:CONFIG_TLV>
-    CONFIG_V121
 )
 
 # 链接库

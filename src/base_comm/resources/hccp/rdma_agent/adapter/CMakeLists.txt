@@ -31,7 +31,6 @@ add_library(ra_adp SHARED
 
 target_compile_definitions(ra_adp PRIVATE
     LOG_CPP
-    $<$<STREQUAL:${PRODUCT_SIDE},device>:CONFIG_TLV>
 )
 
 target_include_directories(ra_adp PRIVATE

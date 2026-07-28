@@ -28,9 +28,7 @@
 #include "ra_rs_err.h"
 #include "rs.h"
 #include "rs_ping.h"
-#ifdef CONFIG_TLV
 #include "ra_adp_tlv.h"
-#endif
 #include "ra_adp_ping.h"
 #include "ra_adp_socket.h"
 #include "ra_hdc_ctx.h"
@@ -1537,8 +1535,7 @@ struct RaOpHandle gRaOpHandle[] = {
     {RA_RS_SOCKET_RECV, RaRsSocketRecv, sizeof(union OpSocketRecvData)},
     {RA_RS_QP_CREATE, RaRsQpCreate, sizeof(union OpQpCreateData)},
     {RA_RS_QP_CREATE_WITH_ATTRS, RaRsQpCreateWithAttrs, sizeof(union OpQpCreateWithAttrsData)},
-    {RA_RS_QP_CREATE_WITH_CQ_WITH_ATTRS, RaRsQpCreateWithCQWithAttrs,
-        sizeof(union OpQpCreateWithCQWithAttrsData)},
+    {RA_RS_QP_CREATE_WITH_CQ_WITH_ATTRS, RaRsQpCreateWithCQWithAttrs, sizeof(union OpQpCreateWithCQWithAttrsData)},
     {RA_RS_AI_QP_CREATE, RaRsAiQpCreate, sizeof(union OpAiQpCreateData)},
     {RA_RS_AI_QP_CREATE_WITH_ATTRS, RaRsAiQpCreateWithData, sizeof(union OpAiQpCreateWithAttrsData)},
     {RA_RS_TYPICAL_QP_CREATE, RaRsTypicalQpCreate, sizeof(union OpTypicalQpCreateData)},
@@ -1608,13 +1605,11 @@ struct RaOpHandle gRaOpHandle[] = {
     {RA_RS_PING_STOP, RaRsPingTaskStop, sizeof(union OpPingStopData)},
     {RA_RS_PING_DEL, RaRsPingTargetDel, sizeof(union OpPingDelData)},
     {RA_RS_PING_DEINIT, RaRsPingDeinit, sizeof(union OpPingDeinitData)},
-#ifdef CONFIG_TLV
     {RA_RS_TLV_INIT_V1, RaRsTlvInitV1, sizeof(union OpTlvInitDataV1)},
     {RA_RS_TLV_INIT, RaRsTlvInit, sizeof(union OpTlvInitData)},
     {RA_RS_TLV_DEINIT, RaRsTlvDeinit, sizeof(union OpTlvDeinitData)},
     {RA_RS_TLV_REQUEST, RaRsTlvRequest, sizeof(union OpTlvRequestData)},
     {RA_RS_TLV_REQUEST_V2, RaRsTlvRequestV2, sizeof(union OpTlvRequestDataV2)},
-#endif
     {RA_RS_GET_TLS_ENABLE, RaRsGetTlsEnable, sizeof(union OpGetTlsEnableData)},
     {RA_RS_GET_SEC_RANDOM, RaRsGetSecRandom, sizeof(union OpGetSecRandomData)},
     {RA_RS_GET_HCCN_CFG, RaRsGetHccnCfg, sizeof(union OpGetHccnCfgData)},

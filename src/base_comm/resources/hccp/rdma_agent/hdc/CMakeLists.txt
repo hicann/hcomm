@@ -31,9 +31,6 @@ set(ra_hdc_list
 
 add_library(ra_hdc SHARED ${ra_hdc_list})
 
-target_compile_definitions(ra_hdc PRIVATE
-    LOG_CPP)
-
 target_include_directories(ra_hdc PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../inc
     ${CMAKE_CURRENT_SOURCE_DIR}/../../inc/network
@@ -89,6 +86,7 @@ target_link_libraries(ra_hdc PRIVATE
 
 target_compile_definitions(ra_hdc PRIVATE
     LOG_HOST
+    LOG_CPP
 )
 
 # 安装
