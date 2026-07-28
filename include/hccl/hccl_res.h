@@ -190,7 +190,7 @@ typedef enum {
 /** 
   * @brief 申请专用thread
   * @param[in] comm 通信域句柄 
-  * @param[in] useType 专用线程使用类型(AICPU_KERNEL等) 
+  * @param[in] useType 专用线程使用类型(HCCL_DED_THREAD_TYPE_AICPU_LAUNCH等) 
   * @param[in] notifyNumPerThread 每线程的通知数量
   * @param[out] thread 返回的线程句柄 
   * @return HcclResult 执行结果状态码 

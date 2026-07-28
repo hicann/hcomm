@@ -7,6 +7,7 @@
 - [ChannelHandle](ChannelHandle.md)  
 - [ThreadHandle](ThreadHandle.md)  
 - [ThreadType](ThreadType.md)  
+- [HcclDedicatedThreadType](HcclDedicatedThreadType.md)  
 - [ThreadConfig](ThreadConfig.md)  
 - [ThreadResType](ThreadResType.md)
 - [ThreadResTypeStream](ThreadResTypeStream.md)
