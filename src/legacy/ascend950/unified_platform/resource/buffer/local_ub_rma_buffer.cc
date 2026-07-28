@@ -27,8 +27,8 @@ LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle rdmaH
     }
     std::pair<u64, u64> alignBuf = BufAlign(buf->GetAddr(), buf->GetSize());
 
-    const auto &tokenIdInfoPair = RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle,
-        BufferKey<uintptr_t, u64>{alignBuf.first, alignBuf.second});
+    bufKey_ = BufferKey<uintptr_t, u64>{alignBuf.first, alignBuf.second};
+    const auto &tokenIdInfoPair = RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle, bufKey_);
     tokenIdHandle = tokenIdInfoPair.first;
     tokenId       = tokenIdInfoPair.second;
     tokenValue    = GetUbToken();
@@ -75,7 +75,8 @@ LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, void *netDevice,
 
     std::pair<u64, u64> alignBuf = BufAlign(buf->GetAddr(), buf->GetSize());
 
-    const auto &tokenIdInfoPair = netDev->GetTokenIdInfo(BufferKey<uintptr_t, u64>{alignBuf.first, alignBuf.second});
+    bufKey_ = BufferKey<uintptr_t, u64>{alignBuf.first, alignBuf.second};
+    const auto &tokenIdInfoPair = netDev->GetTokenIdInfo(bufKey_);
     tokenIdHandle               = tokenIdInfoPair.first;
     tokenId                     = tokenIdInfoPair.second;
     tokenValue                  = GetUbToken();
@@ -120,9 +121,19 @@ std::unique_ptr<Serializable> LocalUbRmaBuffer::GetExchangeDto()
 
 LocalUbRmaBuffer::~LocalUbRmaBuffer()
 {
-    if (rdmaHandle != nullptr && reqReg.handle != 0 && !isAlias_) {
+    if (isAlias_) {
+        return;
+    }
+    if (netDev != nullptr && reqReg.handle != 0) {
+        DECTOR_TRY_CATCH("LocalUbRmaBuffer", HrtRaUbLocalMemUnreg(netDev->GetRdmaHandle(), reqReg.handle));
+        netDev->PutTokenIdInfo(bufKey_, tokenIdHandle);
+    } else if (rdmaHandle != nullptr && reqReg.handle != 0) {
         HCCL_INFO("[LocalUbRmaBuffer::%s] rdmaHandle[%p], lmemHandle[0x%llx]", __func__, rdmaHandle, reqReg.handle);
         DECTOR_TRY_CATCH("LocalUbRmaBuffer", HrtRaUbLocalMemUnreg(rdmaHandle, reqReg.handle));
+        RdmaHandleManager::GetInstance().PutTokenIdInfo(rdmaHandle, bufKey_, tokenIdHandle);
+    } else if (reqReg.handle != 0) {
+        HCCL_WARNING("[LocalUbRmaBuffer::%s] reqReg.handle[0x%llx] is non-zero but no valid cleanup path "
+                     "(netDev[%p], rdmaHandle[%p])", __func__, reqReg.handle, netDev, rdmaHandle);
     }
 }
 

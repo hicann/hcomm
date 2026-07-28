@@ -498,7 +498,6 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(const uint8_t dieId, const Ip
 
     const auto &ccuRmaBuffer = rmaBufferIter->second;
     const auto ccuBufTokenValue = ccuRmaBuffer->GetTokenValue();
-    const auto tokenIdHandle = ccuRmaBuffer->GetTokenIdHandle();
     
     const auto &tpInfo = GetTpInfo(ipAddr);
     const auto tpAttrInfo = GetLoopTpAttr(ipAddr, tpInfo.tpHandle);
@@ -513,7 +512,7 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(const uint8_t dieId, const Ip
     for (const auto &jettyInfo : jettyInfos) {
         const auto jettyMode = HrtJettyMode::CCU_CCUM_CACHE; // 当前仅支持该模式
         HrtRaUbCreateJettyParam req{jfcHandle, jfcHandle, ccuBufTokenValue,
-            tokenIdHandle, jettyMode, jettyInfo.taJettyId, jettyInfo.sqBufVa,
+            0, jettyMode, jettyInfo.taJettyId, jettyInfo.sqBufVa,
             jettyInfo.sqBufSize, jettyInfo.wqeBBStartId, jettyInfo.sqDepth, errTimeout};
         req.qos = loopJettyQos;
         auto createdOutParam = HrtRaUbCreateJetty(rdmaHandle, req);
@@ -1112,7 +1111,6 @@ void CcuComponent::DestroyAllJetty()
             }
         }
     }
-
     createdOutParamMap.clear();
 }
 

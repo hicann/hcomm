@@ -55,15 +55,12 @@ HcclResult CcuJetty::Init()
         HcclResult::HCCL_E_INTERNAL);
     const auto _jfcHandle = rdmaHandleMgr.GetJfcHandle(ctxHandle_, cqInfo, Hccl::HrtUbJfcMode::CCU_POLL);
     const JfcHandle jfcHandle = reinterpret_cast<JfcHandle>(_jfcHandle);
-    const auto &tokenInfo = rdmaHandleMgr.GetTokenIdInfo(ctxHandle_);
-    const auto _tokenIdHandle = tokenInfo.first;
-    const TokenIdHandle tokenIdHandle = reinterpret_cast<TokenIdHandle>(_tokenIdHandle);
     const auto tokenValue = Hccl::GetUbToken();
     const auto jettyMode = jettyInfo_.jettyType == CcuJettyType::CCUM_CACHED_JETTY ?
         HrtJettyMode::CCU_CCUM_CACHE : HrtJettyMode::CCU_TA_CACHE;
 
     inParam_ = HrtRaUbCreateJettyParam{jfcHandle, jfcHandle, tokenValue,
-        tokenIdHandle, jettyMode, jettyInfo_.taJettyId, jettyInfo_.sqBufVa,
+        0, jettyMode, jettyInfo_.taJettyId, jettyInfo_.sqBufVa,
         jettyInfo_.sqBufSize, jettyInfo_.wqeBBStartId, jettyInfo_.sqDepth}; // CTP默认为8s
     EXCEPTION_HANDLE_END
 

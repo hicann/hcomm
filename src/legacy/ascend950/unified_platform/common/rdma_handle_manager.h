@@ -49,8 +49,8 @@ public:
     std::pair<uint32_t, uint32_t> GetDieAndFuncId(RdmaHandle rdmaHandle);
     bool GetRtpEnable(RdmaHandle rdmaHandle);
 
-    std::pair<TokenIdHandle, uint32_t> GetTokenIdInfo(RdmaHandle rdmaHandle, 
-        const BufferKey<uintptr_t, u64> &bufKey = BufferKey<uintptr_t, u64>{0,0});
+    std::pair<TokenIdHandle, uint32_t> GetTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64> &bufKey);
+    void PutTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle);
     RdmaHandleManager(const RdmaHandleManager &rdmaHandleManager) = delete;
     RdmaHandleManager &operator=(const RdmaHandleManager &rdmaHandleManager) = delete;
     void DestroyAll();

@@ -69,6 +69,15 @@ std::pair<TokenIdHandle, uint32_t> InnerNetDev::getTokenIdInfo(const BufferKey<u
     return tokenInfoManager_->GetTokenInfo(bufKey);
 }
 
+void InnerNetDev::putTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle)
+{
+    if (tokenInfoManager_ == nullptr) {
+        HCCL_WARNING("[InnerNetDev::%s]tokenInfoManager_ is nullptr", __func__);
+        return;
+    }
+    tokenInfoManager_->PutTokenInfo(bufKey, tokenIdHandle);
+}
+
 InnerNetDev::~InnerNetDev()
 {
     if (ubJfcHandle_ != 0) {
@@ -76,7 +85,7 @@ InnerNetDev::~InnerNetDev()
     }
     if (localProto_ == LinkProtoType::RDMA) {
         if (tokenHandle_ != 0) {
-            RaUbFreeTokenIdHandle(rdmaHandle_, tokenId_);
+            RaUbFreeTokenIdHandle(rdmaHandle_, tokenHandle_);
         }
         if (rdmaHandle_ != nullptr) {
             HrtRaRdmaDeInit(rdmaHandle_, netMode_);

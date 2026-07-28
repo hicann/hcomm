@@ -59,8 +59,8 @@ public:
 
     RdmaHandle GetRdmaHandle() const;
 
-    std::pair<TokenIdHandle, uint32_t> GetTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey
-                                                      = BufferKey<uintptr_t, u64>{0, 0}) const;
+    std::pair<TokenIdHandle, uint32_t> GetTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey) const;
+    void PutTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle) const;
     bool IsUB();
 
 private:

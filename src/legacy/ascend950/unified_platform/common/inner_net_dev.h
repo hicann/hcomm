@@ -152,7 +152,9 @@ public:
 
     bool GetIsValid() const { return isValid_; }
 
-    std::pair<TokenIdHandle, uint32_t> getTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey = BufferKey<uintptr_t, u64>{0,0});
+    std::pair<TokenIdHandle, uint32_t> getTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey);
+
+    void putTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle);
 
 private:
     RdmaHandle    rdmaHandle_{nullptr};

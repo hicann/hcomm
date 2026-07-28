@@ -123,15 +123,18 @@ TEST_F(RdmaHandleManagerTest, rdma_handle_manager_get_token_id_handle)
 {
     RdmaHandle rdmaHandle = nullptr;
     TokenIdHandle tokenIdHandle;
-    EXPECT_THROW(RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle), InvalidParamsException);
+    EXPECT_THROW(RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle, BufferKey<uintptr_t, u64>{0, 0}),
+                 InvalidParamsException);
 
     RdmaHandle rdmaHandle1 = (void *)0x12;
     RdmaHandleManager::GetInstance().tokenInfoMap[rdmaHandle1] = make_unique<TokenInfoManager>(0, rdmaHandle1);
     RdmaHandle rdmaHandle2 = (void *)0x1365;
-    EXPECT_THROW(RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle2), InvalidParamsException);
+    EXPECT_THROW(RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle2, BufferKey<uintptr_t, u64>{0, 0}),
+                 InvalidParamsException);
 
     std::pair<TokenIdHandle, uint32_t> expectResult(0, 0);
-    EXPECT_EQ(RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle1), expectResult);
+    EXPECT_EQ(RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle1, BufferKey<uintptr_t, u64>{0, 0}),
+              expectResult);
 }
 
 // ===================== FindCachedJfcHandle / GetJfcHandle / GetJfcHandleAndCqInfo / cqInfoMap cleanup =====================
