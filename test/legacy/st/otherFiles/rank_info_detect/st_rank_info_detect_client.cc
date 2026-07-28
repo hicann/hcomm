@@ -42,7 +42,7 @@
 
 using namespace Hccl;
 
-std::string filePath = "llt/ace/comop/hccl/orion/st/otherFiles/rank_info_detect/rootInfo.json";
+std::string filePath = "llt/ace/comop/hccl/orion/ut/framework/topo/rank_info_detect/rootinfo.json";
 
 class RankInfoDetectClientTest : public testing::Test {
 protected:
@@ -128,7 +128,7 @@ TEST_F(RankInfoDetectClientTest, st_ConstructRankTable_When_Normal_Expect_Succes
 {
     rankInfoDetectClient_->rankSize_ = 2;
     RankTableInfo localRankTable;
-    std::string testJsonPath = "llt/ace/comop/hccl/orion/st/otherFiles/rank_info_detect/rootInfo.json";
+    std::string testJsonPath = "llt/ace/comop/hccl/orion/ut/framework/topo/rank_info_detect/rootInfo.json";
 
     MOCKER(realpath) 
         .stubs()  

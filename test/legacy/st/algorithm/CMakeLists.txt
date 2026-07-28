@@ -40,7 +40,6 @@ set(HCOMM_CODE_LEGACY      ${HCOMM_ROOT_PATH}/src/legacy/ascend950)
 set(HCOMM_LEGACY_FRAMEWORK ${HCOMM_CODE_LEGACY}/framework)
 set(HCOMM_LEGACY_PLATFORM  ${HCOMM_CODE_LEGACY}/unified_platform)
 set(HCOMM_LEGACY_SERVICE   ${HCOMM_CODE_LEGACY}/service/collective)
-set(HCOMM_RANK_GRAPH       ${HCOMM_ROOT_PATH}/src/coll_communicator_mgr/rank_graph)
 
 set(PROTOC_PROGRAM     ${HOST_PROTOC_PATH}/protoc)
 add_cann_third_party(gtest)
@@ -71,13 +70,14 @@ set(legacy_framework_include_list
     ${HCOMM_LEGACY_FRAMEWORK}/entrance
     ${HCOMM_LEGACY_FRAMEWORK}/env_config
     ${HCOMM_LEGACY_FRAMEWORK}/topo
-    ${HCOMM_RANK_GRAPH}/phy_topo
-    ${HCOMM_RANK_GRAPH}/rank_graph
-    ${HCOMM_RANK_GRAPH}/common
-    ${HCOMM_RANK_GRAPH}/rank_table_info
-    ${HCOMM_RANK_GRAPH}/rank_graph_builder
-    ${HCOMM_RANK_GRAPH}/topo_info
-    ${HCOMM_RANK_GRAPH}/phy_topo_builder
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/phy_topo
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_graph
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/common
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_table_info
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_graph_builder
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/topo_info
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/phy_topo_builder
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/phy_topo_builder
 
     ${HCOMM_LEGACY_FRAMEWORK}/resource_manager/transport/aicpu
     ${HCOMM_LEGACY_FRAMEWORK}/resource_manager/buffer/aicpu

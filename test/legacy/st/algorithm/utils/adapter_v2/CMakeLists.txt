@@ -99,23 +99,23 @@ add_library(hccl_alg_adaption_v2 SHARED
     ${HCOMM_LEGACY_FRAMEWORK}/resource_manager/transport/aicpu/connected_link_mgr.cc
 
     ${HCOMM_LEGACY_FRAMEWORK}/topo/virtual_topo.cc
-    ${HCOMM_RANK_GRAPH}/common/conn_interface.cc
-    ${HCOMM_RANK_GRAPH}/rank_table_info/rank_table_info.cc
-    ${HCOMM_RANK_GRAPH}/rank_table_info/new_rank_info.cc
-    ${HCOMM_RANK_GRAPH}/rank_table_info/rank_level_info.cc
-    ${HCOMM_RANK_GRAPH}/rank_table_info/address_info.cc
-    ${HCOMM_RANK_GRAPH}/rank_table_info/control_plane.cc
-    ${HCOMM_RANK_GRAPH}/phy_topo/phy_topo.cc
-    ${HCOMM_RANK_GRAPH}/phy_topo_builder/phy_topo_builder.cc
-    ${HCOMM_RANK_GRAPH}/topo_info/topo_info.cc
-    ${HCOMM_RANK_GRAPH}/topo_info/edge_info.cc
-    ${HCOMM_RANK_GRAPH}/topo_info/peer_info.cc
-    ${HCOMM_RANK_GRAPH}/rank_graph/rank_graph.cc
-    ${HCOMM_RANK_GRAPH}/rank_graph/net_instance.cc
-    ${HCOMM_RANK_GRAPH}/rank_graph_builder/rank_graph_builder.cc
-    ${HCOMM_RANK_GRAPH}/rank_graph_builder/detour_service.cc
-    ${HCOMM_RANK_GRAPH}/rank_graph_builder/detour_rules.cc
-    ${HCOMM_RANK_GRAPH}/rank_graph_builder/updater_for_64_plus_1.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/common/conn_interface.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_table_info/rank_table_info.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_table_info/new_rank_info.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_table_info/rank_level_info.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_table_info/address_info.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_table_info/control_plane.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/phy_topo/phy_topo.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/phy_topo_builder/phy_topo_builder.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/topo_info/topo_info.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/topo_info/edge_info.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/topo_info/peer_info.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_graph/rank_graph.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_graph/net_instance.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_graph_builder/rank_graph_builder.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_graph_builder/detour_service.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_graph_builder/detour_rules.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/topo/new_topo_builder/rank_graph_builder/updater_for_64_plus_1.cc
     ${HCOMM_LEGACY_FRAMEWORK}/env_config/env_config.cc
     ${HCOMM_LEGACY_FRAMEWORK}/env_config/env_func.cc
     ${HCOMM_LEGACY_FRAMEWORK}/env_config/base_config.cc

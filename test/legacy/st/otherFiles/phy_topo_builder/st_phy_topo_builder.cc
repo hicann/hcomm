@@ -262,7 +262,7 @@ TEST_F(PhyTopoBuilderTest, St_PhyTopoBuilder_When_InValidTopoPath_Expect_ThrowIn
 
 TEST_F(PhyTopoBuilderTest, St_PhyTopoBuilder_When_MaxTopoSizeFile_Expect_ThrowInvalidParamsException)
 {
-    std::string topoPath = "llt/ace/comop/hccl/orion/st/otherFiles/phy_topo_builder/largeTopo.json";
+    std::string topoPath = "llt/ace/comop/hccl/orion/ut/framework/topo/new_topo_builder/phy_topo_builder/largeTopo.json";
     EXPECT_THROW(PhyTopoBuilderBuildStub(topoPath), InvalidParamsException);
 }
 

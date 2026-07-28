@@ -51,17 +51,6 @@ target_link_libraries(topoaddrinfo PRIVATE
     c_sec
 )
 
-if(TARGET hcomm)
-    if(POLICY CMP0079)
-        cmake_policy(PUSH)
-        cmake_policy(SET CMP0079 NEW)
-    endif()
-    target_link_libraries(hcomm topoaddrinfo)
-    if(POLICY CMP0079)
-        cmake_policy(POP)
-    endif()
-endif()
-
 install(TARGETS topoaddrinfo
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} ${INSTALL_OPTIONAL}
     COMPONENT hcomm

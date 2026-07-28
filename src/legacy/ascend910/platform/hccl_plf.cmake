@@ -93,8 +93,8 @@ target_include_directories(hccl_plf PRIVATE
     ${HCOMM_DIR}/src/legacy/ascend950/unified_platform/pub_inc
     ${HCOMM_DIR}/src/legacy/ascend950/unified_platform/resource
     ${HCOMM_DIR}/src/legacy/ascend950/framework/topo
-    ${HCOMM_DIR}/src/coll_communicator_mgr/rank_graph/common
-    ${HCOMM_DIR}/src/coll_communicator_mgr/rank_graph/rank_graph
+    ${HCOMM_DIR}/src/legacy/ascend950/framework/topo/new_topo_builder/common
+    ${HCOMM_DIR}/src/legacy/ascend950/framework/topo/new_topo_builder/rank_graph
 )
 
 if(BUILD_OPEN_PROJECT)

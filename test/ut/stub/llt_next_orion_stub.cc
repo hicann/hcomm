@@ -170,7 +170,8 @@ void Socket::ConnectAsync()
 
 bool Socket::ISend(void *data, u64 size, u64& compSize) const
 {
-    return HrtRaSocketNonBlockSend(fdHandle, data, size, &compSize);
+    compSize = size;
+    return true;
 }
 
 HcclResult Socket::ISendWithHeart(void *data, u64 size, u64& compSize) const
@@ -197,26 +198,14 @@ void Socket::RecvAsync(u8 *recvBuf, u32 size)
 
 void Socket::Listen()
 {
-    HrtNetworkMode netMode = nicType == NicType::HOST_NIC_TYPE ? HrtNetworkMode::PEER : HrtNetworkMode::HDC;
-    RaSocketListenParam param(socketHandle, listenPort, localIp);
-    HrtRaSocketListenOneStart(param, netMode);
-    isListening = true;
-    socketStatus = SocketStatus::LISTENING;
     std::cout << "Socket Server, listen." << std::endl;
 }
 
 bool Socket::Listen(u32 &port)
 {
-    HrtNetworkMode netMode = nicType == NicType::HOST_NIC_TYPE ? HrtNetworkMode::PEER : HrtNetworkMode::HDC;
-    RaSocketListenParam param(socketHandle, port, localIp);
-    bool ret = HrtRaSocketTryListenOneStart(param, netMode);
-    if (!ret) {
-        return false;
+    if (port == 0) {
+        port = 43210;
     }
-    port = port == AUTO_LISTEN_PORT ? param.port : port;
-    listenPort = port;
-    isListening = true;
-    socketStatus = SocketStatus::LISTENING;
     std::cout << "Socket Server, listen on port" << port << std::endl;
     return true;
 }

@@ -34,7 +34,7 @@
 using namespace std;
 using namespace Hccl;
 
-string whitelistPath = "llt/ace/comop/hccl/orion/st/otherFiles/rank_info_detect/whitelist.json";
+string whitelistPath = "llt/ace/comop/hccl/orion/ut/framework/topo/rank_info_detect/whitelist.json";
 
 class GetBootstrapIpTest : public testing::Test {
 protected:

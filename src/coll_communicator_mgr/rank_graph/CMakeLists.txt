@@ -12,23 +12,13 @@ set(src_list
     ${CMAKE_CURRENT_SOURCE_DIR}/rank_graph_v2.cc
 )
 
-set(v2_rank_graph_include_dirs
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/common
-    ${CMAKE_CURRENT_SOURCE_DIR}/phy_topo
-    ${CMAKE_CURRENT_SOURCE_DIR}/phy_topo_builder
-    ${CMAKE_CURRENT_SOURCE_DIR}/rank_graph
-    ${CMAKE_CURRENT_SOURCE_DIR}/rank_graph_builder
-    ${CMAKE_CURRENT_SOURCE_DIR}/rank_table_info
-    ${CMAKE_CURRENT_SOURCE_DIR}/topo_info
-    ${HCOMM_DIR}/src/legacy/ascend950/framework/topo/topo_addr_info/include
-)
-
 if(TARGET hcomm)
     target_sources(hcomm PRIVATE
         ${src_list}
     )
-    target_include_directories(hcomm BEFORE PRIVATE ${v2_rank_graph_include_dirs})
+    target_include_directories(hcomm PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    )
 endif()
 
 if(TARGET ccl_kernel)
@@ -36,15 +26,3 @@ if(TARGET ccl_kernel)
         ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif()
-
-if(TARGET hccl_v2)
-    target_include_directories(hccl_v2 BEFORE PRIVATE ${v2_rank_graph_include_dirs})
-endif()
-
-add_subdirectory(common)
-add_subdirectory(phy_topo)
-add_subdirectory(phy_topo_builder)
-add_subdirectory(rank_graph)
-add_subdirectory(rank_graph_builder)
-add_subdirectory(rank_table_info)
-add_subdirectory(topo_info)

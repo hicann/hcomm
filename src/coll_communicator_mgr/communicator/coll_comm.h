@@ -158,7 +158,6 @@ private:
     std::shared_ptr<Hccl::DevBuffer> cclBuffer_{nullptr};
 
     RankGraph* rankgraph_{nullptr};
-    std::unique_ptr<RankGraph> rankGraphOwner_{nullptr};
     std::unique_ptr<CommEngineResMgr> commEngineResMgr_{nullptr};
     std::unique_ptr<ContextManager>  contextMgr_{nullptr};
     std::unique_ptr<CommMemMgr> commMemMgr_{nullptr};

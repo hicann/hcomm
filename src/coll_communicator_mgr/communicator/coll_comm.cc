@@ -49,6 +49,11 @@ CollComm::~CollComm()
 
     CHK_PRT(HcclBinaryUnLoad());
 
+    // fullMode collComm正常析构，rankgraph_在fullMode下是自己new的，需要释放
+    if (rankgraph_ != nullptr) {
+        delete rankgraph_;
+        rankgraph_ = nullptr;
+    }
     CollCommMgr::GetInstance()->UnRegisteCollComm(this); 
     HCCL_INFO("[CollComm][~CollComm] collComm deinit");
     // dpu的兜底上报 - 异常退出时捕获异常避免二次崩溃
@@ -105,8 +110,7 @@ HcclResult CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, Hcc
     EXCEPTION_HANDLE_BEGIN
 
     CHK_RET(DlHalFunction::GetInstance().DlHalFunctionInit());
-    rankGraphOwner_ = std::make_unique<RankGraphV2>(rankGraph);
-    rankgraph_ = rankGraphOwner_.get();
+    rankgraph_ = new (std::nothrow) RankGraphV2(rankGraph);
     uint32_t rankNum = 0;
     CHK_PTR_NULL(rankgraph_);
     CHK_RET(rankgraph_->GetRankSize(&rankNum));

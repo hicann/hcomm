@@ -53,8 +53,8 @@ PreemptPortManager& PreemptPortManager::GetInstance(s32 deviceLogicId)
 void PreemptPortManager::ListenPreempt(const std::shared_ptr<Socket> &listenSocket,
     const std::vector<SocketPortRange> &portRange, u32 &usePort)
 {
-    CHK_PRT_RET(!initialized,
-        HCCL_ERROR("[PreemptPortManager::%s] preempt port manager has already been release.", __func__),);
+    CHK_PRT_RET_NULL(!initialized,
+        HCCL_ERROR("[PreemptPortManager::%s] preempt port manager has already been release.", __func__));
 
     CHK_SMART_PTR_RET_NULL(listenSocket);
     NicType nicType = listenSocket->GetNicType();
@@ -68,8 +68,8 @@ void PreemptPortManager::ListenPreempt(const std::shared_ptr<Socket> &listenSock
 
 void PreemptPortManager::Release(const std::shared_ptr<Socket> &listenSocket)
 {
-    CHK_PRT_RET(!initialized,
-        HCCL_WARNING("[PreemptPortManager::%s] preempt port manager has already been release.", __func__),);
+    CHK_PRT_RET_NULL(!initialized,
+        HCCL_WARNING("[PreemptPortManager::%s] preempt port manager has already been release.", __func__));
 
     CHK_SMART_PTR_RET_NULL(listenSocket);
     NicType nicType = listenSocket->GetNicType();
@@ -143,9 +143,9 @@ void PreemptPortManager::ReleasePreempt(IpPortRef& portRef, const std::shared_pt
 
     bool isListening = IsAlreadyListening(portRef, ipAddr, port);
     // 释放的端口并非正在抢占的端口
-    CHK_PRT_RET(!isListening,
+    CHK_PRT_RET_NULL(!isListening,
         HCCL_WARNING("[PreemptPortManager::%s] socket ip[%s], port[%u] is not preempted or has already been released.",
-        __func__, ipAddr.c_str(), port),);
+        __func__, ipAddr.c_str(), port));
 
     // 释放的端口计数异常
     Referenced &ref = portRef[ipAddr].second;
@@ -156,9 +156,9 @@ void PreemptPortManager::ReleasePreempt(IpPortRef& portRef, const std::shared_pt
     // 释放绑定端口的Socket
     listenSocket->StopListen();
     int count = ref.Unref();
-    CHK_PRT_RET(count > 0,
+    CHK_PRT_RET_NULL(count > 0,
         HCCL_INFO("[PreemptPortManager::%s] release a socket on ip[%s], port[%u], ref[%u].", __func__,
-        ipAddr.c_str(), port, count),);
+        ipAddr.c_str(), port, count));
         
     // 如果端口的计数归零，则不再抢占该端口
     portRef.erase(ipAddr);

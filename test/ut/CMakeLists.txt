@@ -206,9 +206,9 @@ set(UT_COMMON_INCLUDE_LIST
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/communicator/aicpu/inc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/communicator/aicpu/daemon
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/topo/
-    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/common/
-    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph/
-    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/
+    ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/topo/new_topo_builder/common/
+    ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/topo/new_topo_builder/rank_graph/
+    ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/topo/new_topo_builder/rank_table_info/
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/env_config/
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/interface/
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/service/collective/
