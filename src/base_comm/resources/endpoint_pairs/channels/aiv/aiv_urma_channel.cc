@@ -356,8 +356,7 @@ HcclResult AivUrmaChannel::StartListen()
     }
 
     uint16_t port = channelDesc_.port;
-    HCCL_INFO("[AivUrmaChannel::%s] Start. EndpointHandle[0x%llx], port[%u]", __func__,
-        reinterpret_cast<uint64_t>(endpointHandle_), port);
+    HCCL_INFO("[AivUrmaChannel::%s] Start. EndpointHandle[%p], port[%u]", __func__, endpointHandle_, port);
     if (port == 0) {
         port = DEFAULT_LISTENING_PORT;
         HCCL_INFO("[AivUrmaChannel::%s] channelDesc port is 0, use default port [%u]", __func__, port);
