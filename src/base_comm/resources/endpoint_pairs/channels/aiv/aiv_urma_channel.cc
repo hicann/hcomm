@@ -387,13 +387,13 @@ HcclResult AivUrmaChannel::BuildConnection()
         case Hccl::LinkProtocol::UB_TP:
             EXCEPTION_CATCH(ubConn = std::make_unique<Hccl::DevUbTpConnection>(
                                  rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode,
-                                 Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre),
+                                 Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXCEPTION_CATCH(ubConn = std::make_unique<Hccl::DevUbCtpConnection>(
                                  rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode,
-                                 Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre),
+                                 Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV),
                 return HCCL_E_PTR);
             break;
         default:

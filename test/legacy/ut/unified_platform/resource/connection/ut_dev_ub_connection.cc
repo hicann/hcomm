@@ -1079,3 +1079,18 @@ TEST_F(DevUbConnectionTest, Ut_CreateJetty_PassesConfiguredQos)
     EXPECT_EQ(gCapturedJettyCreateQos, static_cast<u8>(5U));
     GlobalMockObject::verify();
 }
+
+TEST_F(DevUbConnectionTest, Ut_AivEngine_Constructor_CreatesAivUrmaJfc)
+{
+    RdmaHandle rdmaHandle = (void *)0x1000000;
+    BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
+    LinkData linkData(portType, 0, 1, 0, 1);
+
+    DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE,
+        false, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(), static_cast<u8>(UB_QOS_DEFAULT),
+        COMM_ENGINE_AIV);
+
+    EXPECT_EQ(devUbConnection.engine_, COMM_ENGINE_AIV);
+    EXPECT_EQ(devUbConnection.jfcHandle, static_cast<JfcHandle>(0x0));
+    GlobalMockObject::verify();
+}

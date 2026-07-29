@@ -28,22 +28,24 @@ constexpr u32 UB_MAX_TRANS_SIZE       = 256 * 1024 * 1024; // UB单次最大传�
 
 DevUbConnection::DevUbConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                                  const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-                                 const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, u8 qos)
+                                 const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, u8 qos, CommEngine engine)
     : RmaConnection(nullptr, RmaConnType::UB), rdmaHandle(rdmaHandle), locAddr(locAddr), rmtAddr(rmtAddr),
-      opMode(opMode), jfcMode(jfcMode), locIpv4Addr(locIpv4Addr), rmtIpv4Addr(rmtIpv4Addr),
+      opMode(opMode), jfcMode(jfcMode), engine_(engine), locIpv4Addr(locIpv4Addr), rmtIpv4Addr(rmtIpv4Addr),
       rmtEid(rmtAddr.GetReverseEid()), locEid(locAddr.GetReverseEid()), qos_(qos), devUsed_(devUsed)
 {
-    HCCL_INFO("[DevUbConnection::DevUbConnection] rmtEid=%s", rmtEid.Describe().c_str());
+    HCCL_INFO("[DevUbConnection::DevUbConnection] rmtEid=%s, engine=%d", rmtEid.Describe().c_str(),
+        static_cast<s32>(engine_));
     devLogicId = HrtGetDevice();
 
     auto dieIdAndFuncId = RdmaHandleManager::GetInstance().GetDieAndFuncId(rdmaHandle); // 获取dieId和FuncId
     dieId               = dieIdAndFuncId.first;
     funcId              = dieIdAndFuncId.second;
 
-    if (jfcMode == HrtUbJfcMode::USER_CTL) {
+    if (engine_ == COMM_ENGINE_AIV) {
+        CreateAivUrmaJfc();
+    } else if (jfcMode == HrtUbJfcMode::USER_CTL) {
         jfcHandle = RdmaHandleManager::GetInstance().GetJfcHandleAndCqInfo(rdmaHandle, cqInfo_, jfcMode);
-    }
-    else {
+    } else {
         jfcHandle = RdmaHandleManager::GetInstance().GetJfcHandle(rdmaHandle, cqInfo_, jfcMode);
     }
     isdevUsed = devUsed;
@@ -67,24 +69,24 @@ DevUbConnection::DevUbConnection(const RdmaHandle rdmaHandle, const IpAddress &l
 
 DevUbTpConnection::DevUbTpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                                      const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-                                     const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, u8 qos)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
+                                     const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, u8 qos, CommEngine engine)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine)
 {
     tpProtocol = TpProtocol::TP;
 }
 
 DevUbCtpConnection::DevUbCtpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                                        const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-                                       const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, u8 qos)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
+                                       const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, u8 qos, CommEngine engine)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine)
 {
     tpProtocol = TpProtocol::CTP;
 }
 
 DevUbUboeConnection::DevUbUboeConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
-                                         const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-                                         const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, u8 qos)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
+                                          const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
+                                          const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, u8 qos, CommEngine engine)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine)
 {
     tpProtocol = TpProtocol::UBOE;
     jettyTimeOut = 16; // UBOE Jetty异步创建超时16秒
@@ -92,8 +94,9 @@ DevUbUboeConnection::DevUbUboeConnection(const RdmaHandle rdmaHandle, const IpAd
 
 DevUbUbgConnection::DevUbUbgConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                                         const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
-                                        const IpAddress &locAddrEid, const IpAddress &rmtAddrEid)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid)
+                                        const IpAddress &locAddrEid, const IpAddress &rmtAddrEid, CommEngine engine)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid,
+                      static_cast<u8>(UB_QOS_DEFAULT), engine)
 {
     tpProtocol = TpProtocol::UBG;
     // UBG与UBOE同属UB传输，Jetty异步创建超时一致，均为16秒
@@ -545,6 +548,17 @@ void DevUbConnection::ReleaseResource()
         HrtRaUbDestroyJetty(jettyHandle);
         jettyHandle = 0;
     }
+
+    if (engine_ == COMM_ENGINE_AIV && jfcHandle != 0) {
+        HrtRaUbDestroyJfc(rdmaHandle, jfcHandle);
+        jfcHandle = 0;
+    }
+}
+
+void DevUbConnection::CreateAivUrmaJfc()
+{
+    jfcHandle = HrtRaUbCreateJfcUserCtl(rdmaHandle, cqInfo_);
+    HCCL_INFO("[DevUbConnection][CreateAivUrmaJfc] create jfcHandle[%p] for rdmaHandle[%p].", jfcHandle, rdmaHandle);
 }
 
 DevUbConnection::~DevUbConnection()

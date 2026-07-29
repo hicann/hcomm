@@ -29,7 +29,7 @@ public:
     DevUbConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                     const OpMode opMode, const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
                     const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress(),
-                    u8 qos = static_cast<u8>(UB_QOS_DEFAULT));
+                    u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED);
     void          Connect() override;
     RmaConnStatus GetStatus() override;
     bool          Suspend() override;
@@ -111,6 +111,7 @@ private:
     IpAddress    rmtAddr{};
     OpMode       opMode{OpMode::OPBASE};
     HrtUbJfcMode jfcMode{HrtUbJfcMode::STARS_POLL};
+    CommEngine   engine_{COMM_ENGINE_RESERVED};
     IpAddress    locIpv4Addr{};
     IpAddress    rmtIpv4Addr{};
     u32          tokenValue{GetUbToken()};
@@ -171,6 +172,7 @@ private:
 
     void         GenerateLocalPsn();
     void         CreateJetty(const bool devUsed);
+    void         CreateAivUrmaJfc();
     void         SetJettyInfo();
     bool         GetTpInfo();
     void         UpdateLocTpInfo();
@@ -200,7 +202,7 @@ public:
     DevUbTpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                       const OpMode opMode, const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
                       const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress(),
-                      u8 qos = static_cast<u8>(UB_QOS_DEFAULT));
+                      u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED);
 };
 
 class DevUbCtpConnection : public DevUbConnection {
@@ -208,7 +210,7 @@ public:
     DevUbCtpConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                        const OpMode opMode, const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
                        const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress(),
-                       u8 qos = static_cast<u8>(UB_QOS_DEFAULT));
+                       u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED);
 };
 
 class DevUbUboeConnection : public DevUbConnection {
@@ -216,14 +218,15 @@ public:
     DevUbUboeConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                         const OpMode opMode, const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
                         const IpAddress &locIpv4Addr = IpAddress(), const IpAddress &rmtIpv4Addr = IpAddress(),
-                        u8 qos = static_cast<u8>(UB_QOS_DEFAULT));
+                        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED);
 };
 
 class DevUbUbgConnection : public DevUbConnection {
 public:
     DevUbUbgConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
                        const OpMode opMode, const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
-                       const IpAddress &locAddrEid = IpAddress(), const IpAddress &rmtAddrEid = IpAddress());
+                       const IpAddress &locAddrEid = IpAddress(), const IpAddress &rmtAddrEid = IpAddress(),
+                       CommEngine engine = COMM_ENGINE_RESERVED);
 };
 
 std::vector<DevUbConnection *> GetStarsPollUbConns(const std::vector<RmaConnection *> &rmaConns);
