@@ -50,6 +50,11 @@ private:
  	static void PrintCcuErrorInfo(uint32_t deviceId, uint16_t status, const Hccl::TaskInfo& taskInfo);
     static void PrintCcuErrorLog(const std::vector<CcuErrorInfo>& errorInfos, const Hccl::TaskInfo& taskInfo, u32 deviceId);
 
+    // 获取信息的公用接口
+    static HcclResult GetChannelIdByHandle(const ChannelHandle &channel, uint32_t &channelId);
+    static HcclResult GetSignalIdByHandle(const ChannelHandle &channel, uint16_t semIdx, bool isRmtSig, uint32_t &signalId);
+    static HcclResult GetVariableIdByHandle(const ChannelHandle &channel, uint16_t varIdx, uint32_t &varId);
+
     // 获取ErrorMsg
     static std::string GetCcuErrorMsgByType(const CcuErrorInfo &ccuErrorInfo, const Hccl::TaskInfo &taskInfo, u32 deviceId);
     static std::string GetCcuErrorMsgLoop(const CcuErrorInfo &ccuErrorInfo, const Hccl::TaskInfo &taskInfo, u32 deviceId);

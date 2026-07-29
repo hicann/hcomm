@@ -553,6 +553,49 @@ uint16_t CcuTaskException::GetCcuCKEValue(int32_t deviceId, uint32_t dieId, uint
     return static_cast<uint16_t>(ckeVal);
 }
 
+HcclResult CcuTaskException::GetChannelIdByHandle(const ChannelHandle &channel, uint32_t &channelId)
+{
+    void *channelPtr = nullptr;
+    CHK_RET(static_cast<HcclResult>(HcommChannelGet(channel, &channelPtr)));
+    CHK_PTR_NULL(channelPtr);
+    auto *channelImpl = dynamic_cast<CcuUrmaChannel *>(static_cast<Channel *>(channelPtr));
+    CHK_PTR_NULL(channelImpl);
+    channelId = channelImpl->GetChannelId();
+    return HCCL_SUCCESS;
+}
+
+HcclResult CcuTaskException::GetSignalIdByHandle(const ChannelHandle &channel, uint16_t semIdx, bool isRmtSig, uint32_t &signalId)
+{
+    void *channelPtr = nullptr;
+    CHK_RET(static_cast<HcclResult>(HcommChannelGet(channel, &channelPtr)));
+    CHK_PTR_NULL(channelPtr);
+    auto *channelImpl = dynamic_cast<CcuUrmaChannel *>(static_cast<Channel *>(channelPtr));
+    CHK_PTR_NULL(channelImpl);
+    if (isRmtSig) {
+        CHK_PRT_RET(channelImpl->GetRmtCkeByIndex(semIdx, signalId) != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("[%s] failed to get remote cke id, channelHandle[0x%llx].",
+                __func__, channel), HCCL_E_UNAVAIL);
+    } else {
+        CHK_PRT_RET(channelImpl->GetLocCkeByIndex(semIdx, signalId) != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("[%s] failed to get local cke id, channelHandle[0x%llx]--sem[%u].",
+                __func__, channel, semIdx), HCCL_E_UNAVAIL);
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult CcuTaskException::GetVariableIdByHandle(const ChannelHandle &channel, uint16_t varIdx, uint32_t &varId)
+{
+    void *channelPtr = nullptr;
+    CHK_RET(static_cast<HcclResult>(HcommChannelGet(channel, &channelPtr)));
+    CHK_PTR_NULL(channelPtr);
+    auto *channelImpl = dynamic_cast<CcuUrmaChannel *>(static_cast<Channel *>(channelPtr));
+    CHK_PTR_NULL(channelImpl);
+    CHK_PRT_RET(channelImpl->GetRmtXnByIndex(varIdx, varId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("[%s] failed to get remote xn id, channelHandle[0x%llx]--var[%u].",
+            __func__, channel, varIdx), HCCL_E_UNAVAIL);
+    return HCCL_SUCCESS;
+}
+
 void CcuTaskException::GenErrorInfoLocRecordEvent(const ErrorInfoBase &baseInfo, shared_ptr<CcuRep::CcuRepBase> repBase,
                                              vector<CcuErrorInfo> &errorInfo)
 {
@@ -654,14 +697,21 @@ void CcuTaskException::GenErrorInfoRemPostSem(const ErrorInfoBase &baseInfo, sha
     CcuErrorInfo errorMsg{};
     errorMsg.type    = CcuErrorType::WAIT_SIGNAL;
     errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
-
     const auto rep                     = static_pointer_cast<CcuRep::CcuRepRemPostSem>(repBase);
-    errorMsg.msg.waitSignal.signalId   = rep->GetId();
+
+    uint32_t channelId = 0;
+    CHK_PRT_RET(GetChannelIdByHandle(rep->GetChannel(), channelId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetChannelIdByHandle[0x%llx] failed", rep->GetChannel()),);
+    uint32_t signalId = 0;
+    CHK_PRT_RET(GetSignalIdByHandle(rep->GetChannel(), rep->GetSemIndex(), 1, signalId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetSignalIdByHandle[0x%llx]--SemIdx[%d] failed", rep->GetChannel(), rep->GetSemIndex()),);
+
+    errorMsg.msg.waitSignal.signalId   = signalId;
     errorMsg.msg.waitSignal.signalMask = rep->GetMask();
     auto sret = memset_s(errorMsg.msg.waitSignal.channelId, sizeof(errorMsg.msg.waitSignal.channelId), 0xFF,
         sizeof(errorMsg.msg.waitSignal.channelId));
     CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset_s failed. errorno[%d]:", __func__, sret),);
-    errorMsg.msg.waitSignal.channelId[0] = rep->GetChannelId();
+    errorMsg.msg.waitSignal.channelId[0] = channelId;
 
     errorInfo.push_back(errorMsg);
 }
@@ -672,16 +722,24 @@ void CcuTaskException::GenErrorInfoRemWaitSem(const ErrorInfoBase &baseInfo, sha
     CcuErrorInfo errorMsg{};
     errorMsg.type    = CcuErrorType::WAIT_SIGNAL;
     errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
-
     const auto rep                     = static_pointer_cast<CcuRep::CcuRepRemWaitSem>(repBase);
-    errorMsg.msg.waitSignal.signalId    = rep->GetId();
+
+    uint32_t channelId = 0;
+    CHK_PRT_RET(GetChannelIdByHandle(rep->GetChannel(), channelId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetChannelIdByHandle[0x%llx] failed", rep->GetChannel()),);
+    uint32_t signalId = 0;
+    CHK_PRT_RET(GetSignalIdByHandle(rep->GetChannel(), rep->GetSemIndex(), 0, signalId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetSignalIdByHandle[0x%llx]--SemIdx[%d] failed", rep->GetChannel(), rep->GetSemIndex()),);
+
+    errorMsg.msg.waitSignal.signalId    = signalId;
     errorMsg.msg.waitSignal.signalValue = GetCcuCKEValue(baseInfo.deviceId, baseInfo.dieId,
         errorMsg.msg.waitSignal.signalId);
     errorMsg.msg.waitSignal.signalMask  = rep->GetMask();
     auto sret = memset_s(errorMsg.msg.waitSignal.channelId, sizeof(errorMsg.msg.waitSignal.channelId), 0xFF,
         sizeof(errorMsg.msg.waitSignal.channelId));
     CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset_s failed. errorno[%d]:", __func__, sret),);
-    errorMsg.msg.waitSignal.channelId[0] = rep->GetChannelId();
+
+    errorMsg.msg.waitSignal.channelId[0] = channelId;
 
     errorInfo.push_back(errorMsg);
 }
@@ -692,16 +750,27 @@ void CcuTaskException::GenErrorInfoRemPostVar(const ErrorInfoBase &baseInfo, sha
     CcuErrorInfo errorMsg{};
     errorMsg.type    = CcuErrorType::WAIT_SIGNAL;
     errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
-
     const auto rep                     = static_pointer_cast<CcuRep::CcuRepRemPostVar>(repBase);
-    errorMsg.msg.waitSignal.signalId   = rep->GetRmtCkeId();
+
+    // 通过channelHandle从rep中获取channelId，rmtCkeId，rmtXnId
+    uint32_t channelId = 0;
+    CHK_PRT_RET(GetChannelIdByHandle(rep->GetChannel(), channelId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetChannelIdByHandle[0x%llx] failed", rep->GetChannel()),);
+    uint32_t rmtCkeId = 0;
+    CHK_PRT_RET(GetSignalIdByHandle(rep->GetChannel(), rep->GetSemIndex(), 1, rmtCkeId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetSignalIdByHandle[0x%llx]--SemIdx[%d] failed", rep->GetChannel(), rep->GetSemIndex()),);
+    uint32_t rmtXnId = 0;
+    CHK_PRT_RET(GetVariableIdByHandle(rep->GetChannel(), rep->GetParamIndex(), rmtXnId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetVariableIdByHandle[0x%llx]--VarIdx[%d] failed", rep->GetChannel(), rep->GetParamIndex()),);
+
+    errorMsg.msg.waitSignal.signalId   = rmtCkeId;
     errorMsg.msg.waitSignal.signalMask = rep->GetMask();
     auto sret = memset_s(errorMsg.msg.waitSignal.channelId, sizeof(errorMsg.msg.waitSignal.channelId), 0xFF,
         sizeof(errorMsg.msg.waitSignal.channelId));
     CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset_s failed. errorno[%d]:", __func__, sret),);
 
-    errorMsg.msg.waitSignal.channelId[0] = rep->GetChannelId();
-    errorMsg.msg.waitSignal.paramId = rep->GetRmtXnId();
+    errorMsg.msg.waitSignal.channelId[0] = channelId;
+    errorMsg.msg.waitSignal.paramId = rmtXnId;
     errorMsg.msg.waitSignal.paramValue = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetParam().Id());
 
     errorInfo.push_back(errorMsg);
@@ -727,8 +796,12 @@ void CcuTaskException::GenErrorInfoRead(const ErrorInfoBase &baseInfo, shared_pt
     CcuErrorInfo errorMsg{};
     errorMsg.type = CcuErrorType::TRANS_MEM;
     errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
-
     const auto rep                   = static_pointer_cast<CcuRep::CcuRepRead>(repBase);
+
+    uint32_t channelId = 0;
+    CHK_PRT_RET(GetChannelIdByHandle(rep->GetChannel(), channelId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetChannelIdByHandle[0x%llx] failed", rep->GetChannel()),);
+
     errorMsg.msg.transMem.locAddr    = GetCcuGSAValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLocAddrId());
     errorMsg.msg.transMem.locToken   = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLocTokenId());
     errorMsg.msg.transMem.rmtAddr    = GetCcuGSAValue(baseInfo.deviceId, baseInfo.dieId, rep->GetRemAddrId());
@@ -736,7 +809,7 @@ void CcuTaskException::GenErrorInfoRead(const ErrorInfoBase &baseInfo, shared_pt
     errorMsg.msg.transMem.len        = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLenId());
     errorMsg.msg.transMem.signalMask = rep->GetMask();
     errorMsg.msg.transMem.signalId   = rep->GetSemId();
-    errorMsg.msg.transMem.channelId = rep->GetChannelId();
+    errorMsg.msg.transMem.channelId = channelId;
     errorInfo.push_back(errorMsg);
 }
 
@@ -746,8 +819,12 @@ void CcuTaskException::GenErrorInfoWrite(const ErrorInfoBase &baseInfo, shared_p
     CcuErrorInfo errorMsg{};
     errorMsg.type    = CcuErrorType::TRANS_MEM;
     errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
-
     const auto rep                   = static_pointer_cast<CcuRep::CcuRepWrite>(repBase);
+
+    uint32_t channelId = 0;
+    CHK_PRT_RET(GetChannelIdByHandle(rep->GetChannel(), channelId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetChannelIdByHandle[0x%llx] failed", rep->GetChannel()),);
+
     errorMsg.msg.transMem.locAddr    = GetCcuGSAValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLocAddrId());
     errorMsg.msg.transMem.locToken   = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLocTokenId());
     errorMsg.msg.transMem.rmtAddr    = GetCcuGSAValue(baseInfo.deviceId, baseInfo.dieId, rep->GetRemAddrId());
@@ -755,7 +832,7 @@ void CcuTaskException::GenErrorInfoWrite(const ErrorInfoBase &baseInfo, shared_p
     errorMsg.msg.transMem.len        = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLenId());
     errorMsg.msg.transMem.signalId   = rep->GetSemId();
     errorMsg.msg.transMem.signalMask = rep->GetMask();
-    errorMsg.msg.transMem.channelId  = rep->GetChannelId();
+    errorMsg.msg.transMem.channelId  = channelId;
 
     errorInfo.push_back(errorMsg);
 }
@@ -806,15 +883,19 @@ void CcuTaskException::GenErrorInfoBufRead(const ErrorInfoBase &baseInfo, shared
     CcuErrorInfo errorMsg{};
     errorMsg.type    = CcuErrorType::BUF_TRANS_MEM;
     errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
-
     const auto rep                    = static_pointer_cast<CcuRep::CcuRepBufRead>(repBase);
+
+    uint32_t channelId = 0;
+    CHK_PRT_RET(GetChannelIdByHandle(rep->GetChannel(), channelId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetChannelIdByHandle[0x%llx] failed", rep->GetChannel()),);
+
     errorMsg.msg.bufTransMem.bufId    = GetMSIdPerDie(rep->GetDstAddrId());
     errorMsg.msg.bufTransMem.addr     = GetCcuGSAValue(baseInfo.deviceId, baseInfo.dieId, rep->GetSrcAddrId());
     errorMsg.msg.bufTransMem.token    = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetSrcTokenId());
     errorMsg.msg.bufTransMem.len      = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLenId());
     errorMsg.msg.bufTransMem.signalId = rep->GetSemId();
     errorMsg.msg.bufTransMem.signalMask = rep->GetMask();
-    errorMsg.msg.bufTransMem.channelId = rep->GetChannelId();
+    errorMsg.msg.bufTransMem.channelId = channelId;
     errorInfo.push_back(errorMsg);
 }
 
@@ -824,15 +905,19 @@ void CcuTaskException::GenErrorInfoBufWrite(const ErrorInfoBase &baseInfo, share
     CcuErrorInfo errorMsg{};
     errorMsg.type    = CcuErrorType::BUF_TRANS_MEM;
     errorMsg.SetBaseInfo(repBase->Type(), baseInfo.dieId, baseInfo.missionId, repBase->StartInstrId());
-
     const auto rep                      = static_pointer_cast<CcuRep::CcuRepBufWrite>(repBase);
+
+    uint32_t channelId = 0;
+    CHK_PRT_RET(GetChannelIdByHandle(rep->GetChannel(), channelId) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("GetChannelIdByHandle[0x%llx] failed", rep->GetChannel()),);
+
     errorMsg.msg.bufTransMem.bufId      = GetMSIdPerDie(rep->GetSrcId());
     errorMsg.msg.bufTransMem.addr       = GetCcuGSAValue(baseInfo.deviceId, baseInfo.dieId, rep->GetDstAddrId());
     errorMsg.msg.bufTransMem.token      = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetDstTokenId());
     errorMsg.msg.bufTransMem.len      = GetCcuXnValue(baseInfo.deviceId, baseInfo.dieId, rep->GetLenId());
     errorMsg.msg.bufTransMem.signalId   = rep->GetSemId();
     errorMsg.msg.bufTransMem.signalMask = rep->GetMask();
-    errorMsg.msg.bufTransMem.channelId  = rep->GetChannelId();
+    errorMsg.msg.bufTransMem.channelId  = channelId;
 
     errorInfo.push_back(errorMsg);
 }
