@@ -14,7 +14,7 @@
 #include <string.h>
 #include <securec.h>
 
-char g_end_ca[] = {"-----BEGIN CERTIFICATE-----\n\
+static char g_end_ca[] = {"-----BEGIN CERTIFICATE-----\n\
 MIIDizCCAnOgAwIBAgIIffhsme9FaxYwDQYJKoZIhvcNAQELBQAwQjELMAkGA1UE\n\
 BhMCQ04xDzANBgNVBAoTBkh1YXdlaTEiMCAGA1UEAxMZSHVhd2VpIDIwMTIgbGFi\n\
 b3JhdG9yeSBDQTAeFw0xOTExMTEwMjEzNTJaFw0yMDExMTAwMjEzNTJaMDcxCzAJ\n\
@@ -36,7 +36,7 @@ P2/w4W2Y+oEdSz8Diep1IelfOu9NCWnsbVIVgDZit3L5hFi9FWTj/XU3z5gACPV3\n\
 peMyQA8cuwyoeHYhcYZT/gM2IQAZaBWEjv+uEF87eRnEGsJ3zmRDjl/ZGwXfWjQ=\n\
 -----END CERTIFICATE-----"};
 
-char g_root_ca[] = {"-----BEGIN CERTIFICATE-----\n\
+static char g_root_ca[] = {"-----BEGIN CERTIFICATE-----\n\
 MIIEtjCCAp6gAwIBAgIRdkeE+a6EVyCmTfYyjUiOjlwwDQYJKoZIhvcNAQELBQAw\n\
 PDELMAkGA1UEBhMCQ04xDzANBgNVBAoTBkh1YXdlaTEcMBoGA1UEAxMTSHVhd2Vp\n\
 IEVxdWlwbWVudCBDQTAeFw0xNzExMjMwMTIxMDNaFw00MTExMTIwMTIxMDNaMEIx\n\
@@ -65,7 +65,7 @@ t2f37SGLILtM9mOrz5CxaIysvPHbqzdKu9obT34maYWnX+FoFwfyJErix4sqaj56\n\
 JRJoN9BBmLJ+Nw==\n\
 -----END CERTIFICATE-----"};
 
-char g_snd_ca[] = {"-----BEGIN CERTIFICATE-----\n\
+static char g_snd_ca[] = {"-----BEGIN CERTIFICATE-----\n\
 MIIFPzCCAyegAwIBAgIRdiVgAipHXuymK3xorJs/KYYwDQYJKoZIhvcNAQELBQAw\n\
 PDELMAkGA1UEBhMCQ04xDzANBgNVBAoTBkh1YXdlaTEcMBoGA1UEAxMTSHVhd2Vp\n\
 IEVxdWlwbWVudCBDQTAeFw0xMTEyMDYwNzM0MjNaFw00MTExMjgwNzM0MjNaMDwx\n\
@@ -97,7 +97,7 @@ W0d5dyNozy+IJcUo7Gg2+F1AhTLwvPiYlJLsNGZZvqXfhplpwcAnvtoGJvAj+QkL\n\
 iW4z\n\
 -----END CERTIFICATE-----"};
 
-char g_py[] = {"-----BEGIN RSA PRIVATE KEY-----\n\
+static char g_py[] = {"-----BEGIN RSA PRIVATE KEY-----\n\
 MIIEpAIBAAKCAQEA/FbiM9Qfb/Ze+dlMdBpZoM0GJ8O+L0NaVxSBXRTPcXAtdVQM\n\
 kJyprRK8RnZxeaDhbui8TXDO14aF0IN+BOwLjS/WsUg/SidtHLYSurKGerIBSUHJ\n\
 GtTARlpwlrOf50TJ3xd8P+/w+2Jq4gq9PWpFQUeJ/WnRA2BUFBJH0ssilU/W+FKy\n\

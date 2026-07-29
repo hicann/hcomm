@@ -57,7 +57,6 @@ struct ibv_abi_compat_v2 {
 	pthread_mutex_t		in_use;
 };
 
-extern int abi_ver;
 extern const struct verbs_context_ops verbs_dummy_ops;
 
 int ibverbs_get_device_list(struct list_head *list);

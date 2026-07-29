@@ -53,7 +53,7 @@
 
 #include "ibverbs.h"
 
-int abi_ver;
+static int abi_ver;
 
 struct ibv_driver_name {
 	struct list_node	entry;
@@ -73,7 +73,7 @@ static int find_sysfs_devs(struct list_head *tmp_sysfs_dev_list)
 	return 0;
 }
 
-struct verbs_device_ops *tc_driver_ops;
+static struct verbs_device_ops *tc_driver_ops;
 
 void verbs_register_driver(const struct verbs_device_ops *ops)
 {

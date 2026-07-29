@@ -49,7 +49,7 @@
 #include "rs_inner.h"
 #include "verbs_exp.h"
 
-int testcase_return = 0;
+static int testcase_return = 0;
 
 static void copy_query_dev_fields(struct ibv_device_attr *device_attr,
 				  struct ib_uverbs_query_device_resp *resp,
@@ -801,7 +801,7 @@ struct ibv_context *ibv_open_device(struct ibv_device *device)
 	return ctx;
 }
 
-struct ibv_device *tc_dev[2]= {(void *)0x123, (void *)0x456};
+static struct ibv_device *tc_dev[2]= {(void *)0x123, (void *)0x456};
 
 struct ibv_device **ibv_get_device_list(int *num_devices)
 {

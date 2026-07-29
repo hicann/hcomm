@@ -15,23 +15,22 @@
 #include <string.h>
 
 #define LLT_MAX_HDC_DATA	65536
-char tc_host_hdc_memory[LLT_MAX_HDC_DATA] = {0};
-int tc_host_hdc_len = 0;
+static char tc_host_hdc_memory[LLT_MAX_HDC_DATA] = {0};
+static int tc_host_hdc_len = 0;
 
-char tc_device_hdc_memory[LLT_MAX_HDC_DATA] = {0};
-int tc_device_hdc_len = 0;
+static char tc_device_hdc_memory[LLT_MAX_HDC_DATA] = {0};
+static int tc_device_hdc_len = 0;
 
-HDC_SESSION tc_host_hdc_session = (HDC_SESSION)(uintptr_t)2;
-HDC_SESSION tc_device_hdc_session = (HDC_SESSION)(uintptr_t)1;
+static HDC_SESSION tc_host_hdc_session = (HDC_SESSION)(uintptr_t)2;
+static HDC_SESSION tc_device_hdc_session = (HDC_SESSION)(uintptr_t)1;
 
-int tc_host_hdc_flag = 0;
-int tc_device_hdc_flag = 0;
+static int tc_host_hdc_flag = 0;
+static int tc_device_hdc_flag = 0;
 
-int tc_host_recv_flag = 0;
-int tc_device_recv_flag = 0;
+static int tc_host_recv_flag = 0;
+static int tc_device_recv_flag = 0;
 
-static int counter = 0;
-int tc_hdc_get_msg_error_flag = 0;
+static int tc_hdc_get_msg_error_flag = 0;
 
 #define RS_DEVICE_NUM 0x3
 #define RS_HOSTID2DEVID(dev_id) ((dev_id) & RS_DEVICE_NUM)
@@ -162,7 +161,6 @@ DLLEXPORT hdcError_t drvHdcAddMsgBuffer(struct drvHdcMsg *msg, char *pBuf, int l
 	return DRV_ERROR_NONE;
 };
 
-extern int tc_hdc_get_msg_error_flag;
 DLLEXPORT hdcError_t drvHdcGetMsgBuffer(struct drvHdcMsg *msg, int index,
 					char **pBuf, int *pLen)
 {
