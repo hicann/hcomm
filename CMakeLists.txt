@@ -151,6 +151,7 @@ elseif(BUILD_OPEN_PROJECT)
         include/hccl/hccl_res.h
         include/hccl/hccl_sym_win.h
         include/hccl/hccl_launch.h
+        include/hccl/hccl_team.h
     )
 
     set(HCOMM_HEAD
@@ -177,6 +178,8 @@ elseif(BUILD_OPEN_PROJECT)
     install(FILES
         include/hcomm_res.h
         include/hcomm_res_defs.h
+        include/hcomm_team.h
+        include/hcomm_team_defs.h
         DESTINATION ${INSTALL_INCLUDE_DIR}/hcomm/ ${INSTALL_OPTIONAL}
         COMPONENT hcomm
     )
@@ -235,6 +238,7 @@ elseif(BUILD_OPEN_PROJECT)
     set(HCOMM_PKG_HEAD
         pkg_inc/hcomm/hcomm_primitives_expt.h
         pkg_inc/hcomm/hcomm_res_entity_defs.h
+        pkg_inc/hcomm/hcomm_team_entity_defs.h
     )
     install(FILES
         ${HCOMM_PKG_HEAD}
