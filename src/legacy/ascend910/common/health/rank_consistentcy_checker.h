@@ -138,6 +138,7 @@ private:
     HcclResult GetOpParaByTag(const std::string &tag, HcclCMDInfo &CMDInfoOutput);
     HcclResult GetCrcByTag(const std::string &tag, HcclCRCInfo &crcInfo);
     HcclResult GenerateCheckFrame(HcclCheckInfo &checkInfo, const std::string &tag);
+    void CompareVersion(const HcclCheckInfo &local, const HcclCheckInfo &remote, bool &isDiff);
     bool CompareFrame(HcclCheckInfo &checkInfo, HcclCheckInfo &checkInfoRecv);
     bool CompareCrcInfo(const  HcclCMDInfo &hcclCMDInfo, HcclCRCInfo &crcInfo, HcclCRCInfo &crcInfoRecv);
     void ReportCmdInfoCheckFailed(const HcclCMDInfo &hcclCMDInfo, const std::string &paraName,

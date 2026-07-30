@@ -98,11 +98,11 @@ const std::string hcomm_g_msg = R"(
       "errClass": "HCCL Errors",
       "errTitle": "Package_Error_Incorrect_HCCL_Version",
       "ErrCode": "EI0008",
-      "ErrMessage": "The HCCL versions are inconsistent. The local version is %s, while the remote version is %s.",
-      "Arglist": "local_version, remote_version",
+      "ErrMessage": "The %s versions are inconsistent. The local %s, while the remote %s.",
+      "Arglist": "inconsistent_package, local_version, remote_version",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Install the same HCCL version."
+        "Solution": "Install the same version. The local Toolkit (cann-hcomm) and ops (cann-hccl) versions must be consistent with the corresponding remote versions."
       }
     },
     {
