@@ -177,7 +177,7 @@ else()
     )
 
     target_link_libraries(ccl_kernel PRIVATE
-        $<BUILD_INTERFACE:intf_pub_cxx14>
+        $<BUILD_INTERFACE:intf_pub_cxx17>
         $<BUILD_INTERFACE:mmpa_headers>
         $<BUILD_INTERFACE:msprof_headers>
         $<BUILD_INTERFACE:slog_headers>

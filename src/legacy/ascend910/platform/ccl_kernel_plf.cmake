@@ -294,7 +294,7 @@ else()
 
     # 链接库
     set(CCL_KERNEL_PLF_LINK_LIBS
-        $<BUILD_INTERFACE:intf_pub_cxx14>
+        $<BUILD_INTERFACE:intf_pub_cxx17>
         $<BUILD_INTERFACE:mmpa_headers>
         $<BUILD_INTERFACE:msprof_headers>
         $<BUILD_INTERFACE:slog_headers>

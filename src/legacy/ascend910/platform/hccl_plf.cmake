@@ -154,7 +154,7 @@ else()
 
     target_link_libraries(hccl_plf
     PRIVATE
-        $<BUILD_INTERFACE:intf_pub_cxx14>
+        $<BUILD_INTERFACE:intf_pub_cxx17>
         $<BUILD_INTERFACE:hccl_headers>
         -Wl,--no-as-needed
         c_sec
