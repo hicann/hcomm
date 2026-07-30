@@ -48,16 +48,22 @@ void UbConnLite::FillCommSqe(UdmaSqeCommon *sqe, const RmtRmaBufSliceLite &rmt, 
     sqe->opcode    = opCode;
     sqe->tpn       = tpn_;
 
-    // 当前片是ONLY片(只有一片的情况)和最后一片的情况，全严格保序
-    if (slicePos == SlicePosition::ONLY || slicePos == SlicePosition::LAST) {
-        sqe->placeOdr = UB_STRONG_ORDER;
-        sqe->compOrder = 1;
-        sqe->fence = 1;
+    if (cfg.userConfig) {
+        sqe->placeOdr = cfg.placeOdr;
+        sqe->compOrder = cfg.compOrder;
+        sqe->fence = cfg.fence;
     } else {
-        // 中间片写死配置，第一片由全局cfg配置
-        sqe->placeOdr = (slicePos == SlicePosition::MIDDLE) ? UB_RELAX_ORDER : cfg.placeOdr;
-        sqe->compOrder = (slicePos == SlicePosition::MIDDLE) ? 0 : cfg.compOrder;
-        sqe->fence = (slicePos == SlicePosition::MIDDLE) ? 0 : cfg.fence;
+        // 当前片是ONLY片(只有一片的情况)和最后一片的情况，全严格保序
+        if (slicePos == SlicePosition::ONLY || slicePos == SlicePosition::LAST) {
+            sqe->placeOdr = UB_STRONG_ORDER;
+            sqe->compOrder = 1;
+            sqe->fence = 1;
+        } else {
+            // 中间片写死配置，第一片由全局cfg配置
+            sqe->placeOdr = (slicePos == SlicePosition::MIDDLE) ? UB_RELAX_ORDER : cfg.placeOdr;
+            sqe->compOrder = (slicePos == SlicePosition::MIDDLE) ? 0 : cfg.compOrder;
+            sqe->fence = (slicePos == SlicePosition::MIDDLE) ? 0 : cfg.fence;
+        }
     }
 
     sqe->se           = 1; // 表示是否使能solicited event

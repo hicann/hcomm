@@ -371,6 +371,7 @@ void UbTransportLiteImpl::Post(u32 index, const StreamLite &stream)
         cfg.cqeEn     = true;
         cfg.placeOdr  = UB_STRONG_ORDER;
         cfg.compOrder = UB_COMPLETION;
+        cfg.userConfig = true;
     }
     u32           inlineData = 1;
 
@@ -676,6 +677,7 @@ void UbTransportLiteImpl::BatchTransfer(const std::vector<RmaBufferLite> &loc, c
         cfg.cqeEn     = (i == insNum - 1) ? true : false; // 返回最后一个sqe的cqe
         cfg.placeOdr  = UB_RELAX_ORDER;
         cfg.compOrder = UB_NO_COMPLETION;
+        cfg.userConfig = true;
 
         auto localBuffer  = GetRmaBufSlicelite(loc[i]);
         auto remoteBuffer = GetRmtRmaBufSliceLite(rmt[i]);
@@ -880,12 +882,14 @@ void UbTransportLiteImpl::BatchTransferAll(const std::vector<RmaBufferLite> &loc
         cfg.cqeEn     = (i == insNum - 1) ? true : false; // 返回最后一个sqe的cqe
         cfg.placeOdr  = (i == insNum - 1) ? UB_STRONG_ORDER : UB_RELAX_ORDER; // 最后一个要求保序
         cfg.compOrder = (i == insNum - 1) ? UB_COMPLETION : UB_NO_COMPLETION;
+        cfg.userConfig = true;
 
         if (transferOp[i].transType == TransferType::NOTIFY_RECORD) { // notifyRecord操作没有loc/rmt，因此单独处理
             if (notifyIdxs[i] == 1) { // PostFin场景
                 cfg.cqeEn     = true;
                 cfg.placeOdr  = UB_STRONG_ORDER;
                 cfg.compOrder = UB_COMPLETION;
+                cfg.userConfig = true;
             }
             u32           inlineData = 1;
             // 当前使用1个connection，下标为0 构建sqe
@@ -1082,6 +1086,7 @@ void UbTransportLiteImpl::SetFenceConfig(SqeConfigLite &cfg)
         cfg.fence = UB_FENCE_ENABLED;
         cfg.placeOdr  = UB_STRONG_ORDER;
         cfg.compOrder = UB_COMPLETION;
+        cfg.userConfig = true;
     }
     fence_ = false;
 }
