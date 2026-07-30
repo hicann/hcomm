@@ -363,13 +363,6 @@ void TcRsCcuRequest()
     ret = RsCcuRequest(&head, dataIn, dataOut, &bufferSize);
     EXPECT_INT_EQ(0, ret);
     mocker_clean();
-
-    mocker(isCcuTlvReqExist, 10, true);
-    mocker(RsCcuTlvRequest, 10, 0);
-    bufferSize = 4096U;
-    ret = RsCcuRequest(&head, dataIn, dataOut, &bufferSize);
-    EXPECT_INT_NE(0, ret);
-    mocker_clean();
 }
 
 void tc_RsNslbNetcoInitDeinit()

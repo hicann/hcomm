@@ -92,6 +92,7 @@ struct OpcodeInterfaceInfo gInterfaceInfoList[] = {
     {RA_RS_TLV_DEINIT, 1},
     {RA_RS_TLV_REQUEST, 1},
     {RA_RS_TLV_REQUEST_V2, 1},
+    {RA_RS_CUSTOM_CHANNEL_DEPRECATED, 1},
     {RA_RS_GET_TLS_ENABLE, 1},
     {RA_RS_GET_SEC_RANDOM, 1},
     {RA_RS_GET_HCCN_CFG, 3},

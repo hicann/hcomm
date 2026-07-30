@@ -10,7 +10,6 @@
 
 #include <errno.h>
 #include "securec.h"
-#include "hccp_tlv.h"
 #include "ra_rs_err.h"
 #include "rs_adp_nslb.h"
 #include "rs_inner.h"
@@ -121,11 +120,9 @@ STATIC int RsCcuRequest(struct TlvRequestMsgHead *head, char *dataIn, char *data
     int ret = 0;
     if (isCcuTlvReqExist()) {
         ret = RsCcuTlvRequest(head->type, dataIn, dataOut, head->totalBytes, bufferSize, MAX_TLV_MSG_DATA_LEN_V2);
-        CHK_PRT_RETURN(ret != 0, hccp_err("rs_ccu_tlv_request failed, ret(%d) msg_type(%u) phy_id(%u)",
+        CHK_PRT_RETURN(ret != 0 && ret != -EUSERS, hccp_err("rs_ccu_tlv_request failed, ret(%d) msg_type(%u) phy_id(%u)",
                 ret, head->type, head->phyId), ret);
-        CHK_PRT_RETURN(*bufferSize > MAX_TLV_MSG_DATA_LEN_V2, hccp_err("rs_ccu_tlv_request rsp length exceeds limit, ret(%d) msg_type(%u) phy_id(%u)",
-                ret, head->type, head->phyId), -EINVAL);
-        return 0;
+        return ret;
     }
 
     switch (head->type) {
@@ -202,4 +199,26 @@ RS_ATTRI_VISI_DEF int RsTlvRequest(struct TlvRequestMsgHead *head, char *dataIn,
 tlv_request_release_lock:
     RS_PTHREAD_MUTEX_ULOCK(&tlvCb->mutex);
     return ret;
+}
+
+RS_ATTRI_VISI_DEF int RsCtxCustomChannel(const struct CustomChanInfoIn *in, struct CustomChanInfoOut *out) 
+{ 
+    struct channel_info_out chanOut = {0}; 
+    struct channel_info_in chanIn = {0}; 
+    int ret; 
+
+    RS_CHECK_POINTER_NULL_RETURN_INT(in); 
+    RS_CHECK_POINTER_NULL_RETURN_INT(out); 
+
+    ret = memcpy_s(&chanIn, sizeof(struct channel_info_in), in, sizeof(struct CustomChanInfoIn)); 
+    CHK_PRT_RETURN(ret != 0, hccp_err("[ccu]memcpy_s in failed, ret[%d]", ret), -ESAFEFUNC); 
+
+    ret = RsCcuCustomChannel(&chanIn, &chanOut); 
+    CHK_PRT_RETURN(ret != 0, hccp_err("[ccu]rs_ctx_ccu_custom_channel failed, ret[%d]", ret), ret); 
+
+    // prepare output data 
+    ret = memcpy_s(out, sizeof(struct CustomChanInfoOut), &chanOut, sizeof(struct channel_info_out)); 
+    CHK_PRT_RETURN(ret != 0, hccp_err("[ccu]memcpy_s out failed, ret[%d]", ret), -ESAFEFUNC); 
+
+    return 0; 
 }

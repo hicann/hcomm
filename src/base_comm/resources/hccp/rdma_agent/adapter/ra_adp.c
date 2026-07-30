@@ -1610,6 +1610,7 @@ struct RaOpHandle gRaOpHandle[] = {
     {RA_RS_TLV_DEINIT, RaRsTlvDeinit, sizeof(union OpTlvDeinitData)},
     {RA_RS_TLV_REQUEST, RaRsTlvRequest, sizeof(union OpTlvRequestData)},
     {RA_RS_TLV_REQUEST_V2, RaRsTlvRequestV2, sizeof(union OpTlvRequestDataV2)},
+    {RA_RS_CUSTOM_CHANNEL_DEPRECATED, RaRsCustomChannel, sizeof(union OpCustomChannelData)},
     {RA_RS_GET_TLS_ENABLE, RaRsGetTlsEnable, sizeof(union OpGetTlsEnableData)},
     {RA_RS_GET_SEC_RANDOM, RaRsGetSecRandom, sizeof(union OpGetSecRandomData)},
     {RA_RS_GET_HCCN_CFG, RaRsGetHccnCfg, sizeof(union OpGetHccnCfgData)},

@@ -30,3 +30,8 @@ int RsTlvRequest(struct TlvRequestMsgHead *head, char *data)
 {
     return 0;
 }
+
+int RsCtxCustomChannel(const struct ChannelInfoIn *in, struct ChannelInfoOut *out) 
+{ 
+    return 0; 
+}

@@ -95,6 +95,19 @@ union OpTlvRequestDataCommon {
     } rxData;
 };
 
+union OpCustomChannelData { 
+    struct { 
+        unsigned int phyId; 
+        struct CustomChanInfoIn info; 
+        unsigned int rsvd[64U]; 
+    } txData; 
+
+    struct { 
+        struct CustomChanInfoOut info; 
+        unsigned int rsvd[64U]; 
+    } rxData; 
+};
+
 #define TLV_SETUP_TX(isV1, tlvData, commonData) \
     do { \
         unsigned int headoff = (isV1) ? offsetof(union OpTlvRequestData, txData.head) : \
