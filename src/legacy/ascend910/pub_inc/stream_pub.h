@@ -11,6 +11,7 @@
 #ifndef STREAM_PUB_H
 #define STREAM_PUB_H
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -140,6 +141,13 @@ public:
         return stream_ != nullptr;
     }
 
+    // 判断stream是否已销毁 (streamMap_中的副本通过此接口感知原stream销毁, 避免访问悬空的sqeContext_)
+    // 原stream销毁时将invalidFlag_置true, 所有共享同一invalidFlag_的拷贝副本均能感知
+    bool IsInvalid() const
+    {
+        return invalidFlag_ != nullptr && invalidFlag_->load(std::memory_order_relaxed);
+    }
+
     // 取地址
     void *ptr() const
     {
@@ -196,6 +204,11 @@ private:
     HcclSqeContext* sqeContext_ = nullptr; // device侧写sqe时使用的信息
     ErrCqeContext* cqeContext_ = nullptr; // device侧写cqe时使用的信息
     HcclComStreamInfo streamInfo_; // device侧写stream时使用的信息
+
+    // stream销毁标志, 通过shared_ptr在所有拷贝副本间共享
+    // 仅stream_owner_=true的owner析构时置true, 副本(IsInvalid调用方)只读
+    // 配合std::atomic保证多线程下dispatcher遍历streamMap_与原stream销毁的并发安全
+    std::shared_ptr<std::atomic<bool>> invalidFlag_ = std::make_shared<std::atomic<bool>>(false);
 
     void SetStreamInfo(const HcclComStreamInfo &streamInfo)
     {
