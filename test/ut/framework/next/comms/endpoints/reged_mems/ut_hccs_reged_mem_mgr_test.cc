@@ -207,3 +207,123 @@ TEST_F(HccsRegedMemMgrTest, Ut_MemoryExport_When_MemHandleUnregistered_Expect_No
     EXPECT_EQ(memDesc, nullptr);
     EXPECT_EQ(memDescLen, 0U);
 }
+
+// 父+子集注册 → 先解注册父(soft-delete) → 验证handlesRecords_和allRegisteredBuffers_状态 → 再解注册子
+TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_UnregisterParentFirst_Expect_ParentSoftDeleted)
+{
+    MOCKER_CPP(&hccl::LocalIpcRmaBuffer::Init).stubs().will(returnValue(HCCL_SUCCESS));
+
+    hccl::HcclIpAddress localIp;
+    ASSERT_EQ(localIp.SetReadableAddress("127.0.0.1"), HCCL_SUCCESS);
+    hccl::NetDevContext netCtx;
+    ASSERT_EQ(netCtx.Init(NicType::DEVICE_NIC_TYPE, 0, 0, localIp), HCCL_SUCCESS);
+
+    HccsRegedMemMgr mgr(reinterpret_cast<HcclNetDevCtx>(&netCtx));
+    auto localIpcRmaBufferMgr = netCtx.GetlocalIpcRmaBufferMgr();
+
+    HcommMem mem0;
+    mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem0.addr = (void*)0x7000;
+    mem0.size = 4096;
+    void *parentHandle = nullptr;
+    ASSERT_EQ(mgr.RegisterMemory(mem0, "parent", &parentHandle), HCCL_SUCCESS);
+    auto* parentBuf = static_cast<hccl::LocalIpcRmaBuffer*>(parentHandle);
+    hccl::BufferKey<uintptr_t, u64> parentKey(
+        reinterpret_cast<uintptr_t>(parentBuf->GetAddr()),
+        static_cast<u64>(parentBuf->GetSize()));
+    EXPECT_EQ(GetRef(*localIpcRmaBufferMgr, parentKey), 1u);
+    EXPECT_EQ(mgr.handlesRecords_.size(), 1u);
+
+    // 子集注册（alias）
+    HcommMem mem1;
+    mem1.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem1.addr = (void*)0x7000;
+    mem1.size = 512;
+    void *childHandle = nullptr;
+    EXPECT_EQ(mgr.RegisterMemory(mem1, "child", &childHandle), HCCL_SUCCESS);
+    EXPECT_NE(childHandle, parentHandle);
+    EXPECT_EQ(GetRef(*localIpcRmaBufferMgr, parentKey), 2u);
+    EXPECT_EQ(mgr.handlesRecords_.size(), 2u);
+    EXPECT_EQ(mgr.allRegisteredBuffers_.size(), 2u);
+
+    // 先解注册父（ref 2→1，IsInTree=true，父标记为soft-deleted）
+    EXPECT_EQ(mgr.UnregisterMemory(parentHandle), HCCL_SUCCESS);
+    EXPECT_TRUE(localIpcRmaBufferMgr->Find(parentKey).first);
+    EXPECT_EQ(GetRef(*localIpcRmaBufferMgr, parentKey), 1u);
+
+    // 验证：handlesRecords_中已移除父，但allRegisteredBuffers_中父标记为soft-deleted
+    EXPECT_EQ(mgr.handlesRecords_.size(), 1u);
+    EXPECT_EQ(mgr.allRegisteredBuffers_.size(), 2u);
+
+    auto itParent = std::find_if(mgr.allRegisteredBuffers_.begin(),
+        mgr.allRegisteredBuffers_.end(),
+        [parentBuf](const auto& e) { return e.first.get() == parentBuf; });
+    ASSERT_NE(itParent, mgr.allRegisteredBuffers_.end());
+    EXPECT_TRUE(itParent->second);
+
+    auto itChild = std::find_if(mgr.allRegisteredBuffers_.begin(),
+        mgr.allRegisteredBuffers_.end(),
+        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    ASSERT_NE(itChild, mgr.allRegisteredBuffers_.end());
+    EXPECT_FALSE(itChild->second);
+
+    // 再解注册子（ref 1→0，tree entry removed，子从allRegisteredBuffers_擦除）
+    EXPECT_EQ(mgr.UnregisterMemory(childHandle), HCCL_SUCCESS);
+    EXPECT_FALSE(localIpcRmaBufferMgr->Find(parentKey).first);
+    EXPECT_EQ(GetRef(*localIpcRmaBufferMgr, parentKey), 0u);
+    EXPECT_EQ(mgr.handlesRecords_.size(), 0u);
+
+    // 验证：子已从allRegisteredBuffers_中移除
+    itChild = std::find_if(mgr.allRegisteredBuffers_.begin(),
+        mgr.allRegisteredBuffers_.end(),
+        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    EXPECT_EQ(itChild, mgr.allRegisteredBuffers_.end());
+}
+
+// GetAllMemHandles: 空记录 → 注册 → 解注册 → null入参 → 验证句柄数
+TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_GetAllMemHandles_Expect_CorrectCount)
+{
+    MOCKER_CPP(&hccl::LocalIpcRmaBuffer::Init).stubs().will(returnValue(HCCL_SUCCESS));
+
+    hccl::HcclIpAddress localIp;
+    ASSERT_EQ(localIp.SetReadableAddress("127.0.0.1"), HCCL_SUCCESS);
+    hccl::NetDevContext netCtx;
+    ASSERT_EQ(netCtx.Init(NicType::DEVICE_NIC_TYPE, 0, 0, localIp), HCCL_SUCCESS);
+
+    HccsRegedMemMgr mgr(reinterpret_cast<HcclNetDevCtx>(&netCtx));
+
+    void *handles = nullptr;
+    uint32_t count = 99U;
+    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 0U);
+    EXPECT_EQ(handles, nullptr);
+
+    HcommMem mem;
+    mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem.addr = (void*)0x8000;
+    mem.size = 4096;
+    void *h1 = nullptr;
+    ASSERT_EQ(mgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
+
+    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 1U);
+    EXPECT_NE(handles, nullptr);
+
+    void *h2 = nullptr;
+    ASSERT_EQ(mgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
+
+    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 2U);
+
+    EXPECT_EQ(mgr.UnregisterMemory(h1), HCCL_SUCCESS);
+    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 1U);
+
+    EXPECT_EQ(mgr.UnregisterMemory(h2), HCCL_SUCCESS);
+    EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 0U);
+
+    // null 入参
+    EXPECT_EQ(mgr.GetAllMemHandles(nullptr, &count), HCCL_E_PTR);
+    EXPECT_EQ(mgr.GetAllMemHandles(&handles, nullptr), HCCL_E_PTR);
+}

@@ -87,28 +87,6 @@ protected:
         return HCCL_SUCCESS;
     }
 
-    // GetAllMemHandles: 收集所有未标记删除的buffer指针
-    template <typename RmaBuffer>
-    static HcclResult GetAllMemHandlesImpl(std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers,
-        std::vector<std::shared_ptr<RmaBuffer>>& activeHandles,
-        void **memHandles, uint32_t *memHandleNum, const char* logTag)
-    {
-        CHK_PTR_NULL(memHandles);
-        CHK_PTR_NULL(memHandleNum);
-
-        activeHandles.clear();
-        for (auto& entry : allBuffers) {
-            if (!entry.second) {
-                activeHandles.push_back(entry.first);
-            }
-        }
-
-        *memHandleNum = static_cast<uint32_t>(activeHandles.size());
-        *memHandles = activeHandles.empty() ? nullptr : static_cast<void *>(activeHandles.data());
-        HCCL_INFO("[%s][GetAllMemHandles] memHandleNum[%u]", logTag, *memHandleNum);
-        return HCCL_SUCCESS;
-    }
-
     // ---- 底层：tree 操作 ----
 
     // 用实际注册后的addr/size做key，对buffer增加引用计数
@@ -166,9 +144,11 @@ protected:
     // 构造基类Buffer → RegisterOrAlias → 写回memHandle
     // makeAlias(bufPtr, parent) — 基于父buffer构造别名
     // makeNew(bufPtr)          — 构造新buffer
+    // outRecords               — 可选的记录向量，注册成功时追加
     template <typename Mgr, typename RmaBuffer, typename MakeAlias, typename MakeNew>
     static HcclResult RegisterMemoryImpl(HcommMem mem, const char *memTag, void **memHandle,
         Mgr& mgr, std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers,
+        std::vector<std::shared_ptr<RmaBuffer>> *outRecords,
         const char* logTag, MakeAlias&& makeAlias, MakeNew&& makeNew)
     {
         CHK_RET(ValidateMemParams(mem, memHandle));
@@ -189,15 +169,21 @@ protected:
         HCCL_INFO("[%s][RegisterMemory] success, key {%p, %llu}", logTag, mem.addr, mem.size);
         *memHandle = static_cast<void *>(rmaBuffer.get());
         allBuffers.emplace_back(rmaBuffer, false);
+        if (outRecords != nullptr) {
+            outRecords->push_back(rmaBuffer);
+        }
         return HCCL_SUCCESS;
     }
 
     // IsAlias → ResolveAliasParent → Del → erase
     // hwHandleGetter(buffer) — 获取硬件句柄用于ResolveAliasParent
     // tokenEqual(lhs, rhs)   — 比较两个句柄是否相等
+    // outRecords             — 可选的记录向量，注销成功时移除
     template <typename Mgr, typename RmaBuffer, typename HwHandleFn, typename EqualFn>
     static HcclResult UnregisterMemoryImpl(void* memHandle, Mgr& mgr,
-        std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers, HwHandleFn&& hwHandleGetter, EqualFn&& tokenEqual)
+        std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers,
+        std::vector<std::shared_ptr<RmaBuffer>> *outRecords,
+        HwHandleFn&& hwHandleGetter, EqualFn&& tokenEqual)
     {
         CHK_PTR_NULL(memHandle);
         RmaBuffer* buffer = static_cast<RmaBuffer*>(memHandle);
@@ -227,6 +213,10 @@ protected:
                 allBuffers.erase(it);
             } else {
                 it->second = true;
+            }
+            if (outRecords != nullptr) {
+                outRecords->erase(std::remove(outRecords->begin(), outRecords->end(), it->first),
+                outRecords->end());
             }
         }
         return HCCL_SUCCESS;

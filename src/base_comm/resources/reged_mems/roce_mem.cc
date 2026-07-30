@@ -26,7 +26,7 @@ HcclResult RoceRegedMemMgr::RegisterMemory(HcommMem mem, const char *memTag, voi
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     CHK_PTR_NULL(localRdmaRmaBufferMgr_);
     return RegisterMemoryImpl(mem, memTag, memHandle,
-        localRdmaRmaBufferMgr_, allRegisteredBuffers_, "RoceRegedMemMgr",
+        localRdmaRmaBufferMgr_, allRegisteredBuffers_, &handlesRecords_, "RoceRegedMemMgr",
         [&](auto& bufPtr, auto& parent) {
             return std::make_shared<Hccl::LocalRdmaRmaBuffer>(bufPtr, rdmaHandle_,
                 parent->GetLkey(), parent->GetRkey(), parent->GetMrHandle());
@@ -40,7 +40,7 @@ HcclResult RoceRegedMemMgr::UnregisterMemory(void* memHandle)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     CHK_PTR_NULL(localRdmaRmaBufferMgr_);
-    return UnregisterMemoryImpl(memHandle, localRdmaRmaBufferMgr_, allRegisteredBuffers_,
+    return UnregisterMemoryImpl(memHandle, localRdmaRmaBufferMgr_, allRegisteredBuffers_, &handlesRecords_,
         [](auto* b) { return b->GetLkey(); },
         [](auto a, auto b) { return a == b; });
 }
@@ -189,7 +189,12 @@ HcclResult RoceRegedMemMgr::MemoryUnimport(const void *memDesc, uint32_t descLen
 HcclResult RoceRegedMemMgr::GetAllMemHandles(void **memHandles, uint32_t *memHandleNum)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
-    return GetAllMemHandlesImpl(allRegisteredBuffers_, activeHandles_, memHandles, memHandleNum, "RoceRegedMemMgr");
+    CHK_PTR_NULL(memHandles);
+    CHK_PTR_NULL(memHandleNum);
+    *memHandleNum = static_cast<uint32_t>(handlesRecords_.size());
+    *memHandles = handlesRecords_.empty() ? nullptr : static_cast<void *>(handlesRecords_.data());
+    HCCL_INFO("[RoceRegedMemMgr][GetAllMemHandles] memHandleNum[%u]", *memHandleNum);
+    return HCCL_SUCCESS;
 }
 
 }

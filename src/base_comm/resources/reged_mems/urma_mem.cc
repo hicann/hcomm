@@ -31,7 +31,7 @@ HcclResult UbRegedMemMgr::RegisterMemory(HcommMem mem, const char *memTag, void 
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     CHK_PTR_NULL(localUbRmaBufferMgr_);
     return RegisterMemoryImpl(mem, memTag, memHandle,
-        localUbRmaBufferMgr_, allRegisteredBuffers_, "UbRegedMemMgr",
+        localUbRmaBufferMgr_, allRegisteredBuffers_, &handlesRecords_, "UbRegedMemMgr",
         [&](auto& bufPtr, auto& parent) {
             return std::make_shared<Hccl::LocalUbRmaBuffer>(bufPtr, rdmaHandle_, *parent);
         },
@@ -44,7 +44,7 @@ HcclResult UbRegedMemMgr::UnregisterMemory(void* memHandle)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     CHK_PTR_NULL(localUbRmaBufferMgr_);
-    return UnregisterMemoryImpl(memHandle, localUbRmaBufferMgr_, allRegisteredBuffers_,
+    return UnregisterMemoryImpl(memHandle, localUbRmaBufferMgr_, allRegisteredBuffers_, &handlesRecords_,
         [](auto *b) { return b->GetMemRegOutParam(); },
         [](const void *lhs, const void *rhs) {
             return Hccl::LocalUbRmaBuffer::IsSameMemRegOutParam(lhs, rhs);
@@ -195,7 +195,12 @@ HcclResult UbRegedMemMgr::MemoryUnimport(const void *memDesc, uint32_t descLen)
 HcclResult UbRegedMemMgr::GetAllMemHandles(void **memHandles, uint32_t *memHandleNum)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
-    return GetAllMemHandlesImpl(allRegisteredBuffers_, activeHandles_, memHandles, memHandleNum, "UbRegedMemMgr");
+    CHK_PTR_NULL(memHandles);
+    CHK_PTR_NULL(memHandleNum);
+    *memHandleNum = static_cast<uint32_t>(handlesRecords_.size());
+    *memHandles = handlesRecords_.empty() ? nullptr : static_cast<void *>(handlesRecords_.data());
+    HCCL_INFO("[UbRegedMemMgr][GetAllMemHandles] memHandleNum[%u]", *memHandleNum);
+    return HCCL_SUCCESS;
 }
 
 }

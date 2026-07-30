@@ -188,3 +188,137 @@ TEST_F(UrmaRegedMemMgrTest, Ut_MemoryExport_When_MemHandleUnregistered_Expect_No
     EXPECT_EQ(memDesc, nullptr);
     EXPECT_EQ(memDescLen, 0U);
 }
+
+// 父+子集注册 → 先解注册父(soft-delete) → 验证handlesRecords_和allBuffers_状态 → 再解注册子
+TEST_F(UrmaRegedMemMgrTest, ut_UbRegedMemMgr_URMA_When_UnregisterParentFirst_Expect_ParentSoftDeleted)
+{
+    UbRegedMemMgr ubRegedMemMgr{};
+    HcommMem mem0;
+    mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem0.addr = (void*)0x7000;
+    mem0.size = 4096;
+    void *parentHandle = nullptr;
+    ASSERT_EQ(ubRegedMemMgr.RegisterMemory(mem0, "parent", &parentHandle), HCCL_SUCCESS);
+    auto* parentBuf = static_cast<Hccl::LocalUbRmaBuffer*>(parentHandle);
+    hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(),
+        static_cast<uint64_t>(parentBuf->GetSize()));
+    EXPECT_EQ(GetRef(*ubRegedMemMgr.localUbRmaBufferMgr_, parentKey), 1u);
+    EXPECT_EQ(ubRegedMemMgr.handlesRecords_.size(), 1u);
+
+    // 子集注册（alias）
+    HcommMem mem1;
+    mem1.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem1.addr = (void*)0x7000;
+    mem1.size = 512;
+    void *childHandle = nullptr;
+    ASSERT_EQ(ubRegedMemMgr.RegisterMemory(mem1, "child", &childHandle), HCCL_SUCCESS);
+    EXPECT_NE(childHandle, parentHandle);
+    EXPECT_EQ(GetRef(*ubRegedMemMgr.localUbRmaBufferMgr_, parentKey), 2u);
+    EXPECT_EQ(ubRegedMemMgr.handlesRecords_.size(), 2u);
+    EXPECT_EQ(ubRegedMemMgr.allRegisteredBuffers_.size(), 2u);
+
+    // 先解注册父（ref 2→1，IsInTree=true，父标记为soft-deleted）
+    EXPECT_EQ(ubRegedMemMgr.UnregisterMemory(parentHandle), HCCL_SUCCESS);
+    EXPECT_TRUE(ubRegedMemMgr.localUbRmaBufferMgr_->Find(parentKey).first);
+    EXPECT_EQ(GetRef(*ubRegedMemMgr.localUbRmaBufferMgr_, parentKey), 1u);
+
+    // 验证：handlesRecords_中已移除父，但allBuffers_中父标记为soft-deleted
+    EXPECT_EQ(ubRegedMemMgr.handlesRecords_.size(), 1u);
+    EXPECT_EQ(ubRegedMemMgr.allRegisteredBuffers_.size(), 2u);
+
+    auto itParent = std::find_if(ubRegedMemMgr.allRegisteredBuffers_.begin(),
+        ubRegedMemMgr.allRegisteredBuffers_.end(),
+        [parentBuf](const auto& e) { return e.first.get() == parentBuf; });
+    ASSERT_NE(itParent, ubRegedMemMgr.allRegisteredBuffers_.end());
+    EXPECT_TRUE(itParent->second);
+
+    auto itChild = std::find_if(ubRegedMemMgr.allRegisteredBuffers_.begin(),
+        ubRegedMemMgr.allRegisteredBuffers_.end(),
+        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    ASSERT_NE(itChild, ubRegedMemMgr.allRegisteredBuffers_.end());
+    EXPECT_FALSE(itChild->second);
+
+    // 再解注册子（ref 1→0，tree entry removed，子从allBuffers_擦除）
+    EXPECT_EQ(ubRegedMemMgr.UnregisterMemory(childHandle), HCCL_SUCCESS);
+    EXPECT_FALSE(ubRegedMemMgr.localUbRmaBufferMgr_->Find(parentKey).first);
+    EXPECT_EQ(GetRef(*ubRegedMemMgr.localUbRmaBufferMgr_, parentKey), 0u);
+    EXPECT_EQ(ubRegedMemMgr.handlesRecords_.size(), 0u);
+
+    // 验证：子已从allBuffers_中移除
+    itChild = std::find_if(ubRegedMemMgr.allRegisteredBuffers_.begin(),
+        ubRegedMemMgr.allRegisteredBuffers_.end(),
+        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    EXPECT_EQ(itChild, ubRegedMemMgr.allRegisteredBuffers_.end());
+}
+
+// GetAllMemHandles: 空记录 → 注册 → 多次注册 → 解注册 → 验证句柄数
+TEST_F(UrmaRegedMemMgrTest, ut_UbRegedMemMgr_URMA_When_GetAllMemHandles_Expect_CorrectCount)
+{
+    UbRegedMemMgr ubRegedMemMgr{};
+
+    void *handles = nullptr;
+    uint32_t count = 99U;
+    EXPECT_EQ(ubRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 0U);
+    EXPECT_EQ(handles, nullptr);
+
+    HcommMem mem;
+    mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem.addr = (void*)0x8000;
+    mem.size = 4096;
+    void *h1 = nullptr;
+    ASSERT_EQ(ubRegedMemMgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
+
+    EXPECT_EQ(ubRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 1U);
+    EXPECT_NE(handles, nullptr);
+
+    void *h2 = nullptr;
+    ASSERT_EQ(ubRegedMemMgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
+
+    EXPECT_EQ(ubRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 2U);
+
+    EXPECT_EQ(ubRegedMemMgr.UnregisterMemory(h1), HCCL_SUCCESS);
+    EXPECT_EQ(ubRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 1U);
+
+    EXPECT_EQ(ubRegedMemMgr.UnregisterMemory(h2), HCCL_SUCCESS);
+    EXPECT_EQ(ubRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 0U);
+}
+
+// RegisterMemory: 非法入参（null addr / zero size / invalid type）→ 返回错误
+TEST_F(UrmaRegedMemMgrTest, ut_UbRegedMemMgr_URMA_When_InvalidParams_Expect_Error)
+{
+    UbRegedMemMgr ubRegedMemMgr{};
+    void *h = nullptr;
+
+    // null mem.addr
+    HcommMem mem0{};
+    mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem0.addr = nullptr;
+    mem0.size = 4096;
+    EXPECT_EQ(ubRegedMemMgr.RegisterMemory(mem0, "t", &h), HCCL_E_PTR);
+
+    // zero size
+    HcommMem mem1{};
+    mem1.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem1.addr = (void*)0x1000;
+    mem1.size = 0;
+    EXPECT_EQ(ubRegedMemMgr.RegisterMemory(mem1, "t", &h), HCCL_E_PARA);
+
+    // invalid type
+    HcommMem mem2{};
+    mem2.type = COMM_MEM_TYPE_INVALID;
+    mem2.addr = (void*)0x1000;
+    mem2.size = 4096;
+    EXPECT_EQ(ubRegedMemMgr.RegisterMemory(mem2, "t", &h), HCCL_E_PARA);
+}
+
+// UnregisterMemory: null memHandle → 返回错误
+TEST_F(UrmaRegedMemMgrTest, ut_UbRegedMemMgr_URMA_When_UnregisterNullHandle_Expect_Error)
+{
+    UbRegedMemMgr ubRegedMemMgr{};
+    EXPECT_EQ(ubRegedMemMgr.UnregisterMemory(nullptr), HCCL_E_PTR);
+}
