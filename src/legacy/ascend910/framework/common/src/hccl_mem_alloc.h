@@ -14,20 +14,11 @@
 #include <hccl_comm.h>
 #include "hccl_comm_pub.h"
 #include "config.h"
+#include "hcomm_res.h"
 
 #define ALIGN_SIZE(size, align) \
     ({ \
         (size) = (((size) + (align) - 1) / (align)) * (align);\
     })
 
-#ifdef __cplusplus
-extern "C" {
-#endif  // __cplusplus
-
-HcclResult HcclMemAlloc(void **ptr, size_t size);
-HcclResult HcclMemFree(void *ptr);
-
-#ifdef __cplusplus
-}
-#endif  // __cplusplus
 #endif // HCCL_MEM_ALLOC_H

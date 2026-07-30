@@ -44,23 +44,23 @@ protected:
     }
 };
 
-TEST_F(MemAllocTest, ut_HcclMemAlloc_When_Normal_Expect_ReturnHCCL_SUCCESS)
+TEST_F(MemAllocTest, ut_HcommMemAlloc_When_Normal_Expect_ReturnHCCL_SUCCESS)
 {
     void *ptr = nullptr;
     size_t size = TWO_M;
-    HcclResult ret = HcclMemAlloc(&ptr, size);
+    HcommResult ret = HcommMemAlloc(&ptr, size);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemAlloc_When_SizeIsZero_Expect_ReturnHCCL_E_PARA)
+TEST_F(MemAllocTest, ut_HcommMemAlloc_When_SizeIsZero_Expect_ReturnHCCL_E_PARA)
 {
     void *ptr = nullptr;
     size_t size = 0;
-    HcclResult ret = HcclMemAlloc(&ptr, size);
+    HcommResult ret = HcommMemAlloc(&ptr, size);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemAlloc_When_GetDeviceFailed_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemAlloc_When_GetDeviceFailed_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtGetDevice)
     .stubs()
@@ -68,11 +68,11 @@ TEST_F(MemAllocTest, ut_HcclMemAlloc_When_GetDeviceFailed_Expect_ReturnHCCL_E_RU
 
     void *ptr = nullptr;
     size_t size = TWO_M;
-    HcclResult ret = HcclMemAlloc(&ptr, size);
+    HcommResult ret = HcommMemAlloc(&ptr, size);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemAlloc_When_GetGranularityFailed_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemAlloc_When_GetGranularityFailed_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtMemGetAllocationGranularity)
     .stubs()
@@ -80,11 +80,11 @@ TEST_F(MemAllocTest, ut_HcclMemAlloc_When_GetGranularityFailed_Expect_ReturnHCCL
 
     void *ptr = nullptr;
     size_t size = TWO_M;
-    HcclResult ret = HcclMemAlloc(&ptr, size);
+    HcommResult ret = HcommMemAlloc(&ptr, size);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemAlloc_When_GranularityIsZero_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemAlloc_When_GranularityIsZero_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtMemGetAllocationGranularity)
     .stubs()
@@ -92,11 +92,11 @@ TEST_F(MemAllocTest, ut_HcclMemAlloc_When_GranularityIsZero_Expect_ReturnHCCL_E_
 
     void *ptr = nullptr;
     size_t size = TWO_M;
-    HcclResult ret = HcclMemAlloc(&ptr, size);
+    HcommResult ret = HcommMemAlloc(&ptr, size);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemAlloc_When_ReserveMemAddressFailed_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemAlloc_When_ReserveMemAddressFailed_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtReserveMemAddress)
     .stubs()
@@ -104,11 +104,11 @@ TEST_F(MemAllocTest, ut_HcclMemAlloc_When_ReserveMemAddressFailed_Expect_ReturnH
 
     void *ptr = nullptr;
     size_t size = TWO_M + 1;            // 对齐测试
-    HcclResult ret = HcclMemAlloc(&ptr, size);
+    HcommResult ret = HcommMemAlloc(&ptr, size);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemAlloc_When_MallocPhysicalFailed_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemAlloc_When_MallocPhysicalFailed_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtMallocPhysical)
     .stubs()
@@ -116,11 +116,11 @@ TEST_F(MemAllocTest, ut_HcclMemAlloc_When_MallocPhysicalFailed_Expect_ReturnHCCL
 
     void *ptr = nullptr;
     size_t size = TWO_M;
-    HcclResult ret = HcclMemAlloc(&ptr, size);
+    HcommResult ret = HcommMemAlloc(&ptr, size);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemAlloc_When_MapMemFailed_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemAlloc_When_MapMemFailed_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtMapMem)
     .stubs()
@@ -128,26 +128,26 @@ TEST_F(MemAllocTest, ut_HcclMemAlloc_When_MapMemFailed_Expect_ReturnHCCL_E_RUNTI
 
     void *ptr = nullptr;
     size_t size = TWO_M;
-    HcclResult ret = HcclMemAlloc(&ptr, size);
+    HcommResult ret = HcommMemAlloc(&ptr, size);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemFree_When_Normal_Expect_ReturnHCCL_SUCCESS)
+TEST_F(MemAllocTest, ut_HcommMemFree_When_Normal_Expect_ReturnHCCL_SUCCESS)
 {
     int temp = 0;
     void *ptr = &temp;
-    HcclResult ret = HcclMemFree(ptr);
+    HcommResult ret = HcommMemFree(ptr);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemFree_When_PtrIsNull_Expect_ReturnHCCL_SUCCESS)
+TEST_F(MemAllocTest, ut_HcommMemFree_When_PtrIsNull_Expect_ReturnHCCL_SUCCESS)
 {
     void *ptr = nullptr;
-    HcclResult ret = HcclMemFree(ptr);
+    HcommResult ret = HcommMemFree(ptr);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemFree_When_RetainAllocationHandleFailed_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemFree_When_RetainAllocationHandleFailed_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtMemRetainAllocationHandle)
     .stubs()
@@ -155,11 +155,11 @@ TEST_F(MemAllocTest, ut_HcclMemFree_When_RetainAllocationHandleFailed_Expect_Ret
 
     int temp = 0;
     void *ptr = &temp;
-    HcclResult ret = HcclMemFree(ptr);
+    HcommResult ret = HcommMemFree(ptr);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemFree_When_UnmapMemFailed_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemFree_When_UnmapMemFailed_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtUnmapMem)
     .stubs()
@@ -167,11 +167,11 @@ TEST_F(MemAllocTest, ut_HcclMemFree_When_UnmapMemFailed_Expect_ReturnHCCL_E_RUNT
 
     int temp = 0;
     void *ptr = &temp;
-    HcclResult ret = HcclMemFree(ptr);
+    HcommResult ret = HcommMemFree(ptr);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemFree_When_FreePhysicalFailed_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemFree_When_FreePhysicalFailed_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtFreePhysical)
     .stubs()
@@ -179,11 +179,11 @@ TEST_F(MemAllocTest, ut_HcclMemFree_When_FreePhysicalFailed_Expect_ReturnHCCL_E_
 
     int temp = 0;
     void *ptr = &temp;
-    HcclResult ret = HcclMemFree(ptr);
+    HcommResult ret = HcommMemFree(ptr);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
 
-TEST_F(MemAllocTest, ut_HcclMemFree_When_ReleaseMemAddressFailed_Expect_ReturnHCCL_E_RUNTIME)
+TEST_F(MemAllocTest, ut_HcommMemFree_When_ReleaseMemAddressFailed_Expect_ReturnHCCL_E_RUNTIME)
 {
     MOCKER(aclrtReleaseMemAddress)
     .stubs()
@@ -191,6 +191,6 @@ TEST_F(MemAllocTest, ut_HcclMemFree_When_ReleaseMemAddressFailed_Expect_ReturnHC
 
     int temp = 0;
     void *ptr = &temp;
-    HcclResult ret = HcclMemFree(ptr);
+    HcommResult ret = HcommMemFree(ptr);
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }

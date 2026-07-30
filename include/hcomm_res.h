@@ -46,6 +46,10 @@ extern HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uin
 
 extern HcommResult HcommEndpointCheckFeature(HcommEndpointFeatureType featureType, const EndpointDesc *endpointDesc, bool *value);
 
+extern HcommResult HcommMemAlloc(void **ptr, size_t size);
+
+extern HcommResult HcommMemFree(void *ptr);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

@@ -3415,6 +3415,8 @@ namespace hccl
         opParam.aicpuUnfoldMode = false;
         opParam.aicpuCacheEnable = 0;
         opParam.isCapture = isCapture;
+        opParam.inputSize = sendCount * SIZE_TABLE[sendType] * userRankSize_;
+        opParam.outputSize = recvCount * SIZE_TABLE[recvType] * userRankSize_;
         if (EnableAicpuUnfold(isCapture)) {
             opParam.aicpuUnfoldMode = true;
             opParam.aicpuCacheEnable = GetExternalInputAicpuCacheEnable();

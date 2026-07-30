@@ -318,16 +318,16 @@ void* SymmetricMemory::AllocSymmetricMem(size_t size)
 {
     void* devWin = nullptr;
     void *ptr = nullptr;
-    HcclResult ret = HcclMemAlloc(&ptr, size);
+    HcommResult ret = HcommMemAlloc(&ptr, size);
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[SymmetricMemory][AllocSymmetricMem] HcclMemAlloc failed for size[%u].", size);
+        HCCL_ERROR("[SymmetricMemory][AllocSymmetricMem] HcommMemAlloc failed for size[%u].", size);
         return nullptr;
     }
 
     ret = RegisterSymmetricMem(ptr, size, &devWin);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[SymmetricMemory][AllocSymmetricMem] RegisterSymmetricMem failed for ptr[%p], size[%u].", ptr, size);
-        (void)HcclMemFree(ptr);
+        (void)HcommMemFree(ptr);
         return nullptr;
     }
     return devWin;
@@ -342,7 +342,7 @@ HcclResult SymmetricMemory::FreeSymmetricMem(void* devWin)
 
     void* userPtr = pWin->userVa;
     CHK_RET(DeregisterSymmetricMem(devWin));
-    CHK_RET(HcclMemFree(userPtr));
+    CHK_RET(static_cast<HcclResult>(HcommMemFree(userPtr)));
     return HCCL_SUCCESS;
 }
 
