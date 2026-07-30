@@ -730,8 +730,8 @@ RS_ATTRI_VISI_DEF int RsRegisterMr(unsigned int phyId, unsigned int rdevIndex, s
 
     *mrHandle = (void *)RsDrvMrReg(rdevCb->ibPd, mrRegInfo->addr, mrRegInfo->len, mrRegInfo->access);
     if (*mrHandle == NULL) {
-        hccp_warn("rs_drv_mr_reg addr is NULL len[0x%llx] access[%d] unsuccessful ", mrRegInfo->len,
-            mrRegInfo->access);
+        hccp_warn("rs_drv_mr_reg addr is NULL len[0x%llx] access[%d] unsuccessful errno[%d]", mrRegInfo->len,
+            mrRegInfo->access, errno);
         goto mr_reg_err;
     }
 

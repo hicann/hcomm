@@ -579,7 +579,7 @@ STATIC int RsPingUrmaPingCbInit(unsigned int phyId, struct PingInitAttr *attr, s
     pingCb->udevCb.urmaDev = RsUrmaGetDeviceByEid(eid, URMA_TRANSPORT_UB);
     if (pingCb->udevCb.urmaDev == NULL) {
         hccp_err("urma_get_device_by_eid failed, urmaDev is NULL, errno:%d eid:%016llx:%016llx", errno,
-            eid.in6.subnet_prefix, eid.in6.subnet_prefix);
+            eid.in6.subnet_prefix, eid.in6.interface_id);
         ret = -ENODEV;
         goto get_urma_dev_fail;
     }
@@ -631,7 +631,7 @@ STATIC int RsPingUrmaFindTargetNode(struct RsPingCtxCb *pingCb, struct PingQpInf
     RS_PTHREAD_MUTEX_ULOCK(&pingCb->pingMutex);
 
     hccp_info("ping target node for jetty_id:%u eid:%016llx:%016llx not found", targetJettyId.id,
-        targetEid.in6.subnet_prefix, targetEid.in6.subnet_prefix);
+        targetEid.in6.subnet_prefix, targetEid.in6.interface_id);
     return -ENODEV;
 }
 
@@ -653,7 +653,7 @@ STATIC int RsPingCommonImportJetty(urma_context_t *urmaCtx, struct PingQpInfo *t
     *importTjetty = RsUrmaImportJetty(urmaCtx, &rjetty, &tokenValue);
     if (*importTjetty == NULL) {
         hccp_err("urma_import_jetty failed, errno:%d remote eid:%016llx:%016llx", errno,
-            remoteEid.in6.subnet_prefix, remoteEid.in6.subnet_prefix);
+            remoteEid.in6.subnet_prefix, remoteEid.in6.interface_id);
         return -EOPENSRC;
     }
     return 0;
@@ -759,7 +759,7 @@ STATIC int RsPingUrmaPostSend(struct RsPingCtxCb *pingCb, struct RsPingTargetInf
 
     RsGetJettyInfo(&target->qpInfo, &targetJettyId, &targetEid);
     hccp_dbg("target uuid:0x%llx state:%d payload_size:%u jetty_id:%u eid:%016llx:%016llx", target->uuid, target->state,
-        target->payloadSize, targetJettyId.id, targetEid.in6.subnet_prefix, targetEid.in6.subnet_prefix);
+        target->payloadSize, targetJettyId.id, targetEid.in6.subnet_prefix, targetEid.in6.interface_id);
 
     RS_PTHREAD_MUTEX_LOCK(&pingCb->pingJetty.sendSegCb.mutex);
     sgeIdx = pingCb->pingJetty.sendSegCb.sgeIdx;

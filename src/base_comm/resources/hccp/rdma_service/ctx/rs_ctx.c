@@ -313,7 +313,7 @@ RS_ATTRI_VISI_DEF int RsCtxTokenIdAlloc(struct RaRsDevInfo *devInfo, unsigned lo
 
     ret = RsUbCtxTokenIdAlloc(devCb, addr, tokenId);
     CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_token_id_alloc failed, ret:%d, devIndex:0x%x",
-        devInfo->devIndex, ret), ret);
+        ret, devInfo->devIndex), ret);
 
     return ret;
 }
@@ -334,7 +334,7 @@ RS_ATTRI_VISI_DEF int RsCtxTokenIdFree(struct RaRsDevInfo *devInfo, unsigned lon
 
     ret = RsUbCtxTokenIdFree(devCb, addr);
     CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_token_id_free failed, ret:%d, devIndex:0x%x",
-        devInfo->devIndex, ret), ret);
+        ret, devInfo->devIndex), ret);
 
     return ret;
 }
@@ -358,7 +358,7 @@ RS_ATTRI_VISI_DEF int RsCtxLmemReg(struct RaRsDevInfo *devInfo, struct MemRegAtt
 
     ret = RsUbCtxLmemReg(devCb, memAttr, memInfo);
     CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_lmem_reg failed, ret:%d, devIndex:0x%x",
-        devInfo->devIndex, ret), ret);
+        ret, devInfo->devIndex), ret);
 
     return ret;
 }

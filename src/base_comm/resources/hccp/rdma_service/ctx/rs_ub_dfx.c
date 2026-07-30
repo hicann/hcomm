@@ -296,6 +296,8 @@ STATIC int RsUbGetSaveAsyncEvent(struct RsUbDevCb *devCb)
         goto free_event_cb;
     }
 
+    hccp_run_info("get async event, event_type:%d resId:%d devIndex:0x%x",
+        asyncEventCb->asyncEvent.event_type, asyncEventCb->resId, asyncEventCb->devCb->index);
     RsListAddTail(&asyncEventCb->list, &devCb->asyncEventList);
     devCb->asyncEventCnt++;
 
