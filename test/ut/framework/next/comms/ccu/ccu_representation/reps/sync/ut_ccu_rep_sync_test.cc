@@ -13,7 +13,7 @@
 #include <string>
 #include <climits>
 
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_rep_loc_wait_event.h"
 #include "ccu_rep_loc_wait_notify.h"
 #include "ccu_rep_loc_record_event.h"
@@ -32,42 +32,42 @@ namespace {
 class CcuRepLocWaitEventTest : public ::testing::Test {
 protected:
     void SetUp() override {}
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
 };
 
 class CcuRepLocWaitNotifyTest : public ::testing::Test {
 protected:
     void SetUp() override {}
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
 };
 
 class CcuRepLocRecordEventTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
 };
 
 class CcuRepRecordSharedNotifyTest : public ::testing::Test {
 protected:
     void SetUp() override {}
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
 };
 
 class CcuRepRemPostSemTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
 };
 
 class CcuRepRemPostVarTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
 };
 
 class CcuRepRemWaitSemTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
 };
 
@@ -164,7 +164,7 @@ TEST_F(CcuRepLocWaitEventTest, GetDependencyInfo_NotFound_ReturnsEmpty)
 
 class CcuRepContextDepTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
 };
 
@@ -346,7 +346,7 @@ TEST_F(CcuRepLocRecordEventTest, ConstructorInitializesCorrectly)
 
 TEST_F(CcuRepLocRecordEventTest, Translate)
 {
-    CcuInsGeneraterV1 insGen;
+    CcuInsGeneratorV1 insGen;
     CompletedEvent event;
     CcuRepLocRecordEvent rep(&insGen, event, 0xABCD);
 

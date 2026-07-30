@@ -11,19 +11,19 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepAnd::CcuRepAnd(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB)
+CcuRepAnd::CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB)
     : subType(AndSubType::VAR_AND_VAR_TO_VAR), varA(varA), varB(varB), varC(varC), insGenPtr(insGenPtr)
 {
     type       = CcuRepType::AND;
     instrCount = insGenPtr->GetInstrCount(type);
 }
 
-CcuRepAnd::CcuRepAnd(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varB)
+CcuRepAnd::CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB)
     : subType(AndSubType::SELF_AND_VAR_VARIABLE), varB(varB), varC(varC), insGenPtr(insGenPtr)
 {
     type       = CcuRepType::AND;

@@ -21,8 +21,8 @@ enum class ConditionType { EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_EQUAL, LESS_T
 
 class CcuRepJumpBase : public CcuRepBase {
 public:
-    explicit CcuRepJumpBase(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId);
-    explicit CcuRepJumpBase(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+    explicit CcuRepJumpBase(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId);
+    explicit CcuRepJumpBase(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
                             const Variable& expectedVar, const Variable& condition);
     void Reference(std::shared_ptr<CcuRepJumpLabel> refRep);
     void ValidateInsGeneratorForJump();
@@ -58,7 +58,7 @@ public:
 protected:
     CcuResult InitInstr(CcuInstr *&instr, uint16_t &instrId);
 
-    CcuInsGeneraterBase*             insGeneratorPtr_;
+    CcuInsGeneratorBase*             insGeneratorPtr_;
     std::string                      label;
     std::shared_ptr<CcuRepJumpLabel> jumpLabel{nullptr};
     Variable                         targetInstrId;
@@ -74,32 +74,32 @@ protected:
 
 class CcuRepJump : public CcuRepJumpBase {
 public:
-    explicit CcuRepJump(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId);
+    explicit CcuRepJump(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
 };
 
 class CcuRepJumpNE : public CcuRepJumpBase {
 public:
-    CcuRepJumpNE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar, const Variable &condition, uint64_t expected);
-    CcuRepJumpNE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition, const Variable &expectedVar);  // 仅用于A6翻译
+    CcuRepJumpNE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar, const Variable &condition, uint64_t expected);
+    CcuRepJumpNE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition, const Variable &expectedVar);  // 仅用于A6翻译
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
 };
 
 class CcuRepJumpEQ : public CcuRepJumpBase {
 public:
-    CcuRepJumpEQ(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar, const Variable &condition, uint64_t expected);
-    CcuRepJumpEQ(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition, const Variable &expectedVar);  // 仅用于A6翻译
+    CcuRepJumpEQ(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar, const Variable &condition, uint64_t expected);
+    CcuRepJumpEQ(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition, const Variable &expectedVar);  // 仅用于A6翻译
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
 };
 
 class CcuRepJumpLE : public CcuRepJumpBase {
 public:
-    CcuRepJumpLE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition,
+    CcuRepJumpLE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition,
                  const Variable &expectedVar);
-    CcuRepJumpLE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar,
+    CcuRepJumpLE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar,
                  const Variable &condition, uint64_t expected);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&curInstr, uint16_t &curInstrId, const TransDep &dep) override;
     std::string Describe() override;
@@ -107,9 +107,9 @@ public:
  
 class CcuRepJumpGE : public CcuRepJumpBase {
 public:
-    CcuRepJumpGE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition,
+    CcuRepJumpGE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition,
                  const Variable &expectedVar);
-    CcuRepJumpGE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar,
+    CcuRepJumpGE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar,
                  const Variable &condition, uint64_t expected);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&curInstr, uint16_t &curInstrId, const TransDep &dep) override;
     std::string Describe() override;
@@ -117,9 +117,9 @@ public:
  
 class CcuRepJumpGT : public CcuRepJumpBase {
 public:
-    CcuRepJumpGT(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition,
+    CcuRepJumpGT(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition,
                  const Variable &expectedVar);
-    CcuRepJumpGT(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar,
+    CcuRepJumpGT(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar,
                  const Variable &condition, uint64_t expected);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&curInstr, uint16_t &curInstrId, const TransDep &dep) override;
     std::string Describe() override;
@@ -127,9 +127,9 @@ public:
  
 class CcuRepJumpLT : public CcuRepJumpBase {
 public:
-    CcuRepJumpLT(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition,
+    CcuRepJumpLT(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &condition,
                  const Variable &expectedVar);
-    CcuRepJumpLT(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar,
+    CcuRepJumpLT(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId, const Variable &expectedVar,
                  const Variable &condition, uint64_t expected);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&curInstr, uint16_t &curInstrId, const TransDep &dep) override;
     std::string Describe() override;

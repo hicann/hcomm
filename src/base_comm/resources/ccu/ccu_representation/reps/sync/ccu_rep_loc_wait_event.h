@@ -20,7 +20,7 @@ namespace CcuRep {
 class CcuRepLocWaitEvent : public CcuRepBase {
 public:
     // mask 由调用方显式传入（与 CompletedEvent 解耦）。
-    CcuRepLocWaitEvent(CcuInsGeneraterBase* insGenPtr, const CompletedEvent &event, uint32_t mask, bool isProfiling=true);
+    CcuRepLocWaitEvent(CcuInsGeneratorBase* insGenPtr, const CompletedEvent &event, uint32_t mask, bool isProfiling=true);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint32_t    GetMask() { return mask_; };
@@ -39,7 +39,7 @@ public:
     std::vector<std::shared_ptr<CcuRepBase>> GetDependencyInfo(uint32_t bit);
 
 private:
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     CompletedEvent event_{};
     uint32_t       mask_{1};
     bool           isProfiling_{true};

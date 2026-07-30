@@ -6,7 +6,7 @@
  */
 
 #include "ccu_rep_v1.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
@@ -18,34 +18,34 @@ namespace CcuRep {
 void CcuRepAssign::SetCommonInfo()
 {
     type       = CcuRepType::ASSIGN;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
-CcuRepAssign::CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Variable &varA, uint64_t immediate)
+CcuRepAssign::CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Variable &varA, uint64_t immediate)
     : insGenPtr(insGenPtr), subType(AssignSubType::IMD_TO_VARIABLE), immediate(immediate), varA(varA)
 {
     SetCommonInfo();
 }
 
-CcuRepAssign::CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Address &addrA, uint64_t immediate)
+CcuRepAssign::CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Address &addrA, uint64_t immediate)
     : insGenPtr(insGenPtr), subType(AssignSubType::IMD_TO_ADDR), immediate(immediate), addrA(addrA)
 {
     SetCommonInfo();
 }
 
-CcuRepAssign::CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Address &addrA, const Variable &varA)
+CcuRepAssign::CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const Variable &varA)
     : insGenPtr(insGenPtr), subType(AssignSubType::VAR_TO_ADDR), immediate(0), varA(varA), addrA(addrA)
 {
     SetCommonInfo();
 }
 
-CcuRepAssign::CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Address &addrB, const Address &addrA)
+CcuRepAssign::CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Address &addrB, const Address &addrA)
     : insGenPtr(insGenPtr), subType(AssignSubType::ADDR_TO_ADDR), immediate(0), addrA(addrA), addrB(addrB)
 {
     SetCommonInfo();
 }
 
-CcuRepAssign::CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Variable &varB, const Variable &varA)
+CcuRepAssign::CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Variable &varB, const Variable &varA)
     : insGenPtr(insGenPtr), subType(AssignSubType::VAR_TO_VAR), immediate(0), varA(varA), varB(varB)
 {
     SetCommonInfo();

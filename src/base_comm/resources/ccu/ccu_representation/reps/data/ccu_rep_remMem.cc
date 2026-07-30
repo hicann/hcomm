@@ -15,17 +15,17 @@
 #include "hcomm_c_adpt.h"
 
 #include "../../../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRemMem::CcuRepRemMem(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem)
+CcuRepRemMem::CcuRepRemMem(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem)
     : insGenPtr(insGenPtr), channel(channel), rem(rem) 
 {
     type = CcuRepType::REM_MEM;
-    instrCount = 2;  // 指令数为2个
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
 bool CcuRepRemMem::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)

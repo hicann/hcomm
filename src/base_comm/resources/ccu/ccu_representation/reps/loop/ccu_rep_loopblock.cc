@@ -14,7 +14,7 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLoopBlock::CcuRepLoopBlock(CcuInsGeneraterBase* insGenPtr, const std::string &label) :
+CcuRepLoopBlock::CcuRepLoopBlock(CcuInsGeneratorBase* insGenPtr, const std::string &label) :
     CcuRepBlock(insGenPtr, label)
 {
     type = CcuRepType::LOOP_BLOCK;

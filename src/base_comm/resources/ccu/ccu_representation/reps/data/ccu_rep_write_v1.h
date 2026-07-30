@@ -15,8 +15,8 @@ namespace CcuRep {
 
 class CcuRepWrite : public CcuRepBase {
 public:
-    CcuRepWrite(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, CompletedEvent sem, uint16_t mask);
-    CcuRepWrite(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, uint16_t dataType, uint16_t opType,
+    CcuRepWrite(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, CompletedEvent sem, uint16_t mask);
+    CcuRepWrite(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, uint16_t dataType, uint16_t opType,
                 CompletedEvent sem, uint16_t mask);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
@@ -39,7 +39,7 @@ public:
     uint16_t GetReduceFlag() { return reduceFlag; }
 
 private:
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     ChannelHandle channel;
     uint32_t channelId{0};
     RemoteAddr   rem;

@@ -20,7 +20,7 @@
 #include "ccu_dev_mgr_imp.h"
 #include "../ccu_representation/reps/translator/ccu_rep_translator_v1.h"
 
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 
 namespace hcomm {
 
@@ -81,7 +81,7 @@ private:
     std::unordered_map<uint16_t, std::unordered_map<uint16_t, std::shared_ptr<CcuRep::CcuRepReferenceManager>>> referenceMgrs;
     CcuTranslatResPack translatorResPack{};
     std::unique_ptr<CcuKernel> currKernel_{nullptr};
-    std::shared_ptr<CcuInsGeneraterBase> insGenePtr;
+    std::shared_ptr<CcuInsGeneratorBase> insGenePtr;
     CcuVersion ccuVersion_{CcuVersion::CCU_INVALID};
 };
 }; // namespace hcomm

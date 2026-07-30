@@ -12,7 +12,7 @@
 #include "exception_util.h"
 #include "ccu_api_exception.h"
 
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
@@ -20,14 +20,14 @@ namespace CcuRep {
 
 using namespace Hccl;
 
-CcuRepFuncCall::CcuRepFuncCall(CcuInsGeneraterBase* insGenPtr, const std::string &label) :
+CcuRepFuncCall::CcuRepFuncCall(CcuInsGeneratorBase* insGenPtr, const std::string &label) :
     insGeneratorPtr_(insGenPtr), label(label)
 {
     type = CcuRepType::FUNC_CALL;
     instrCount = 0;
 }
 
-CcuRepFuncCall::CcuRepFuncCall(CcuInsGeneraterBase* insGenPtr, const Variable &funcAddrVar) :
+CcuRepFuncCall::CcuRepFuncCall(CcuInsGeneratorBase* insGenPtr, const Variable &funcAddrVar) :
     insGeneratorPtr_(insGenPtr), label(""), funcAddrVar(funcAddrVar)
 {
     type = CcuRepType::FUNC_CALL;

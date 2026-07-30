@@ -11,6 +11,7 @@
 #ifndef CCU_LOOP_HPP
 #define CCU_LOOP_HPP
 
+#include <memory>
 #include <vector>
 
 #include "ccu_types.h"
@@ -27,25 +28,59 @@ public:
     Loop(Variable &loopCfg, const Func &func)
     {
         ComposeLoopBody(func);
-        isVarBased_ = true;
+        mode_ = Mode::VarBased;
         loopParamVar_ = &loopCfg;
     }
 
+    // 旧 config 与版本化 cfg 都归一化为内部 CcuLoopCfg,统一走 cfg 路径
     Loop(const CcuLoopConfig &loopCfg, const Func &func)
     {
         ComposeLoopBody(func);
-        isVarBased_ = false;
-        config_ = loopCfg;
+        mode_ = Mode::ConfigBased;
+        CcuLoopCfgInit(&cfg_);
+        cfg_.addrOffset = loopCfg.addrOffset;
+        cfg_.iterNum = loopCfg.iterNum;
     }
+
+    Loop(const CcuLoopCfg &loopCfg, const Func &func)
+    {
+        ComposeLoopBody(func);
+        mode_ = Mode::ConfigBased;
+        cfg_ = loopCfg;
+        CcuLoopCfgInit(&cfg_);   // 由封装统一盖版本头,用户无需关心
+    }
+
+    Loop(Variable &iterNum, Variable &addrOffset, const Func &func)
+    {
+        ComposeLoopBody(func);
+        mode_ = Mode::VarBasedV2;
+        iterNumVar_ = &iterNum;
+        addrOffsetVar_ = &addrOffset;
+        ctxIdVar_ = std::make_shared<Variable>();
+    }
+
+private:
+    friend class LoopGroup;
+
+    enum class Mode {
+        ConfigBased,
+        VarBased,
+        VarBasedV2,
+    };
 
     CcuLoop Handle() const
     {
         return handle_;
     }
 
+    Mode GetMode() const
+    {
+        return mode_;
+    }
+
     bool IsVarBased() const
     {
-        return isVarBased_;
+        return mode_ == Mode::VarBased;
     }
 
     Variable *LoopParamVar() const
@@ -53,12 +88,26 @@ public:
         return loopParamVar_;
     }
 
-    const CcuLoopConfig *Config() const
+    Variable *IterNumVar() const
     {
-        return &config_;
+        return iterNumVar_;
     }
 
-private:
+    Variable *AddrOffsetVar() const
+    {
+        return addrOffsetVar_;
+    }
+
+    Variable *CtxIdVar() const
+    {
+        return ctxIdVar_.get();
+    }
+
+    const CcuLoopCfg *Config() const
+    {
+        return &cfg_;
+    }
+
     void ComposeLoopBody(const Func &func)
     {
         if (func.NumIn() != 0) {
@@ -77,9 +126,14 @@ private:
     }
 
     CcuLoop handle_{0};
-    bool isVarBased_{false};
+    Mode mode_{Mode::ConfigBased};
+    // loopParamVar_/iterNumVar_/addrOffsetVar_ 为借用指针,指向调用方持有的 Variable,生命周期由调用方保证,Loop 不拥有;
+    // ctxIdVar_ 由 Loop 内部创建,故用 shared_ptr 拥有其生命周期。
     Variable *loopParamVar_{nullptr};
-    CcuLoopConfig config_{};
+    Variable *iterNumVar_{nullptr};
+    Variable *addrOffsetVar_{nullptr};
+    std::shared_ptr<Variable> ctxIdVar_{nullptr};
+    CcuLoopCfg cfg_{};
 };
 
 class LoopGroup {
@@ -95,14 +149,50 @@ public:
         AddLoops(loops);
     }
 
+    LoopGroup(Variable &parallelCfgV2, Variable &offsetCfgV2, Variable &varOffsetCfg,
+              uint32_t maxLoopNum, const std::vector<Loop> &loops)
+    {
+        CCU_THROW_IF_FAILED(
+            ::CcuLoopGroupCreateFromVarV2(&handle_, maxLoopNum,
+                                         parallelCfgV2.handle, offsetCfgV2.handle, varOffsetCfg.handle),
+            "CcuLoopGroupCreateFromVarV2 failed");
+        AddLoops(loops);
+    }
+
+    // 旧 config 与版本化 cfg 都归一化为 CcuLoopGroupCfg,统一走 cfg 路径
     LoopGroup(const CcuLoopGroupConfig &loopGroupCfg, uint32_t maxLoopNum,
               const std::vector<Loop> &loops)
     {
-        CcuLoopGroupConfig localCfg = loopGroupCfg;
+        CcuLoopGroupCfg localCfg = ToCfg(loopGroupCfg);
         CCU_THROW_IF_FAILED(
-            ::CcuLoopGroupCreate(&handle_, maxLoopNum, &localCfg),
-            "CcuLoopGroupCreate failed");
+            ::CcuLoopGroupCreateCfg(&handle_, maxLoopNum, &localCfg),
+            "CcuLoopGroupCreateCfg failed");
         AddLoops(loops);
+    }
+
+    LoopGroup(const CcuLoopGroupCfg &loopGroupCfg, uint32_t maxLoopNum,
+              const std::vector<Loop> &loops)
+    {
+        CcuLoopGroupCfg localCfg = loopGroupCfg;
+        CcuLoopGroupCfgInit(&localCfg);   // 由封装统一盖版本头,用户无需关心
+        CCU_THROW_IF_FAILED(
+            ::CcuLoopGroupCreateCfg(&handle_, maxLoopNum, &localCfg),
+            "CcuLoopGroupCreateCfg failed");
+        AddLoops(loops);
+    }
+
+private:
+    static CcuLoopGroupCfg ToCfg(const CcuLoopGroupConfig &config)
+    {
+        CcuLoopGroupCfg cfg{};
+        CcuLoopGroupCfgInit(&cfg);
+        cfg.cloneNum = config.cloneNum;
+        cfg.cloneLoopOffset = config.cloneLoopOffset;
+        cfg.addrOffset = config.addrOffset;
+        cfg.ccuBufferOffset = config.ccuBufferOffset;
+        cfg.eventOffset = config.eventOffset;
+        cfg.varOffset = 0;   // 旧 config 无 varOffset,A6 按 0
+        return cfg;
     }
 
     CcuLoopGroup Handle() const
@@ -110,11 +200,22 @@ public:
         return handle_;
     }
 
-private:
     void AddLoops(const std::vector<Loop> &loops)
     {
         for (const auto &loop : loops) {
-            if (loop.IsVarBased()) {
+            if (loop.GetMode() == Loop::Mode::VarBasedV2) {
+                auto *iterNumVar = loop.IterNumVar();
+                auto *addrOffsetVar = loop.AddrOffsetVar();
+                auto *ctxIdVar = loop.CtxIdVar();
+                if (iterNumVar == nullptr || addrOffsetVar == nullptr || ctxIdVar == nullptr) {
+                    throw ::AscendC::ccu::detail::CcuException(CcuResult::CCU_E_PARA,
+                        "ccu::Loop V2 loop has null parameter");
+                }
+                CCU_THROW_IF_FAILED(
+                    ::CcuLoopGroupAddLoopFromVarV2(handle_, loop.Handle(),
+                        iterNumVar->handle, addrOffsetVar->handle, ctxIdVar->handle),
+                    "CcuLoopGroupAddLoopFromVarV2 failed");
+            } else if (loop.IsVarBased()) {
                 auto *loopParamVar = loop.LoopParamVar();
                 if (loopParamVar == nullptr) {
                     throw ::AscendC::ccu::detail::CcuException(CcuResult::CCU_E_PARA,
@@ -125,8 +226,8 @@ private:
                     "CcuLoopGroupAddLoopFromVar failed");
             } else {
                 CCU_THROW_IF_FAILED(
-                    ::CcuLoopGroupAddLoop(handle_, loop.Handle(), loop.Config()),
-                    "CcuLoopGroupAddLoop failed");
+                    ::CcuLoopGroupAddLoopCfg(handle_, loop.Handle(), loop.Config()),
+                    "CcuLoopGroupAddLoopCfg failed");
             }
         }
     }

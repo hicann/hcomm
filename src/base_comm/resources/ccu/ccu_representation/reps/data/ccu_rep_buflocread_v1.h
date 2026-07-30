@@ -15,7 +15,7 @@ namespace CcuRep {
 
 class CcuRepBufLocRead : public CcuRepBase {
 public:
-    CcuRepBufLocRead(CcuInsGeneraterBase* insGenPtr, LocalAddr src, CcuBuf dst, Variable len, CompletedEvent sem, uint16_t mask);
+    CcuRepBufLocRead(CcuInsGeneratorBase* insGenPtr, LocalAddr src, CcuBuf dst, Variable len, CompletedEvent sem, uint16_t mask);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint16_t GetSrcAddrId() { return src.addr.Id(); }
@@ -31,7 +31,7 @@ public:
     uint16_t GetMask() { return mask; }
 
 private:
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     LocalAddr    src;
     CcuBuf dst;
     Variable  len;

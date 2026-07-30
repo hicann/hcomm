@@ -70,9 +70,9 @@ static HcclResult CheckChannelRangeAllocatable(
     const uint32_t startChannelId, const uint32_t channelNum, std::vector<ChannelResInfo> &channelResInfos)
 {
     const uint32_t endChannelId = startChannelId + channelNum;
-    CHK_PRT_RET(channelResInfos.size() <= endChannelId || startChannelId >= endChannelId,
+    CHK_PRT_RET(channelResInfos.size() < endChannelId || startChannelId >= endChannelId,
         HCCL_ERROR("[CcuChannelCtxMgrV2][%s] failed, channel id range[%u, %u) is not expected, "
-            "should be less than channelResInfos size[%u].", __func__, startChannelId,
+            "should be less than channelResInfos size[%zu].", __func__, startChannelId,
             endChannelId, channelResInfos.size()),
         HcclResult::HCCL_E_INTERNAL);
 
@@ -221,7 +221,7 @@ HcclResult CcuChannelCtxMgrV2::Config(const ChannelCfg &channelCfg)
     uint32_t channelId = channelCfg.channelId;
     if (!CheckIfChannelAllocated(channelId)) {
         return HcclResult::HCCL_E_PARA; // 日志已在判断处处理
-    };
+    }
 
     const auto &channelResInfo = channelResInfos_[channelId];
     const uint32_t feId = channelResInfo.feId;

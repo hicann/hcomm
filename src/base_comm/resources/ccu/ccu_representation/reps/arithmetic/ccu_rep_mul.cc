@@ -9,7 +9,7 @@
  */
 
 #include "ccu_rep_v1.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
@@ -20,70 +20,70 @@ namespace CcuRep {
 void CcuRepMul::SetCommonInfo()
 {
     type       = CcuRepType::MUL;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB)
     : insGenPtr(insGenPtr), subType(MulSubType::VAR_MUL_VAR_TO_VAR), varA(varA), varB(varB), varC(varC)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, uint16_t immedB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, uint16_t immedB)
     : insGenPtr(insGenPtr), subType(MulSubType::VAR_MUL_IMMED_TO_VAR), varA(varA), varC(varC), immedB(immedB)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varA, const Variable &varB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varA, const Variable &varB)
     : insGenPtr(insGenPtr), subType(MulSubType::SELF_MUL_VAR_VARIABLE), varA(varA), varB(varB)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varA, uint16_t immedB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varA, uint16_t immedB)
     : insGenPtr(insGenPtr), subType(MulSubType::SELF_MUL_IMMED_VARIABLE), varA(varA), immedB(immedB)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Variable &varA, const Variable &varB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const Variable &varB)
     : insGenPtr(insGenPtr), subType(MulSubType::VAR_MUL_VAR_TO_ADDR), varA(varA), varB(varB), addrC(addrC)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Variable &varA, const Address &addrB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const Address &addrB)
     : insGenPtr(insGenPtr), subType(MulSubType::VAR_MUL_ADDR_TO_ADDR), varA(varA), addrB(addrB), addrC(addrC)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrA, const Variable &varB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const Variable &varB)
     : insGenPtr(insGenPtr), subType(MulSubType::SELF_MUL_VAR_ADDRESS), varB(varB), addrA(addrA)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Address &addrA, const uint16_t immedB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Address &addrA, const uint16_t immedB)
     : insGenPtr(insGenPtr), subType(MulSubType::ADDR_MUL_IMMED_TO_ADDR), addrA(addrA), addrC(addrC), immedB(immedB)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Variable &varA, const uint16_t immedB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const uint16_t immedB)
     : insGenPtr(insGenPtr), subType(MulSubType::VAR_MUL_IMMED_TO_ADDR), varA(varA), addrC(addrC), immedB(immedB)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrA, const uint16_t immedB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const uint16_t immedB)
     : insGenPtr(insGenPtr), subType(MulSubType::SELF_MUL_IMMED_ADDRESS), addrA(addrA), immedB(immedB)
 {
     SetCommonInfo();
 }
 
-CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Address &addrA, const uint16_t immedB)
+CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Address &addrA, const uint16_t immedB)
     : insGenPtr(insGenPtr), subType(MulSubType::ADDR_MUL_IMMED_TO_VAR), varC(varC), addrA(addrA), immedB(immedB)
 {
     SetCommonInfo();
@@ -91,7 +91,7 @@ CcuRepMul::CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const
 
 void CcuRepMul::ValidateInsGenPtrForMul()
 {
-    CcuInsGeneraterV1* tmpPtrV1 = dynamic_cast<CcuInsGeneraterV1 *>(insGenPtr);
+    CcuInsGeneratorV1* tmpPtrV1 = dynamic_cast<CcuInsGeneratorV1 *>(insGenPtr);
     CHK_PRT_THROW((tmpPtrV1 && !supportCcuV1),
         HCCL_ERROR("[CcuRepMul][%s]Cannot translate CcuRepMul for A5 when supportCcuV1 is false", __func__),
         Hccl::CcuApiException, "tmpPtrV1 does not match supportCcuV1");

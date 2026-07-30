@@ -37,8 +37,8 @@
 #include "task_info.h"
 #include "task_param.h"
 
-#include "ccu_ins_generater_base.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_base.h"
+#include "ccu_ins_generator_v1.h"
 #include "unified_platform/pub_inc/config_plf_log.h"
 
 namespace hcomm {
@@ -48,8 +48,8 @@ using Hccl::PLF_DATA_OP;
 constexpr uint32_t TOKEN_VALUE_INDEX = 2;
 constexpr uint16_t INVALID_U16 = 65535;
 
-using CcuRep::CcuInsGeneraterBase;
-using CcuRep::CcuInsGeneraterV1;
+using CcuRep::CcuInsGeneratorBase;
+using CcuRep::CcuInsGeneratorV1;
 
 template <typename T>
 T CcuKernel::CreateResAssist(
@@ -216,9 +216,9 @@ HcclResult CcuKernel::SelectDie()
     return HcclResult::HCCL_SUCCESS;
 }
 
-void CcuKernel::SetInsGenerater(CcuInsGeneraterBase* insGeneraterBase)
+void CcuKernel::SetInsGenerater(CcuInsGeneratorBase* insGeneratorBase)
 {
-    insGenerator = insGeneraterBase;
+    insGenerator = insGeneratorBase;
 }
 
 CcuResult CcuKernel::ValidateTaskArgs(const uint64_t *taskArgs, uint32_t argsNum) const
@@ -1072,7 +1072,7 @@ void CcuKernel::Append(std::shared_ptr<CcuRep::CcuRepBase> rep)
 
 namespace {
 std::shared_ptr<CcuRep::CcuRepJumpBase> MakeInvertedCondJumpImm(
-    CcuInsGeneraterBase *insGenerator, const std::string &destLabelStr,
+    CcuInsGeneratorBase *insGenerator, const std::string &destLabelStr,
     const CcuRep::Variable &targetVar, const CcuRep::Variable &expectVar,
     const CcuRep::Variable &variable, uint64_t immediate,
     CcuConditionType condType, const char *funcName)
@@ -1084,6 +1084,18 @@ std::shared_ptr<CcuRep::CcuRepJumpBase> MakeInvertedCondJumpImm(
         case CCU_CONDITION_NE:
             return std::make_shared<CcuRep::CcuRepJumpEQ>(
                 insGenerator, destLabelStr, targetVar, expectVar, variable, immediate);
+        case CCU_CONDITION_LT:
+            return std::make_shared<CcuRep::CcuRepJumpGE>(
+                insGenerator, destLabelStr, targetVar, expectVar, variable, immediate);
+        case CCU_CONDITION_LE:
+            return std::make_shared<CcuRep::CcuRepJumpGT>(
+                insGenerator, destLabelStr, targetVar, expectVar, variable, immediate);
+        case CCU_CONDITION_GT:
+            return std::make_shared<CcuRep::CcuRepJumpLE>(
+                insGenerator, destLabelStr, targetVar, expectVar, variable, immediate);
+        case CCU_CONDITION_GE:
+            return std::make_shared<CcuRep::CcuRepJumpLT>(
+                insGenerator, destLabelStr, targetVar, expectVar, variable, immediate);
         default:
             HCCL_ERROR("[%s] unsupported condition type: %d", funcName, condType);
             return nullptr;
@@ -1092,7 +1104,7 @@ std::shared_ptr<CcuRep::CcuRepJumpBase> MakeInvertedCondJumpImm(
 
 // 双变量版本：当 (lhsVar OP rhsVar) 为假时跳转到 destLabelStr。
 std::shared_ptr<CcuRep::CcuRepJumpBase> MakeInvertedCondJumpVar(
-    CcuInsGeneraterBase *insGenerator, const std::string &destLabelStr,
+    CcuInsGeneratorBase *insGenerator, const std::string &destLabelStr,
     const CcuRep::Variable &targetVar,
     const CcuRep::Variable &lhsVar, const CcuRep::Variable &rhsVar,
     CcuConditionType condType, const char *funcName)
@@ -1103,6 +1115,18 @@ std::shared_ptr<CcuRep::CcuRepJumpBase> MakeInvertedCondJumpVar(
                 insGenerator, destLabelStr, targetVar, lhsVar, rhsVar);
         case CCU_CONDITION_NE:
             return std::make_shared<CcuRep::CcuRepJumpEQ>(
+                insGenerator, destLabelStr, targetVar, lhsVar, rhsVar);
+        case CCU_CONDITION_LT:
+            return std::make_shared<CcuRep::CcuRepJumpGE>(
+                insGenerator, destLabelStr, targetVar, lhsVar, rhsVar);
+        case CCU_CONDITION_LE:
+            return std::make_shared<CcuRep::CcuRepJumpGT>(
+                insGenerator, destLabelStr, targetVar, lhsVar, rhsVar);
+        case CCU_CONDITION_GT:
+            return std::make_shared<CcuRep::CcuRepJumpLE>(
+                insGenerator, destLabelStr, targetVar, lhsVar, rhsVar);
+        case CCU_CONDITION_GE:
+            return std::make_shared<CcuRep::CcuRepJumpLT>(
                 insGenerator, destLabelStr, targetVar, lhsVar, rhsVar);
         default:
             HCCL_ERROR("[%s] unsupported condition type: %d", funcName, condType);
@@ -1433,6 +1457,18 @@ CcuResult CcuKernel::DoWhileEnd(CcuVariableHandle varHandle, uint64_t immediate,
     } else if (condType == CCU_CONDITION_NE) {
         jump = std::make_shared<CcuRep::CcuRepJumpNE>(
             insGenerator, beginLabelStr, targetVar, expectVar, *variable, immediate);
+    } else if (condType == CCU_CONDITION_LT) {
+        jump = std::make_shared<CcuRep::CcuRepJumpLT>(
+            insGenerator, beginLabelStr, targetVar, expectVar, *variable, immediate);
+    } else if (condType == CCU_CONDITION_LE) {
+        jump = std::make_shared<CcuRep::CcuRepJumpLE>(
+            insGenerator, beginLabelStr, targetVar, expectVar, *variable, immediate);
+    } else if (condType == CCU_CONDITION_GT) {
+        jump = std::make_shared<CcuRep::CcuRepJumpGT>(
+            insGenerator, beginLabelStr, targetVar, expectVar, *variable, immediate);
+    } else if (condType == CCU_CONDITION_GE) {
+        jump = std::make_shared<CcuRep::CcuRepJumpGE>(
+            insGenerator, beginLabelStr, targetVar, expectVar, *variable, immediate);
     } else {
         HCCL_ERROR("[%s] unsupported condition type: %d", __func__, condType);
         return CcuResult::CCU_E_PARA;
@@ -1470,6 +1506,18 @@ CcuResult CcuKernel::DoWhileEndVar(CcuVariableHandle lhsHandle, CcuVariableHandl
             insGenerator, beginLabelStr, targetVar, *lhsVar, *rhsVar);
     } else if (condType == CCU_CONDITION_NE) {
         jump = std::make_shared<CcuRep::CcuRepJumpNE>(
+            insGenerator, beginLabelStr, targetVar, *lhsVar, *rhsVar);
+    } else if (condType == CCU_CONDITION_LT) {
+        jump = std::make_shared<CcuRep::CcuRepJumpLT>(
+            insGenerator, beginLabelStr, targetVar, *lhsVar, *rhsVar);
+    } else if (condType == CCU_CONDITION_LE) {
+        jump = std::make_shared<CcuRep::CcuRepJumpLE>(
+            insGenerator, beginLabelStr, targetVar, *lhsVar, *rhsVar);
+    } else if (condType == CCU_CONDITION_GT) {
+        jump = std::make_shared<CcuRep::CcuRepJumpGT>(
+            insGenerator, beginLabelStr, targetVar, *lhsVar, *rhsVar);
+    } else if (condType == CCU_CONDITION_GE) {
+        jump = std::make_shared<CcuRep::CcuRepJumpGE>(
             insGenerator, beginLabelStr, targetVar, *lhsVar, *rhsVar);
     } else {
         HCCL_ERROR("[%s] unsupported condition type: %d", __func__, condType);
@@ -2196,10 +2244,10 @@ CcuResult CcuKernel::EnsureLoopEnginePool(uint32_t maxLoopNum)
 }
 
 CcuResult CcuKernel::LoopGroupCreate(CcuLoopGroup *group, uint32_t maxLoopNum,
-    const CcuLoopGroupConfig *config)
+    const CcuLoopGroupCfg *cfg)
 {
     PLF_CONFIG_INFO(PLF_DATA_OP, "[LoopGroupCreate] maxLoopNum=%u", maxLoopNum);
-    if (group == nullptr || config == nullptr) {
+    if (group == nullptr || cfg == nullptr) {
         HCCL_ERROR("[CcuKernel::LoopGroupCreate] null pointer");
         return CcuResult::CCU_E_PTR;
     }
@@ -2218,13 +2266,13 @@ CcuResult CcuKernel::LoopGroupCreate(CcuLoopGroup *group, uint32_t maxLoopNum,
     CcuLoopGroup handle = ++loopGroupHandleCounter_;
 
     LoopGroupDescriptor desc;
-    desc.config = *config;
+    desc.config = *cfg;
     desc.parallelVar = CreateVariable();
     desc.offsetVar = CreateVariable();
     desc.isVarBased = false;
 
     auto bundle = std::make_shared<CcuRep::CcuRepLoopGroupBundle>(
-        insGenerator, *config, desc.parallelVar, desc.offsetVar);
+        insGenerator, *cfg, desc.parallelVar, desc.offsetVar);
     if (ccuVersion_ == CcuVersion::CCU_V2) {
         bundle->SetXnOffsetVar(CreateVariable());
     }
@@ -2294,10 +2342,10 @@ CcuResult CcuKernel::LoopGroupCreateFromVarV2(CcuLoopGroup *group, uint32_t maxL
     }
     if (CurrentBlock()->Type() == CcuRep::CcuRepType::LOOP_BLOCK) {
         HCCL_ERROR("[CcuKernel::LoopGroupCreateFromVarV2] cannot create loop group inside a loop body");
-        return CcuResult::CCU_E_INTERNAL;
+        return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
     if (inFuncBody_) {
-        HCCL_ERROR("[CcuKernel::LoopGroupCreateFromVar] cannot create loop group inside a func body");
+        HCCL_ERROR("[CcuKernel::LoopGroupCreateFromVarV2] cannot create loop group inside a func body");
         return LatchBodyError(CcuResult::CCU_E_INTERNAL);
     }
 
@@ -2366,15 +2414,13 @@ CcuResult CcuKernel::LookupLoopGroupAndLoop(CcuLoopGroup group, CcuLoop loop,
     return CcuResult::CCU_SUCCESS;
 }
 
-CcuResult CcuKernel::LoopGroupAddLoop(CcuLoopGroup group,
-    CcuLoop loop, const CcuLoopConfig *config)
+CcuResult CcuKernel::LoopGroupAddLoop(CcuLoopGroup group, CcuLoop loop, const CcuLoopCfg *cfg)
 {
     PLF_CONFIG_INFO(PLF_DATA_OP, "[LoopGroupAddLoop] group=%llu, loop=%llu", group, loop);
-    if (config == nullptr) {
-        HCCL_ERROR("[CcuKernel::LoopGroupAddLoop] null pointer for config");
+    if (cfg == nullptr) {
+        HCCL_ERROR("[CcuKernel::LoopGroupAddLoop] null pointer for cfg");
         return CcuResult::CCU_E_PTR;
     }
-
     LoopGroupDescriptor *grpDesc = nullptr;
     LoopDescriptor *loopDesc = nullptr;
     uint32_t loopIdx = 0;
@@ -2386,7 +2432,7 @@ CcuResult CcuKernel::LoopGroupAddLoop(CcuLoopGroup group,
     grpDesc->totalLoopNum = grpDesc->loopCount;
 
     CcuRep::CcuRepLoopGroupBundle::LoopEntry entry;
-    entry.config = *config;
+    entry.config = *cfg;
     entry.executor = loopEnginePool[loopIdx];
     entry.repLoopBlock = loopDesc->repLoopBlock;
     entry.loopParamVar = CreateVariable();
@@ -2532,13 +2578,11 @@ CcuRep::Variable CcuKernel::CreateVariable()
 
 CcuRep::Address CcuKernel::CreateAddress()
 {
-    CcuInsGeneraterV1* tmpPtrV1 = dynamic_cast<CcuInsGeneraterV1*>(insGenerator);
-    if (tmpPtrV1) {
-        return CreateResAssist(res_.address);
-    } else {
+    if (ccuVersion_ == CcuVersion::CCU_V2) {
         // A6创建Address时，需要添加到Variable的列表中，但是仍以Address返回
         return CcuRep::Address(CreateResAssist(res_.continuousVariable));
     }
+    return CreateResAssist(res_.address);
 }
 
 CcuRep::LocalNotify CcuKernel::CreateLocalNotify()

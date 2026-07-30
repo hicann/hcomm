@@ -10,14 +10,14 @@
 #include "hcomm_c_adpt.h"
 #include "ccu_rep_v1.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"
 #include "../../../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRemWaitSem::CcuRepRemWaitSem(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, uint16_t semIndex, uint16_t mask, bool isProfiling)
+CcuRepRemWaitSem::CcuRepRemWaitSem(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, uint16_t semIndex, uint16_t mask, bool isProfiling)
     : insGenPtr(insGenPtr), channel(channel), semIndex(semIndex), mask(mask), isProfiling(isProfiling)
 {
     type       = CcuRepType::REM_WAIT_SEM;

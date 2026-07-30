@@ -10,7 +10,7 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
@@ -18,7 +18,7 @@ namespace CcuRep {
 
 using namespace Hccl;
 
-CcuRepLoopCall::CcuRepLoopCall(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label) :
+CcuRepLoopCall::CcuRepLoopCall(CcuInsGeneratorBase* insGeneratorPtr, const std::string &label) :
     insGeneratorPtr_(insGeneratorPtr), label(label)
 {
     type = CcuRepType::LOOP_CALL;

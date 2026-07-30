@@ -14,12 +14,12 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLocWaitEvent::CcuRepLocWaitEvent(CcuInsGeneraterBase* insGenPtr, const CompletedEvent &event, uint32_t mask, bool isProfiling)
+CcuRepLocWaitEvent::CcuRepLocWaitEvent(CcuInsGeneratorBase* insGenPtr, const CompletedEvent &event, uint32_t mask, bool isProfiling)
     : insGenPtr(insGenPtr), event_(event), mask_(mask), isProfiling_(isProfiling)
 {
     type       = CcuRepType::LOC_WAIT_EVENT;

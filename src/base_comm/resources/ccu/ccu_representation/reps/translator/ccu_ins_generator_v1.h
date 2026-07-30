@@ -7,21 +7,19 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef CCU_INS_GENERATER_V1
-#define CCU_INS_GENERATER_V1
+#ifndef CCU_INS_GENERATOR_V1
+#define CCU_INS_GENERATOR_V1
 
-#include <iostream>
-#include <string>
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 namespace hcomm {
 namespace CcuRep {
 
-class CcuInsGeneraterV1 : public CcuInsGeneraterBase {
+class CcuInsGeneratorV1 : public CcuInsGeneratorBase {
 public:
-    CcuInsGeneraterV1() {}
+    CcuInsGeneratorV1() {}
 
     // 虚析构函数，确保派生类对象正确析构
-    virtual ~CcuInsGeneraterV1() = default;
+    virtual ~CcuInsGeneratorV1() = default;
 
     // data
     HcclResult CcuRepLocCpyTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepLocCpy* ccuRepLocCpy, const TransDep &dep) override;
@@ -101,12 +99,12 @@ private:
         {CcuRepType::WRITE, 1},
         {CcuRepType::REM_MEM, 2},
         {CcuRepType::BUF_READ, 1},
-        {CcuRepType::LOCAL_CPY, 1},
-        {CcuRepType::LOCAL_REDUCE, 1},
         {CcuRepType::BUF_WRITE, 1},
         {CcuRepType::BUF_REDUCE, 1},
         {CcuRepType::BUF_LOC_READ, 1},
         {CcuRepType::BUF_LOC_WRITE, 1},
+        {CcuRepType::LOCAL_CPY, 1},
+        {CcuRepType::LOCAL_REDUCE, 1},
 
         {CcuRepType::LOC_RECORD_EVENT, 1},
         {CcuRepType::LOC_WAIT_EVENT, 1},
@@ -131,7 +129,9 @@ private:
         {CcuRepType::LOAD_VAR, 7},
         {CcuRepType::LOAD_ARG, 1},
         {CcuRepType::STORE, 7},
-        {CcuRepType::STORE_VAR, 7}
+        {CcuRepType::STORE_VAR, 7},
+
+        {CcuRepType::NOP, 1}
     };
 };
 

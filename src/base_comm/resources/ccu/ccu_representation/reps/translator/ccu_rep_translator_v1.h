@@ -30,8 +30,8 @@ public:
         std::pair<uint64_t, uint64_t> &ccuTokenInfo, uint64_t hbmTokenInfo);
 
     CcuRepTranslator(std::shared_ptr<CcuRepReferenceManager> refManager, const TransDep &transDep);
-    static uint32_t             GetInstrNum();
-    static CcuResReq GetResReq(uint8_t dieId);
+    static uint32_t             GetInstrNum(const int32_t devLogicId);
+    static CcuResReq            GetResReq(const int32_t devLogicId, uint8_t dieId);
     void                        GetRes(CcuRepResource &res);
     CcuInstrInfo Translate(CcuKernel* ccuKernel, const std::vector<std::shared_ptr<CcuRepBase>> &repVec,
                             uint16_t startInstrId, bool isFuncBlock=false);
@@ -53,12 +53,14 @@ private:
     static const int XN_NUM = 4; // 4: Xn资源个数
     static const int GSA_NUM = 3; // 3: GSA资源个数
     static const int CKE_NUM = 2; // 2: CKE资源个数
+    static const int V2_RELJMP_INSTR_NUM = 9; // V2: RelJmp生成的指令数
+    static const int V2_FINISH_BLOCK_INSTR_NUM = 10; // V2: FinishMainBlock占用的指令数(RelJmp+Jump或10xNop)
     std::shared_ptr<CcuRepReferenceManager> refManager{nullptr};
     Variable                             var[XN_NUM];
     Address                              addr[GSA_NUM];
     LocalNotify                          signal[CKE_NUM];
     TransDep                             transDep{0};
-    static CcuVersion                    ccuVersion;
+    CcuVersion                           ccuVersion{CcuVersion::CCU_INVALID};
 };
 }; // namespace CcuRep
 }; // namespace hcomm

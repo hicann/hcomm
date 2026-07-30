@@ -15,7 +15,7 @@ namespace CcuRep {
 
 class CcuRepRemPostVar : public CcuRepBase {
 public:
-    CcuRepRemPostVar(CcuInsGeneraterBase* insGenPtr, Variable param, const ChannelHandle channel, uint16_t paramIndex, uint16_t semIndex,
+    CcuRepRemPostVar(CcuInsGeneratorBase* insGenPtr, Variable param, const ChannelHandle channel, uint16_t paramIndex, uint16_t semIndex,
                        uint16_t mask);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
@@ -29,7 +29,7 @@ public:
     uint16_t GetSemIndex() { return semIndex; }
     uint16_t GetMask() { return mask; }
 private:
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     Variable                      param;
     ChannelHandle                 channel;
     uint16_t                      paramIndex{0};

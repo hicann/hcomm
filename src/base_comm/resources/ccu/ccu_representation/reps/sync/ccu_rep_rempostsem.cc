@@ -7,13 +7,13 @@
 
 #include "ccu_rep_v1.h"
 #include "exception_util.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "internal_exception.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRemPostSem::CcuRepRemPostSem(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, uint16_t semIndex, uint16_t mask)
+CcuRepRemPostSem::CcuRepRemPostSem(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, uint16_t semIndex, uint16_t mask)
     : insGenPtr(insGenPtr), channel(channel), semIndex(semIndex), mask(mask)
 {
     type       = CcuRepType::REM_POST_SEM;

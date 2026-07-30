@@ -17,7 +17,7 @@ namespace CcuRep {
 
 class CcuRepBufReduce : public CcuRepBase {
 public:
-    CcuRepBufReduce(CcuInsGeneraterBase* insGenPtr, const std::vector<CcuBuf> &mem, uint16_t count, uint16_t dataType, uint16_t outputDataType,
+    CcuRepBufReduce(CcuInsGeneratorBase* insGenPtr, const std::vector<CcuBuf> &mem, uint16_t count, uint16_t dataType, uint16_t outputDataType,
                     uint16_t opType, CompletedEvent sem, const CcuRep::Variable &len, uint16_t mask = 1);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
@@ -34,7 +34,7 @@ public:
     CcuRep::Variable GetXnIdLength() { return xnIdLength_; }
 
 private:
-    CcuInsGeneraterBase*   insGenPtr;
+    CcuInsGeneratorBase*   insGenPtr;
     std::vector<CcuBuf>    mem;
     uint16_t               count;
     uint16_t               dataType;

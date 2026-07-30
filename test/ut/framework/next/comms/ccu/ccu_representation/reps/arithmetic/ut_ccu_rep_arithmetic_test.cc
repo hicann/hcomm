@@ -15,9 +15,10 @@
 #include "ccu_rep_base_v1.h"
 #include "ccu_rep_type_v1.h"
 #include "ccu_operator_v1.h"
+#include "ccu_ins_generator_v1.h"
+#include "ccu_ins_generator_v2.h"
 #include "ccu_rep_mul_v1.h"
 #include "ccu_rep_sub_v1.h"
-#include "ccu_ins_generater_v1.h"
 #include <gtest/gtest.h>
 #include <string>
 
@@ -27,7 +28,7 @@ namespace {
 
 class CcuRepAddTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     CcuInstr instr {};
     uint16_t instrId {0};
     TransDep dep {};
@@ -280,7 +281,7 @@ TEST_F(CcuRepAddTest, Describe_SelfAddVariable)
 
 class CcuRepAssignTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     CcuInstr instr {};
     uint16_t instrId {0};
     TransDep dep {};
@@ -577,9 +578,111 @@ TEST_F(CcuOperatorTest, VariableEqualImmediate)
     EXPECT_EQ(op.rhs, 200);
 }
 
+class CcuRepAddV2Test : public ::testing::Test {
+protected:
+    CcuInstr instr {};
+    uint16_t instrId {0};
+    TransDep dep {};
+    CcuInsGeneratorV2 insGen {};
+
+    void SetUp() override
+    {
+        memset(&instr, 0, sizeof(instr));
+    }
+};
+
+TEST_F(CcuRepAddV2Test, Translate_AddrPlusImmToAddr)
+{
+    Address addrC, addrA;
+    addrC.Reset(5);
+    addrA.Reset(3);
+    uint16_t imm = 0x40;
+    CcuRepAdd rep(&insGen, addrC, addrA, imm);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::ADDR_PLUS_IMMED_TO_ADDR);
+
+    CcuInstr* instrPtr = &instr;
+    EXPECT_TRUE(rep.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_EQ(instr.v2.operate.parMode, 0);
+    EXPECT_EQ(instr.v2.operate.xdId, addrC.Id());
+    EXPECT_EQ(instr.v2.operate.xnId, addrA.Id());
+    EXPECT_EQ(instr.v2.operate.xmId, imm);
+}
+
+TEST_F(CcuRepAddV2Test, Translate_VarPlusVarToAddr)
+{
+    Address addrC;
+    Variable varA, varB;
+    addrC.Reset(5);
+    varA.Reset(3);
+    varB.Reset(7);
+    CcuRepAdd rep(&insGen, addrC, varA, varB);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::VAR_PLUS_VAR_TO_ADDR);
+
+    CcuInstr* instrPtr = &instr;
+    EXPECT_TRUE(rep.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_EQ(instr.v2.operate.parMode, 1);
+    EXPECT_EQ(instr.v2.operate.xdId, addrC.Id());
+    EXPECT_EQ(instr.v2.operate.xnId, varA.Id());
+    EXPECT_EQ(instr.v2.operate.xmId, varB.Id());
+}
+
+TEST_F(CcuRepAddV2Test, Translate_VarPlusImmToAddr)
+{
+    Address addrC;
+    Variable varA;
+    addrC.Reset(5);
+    varA.Reset(3);
+    uint16_t imm = 0x40;
+    CcuRepAdd rep(&insGen, addrC, varA, imm);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::VAR_PLUS_IMMED_TO_ADDR);
+
+    CcuInstr* instrPtr = &instr;
+    EXPECT_TRUE(rep.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_EQ(instr.v2.operate.parMode, 0);
+    EXPECT_EQ(instr.v2.operate.xdId, addrC.Id());
+    EXPECT_EQ(instr.v2.operate.xnId, varA.Id());
+    EXPECT_EQ(instr.v2.operate.xmId, imm);
+}
+
+TEST_F(CcuRepAddV2Test, Translate_AddrPlusImmToVar)
+{
+    Variable varC;
+    Address addrA;
+    varC.Reset(5);
+    addrA.Reset(3);
+    uint16_t imm = 0x40;
+    CcuRepAdd rep(&insGen, varC, addrA, imm);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::ADDR_PLUS_IMMED_TO_VAR);
+
+    CcuInstr* instrPtr = &instr;
+    EXPECT_TRUE(rep.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_EQ(instr.v2.operate.parMode, 0);
+    EXPECT_EQ(instr.v2.operate.xdId, varC.Id());
+    EXPECT_EQ(instr.v2.operate.xnId, addrA.Id());
+    EXPECT_EQ(instr.v2.operate.xmId, imm);
+}
+
+TEST_F(CcuRepAddV2Test, Translate_AddrPlusAddrToVar)
+{
+    Variable varC;
+    Address addrA, addrB;
+    varC.Reset(5);
+    addrA.Reset(3);
+    addrB.Reset(7);
+    CcuRepAdd rep(&insGen, varC, addrA, addrB);
+    EXPECT_EQ(rep.GetSubType(), AddSubType::ADDR_PLUS_ADDR_TO_VAR);
+
+    CcuInstr* instrPtr = &instr;
+    EXPECT_TRUE(rep.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_EQ(instr.v2.operate.parMode, 1);
+    EXPECT_EQ(instr.v2.operate.xdId, varC.Id());
+    EXPECT_EQ(instr.v2.operate.xnId, addrA.Id());
+    EXPECT_EQ(instr.v2.operate.xmId, addrB.Id());
+}
+
 class CcuRepMulTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV2 insGen {};
     void SetUp() override {}
 };
 
@@ -672,7 +775,7 @@ TEST_F(CcuRepMulTest, Getters)
 
 class CcuRepSubTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV2 insGen {};
     void SetUp() override {}
 };
 
@@ -773,16 +876,16 @@ TEST_F(CcuRepMulTest, Translate_AllSubTypes)
     dep.reserveXnId = 2;
 
     CcuRepMul m1(&insGen, varC, varA, varB);
-    EXPECT_ANY_THROW(m1.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_TRUE(m1.Translate(nullptr, instrPtr, instrId, dep));
 
     CcuRepMul m2(&insGen, addrC, varA, varB);
-    EXPECT_ANY_THROW(m2.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_TRUE(m2.Translate(nullptr, instrPtr, instrId, dep));
 
     CcuRepMul m3(&insGen, addrA, varB);
-    EXPECT_ANY_THROW(m3.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_TRUE(m3.Translate(nullptr, instrPtr, instrId, dep));
 
     CcuRepMul m4(&insGen, varC, addrA, uint16_t(10));
-    EXPECT_ANY_THROW(m4.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_TRUE(m4.Translate(nullptr, instrPtr, instrId, dep));
 }
 
 TEST_F(CcuRepSubTest, Translate_AllSubTypes)
@@ -800,16 +903,16 @@ TEST_F(CcuRepSubTest, Translate_AllSubTypes)
     dep.reserveXnId = 2;
 
     CcuRepSub s1(&insGen, varC, varA, varB);
-    EXPECT_ANY_THROW(s1.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_TRUE(s1.Translate(nullptr, instrPtr, instrId, dep));
 
     CcuRepSub s2(&insGen, addrC, addrA, varB);
-    EXPECT_ANY_THROW(s2.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_TRUE(s2.Translate(nullptr, instrPtr, instrId, dep));
 
     CcuRepSub s3(&insGen, addrA, varB);
-    EXPECT_ANY_THROW(s3.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_TRUE(s3.Translate(nullptr, instrPtr, instrId, dep));
 
     CcuRepSub s4(&insGen, varC, addrA, uint16_t(10));
-    EXPECT_ANY_THROW(s4.Translate(nullptr, instrPtr, instrId, dep));
+    EXPECT_TRUE(s4.Translate(nullptr, instrPtr, instrId, dep));
 }
 
 }

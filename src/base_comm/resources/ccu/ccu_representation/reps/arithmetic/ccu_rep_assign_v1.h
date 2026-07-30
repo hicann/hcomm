@@ -15,11 +15,11 @@ namespace CcuRep {
 
 class CcuRepAssign : public CcuRepBase {
 public:
-    explicit CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Variable &varA, uint64_t immediate);
-    explicit CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Address &addrA, uint64_t immediate);
-    explicit CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Address &addrA, const Variable &varA);
-    explicit CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Address &addrB, const Address &addrA);
-    explicit CcuRepAssign(CcuInsGeneraterBase* insGenPtr, const Variable &varB, const Variable &varA);
+    explicit CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Variable &varA, uint64_t immediate);
+    explicit CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Address &addrA, uint64_t immediate);
+    explicit CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const Variable &varA);
+    explicit CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Address &addrB, const Address &addrA);
+    explicit CcuRepAssign(CcuInsGeneratorBase* insGenPtr, const Variable &varB, const Variable &varA);
 
     bool          Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string   Describe() override;
@@ -31,7 +31,7 @@ public:
     AssignSubType  GetSubType();
 private:
     void SetCommonInfo();
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     AssignSubType subType{AssignSubType::INVALID};
     uint64_t immediate{0};
 

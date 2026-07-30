@@ -12,12 +12,12 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepNot::CcuRepNot(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varB)
+CcuRepNot::CcuRepNot(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB)
     : subType(NotSubType::VAR_EQUALS_NOT_VAR), varB(varB), varC(varC), insGenPtr(insGenPtr)
 {
     type       = CcuRepType::NOT;

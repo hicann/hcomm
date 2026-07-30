@@ -19,10 +19,10 @@ namespace CcuRep {
 
 class CcuRepShR : public CcuRepBase {
 public:
-    CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Variable &varD, const Variable &varN, const Variable &varM);
-    CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Variable &varD, const Variable &varM);
-    CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Address &addrD, const Variable &varN, const Variable &varM);
-    CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Address &addrD, const Variable &varM);
+    explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varN, const Variable &varM);
+    explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varM);
+    explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varN, const Variable &varM);
+    explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varM);
     bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
     ShiftSubType GetShiftSubType()
     {
@@ -66,7 +66,7 @@ private:
     Variable varD;
     Address addrD;
 
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
 };
 
 };     // namespace CcuRep

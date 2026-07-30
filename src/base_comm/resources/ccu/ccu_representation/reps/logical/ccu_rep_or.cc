@@ -12,19 +12,19 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepOr::CcuRepOr(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB)
+CcuRepOr::CcuRepOr(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB)
     : subType(OrSubType::VAR_OR_VAR_TO_VAR), varA(varA), varB(varB), varC(varC), insGenPtr(insGenPtr)
 {
     type       = CcuRepType::OR;
     instrCount = insGenPtr->GetInstrCount(type);
 }
 
-CcuRepOr::CcuRepOr(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varB)
+CcuRepOr::CcuRepOr(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB)
     : subType(OrSubType::SELF_OR_VAR_VARIABLE), varB(varB), varC(varC), insGenPtr(insGenPtr)
 {
     type       = CcuRepType::OR;

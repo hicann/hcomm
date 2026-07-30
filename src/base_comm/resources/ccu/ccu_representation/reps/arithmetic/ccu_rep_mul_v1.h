@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef HCOMM_CCU_REPRESENTATION_MULT_H
-#define HCOMM_CCU_REPRESENTATION_MULT_H
+#ifndef HCOMM_CCU_REPRESENTATION_MUL_H
+#define HCOMM_CCU_REPRESENTATION_MUL_H
 
 #include "ccu_rep_base_v1.h"
 #include "ccu_datatype_v1.h"
@@ -19,19 +19,19 @@ namespace CcuRep {
 
 class CcuRepMul : public CcuRepBase {
 public:
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, uint16_t immedB);
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varA, const Variable &varB);
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varA, const uint16_t immedB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, uint16_t immedB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varA, const Variable &varB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varA, const uint16_t immedB);
 
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Variable &varA, const Variable &varB);
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Variable &varA, const Address &addrB);
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrA, const Variable &varB);
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Address &addrA, const uint16_t immedB);
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Variable &varA, const uint16_t immedB);
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Address &addrA, const uint16_t immedB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const Variable &varB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const Address &addrB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const Variable &varB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Address &addrA, const uint16_t immedB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const uint16_t immedB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const uint16_t immedB);
 
-    explicit CcuRepMul(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Address &addrA, const uint16_t immedB);
+    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Address &addrA, const uint16_t immedB);
 
     bool          Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string   Describe() override;
@@ -46,7 +46,7 @@ public:
 private:
     void SetCommonInfo();
     void ValidateInsGenPtrForMul();
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     MulSubType  subType{MulSubType::INVALID};
     Variable varA;
     Variable varB;
@@ -60,4 +60,4 @@ private:
 
 }; // namespace CcuRep
 }; // namespace hcomm
-#endif // HCOMM_CCU_REPRESENTATION_MULT_H
+#endif // HCOMM_CCU_REPRESENTATION_MUL_H

@@ -17,6 +17,7 @@
 
 #include "ccu_jetty_ctx_mgr.h"
 #include "ccu_res_allocator.h"
+#include "ccu_wqebb_mgr_v1.h"
 
 namespace hcomm {
 

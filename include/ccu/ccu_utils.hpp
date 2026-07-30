@@ -44,7 +44,8 @@ private:
     CcuResult   code_;
     std::string what_;
 };
-enum class CcuArithmeticOperatorType { ADDITION, INVALID };
+enum class CcuArithmeticOperatorType { ADDITION, SUBTRACTION, MULTIPLICATION, INVALID };
+enum class CcuLogicOperatorType { AND, OR, XOR, NOT, INVALID };
 
 template <typename lhsT, typename rhsT> class CcuOperator {
 public:
@@ -67,6 +68,41 @@ public:
     }
 
     CcuArithmeticOperatorType type{CcuArithmeticOperatorType::INVALID};
+};
+
+// 二元逻辑运算(and/or/xor)算子，仅支持变量-变量，不支持立即数
+template <typename lhsT, typename rhsT>
+class CcuLogicOperator : public CcuOperator<lhsT, rhsT> {
+public:
+    CcuLogicOperator(lhsT lhs, rhsT rhs, CcuLogicOperatorType type): CcuOperator<lhsT, rhsT>(lhs, rhs), type(type)
+    {
+        Check();
+    }
+    void Check() const
+    {
+        throw ::AscendC::ccu::detail::CcuException(CcuResult::CCU_E_PARA,
+            "CcuLogicOperator: invalid operand types");
+    }
+
+    CcuLogicOperatorType type{CcuLogicOperatorType::INVALID};
+};
+
+// 一元逻辑运算(not)算子
+template <typename lhsT>
+class CcuLogicUnaryOperator {
+public:
+    CcuLogicUnaryOperator(lhsT lhs, CcuLogicOperatorType type): lhs(lhs), type(type)
+    {
+        Check();
+    }
+    void Check() const
+    {
+        throw ::AscendC::ccu::detail::CcuException(CcuResult::CCU_E_PARA,
+            "CcuLogicUnaryOperator: invalid operand types");
+    }
+
+    lhsT lhs;
+    CcuLogicOperatorType type{CcuLogicOperatorType::INVALID};
 };
 
 }  // namespace detail

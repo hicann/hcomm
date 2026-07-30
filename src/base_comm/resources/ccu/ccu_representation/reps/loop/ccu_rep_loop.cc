@@ -10,37 +10,45 @@
 
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_base.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_base.h"
+#include "ccu_ins_generator_v1.h"
+#include "ccu_ins_generator_v2.h"
 
 namespace hcomm {
 namespace CcuRep {
 
 using namespace Hccl;
 
-CcuRepLoop::CcuRepLoop(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label, const Variable &loopParam) :
+CcuRepLoop::CcuRepLoop(CcuInsGeneratorBase* insGeneratorPtr, const std::string &label, const Variable &loopParam) :
     insGeneratorPtr_(insGeneratorPtr), label(label), loopParam(loopParam)
 {
     type       = CcuRepType::LOOP;
     instrCount = insGeneratorPtr_->GetInstrCount(type);
     supportCcuV1 = true;
+    supportCcuV2 = false;  // 缺少A6格式下必需的loop参数
 }
 
-CcuRepLoop::CcuRepLoop(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label,
+CcuRepLoop::CcuRepLoop(CcuInsGeneratorBase* insGeneratorPtr, const std::string &label,
     const Variable &loopParam, const Variable &loopIterNum, const Variable &loopGsaOffset) :
     insGeneratorPtr_(insGeneratorPtr), label(label), loopParam(loopParam), loopIterNum(loopIterNum), loopGsaOffset(loopGsaOffset)
 {
     type       = CcuRepType::LOOP;
     instrCount = insGeneratorPtr_->GetInstrCount(type);
     supportCcuV1 = false;  // loopParam按照A6格式填写，不适用A5
+    supportCcuV2 = true;
 }
 
 void CcuRepLoop::ValidateInsGeneratorForLoop()
 {
-    CcuInsGeneraterV1* tmpPtrV1 = dynamic_cast<CcuInsGeneraterV1*>(insGeneratorPtr_);
+    CcuInsGeneratorV1* tmpPtrV1 = dynamic_cast<CcuInsGeneratorV1*>(insGeneratorPtr_);
+    CcuInsGeneratorV2* tmpPtrV2 = dynamic_cast<CcuInsGeneratorV2*>(insGeneratorPtr_);
     if (tmpPtrV1 && !supportCcuV1) {
         // 在A5场景下没有使用A5的loop调用方式
-        Hccl::THROW<Hccl::CcuApiException>("Cannot translate CcuRepLoop for A5 when supportCcuV1 is false!");
+        Hccl::THROW<Hccl::CcuApiException>("Cannot translate CcuRepLoop when supportCcuV1 is false!");
+    }
+    if (tmpPtrV2 && !supportCcuV2) {
+        // 在A5场景下没有使用A6的loop调用方式
+        Hccl::THROW<Hccl::CcuApiException>("Cannot translate CcuRepLoop when supportCcuV2 is false!");
     }
 }
 

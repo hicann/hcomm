@@ -44,8 +44,8 @@ constexpr uint32_t CCU_V2_COUNT_XN_NUM = 4096; // 暂时采用宏定义
 constexpr uint64_t CCU_RESOURCE_INS_RESERVE_SIZE = 0x100000;  // INS预留空间1M
 constexpr uint64_t CCU_V1_RESOURCE_GSA_RESERVE_SIZE = 0x8000; // v1 GSA预留空间32K
 constexpr uint64_t CCU_V2_RESOURCE_GSA_RESERVE_SIZE = 0x0;      // v2 GSA删除
-constexpr uint16_t CCU_RESOURCE_XN_PER_SIZE    = 8;
-constexpr uint16_t CCU_RESOURCE_CKE_PER_SIZE    = 8;
+constexpr uint32_t CCU_RESOURCE_XN_PER_SIZE    = 8;
+constexpr uint32_t CCU_RESOURCE_CKE_PER_SIZE    = 8;
 constexpr uint32_t CCU_RESOURCE_XN_V1_RESERVE_SIZE = 32 * 1024; // xn预留空间32K
 constexpr uint32_t CCU_RESOURCE_XN_V2_RESERVE_SIZE = 256 * 1024; // xn预留空间256K
 constexpr uint16_t CCU_RESOURCE_INSTR_PER_SIZE = 32;
@@ -124,8 +124,8 @@ public:
     HcclResult GetCkeBaseAddr(const uint8_t dieId, uint64_t &ckeBaseAddr) const;
     uint64_t GetXnOffsetCcumBaseAddr(const uint8_t dieId) const;
     uint64_t GetCkeOffsetCcumBaseAddr(const uint8_t dieId) const;
-    HcclResult GetXnOffsetCcumAddrById(const uint8_t dieId, uint16_t id, uint64_t &xnAddr) const;
-    HcclResult GetCkeOffsetCcumAddrById(const uint8_t dieId, uint16_t id, uint64_t &ckeAddr) const;
+    HcclResult GetXnOffsetCcumAddrById(const uint8_t dieId, uint32_t id, uint64_t &xnAddr) const;
+    HcclResult GetCkeOffsetCcumAddrById(const uint8_t dieId, uint32_t id, uint64_t &ckeAddr) const;
 
     HcclResult GetMsId(const uint8_t dieId, uint32_t &msId) const;
     HcclResult GetMissionKey(const uint8_t dieId, uint32_t &missionKey) const;

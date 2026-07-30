@@ -12,8 +12,8 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_base.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_base.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
@@ -21,7 +21,7 @@ namespace CcuRep {
 
 using namespace Hccl;
 
-CcuRepSetLoop::CcuRepSetLoop(CcuInsGeneraterBase* insGeneratorPtr, const Variable &loopParam, const Executor &executor, const Variable &var)
+CcuRepSetLoop::CcuRepSetLoop(CcuInsGeneratorBase* insGeneratorPtr, const Variable &loopParam, const Executor &executor, const Variable &var)
     : insGeneratorPtr_(insGeneratorPtr), loopParam(loopParam), executor(executor), var(var)
 {
     type       = CcuRepType::SET_LOOP;

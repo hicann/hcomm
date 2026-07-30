@@ -16,8 +16,8 @@ namespace CcuRep {
 
 class CcuRepFuncCall : public CcuRepBase {
 public:
-    explicit CcuRepFuncCall(CcuInsGeneraterBase* insGenPtr, const std::string &label);
-    explicit CcuRepFuncCall(CcuInsGeneraterBase* insGenPtr, const Variable &funcAddrVar);
+    explicit CcuRepFuncCall(CcuInsGeneratorBase* insGenPtr, const std::string &label);
+    explicit CcuRepFuncCall(CcuInsGeneratorBase* insGenPtr, const Variable &funcAddrVar);
     bool               Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string        Describe() override;
     uint16_t InstrCount() override;
@@ -43,7 +43,7 @@ public:
     CcuInstr* GetInstr() { return instr; }
 
 private:
-    CcuInsGeneraterBase*    insGeneratorPtr_;
+    CcuInsGeneratorBase*    insGeneratorPtr_;
     CcuRepReferenceManager* funcManager{nullptr};
 
     std::string                      label;

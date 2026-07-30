@@ -19,7 +19,7 @@ namespace CcuRep {
 
 class CcuRepLocRecordEvent : public CcuRepBase {
 public:
-    CcuRepLocRecordEvent(CcuInsGeneraterBase* insGenPtr, const CompletedEvent &event, uint32_t mask);
+    CcuRepLocRecordEvent(CcuInsGeneratorBase* insGenPtr, const CompletedEvent &event, uint32_t mask);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint16_t GetEventId() { return event_.Id(); }
@@ -30,7 +30,7 @@ public:
         return event_;
     }
 private:
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     CompletedEvent event_{};
     uint32_t       mask_{1};
 };

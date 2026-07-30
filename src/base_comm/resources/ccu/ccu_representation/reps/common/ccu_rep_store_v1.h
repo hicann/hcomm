@@ -16,7 +16,7 @@ namespace CcuRep {
 
 class CcuRepStore : public CcuRepBase {
 public:
-    CcuRepStore(CcuInsGeneraterBase* insGenPtr, const Variable &var, uint64_t addr, uint32_t num = 1);
+    CcuRepStore(CcuInsGeneratorBase* insGenPtr, const Variable &var, uint64_t addr, uint32_t num = 1);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
 
@@ -27,7 +27,7 @@ public:
 
 private:
     uint16_t mask{1};
-    CcuInsGeneraterBase* insGeneratorPtr_{nullptr};
+    CcuInsGeneratorBase* insGeneratorPtr_{nullptr};
     Variable var;
     uint64_t addr;
     uint32_t num;

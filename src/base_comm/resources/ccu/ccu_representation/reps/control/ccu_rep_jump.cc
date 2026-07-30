@@ -8,8 +8,8 @@
 #include "ccu_rep_v1.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_base.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_base.h"
+#include "ccu_ins_generator_v1.h"
 
 namespace hcomm {
 namespace CcuRep {
@@ -17,12 +17,12 @@ namespace CcuRep {
 using namespace Hccl;
 
 // jump基类
-CcuRepJumpBase::CcuRepJumpBase(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId):
+CcuRepJumpBase::CcuRepJumpBase(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId):
     insGeneratorPtr_(insGenPtr), label(label), targetInstrId(targetInstrId)
 {
 }
 
-CcuRepJumpBase::CcuRepJumpBase(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpBase::CcuRepJumpBase(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
                                const Variable& expectedVar, const Variable& condition):
     insGeneratorPtr_(insGenPtr), label(label), targetInstrId(targetInstrId), expectedVar(expectedVar), condition(condition)
 {
@@ -35,7 +35,7 @@ void CcuRepJumpBase::Reference(std::shared_ptr<CcuRepJumpLabel> refRep)
 
 void CcuRepJumpBase::ValidateInsGeneratorForJump()
 {
-    CcuInsGeneraterV1* tmpPtrV1 = dynamic_cast<CcuInsGeneraterV1*>(insGeneratorPtr_);
+    CcuInsGeneratorV1* tmpPtrV1 = dynamic_cast<CcuInsGeneratorV1*>(insGeneratorPtr_);
     if (tmpPtrV1 && !supportCcuV1) {
         // 当右值只传入var没有立即数时，无法在A5上翻译
         Hccl::THROW<Hccl::CcuApiException>("Cannot translate %s for A5 when supportCcuV1 is false!",
@@ -56,7 +56,7 @@ CcuResult CcuRepJumpBase::InitInstr(CcuInstr *&instr, uint16_t &instrId)
 }
 
 // direct jump
-CcuRepJump::CcuRepJump(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId) :
+CcuRepJump::CcuRepJump(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId) :
     CcuRepJumpBase(insGenPtr, label, targetInstrId)
 {
     type       = CcuRepType::JUMP;
@@ -85,7 +85,7 @@ std::string CcuRepJump::Describe()
 }
 
 // jumpNE
-CcuRepJumpNE::CcuRepJumpNE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpNE::CcuRepJumpNE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &expectedVar, const Variable &condition, uint64_t expected)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -96,7 +96,7 @@ CcuRepJumpNE::CcuRepJumpNE(CcuInsGeneraterBase* insGenPtr, const std::string &la
     supportCcuV1 = true;
 }
 
-CcuRepJumpNE::CcuRepJumpNE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpNE::CcuRepJumpNE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &condition, const Variable &expectedVar) 
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -132,7 +132,7 @@ std::string CcuRepJumpNE::Describe()
 }
 
 // jumpEQ
-CcuRepJumpEQ::CcuRepJumpEQ(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpEQ::CcuRepJumpEQ(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &expectedVar, const Variable &condition, uint64_t expected)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -143,7 +143,7 @@ CcuRepJumpEQ::CcuRepJumpEQ(CcuInsGeneraterBase* insGenPtr, const std::string &la
     supportCcuV1 = true;
 }
 
-CcuRepJumpEQ::CcuRepJumpEQ(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpEQ::CcuRepJumpEQ(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &condition, const Variable &expectedVar)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -177,7 +177,7 @@ std::string CcuRepJumpEQ::Describe()
 }
 
 // jumpLE
-CcuRepJumpLE::CcuRepJumpLE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpLE::CcuRepJumpLE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &condition, const Variable &expectedVar)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -187,7 +187,7 @@ CcuRepJumpLE::CcuRepJumpLE(CcuInsGeneraterBase* insGenPtr, const std::string &la
     supportCcuV1                     = false;
 }
  
-CcuRepJumpLE::CcuRepJumpLE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpLE::CcuRepJumpLE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &expectedVar, const Variable &condition, uint64_t expected)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -223,7 +223,7 @@ std::string CcuRepJumpLE::Describe()
 }
  
 // jumpGE
-CcuRepJumpGE::CcuRepJumpGE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpGE::CcuRepJumpGE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &condition, const Variable &expectedVar)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -233,7 +233,7 @@ CcuRepJumpGE::CcuRepJumpGE(CcuInsGeneraterBase* insGenPtr, const std::string &la
     supportCcuV1                     = false;
 }
  
-CcuRepJumpGE::CcuRepJumpGE(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpGE::CcuRepJumpGE(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &expectedVar, const Variable &condition, uint64_t expected)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -270,7 +270,7 @@ std::string CcuRepJumpGE::Describe()
 }
  
 // jumpGT
-CcuRepJumpGT::CcuRepJumpGT(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpGT::CcuRepJumpGT(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &condition, const Variable &expectedVar)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -280,7 +280,7 @@ CcuRepJumpGT::CcuRepJumpGT(CcuInsGeneraterBase* insGenPtr, const std::string &la
     supportCcuV1                     = false;
 }
  
-CcuRepJumpGT::CcuRepJumpGT(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpGT::CcuRepJumpGT(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &expectedVar, const Variable &condition, uint64_t expected)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -315,7 +315,7 @@ std::string CcuRepJumpGT::Describe()
 }
  
 // jumpLT
-CcuRepJumpLT::CcuRepJumpLT(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpLT::CcuRepJumpLT(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &condition, const Variable &expectedVar)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {
@@ -325,7 +325,7 @@ CcuRepJumpLT::CcuRepJumpLT(CcuInsGeneraterBase* insGenPtr, const std::string &la
     supportCcuV1                     = false;
 }
  
-CcuRepJumpLT::CcuRepJumpLT(CcuInsGeneraterBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
+CcuRepJumpLT::CcuRepJumpLT(CcuInsGeneratorBase* insGenPtr, const std::string &label, const Variable &targetInstrId,
     const Variable &expectedVar, const Variable &condition, uint64_t expected)
     : CcuRepJumpBase(insGenPtr, label, targetInstrId, expectedVar, condition)
 {

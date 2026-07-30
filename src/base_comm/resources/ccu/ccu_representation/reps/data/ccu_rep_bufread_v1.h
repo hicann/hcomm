@@ -15,7 +15,7 @@ namespace CcuRep {
 
 class CcuRepBufRead : public CcuRepBase {
 public:
-    CcuRepBufRead(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, RemoteAddr src, CcuBuf dst, Variable len, CompletedEvent sem,
+    CcuRepBufRead(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr src, CcuBuf dst, Variable len, CompletedEvent sem,
                   uint32_t mask);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
@@ -34,7 +34,7 @@ public:
     ChannelHandle GetChannel() { return channel; }
 
 private:
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     ChannelHandle channel;
     uint32_t channelId{0};
 

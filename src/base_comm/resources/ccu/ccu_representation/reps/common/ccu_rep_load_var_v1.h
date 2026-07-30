@@ -15,7 +15,7 @@ namespace CcuRep {
 
 class CcuRepLoadVar : public CcuRepBase {
 public:
-    CcuRepLoadVar(CcuInsGeneraterBase* insGenPtr, const Variable &src, const Variable &var, uint32_t num = 1);
+    CcuRepLoadVar(CcuInsGeneratorBase* insGenPtr, const Variable &src, const Variable &var, uint32_t num = 1);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
 
@@ -25,7 +25,7 @@ public:
     uint16_t GetMask() { return mask; }
 
 private:
-    CcuInsGeneraterBase* insGeneratorPtr_{nullptr};
+    CcuInsGeneratorBase* insGeneratorPtr_{nullptr};
     Variable src;
     Variable var;
     uint32_t num;

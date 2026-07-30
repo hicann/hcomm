@@ -12,12 +12,12 @@
 #include <climits>
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLocRecordEvent::CcuRepLocRecordEvent(CcuInsGeneraterBase* insGenPtr, const CompletedEvent &event, uint32_t mask)
+CcuRepLocRecordEvent::CcuRepLocRecordEvent(CcuInsGeneratorBase* insGenPtr, const CompletedEvent &event, uint32_t mask)
     : insGenPtr(insGenPtr), event_(event), mask_(mask)
 {
     type       = CcuRepType::LOC_RECORD_EVENT;

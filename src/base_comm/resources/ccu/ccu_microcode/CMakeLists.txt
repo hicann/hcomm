@@ -13,6 +13,7 @@ if(TARGET hcomm)
         PRIVATE
         ccu_microcode.cc
         ccu_assist.cc
+        ccu_microcode_v2.cc
     )
     target_include_directories(hcomm PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}

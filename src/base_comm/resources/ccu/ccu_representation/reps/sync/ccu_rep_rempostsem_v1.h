@@ -14,7 +14,7 @@ namespace CcuRep {
 
 class CcuRepRemPostSem : public CcuRepBase {
 public:
-    CcuRepRemPostSem(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, uint16_t semIndex, uint16_t mask);
+    CcuRepRemPostSem(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, uint16_t semIndex, uint16_t mask);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint32_t    GetId() override { return signalId; }
@@ -24,7 +24,7 @@ public:
     uint16_t GetSemIndex() { return semIndex; }
     uint16_t GetMask() { return mask; }
 private:
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     ChannelHandle channel;
     uint32_t            channelId{0};
     uint16_t            semIndex{0};

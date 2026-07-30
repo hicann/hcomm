@@ -18,7 +18,7 @@ namespace CcuRep {
 
 class CcuRepLocWaitNotify : public CcuRepBase {
 public:
-    CcuRepLocWaitNotify(CcuInsGeneraterBase* insGenPtr, const LocalNotify &notify, const uint32_t mask, bool isProfiling=true);
+    CcuRepLocWaitNotify(CcuInsGeneratorBase* insGenPtr, const LocalNotify &notify, const uint32_t mask, bool isProfiling=true);
     bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint32_t GetMask() { return mask_; };
@@ -35,7 +35,7 @@ public:
     }
 
 private:
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     LocalNotify notify_{};
     uint32_t mask_{0};
     bool isProfiling_{true};

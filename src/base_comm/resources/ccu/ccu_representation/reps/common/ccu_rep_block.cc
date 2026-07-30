@@ -6,14 +6,14 @@
  */
 
 #include "ccu_rep_v1.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "string_util.h"
 #include "ccu_kernel.h"
 
 namespace hcomm{
 namespace CcuRep {
 
-CcuRepBlock::CcuRepBlock(CcuInsGeneraterBase* insGenPtr, const std::string &label) :
+CcuRepBlock::CcuRepBlock(CcuInsGeneratorBase* insGenPtr, const std::string &label) :
     insGeneratorPtr_(insGenPtr), label(label)
 {
     type = CcuRepType::BLOCK;

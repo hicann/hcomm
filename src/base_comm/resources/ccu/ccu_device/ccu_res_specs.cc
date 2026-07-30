@@ -440,14 +440,14 @@ uint64_t CcuResSpecifications::GetXnOffsetCcumBaseAddr(const uint8_t dieId) cons
     return xnOffsetCcumBaseAddr;
 }
 
-static HcclResult CheckResOffsetAddrIsValid(uint16_t id, uint64_t baseAddr, uint16_t resoucePerSize)
+static HcclResult CheckResOffsetAddrIsValid(uint32_t id, uint64_t baseAddr, uint32_t resoucePerSize)
 {
     if (baseAddr == INVALID_ADDR) {
         HCCL_ERROR("[CcuResSpecifications][%s] failed, base addr is invalid.", __func__);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
-    if (id > UINT16_MAX / resoucePerSize) {
+    if (id > UINT32_MAX / resoucePerSize) {
         HCCL_ERROR("[CcuResSpecifications][%s] failed, id[%u] is invalid.", __func__, id);
         return HcclResult::HCCL_E_PARA;
     }
@@ -455,7 +455,7 @@ static HcclResult CheckResOffsetAddrIsValid(uint16_t id, uint64_t baseAddr, uint
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuResSpecifications::GetXnOffsetCcumAddrById(const uint8_t dieId, uint16_t id, uint64_t &xnAddr) const
+HcclResult CcuResSpecifications::GetXnOffsetCcumAddrById(const uint8_t dieId, uint32_t id, uint64_t &xnAddr) const
 {
     uint64_t xnBaseAddr = GetXnOffsetCcumBaseAddr(dieId);
     CHK_RET(CheckResOffsetAddrIsValid(id, xnBaseAddr, CCU_RESOURCE_XN_PER_SIZE));
@@ -487,7 +487,7 @@ uint64_t CcuResSpecifications::GetCkeOffsetCcumBaseAddr(const uint8_t dieId) con
     return ckeBaseAddr;
 }
 
-HcclResult CcuResSpecifications::GetCkeOffsetCcumAddrById(const uint8_t dieId, uint16_t id, uint64_t &ckeAddr) const
+HcclResult CcuResSpecifications::GetCkeOffsetCcumAddrById(const uint8_t dieId, uint32_t id, uint64_t &ckeAddr) const
 {
     uint64_t ckeBaseAddr = GetCkeOffsetCcumBaseAddr(dieId);
     CHK_RET(CheckResOffsetAddrIsValid(id, ckeBaseAddr, CCU_RESOURCE_CKE_PER_SIZE));

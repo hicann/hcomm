@@ -19,8 +19,8 @@ namespace CcuRep {
 
 class CcuRepOr : public CcuRepBase {
 public:
-    CcuRepOr(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
-    CcuRepOr(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varB);
+    explicit CcuRepOr(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
+    explicit CcuRepOr(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB);
     bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
 
     std::string Describe() override;
@@ -37,7 +37,7 @@ private:
     Variable varB;
     Variable varC;
 
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
 };
 
 }; // namespace CcuRep

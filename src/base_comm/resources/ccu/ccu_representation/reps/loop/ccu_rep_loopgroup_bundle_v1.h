@@ -31,7 +31,7 @@ public:
     };
 
     struct LoopEntry {
-        CcuLoopConfig config;
+        CcuLoopCfg config;
         Executor executor;
         std::shared_ptr<CcuRepLoopBlock> repLoopBlock;
         Variable loopParamVar;
@@ -41,9 +41,9 @@ public:
         Layout layout{Layout::Config};
     };
 
-    CcuRepLoopGroupBundle(CcuInsGeneraterBase* insGenPtr, const CcuLoopGroupConfig &config,
+    CcuRepLoopGroupBundle(CcuInsGeneratorBase* insGenPtr, const CcuLoopGroupCfg &config,
                           const Variable &parallelVar, const Variable &offsetVar);
-    CcuRepLoopGroupBundle(CcuInsGeneraterBase* insGenPtr, const Variable &parallelVar, const Variable &offsetVar);
+    CcuRepLoopGroupBundle(CcuInsGeneratorBase* insGenPtr, const Variable &parallelVar, const Variable &offsetVar);
 
     void AddLoop(const LoopEntry &entry);
     void SetRepeatLoopIdx(uint64_t idx) { repeatLoopIdx_ = idx; }
@@ -65,7 +65,7 @@ public:
     const Variable &GetOffsetParam() const { return offsetVar_; }
 
     const std::vector<LoopEntry> &GetLoops() const { return loops_; }
-    const CcuLoopGroupConfig &GetConfig() const { return config_; }
+    const CcuLoopGroupCfg &GetConfig() const { return config_; }
     const Variable &GetParallelVar() const { return parallelVar_; }
     uint64_t GetRepeatLoopIdx() const { return repeatLoopIdx_; }
     uint64_t GetTotalLoopNum() const { return totalLoopNum_; }
@@ -77,8 +77,8 @@ public:
 private:
     uint16_t LoopGroupInstrOffsetInBundle() const;
 
-    CcuInsGeneraterBase* insGenPtr_{nullptr};
-    CcuLoopGroupConfig config_;
+    CcuInsGeneratorBase* insGenPtr_{nullptr};
+    CcuLoopGroupCfg config_;
     Variable parallelVar_;
     Variable offsetVar_;
     uint64_t repeatLoopIdx_{0};

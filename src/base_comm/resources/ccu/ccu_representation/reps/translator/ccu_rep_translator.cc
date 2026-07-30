@@ -20,8 +20,9 @@
 #include "ccu_dev_mgr_imp.h"
 #include "dtype_common.h"
 
-#include "ccu_ins_generater_base.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_base.h"
+#include "ccu_ins_generator_v1.h"
+#include "ccu_ins_generator_v2.h"
 #include "../../../ccu_device/ccu_res_specs.h"
 
 #include "unified_platform/pub_inc/config_plf_log.h"
@@ -30,8 +31,6 @@ namespace hcomm {
 namespace CcuRep {
 
 using Hccl::PLF_TASK;
-
-CcuVersion CcuRepTranslator::ccuVersion = CcuVersion::CCU_INVALID;
 
 template <typename T> bool CheckType(const std::shared_ptr<CcuRepBlock> &refer)
 {
@@ -89,32 +88,37 @@ CcuRepTranslator::CcuRepTranslator(int32_t deviceLogicId, uint8_t dieId,
     if (result != 0) {
         Hccl::THROW<Hccl::InternalException>(Hccl::StringFormat("[NsRecovery] CcuRepTranslator::CcuRepTranslator: memcpy_s failed, ret = %d", result));
     }
-    // 获取xn起始地址
-    HcclResult ret = CcuDevMgrImp::GetXnBaseAddr(deviceLogicId, dieId, transDep.xnBaseAddr[dieId]);
+
+    HcclResult ret = CcuDevMgrImp::GetCcuVersion(transDep.logicalId, ccuVersion);
+    if (ret != HcclResult::HCCL_SUCCESS || ccuVersion == CcuVersion::CCU_INVALID) {
+        Hccl::THROW<Hccl::CcuApiException>("[CcuRepTranslator] Constructor: Invalid CCU Type!");
+    }
+
+    // 获取本die的xn起始地址
+    ret = CcuDevMgrImp::GetXnBaseAddr(deviceLogicId, dieId, transDep.xnBaseAddr[dieId]);
     if (ret != HcclResult::HCCL_SUCCESS) {
         Hccl::THROW<Hccl::CcuApiException>("Failed to get xn base address. deviceLogicId = %d, dieId = %u, ret = %d",
                                deviceLogicId, dieId, ret);
     }
-    transDep.ccuResSpaceTokenInfo = CcuRep::GetToken(ccuTokenInfo.first, ccuTokenInfo.second, 1);
-    // 获取hbm token信息
-    transDep.memTokenInfo = hbmTokenInfo;
 
-    ret = CcuDevMgrImp::GetCcuVersion(transDep.logicalId, ccuVersion);
-    if (ret != HcclResult::HCCL_SUCCESS || ccuVersion == CcuVersion::CCU_INVALID) {
-        Hccl::THROW<Hccl::CcuApiException>("[CcuRepTranslator] Constructor: Invalid CCU Type!");
+    // 若另一die使能，在A6场景下获得其xn起始地址
+    uint8_t anotherDieId = dieId == 0 ? 1 : 0;
+    bool anotherDieEnable = false;
+    if(static_cast<HcclResult>(CcuGetDieEnableInfo(deviceLogicId, anotherDieId, anotherDieEnable)) != HcclResult::HCCL_SUCCESS)
+    {
+        Hccl::THROW<Hccl::CcuApiException>("Failed to get CcuGetDieEnableInfo. deviceLogicId = %d, dieId = %u", deviceLogicId, dieId);
     }
-    
-    // 单Udie环境下暂不获取另一个die的信息
-    #ifdef OPEN_GET_ANOTHER_DIE_XN_ADDR
-    if (ccuVersion == CcuVersion::CCU_V2) {
-        uint8_t anotherDieId = dieId == 0 ? 1 : 0;
+    if (ccuVersion == CcuVersion::CCU_V2 && anotherDieEnable == true) {
         ret = CcuDevMgrImp::GetXnBaseAddr(deviceLogicId, anotherDieId, transDep.xnBaseAddr[anotherDieId]);
         if (ret != HcclResult::HCCL_SUCCESS) {
             Hccl::THROW<Hccl::CcuApiException>("Failed to get xn base address. deviceLogicId = %d, dieId = %u, "
                 "ret = %d", deviceLogicId, anotherDieId, ret);
         }
-    }
-    #endif
+    }   
+
+    transDep.ccuResSpaceTokenInfo = CcuRep::GetToken(ccuTokenInfo.first, ccuTokenInfo.second, 1);
+    // 获取hbm token信息
+    transDep.memTokenInfo = hbmTokenInfo;
 }
 
 CcuRepTranslator::CcuRepTranslator(std::shared_ptr<CcuRepReferenceManager> refManager, const TransDep &transDep)
@@ -126,21 +130,33 @@ CcuRepTranslator::CcuRepTranslator(std::shared_ptr<CcuRepReferenceManager> refMa
     }
 }
 
-uint32_t CcuRepTranslator::GetInstrNum()
+uint32_t CcuRepTranslator::GetInstrNum(const int32_t devLogicId)
 {
-    return ccuVersion == CcuVersion::CCU_V1 ?
+    CcuVersion tempCcuVersion = CcuVersion::CCU_INVALID;
+    HcclResult ret = CcuDevMgrImp::GetCcuVersion(devLogicId, tempCcuVersion);
+    if (ret != HcclResult::HCCL_SUCCESS || tempCcuVersion == CcuVersion::CCU_INVALID) {
+        Hccl::THROW<Hccl::CcuApiException>("[CcuRepTranslator] GetInstrNum: Invalid CCU Type!");
+    }
+
+    return tempCcuVersion == CcuVersion::CCU_V1 ?
                4  // 4:翻译器翻译过程中额外需要的指令空间大小(插入3条通用操作指令+1条终止指令)
                :
                13;  // 13:翻译器翻译过程中额外需要的指令空间大小(插入3条通用操作指令+1条终止指令+9条repJump)
 }
 
-CcuResReq CcuRepTranslator::GetResReq(uint8_t dieId)
+CcuResReq CcuRepTranslator::GetResReq(const int32_t devLogicId, uint8_t dieId)
 {
     // xn 资源统一从 continuousXn 池子申请，离散 xn 帐户已废弃
     // 需要申请若干xn、gsa、cke设置为固定值用于通用操作
+    CcuVersion tempCcuVersion = CcuVersion::CCU_INVALID;
+    HcclResult ret = CcuDevMgrImp::GetCcuVersion(devLogicId, tempCcuVersion);
+    if (ret != HcclResult::HCCL_SUCCESS || tempCcuVersion == CcuVersion::CCU_INVALID) {
+        Hccl::THROW<Hccl::CcuApiException>("[CcuRepTranslator] GetResReq: Invalid CCU Type!");
+    }
+
     CcuResReq resReq;
     int varNum = XN_NUM;
-    int gsaNum = ccuVersion == CcuVersion::CCU_V1 ? GSA_NUM : 0;
+    int gsaNum = tempCcuVersion == CcuVersion::CCU_V1 ? GSA_NUM : 0;
     resReq.continuousXnReq[dieId] = varNum;
     resReq.gsaReq[dieId] = gsaNum;
     resReq.ckeReq[dieId] = CKE_NUM;
@@ -291,9 +307,18 @@ CcuInstrInfo CcuRepTranslator::Translate(CcuKernel* ccuKernel, const std::vector
 
 void CcuRepTranslator::CommonProcess(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId)
 {
-    LoadImdToXnInstr(instr++, var[0].Id(), 0);
-    LoadImdToGSAInstr(instr++, addr[0].Id(), 0);
-    SetCKEInstr(instr++, signal[0].Id(), 0xffff, 0, 0, 1);
+    if (ccuVersion == CcuVersion::CCU_INVALID) {
+        Hccl::THROW<Hccl::InternalException>("[CcuRepTranslator] Unexpected ccuVersion[Invalid]");
+    }
+    if (ccuVersion == CcuVersion::CCU_V1) {
+        LoadImdToXnInstr(instr++, var[0].Id(), 0);
+        LoadImdToGSAInstr(instr++, addr[0].Id(), 0);
+        SetCKEInstr(instr++, signal[0].Id(), 0xffff, 0, 0, 1);
+    } else {
+        CcuV2::AssignI(instr++, var[0].Id(), 0);
+        CcuV2::AssignI(instr++, var[XN_NUM - 1].Id(), 0);
+        SetCKEInstr(instr++, signal[0].Id(), 0xffff, 0, 0, 1);
+    }
 
     // 遍历需要赋值的常量，A5场景下暂为空表
     std::unordered_map<uint64_t, CcuRep::Variable>& constValue2VarMap = ccuKernel->GetConstValue2VarMap();
@@ -301,7 +326,11 @@ void CcuRepTranslator::CommonProcess(CcuKernel* ccuKernel, CcuInstr *&instr, uin
     for (auto elem : constValue2VarMap) {
         uint64_t constValue = elem.first;
         CcuRep::Variable curVariable = elem.second;
-        LoadImdToXnInstr(instr++, curVariable.Id(), constValue);
+        if (ccuVersion == CcuVersion::CCU_V1) {
+            LoadImdToXnInstr(instr++, curVariable.Id(), constValue);
+        } else {
+            CcuV2::AssignI(instr++, curVariable.Id(), constValue);
+        }
     }
  
     u32 instrNum = 3 + constValueNum;
@@ -313,12 +342,28 @@ void CcuRepTranslator::CommonProcess(CcuKernel* ccuKernel, CcuInstr *&instr, uin
 
 void CcuRepTranslator::FinishMainBlock(CcuInstr *&instr, uint16_t &instrId)
 {
-    if (transDep.isFuncBlock) {
-        JumpInstr(instr++, refManager.get()->GetFuncRet(FUNC_NEST_MAX).Id(), transDep.reserveXnId, 1);
+    if (ccuVersion == CcuVersion::CCU_V1) {
+        if (transDep.isFuncBlock) {
+            JumpInstr(instr++, refManager.get()->GetFuncRet(FUNC_NEST_MAX).Id(), transDep.reserveXnId, 1);
+        } else {
+            LoadImdToXnInstr(instr++, var[0].Id(), 0);
+        }
+        instrId++;
     } else {
-        LoadImdToXnInstr(instr++, var[0].Id(), 0);
+        if (transDep.isFuncBlock) {
+            CcuV2::RelJmp(instr, refManager.get()->GetFuncRet(FUNC_NEST_MAX).Id(), instrId + V2_RELJMP_INSTR_NUM,
+                          transDep.commXn[0], transDep.commXn[1]);
+            instr += V2_RELJMP_INSTR_NUM;
+            CcuV2::Jump(instr++, refManager.get()->GetFuncRet(FUNC_NEST_MAX).Id(), transDep.reserveXnId,
+                        transDep.reserveXnId, 0);
+        } else {
+            for (int i = 0; i < V2_FINISH_BLOCK_INSTR_NUM; i++) {
+                HCCL_INFO("FinishMainBlock Add Nop: index[%d], instrId[%d]", i, instrId);
+                CcuV2::Nop(instr++);
+            }
+        }
+        instrId += V2_FINISH_BLOCK_INSTR_NUM;
     }
-    instrId++;
 
     if (instrId > UINT16_MAX - 1) {
         Hccl::THROW<Hccl::InternalException>("integer overflow occurs");
@@ -330,7 +375,12 @@ void CcuRepTranslator::DumpInstruction(const CcuInstrInfo &instrInfo) const
     HCCL_INFO("CcuInstrInfo: startInstrId = %u, instrCount = %u, missionStartInstrId = %u, missionInstrCount = %u",
               instrInfo.startInstrId, instrInfo.instrCount, instrInfo.missionStartInstrId, instrInfo.missionInstrCount);
     for (uint16_t index = 0; index < instrInfo.instrVec.size(); index++) {
-        HCCL_INFO("%d: %s", instrInfo.startInstrId + index, ParseInstr(instrInfo.instrVec.data() + index).c_str());
+        if (ccuVersion == CcuVersion::CCU_V1) {
+            HCCL_INFO("%d: %s", instrInfo.startInstrId + index, ParseInstr(instrInfo.instrVec.data() + index).c_str());
+        } else {
+            HCCL_INFO("%d: %s", instrInfo.startInstrId + index,
+                      CcuV2::ParseInstrV2(instrInfo.instrVec.data() + index).c_str());
+        }
     }
 }
 
@@ -353,14 +403,20 @@ void CcuRepTranslator::DumpRep(const std::vector<std::shared_ptr<CcuRepBase>> &r
                 HCCL_ERROR("instrId[%u] less than startInstrId[%u]", instrId, instrInfo.startInstrId);
                 continue;
             }
-            PLF_CONFIG_INFO(PLF_TASK, "microcode[%u]: %s", instrId,
-                ParseInstr(instrInfo.instrVec.data() + (instrId - instrInfo.startInstrId)).c_str());
+            if (ccuVersion == CcuVersion::CCU_V1) {
+                PLF_CONFIG_INFO(PLF_TASK, "microcode[%u]: %s", instrId,
+                          ParseInstr(instrInfo.instrVec.data() + (instrId - instrInfo.startInstrId)).c_str());
+            } else {
+                PLF_CONFIG_INFO(PLF_TASK, "microcode[%u]: %s", instrId,
+                          CcuV2::ParseInstrV2(instrInfo.instrVec.data() + (instrId - instrInfo.startInstrId)).c_str());
+            }
         }
     }
 }
 
 void CcuRepTranslator::BindResource(bool isFuncBlock)
 {
+    // 在V2场景下不会为addr数组申请资源，故reserveGsaId和commGsa中实际填的都是默认值0
     transDep.reserveXnId  = var[0].Id();
     transDep.reserveGsaId = addr[0].Id();
     transDep.reserveCkeId = signal[0].Id();

@@ -10,7 +10,7 @@
 
 #include "ccu_rep_context_v1.h"
 #include "ccu_rep_loopgroup_bundle_v1.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_types.h"
 #include <gtest/gtest.h>
 #include <memory>
@@ -22,7 +22,7 @@ namespace {
 
 class CcuRepContextTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
 };
 
@@ -169,7 +169,7 @@ TEST_F(CcuRepContextTest, CollectProfilingReps_Assign_VarToVar)
 TEST_F(CcuRepContextTest, CollectProfilingReps_LoopGroup)
 {
     CcuRepContext context;
-    CcuLoopGroupConfig grpCfg{};
+    CcuLoopGroupCfg grpCfg{};
     Variable parallelParam(nullptr);
     Variable offsetParam(nullptr);
     auto loopGroupPtr = std::make_shared<CcuRepLoopGroupBundle>(&insGen, grpCfg, parallelParam, offsetParam);

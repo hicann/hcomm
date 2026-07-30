@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "hcomm_c_adpt.h"
 #include "ccu_rep_base_v1.h"
 #include "../../../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"
@@ -42,7 +42,7 @@ HcclResult LoadAddrListArg(CcuInstr*& instr, const std::vector<T>& dst, const st
 }
 } // namespace
 
-HcclResult CcuInsGeneraterV1::CcuRepBufLocReadTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufLocRead* repBufLocRead, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepBufLocReadTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufLocRead* repBufLocRead, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(repBufLocRead);
@@ -52,7 +52,7 @@ HcclResult CcuInsGeneraterV1::CcuRepBufLocReadTranslate(CcuKernel* ccuKernel, Cc
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepBufLocWriteTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufLocWrite* repBufLocWrite, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepBufLocWriteTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufLocWrite* repBufLocWrite, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(repBufLocWrite);
@@ -62,7 +62,7 @@ HcclResult CcuInsGeneraterV1::CcuRepBufLocWriteTranslate(CcuKernel* ccuKernel, C
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepBufReadTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufRead* repBufRead, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepBufReadTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufRead* repBufRead, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     UNUSED(dep);
@@ -80,7 +80,7 @@ HcclResult CcuInsGeneraterV1::CcuRepBufReadTranslate(CcuKernel* ccuKernel, CcuIn
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepWriteTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepWrite* repWrite)
+HcclResult CcuInsGeneratorV1::CcuRepWriteTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepWrite* repWrite)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(repWrite);
@@ -96,7 +96,7 @@ HcclResult CcuInsGeneraterV1::CcuRepWriteTranslate(CcuKernel* ccuKernel, CcuInst
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepReadTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRead* repRead)
+HcclResult CcuInsGeneratorV1::CcuRepReadTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRead* repRead)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(repRead);
@@ -112,7 +112,7 @@ HcclResult CcuInsGeneraterV1::CcuRepReadTranslate(CcuKernel* ccuKernel, CcuInstr
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepRemMemTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRemMem* repRemMem)
+HcclResult CcuInsGeneratorV1::CcuRepRemMemTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRemMem* repRemMem)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(repRemMem);
@@ -136,7 +136,7 @@ HcclResult CcuInsGeneraterV1::CcuRepRemMemTranslate(CcuKernel* ccuKernel, CcuIns
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepLocCpyTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepLocCpy* ccuRepLocCpy, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepLocCpyTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepLocCpy* ccuRepLocCpy, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepLocCpy);
@@ -152,7 +152,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLocCpyTranslate(CcuKernel* ccuKernel, CcuIns
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepBufWriteTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufWrite* ccuRepBufWrite, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepBufWriteTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufWrite* ccuRepBufWrite, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     UNUSED(dep);
@@ -169,7 +169,7 @@ HcclResult CcuInsGeneraterV1::CcuRepBufWriteTranslate(CcuKernel* ccuKernel, CcuI
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepBufReduceTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufReduce* ccuRepBufReduce)
+HcclResult CcuInsGeneratorV1::CcuRepBufReduceTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufReduce* ccuRepBufReduce)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepBufReduce);
@@ -208,7 +208,7 @@ HcclResult CcuInsGeneraterV1::CcuRepBufReduceTranslate(CcuKernel* ccuKernel, Ccu
     return HcclResult::HCCL_SUCCESS;
 }
 
-uint32_t CcuInsGeneraterV1::GetInstrCount(CcuRepType repType)
+uint32_t CcuInsGeneratorV1::GetInstrCount(CcuRepType repType)
 {
     if (repTypeInstrCount.find(repType) == repTypeInstrCount.end()) {
         Hccl::THROW<Hccl::CcuApiException>("[%s] Unsupported repType[%d]", __func__, repType);
@@ -216,7 +216,7 @@ uint32_t CcuInsGeneraterV1::GetInstrCount(CcuRepType repType)
     return repTypeInstrCount[repType];
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepLocRecordEventTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepLocRecordEvent* ccuRepLocRecordEvent)
+HcclResult CcuInsGeneratorV1::CcuRepLocRecordEventTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepLocRecordEvent* ccuRepLocRecordEvent)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepLocRecordEvent);
@@ -225,7 +225,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLocRecordEventTranslate(CcuKernel* ccuKernel
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepLocWaitEventTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepLocWaitEvent* ccuRepLocWaitEvent)
+HcclResult CcuInsGeneratorV1::CcuRepLocWaitEventTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepLocWaitEvent* ccuRepLocWaitEvent)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepLocWaitEvent);
@@ -239,7 +239,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLocWaitEventTranslate(CcuKernel* ccuKernel, 
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepLocWaitNotifyTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepLocWaitNotify* ccuRepLocWaitNotify)
+HcclResult CcuInsGeneratorV1::CcuRepLocWaitNotifyTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepLocWaitNotify* ccuRepLocWaitNotify)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepLocWaitNotify);
@@ -253,7 +253,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLocWaitNotifyTranslate(CcuKernel* ccuKernel,
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepRemWaitSemTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRemWaitSem* cuRepRemWaitSem)
+HcclResult CcuInsGeneratorV1::CcuRepRemWaitSemTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRemWaitSem* cuRepRemWaitSem)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(cuRepRemWaitSem);
@@ -277,7 +277,7 @@ HcclResult CcuInsGeneraterV1::CcuRepRemWaitSemTranslate(CcuKernel* ccuKernel, Cc
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepRemPostVarTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRemPostVar* ccuRepRemPostVar)
+HcclResult CcuInsGeneratorV1::CcuRepRemPostVarTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRemPostVar* ccuRepRemPostVar)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepRemPostVar);
@@ -303,7 +303,7 @@ HcclResult CcuInsGeneraterV1::CcuRepRemPostVarTranslate(CcuKernel* ccuKernel, Cc
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepRemPostSemTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRemPostSem* ccuRepRemPostSem, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepRemPostSemTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRemPostSem* ccuRepRemPostSem, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepRemPostSem);
@@ -324,7 +324,7 @@ HcclResult CcuInsGeneraterV1::CcuRepRemPostSemTranslate(CcuKernel* ccuKernel, Cc
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepRecordSharedNotifyTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRecordSharedNotify* ccuRepRecordSharedNotify, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepRecordSharedNotifyTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepRecordSharedNotify* ccuRepRecordSharedNotify, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepRecordSharedNotify);
@@ -339,7 +339,7 @@ HcclResult CcuInsGeneraterV1::CcuRepRecordSharedNotifyTranslate(CcuKernel* ccuKe
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepAddTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepAdd* ccuRepAdd, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepAddTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepAdd* ccuRepAdd, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepAdd);
@@ -373,7 +373,7 @@ HcclResult CcuInsGeneraterV1::CcuRepAddTranslate(CcuKernel* ccuKernel, CcuInstr 
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepAssignTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepAssign* ccuRepAssign, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepAssignTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepAssign* ccuRepAssign, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     CHK_PTR_NULL(ccuRepAssign);
@@ -407,7 +407,7 @@ HcclResult CcuInsGeneraterV1::CcuRepAssignTranslate(CcuKernel* ccuKernel, CcuIns
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepMulTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepMul* ccuRepMul)
+HcclResult CcuInsGeneratorV1::CcuRepMulTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepMul* ccuRepMul)
 {
     UNUSED(ccuKernel);
     UNUSED(instr);
@@ -415,7 +415,7 @@ HcclResult CcuInsGeneraterV1::CcuRepMulTranslate(CcuKernel* ccuKernel, CcuInstr 
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepSubTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepSub* ccuRepSub)
+HcclResult CcuInsGeneratorV1::CcuRepSubTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepSub* ccuRepSub)
 {
     UNUSED(ccuKernel);
     UNUSED(instr);
@@ -423,7 +423,7 @@ HcclResult CcuInsGeneraterV1::CcuRepSubTranslate(CcuKernel* ccuKernel, CcuInstr 
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepAndTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepAnd* ccuRepAnd, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepAndTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepAnd* ccuRepAnd, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     UNUSED(instr);
@@ -432,7 +432,7 @@ HcclResult CcuInsGeneraterV1::CcuRepAndTranslate(CcuKernel* ccuKernel, CcuInstr 
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepNotTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepNot* ccuRepNot, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepNotTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepNot* ccuRepNot, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     UNUSED(instr);
@@ -441,7 +441,7 @@ HcclResult CcuInsGeneraterV1::CcuRepNotTranslate(CcuKernel* ccuKernel, CcuInstr 
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepOrTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepOr* ccuRepOr, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepOrTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepOr* ccuRepOr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     UNUSED(instr);
@@ -450,7 +450,7 @@ HcclResult CcuInsGeneraterV1::CcuRepOrTranslate(CcuKernel* ccuKernel, CcuInstr *
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepXorTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepXor* ccuRepXor, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepXorTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepXor* ccuRepXor, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     UNUSED(instr);
@@ -459,7 +459,7 @@ HcclResult CcuInsGeneraterV1::CcuRepXorTranslate(CcuKernel* ccuKernel, CcuInstr 
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepShLTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepShL* ccuRepShL, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepShLTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepShL* ccuRepShL, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     UNUSED(instr);
@@ -468,7 +468,7 @@ HcclResult CcuInsGeneraterV1::CcuRepShLTranslate(CcuKernel* ccuKernel, CcuInstr 
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepShRTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepShR* ccuRepShR, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepShRTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepShR* ccuRepShR, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     UNUSED(instr);
@@ -477,7 +477,7 @@ HcclResult CcuInsGeneraterV1::CcuRepShRTranslate(CcuKernel* ccuKernel, CcuInstr 
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepFuncBlockTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepFuncBlockTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepFuncBlock* funcBlockPtr, const TransDep &dep, uint32_t step)
 {
     UNUSED(ccuKernel);
@@ -515,7 +515,7 @@ HcclResult CcuInsGeneraterV1::CcuRepFuncBlockTranslate(CcuKernel* ccuKernel, Ccu
     return HcclResult::HCCL_SUCCESS;
 }
  
-void CcuInsGeneraterV1::LoadFuncCallInArgs(CcuInstr* instr, std::vector<CcuRepArg>& inArgs,
+void CcuInsGeneratorV1::LoadFuncCallInArgs(CcuInstr* instr, std::vector<CcuRepArg>& inArgs,
                                            std::vector<Variable>& formalIns, uint16_t reserveXnId)
 {
     uint32_t idx = 0;
@@ -532,7 +532,7 @@ void CcuInsGeneraterV1::LoadFuncCallInArgs(CcuInstr* instr, std::vector<CcuRepAr
     }
 }
 
-void CcuInsGeneraterV1::LoadFuncCallOutArgs(CcuInstr* instr, uint32_t offset, std::vector<CcuRepArg>& outArgs,
+void CcuInsGeneratorV1::LoadFuncCallOutArgs(CcuInstr* instr, uint32_t offset, std::vector<CcuRepArg>& outArgs,
                                             CcuRepReferenceManager* funcManager, uint16_t reserveXnId)
 {
     uint32_t idx = 0;
@@ -550,7 +550,7 @@ void CcuInsGeneraterV1::LoadFuncCallOutArgs(CcuInstr* instr, uint32_t offset, st
     }
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepFuncCallTranslate(CcuKernel* ccuKernel, CcuInstr *&curInstr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepFuncCallTranslate(CcuKernel* ccuKernel, CcuInstr *&curInstr, uint16_t &curInstrId,
     CcuRepFuncCall* funcCallPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -587,7 +587,7 @@ HcclResult CcuInsGeneraterV1::CcuRepFuncCallTranslate(CcuKernel* ccuKernel, CcuI
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepJumpTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepJumpTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepJump* jumpPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -604,7 +604,7 @@ HcclResult CcuInsGeneraterV1::CcuRepJumpTranslate(CcuKernel* ccuKernel, CcuInstr
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepJumpNETranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepJumpNETranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepJumpNE* jumpNEPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -620,7 +620,7 @@ HcclResult CcuInsGeneraterV1::CcuRepJumpNETranslate(CcuKernel* ccuKernel, CcuIns
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepJumpEQTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepJumpEQTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepJumpEQ* jumpEQPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -642,7 +642,7 @@ HcclResult CcuInsGeneraterV1::CcuRepJumpEQTranslate(CcuKernel* ccuKernel, CcuIns
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepJumpLETranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepJumpLETranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepJumpLE* jumpLEPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -653,7 +653,7 @@ HcclResult CcuInsGeneraterV1::CcuRepJumpLETranslate(CcuKernel* ccuKernel, CcuIns
     return HCCL_E_NOT_SUPPORT;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepJumpGETranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepJumpGETranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepJumpGE* jumpGEPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -664,7 +664,7 @@ HcclResult CcuInsGeneraterV1::CcuRepJumpGETranslate(CcuKernel* ccuKernel, CcuIns
     return HCCL_E_NOT_SUPPORT;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepJumpGTTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepJumpGTTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepJumpGT* jumpGTPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -675,7 +675,7 @@ HcclResult CcuInsGeneraterV1::CcuRepJumpGTTranslate(CcuKernel* ccuKernel, CcuIns
     return HCCL_E_NOT_SUPPORT;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepJumpLTTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepJumpLTTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepJumpLT* jumpLTPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -687,7 +687,7 @@ HcclResult CcuInsGeneraterV1::CcuRepJumpLTTranslate(CcuKernel* ccuKernel, CcuIns
 }
 
 
-HcclResult CcuInsGeneraterV1::CcuRepLoopTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, CcuRepLoop* loopPtr)
+HcclResult CcuInsGeneratorV1::CcuRepLoopTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, CcuRepLoop* loopPtr)
 {
     UNUSED(ccuKernel);
     UNUSED(curInstrId);
@@ -700,7 +700,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLoopTranslate(CcuKernel* ccuKernel, CcuInstr
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg,
+HcclResult CcuInsGeneratorV1::LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg,
                                               const TransDep& dep)
 {
     switch (inArg.type) {
@@ -741,7 +741,7 @@ HcclResult CcuInsGeneraterV1::LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg&
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepLoopCallTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepLoopCallTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepLoopCall* loopCallPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -764,7 +764,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLoopCallTranslate(CcuKernel* ccuKernel, CcuI
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepSetLoopTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, CcuRepSetLoop* setLoopPtr)
+HcclResult CcuInsGeneratorV1::CcuRepSetLoopTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, CcuRepSetLoop* setLoopPtr)
 {
     UNUSED(ccuKernel);
     (void)curInstrId;
@@ -774,7 +774,7 @@ HcclResult CcuInsGeneraterV1::CcuRepSetLoopTranslate(CcuKernel* ccuKernel, CcuIn
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepLoadTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepLoadTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepLoad* loadPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -794,7 +794,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLoadTranslate(CcuKernel* ccuKernel, CcuInstr
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepLoadVarTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepLoadVarTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepLoadVar* loadVarPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -813,7 +813,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLoadVarTranslate(CcuKernel* ccuKernel, CcuIn
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepLoadArgTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepLoadArgTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepLoadArg* loadArgPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -829,7 +829,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLoadArgTranslate(CcuKernel* ccuKernel, CcuIn
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepNopTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, CcuRepNop* nopPtr, const TransDep &dep)
+HcclResult CcuInsGeneratorV1::CcuRepNopTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, CcuRepNop* nopPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
     (void)curInstrId;
@@ -839,7 +839,7 @@ HcclResult CcuInsGeneraterV1::CcuRepNopTranslate(CcuKernel* ccuKernel, CcuInstr 
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepStoreTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepStoreTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepStore* storePtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -859,7 +859,7 @@ HcclResult CcuInsGeneraterV1::CcuRepStoreTranslate(CcuKernel* ccuKernel, CcuInst
     return HcclResult::HCCL_SUCCESS;
 }
  
-HcclResult CcuInsGeneraterV1::CcuRepStoreVarTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepStoreVarTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepStoreVar* storeVarPtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -879,7 +879,7 @@ HcclResult CcuInsGeneraterV1::CcuRepStoreVarTranslate(CcuKernel* ccuKernel, CcuI
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuInsGeneraterV1::CcuRepLoopGroupBundleTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
+HcclResult CcuInsGeneratorV1::CcuRepLoopGroupBundleTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId,
     CcuRepLoopGroupBundle* bundlePtr, const TransDep &dep)
 {
     UNUSED(ccuKernel);
@@ -938,7 +938,7 @@ HcclResult CcuInsGeneraterV1::CcuRepLoopGroupBundleTranslate(CcuKernel* ccuKerne
     return HcclResult::HCCL_SUCCESS;
 }
 
-uint16_t CcuInsGeneraterV1::CcuRepLoopGroupBundleInstrCount(CcuRepLoopGroupBundle* bundlePtr)
+uint16_t CcuInsGeneratorV1::CcuRepLoopGroupBundleInstrCount(CcuRepLoopGroupBundle* bundlePtr)
 {
     if (bundlePtr == nullptr) {
         Hccl::THROW<Hccl::CcuApiException>("[%s] bundlePtr is nullptr", __func__);

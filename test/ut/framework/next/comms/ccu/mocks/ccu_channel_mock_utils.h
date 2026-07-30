@@ -145,6 +145,8 @@ void MockCcuChannelGetRes()
     MOCKER_CPP(&hcomm::CcuTransport::CheckFinish).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER_CPP(&hcomm::CcuTransport::GetRmtCkeByIndex).stubs().will(invoke(MockCcuTransportGetRmtCke));
     MOCKER_CPP(&hcomm::CcuTransport::GetRmtXnByIndex).stubs().will(invoke(MockCcuTransportGetRmtXn));
+    MOCKER_CPP(&hcomm::CcuTransport::GetRmtSignalAddrByIndex).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER_CPP(&hcomm::CcuTransport::GetRmtVarAddrByIndex).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
 }
 
 #endif // CCU_CHANNEL_MOCK_UTILS_H

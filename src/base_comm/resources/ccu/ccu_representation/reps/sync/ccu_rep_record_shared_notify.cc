@@ -10,12 +10,12 @@
 
 #include "ccu_rep_v1.h"
 #include "string_util.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRecordSharedNotify::CcuRepRecordSharedNotify(CcuInsGeneraterBase* insGenPtr, const LocalNotify &notify, uint16_t mask)
+CcuRepRecordSharedNotify::CcuRepRecordSharedNotify(CcuInsGeneratorBase* insGenPtr, const LocalNotify &notify, uint16_t mask)
     : insGenPtr(insGenPtr), notify_(notify), mask_(mask)
 {
     type       = CcuRepType::RECORD_SHARED_NOTIFY;

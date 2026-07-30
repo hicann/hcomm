@@ -81,19 +81,19 @@ public:
     std::vector<std::shared_ptr<CcuRepBase>> waitCkeProfilingReps; // waitCKE相关REP缓存
     std::vector<CcuProfilingInfo> profilingInfo; // context全部profiling缓存信息
     // 需要校验返回值是否为nullptr
-    CcuInsGeneraterBase* GetInsGenerator()
+    CcuInsGeneratorBase* GetInsGenerator()
     {
         return insGenerator;
     }
 
-    void SetInsGenerater(CcuInsGeneraterBase* insGeneraterBase)
+    void SetInsGenerater(CcuInsGeneratorBase* insGeneratorBase)
     {
-        insGenerator = insGeneraterBase;
+        insGenerator = insGeneratorBase;
     }
 
 protected:
     std::set<std::string> registeredLoop;
-    CcuInsGeneraterBase* insGenerator{nullptr};
+    CcuInsGeneratorBase* insGenerator{nullptr};
     std::unordered_map<uint32_t, std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>>> depInfo;
 
 private:

@@ -44,7 +44,26 @@ extern CcuResult CcuVariableCreateByChannel(ChannelHandle channel,
 //Variable操作类 相关接口
 extern CcuResult CcuVariableAssignImm(CcuVariableHandle resVar, uint64_t immediate);
 extern CcuResult CcuVariableAssignVar(CcuVariableHandle dstVarHandle, CcuVariableHandle srcVarHandle);
+/** @brief 变量相加：resVar = varA + varB。@return CCU_SUCCESS 成功，否则为错误码。 */
 extern CcuResult CcuVariableAddVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB);
+/** @brief 变量相减：resVar = varA - varB。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableSubVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB);
+/** @brief 变量相乘：resVar = varA * varB。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableMulVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB);
+/** @brief 变量加立即数：resVar = varA + immediate。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableAddImmToVar(CcuVariableHandle resVar, CcuVariableHandle varA, uint16_t immediate);
+/** @brief 变量减立即数：resVar = varA - immediate。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableSubImmToVar(CcuVariableHandle resVar, CcuVariableHandle varA, uint16_t immediate);
+/** @brief 变量乘立即数：resVar = varA * immediate。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableMulImmToVar(CcuVariableHandle resVar, CcuVariableHandle varA, uint16_t immediate);
+/** @brief 变量按位与：resVar = varA & varB。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableAndVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB);
+/** @brief 变量按位或：resVar = varA | varB。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableOrVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB);
+/** @brief 变量按位异或：resVar = varA ^ varB。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableXorVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB);
+/** @brief 变量按位取反：resVar = ~varA。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableNotVar(CcuVariableHandle resVar, CcuVariableHandle varA);
 
 //Address操作类 相关接口
 extern CcuResult CcuAddressAssignImm(CcuAddressHandle addr, uint64_t immediate);
@@ -53,6 +72,7 @@ extern CcuResult CcuAddressAssignVar(CcuAddressHandle addr, CcuVariableHandle va
 extern CcuResult CcuAddressAddVarToAddr(CcuAddressHandle resAddr, CcuAddressHandle lhsAddr, CcuVariableHandle rhsVar);
 extern CcuResult CcuAddressAddAddrToAddr(CcuAddressHandle resAddr, CcuAddressHandle addrA, CcuAddressHandle addrB);
 extern CcuResult CcuAddressAddAssignVar(CcuAddressHandle addr, CcuVariableHandle var);
+extern CcuResult CcuAddressAddImmToAddr(CcuAddressHandle resAddr, CcuAddressHandle addrA, uint16_t imm);
 
 //参数加载类 相关接口
 extern CcuResult CcuLoadArg(CcuVariableHandle varHandle, uint32_t argId);
@@ -98,6 +118,12 @@ extern CcuResult CcuWhileBegin(CcuVariableHandle var, uint64_t immediate, CcuCon
 extern CcuResult CcuWhileEnd(const char *label);
 extern CcuResult CcuDoWhileBegin(const char *label);
 extern CcuResult CcuDoWhileEnd(CcuVariableHandle var, uint64_t immediate, CcuConditionType condType, const char *label);
+/** @brief 双变量条件的 if 起始：按 (lhs condType rhs) 判定，label 标识本控制块。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuIfBeginVar(CcuVariableHandle lhs, CcuVariableHandle rhs, CcuConditionType condType, const char *label);
+/** @brief 双变量条件的 while 起始：按 (lhs condType rhs) 判定，label 标识本循环块。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuWhileBeginVar(CcuVariableHandle lhs, CcuVariableHandle rhs, CcuConditionType condType, const char *label);
+/** @brief 双变量条件的 do-while 收尾：按 (lhs condType rhs) 判定是否回跳，label 需与对应 CcuDoWhileBegin 一致。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuDoWhileEndVar(CcuVariableHandle lhs, CcuVariableHandle rhs, CcuConditionType condType, const char *label);
 
 /*========== 函数调用操作 ==========*/
 extern CcuResult CcuFuncBlockLookup(const void *funcPtr, uint64_t *outHandle);
@@ -130,10 +156,23 @@ extern CcuResult CcuLoopGroupCreate(CcuLoopGroup *group, uint32_t maxLoopNum,
     const CcuLoopGroupConfig *config);
 extern CcuResult CcuLoopGroupCreateFromVar(CcuLoopGroup *group, uint32_t maxLoopNum,
     CcuVariableHandle parallelVar, CcuVariableHandle offsetVar);
+/** @brief 由变量创建 LoopGroup(V2)：并行度/偏移/变量偏移均以运行期变量给出。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuLoopGroupCreateFromVarV2(CcuLoopGroup *group, uint32_t maxLoopNum,
+    CcuVariableHandle parallelVarV2, CcuVariableHandle offsetVarV2, CcuVariableHandle varOffsetVar);
 extern CcuResult CcuLoopGroupAddLoop(CcuLoopGroup group,
     CcuLoop loop, const CcuLoopConfig *config);
+// 版本化 cfg 入口:携带版本头,读取侧做 strict 校验(旧接口不变,并存)
+/** @brief 以版本化 cfg 创建 LoopGroup：cfg 需先经 CcuLoopGroupCfgInit 盖版本头。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuLoopGroupCreateCfg(CcuLoopGroup *group, uint32_t maxLoopNum,
+    const CcuLoopGroupCfg *cfg);
+/** @brief 以版本化 cfg 向 LoopGroup 追加 Loop：cfg 需先经 CcuLoopCfgInit 盖版本头。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuLoopGroupAddLoopCfg(CcuLoopGroup group,
+    CcuLoop loop, const CcuLoopCfg *cfg);
 extern CcuResult CcuLoopGroupAddLoopFromVar(CcuLoopGroup group,
     CcuLoop loop, CcuVariableHandle loopParamVar);
+/** @brief 由变量向 LoopGroup 追加 Loop(V2)：迭代次数/地址偏移/上下文 id 均以运行期变量给出。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuLoopGroupAddLoopFromVarV2(CcuLoopGroup group,
+    CcuLoop loop, CcuVariableHandle iterNumVar, CcuVariableHandle addrOffsetVar, CcuVariableHandle ctxIdVar);
 
 #ifdef __cplusplus
 }

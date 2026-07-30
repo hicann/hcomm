@@ -12,12 +12,12 @@
 #include "exception_util.h"
 #include "ccu_api_exception.h"
 #include "ccu_rep_v1.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepShR::CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Variable &varD, const Variable &varN, const Variable &varM)
+CcuRepShR::CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varN, const Variable &varM)
     : subType(ShiftSubType::VAR_EQUALS_VAR_SHIFT_VAR), shiftType(ShiftType::LOGICAL_SHIFT), varN(varN), varM(varM),
       varD(varD), insGenPtr(insGenPtr)
 {
@@ -25,14 +25,14 @@ CcuRepShR::CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Variable &varD, const
     instrCount = insGenPtr->GetInstrCount(type);
 }
 
-CcuRepShR::CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Variable &varD, const Variable &varM)
+CcuRepShR::CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varM)
     : subType(ShiftSubType::VAR_SHIFT_ASSIGN_VAR), shiftType(ShiftType::LOGICAL_SHIFT), varM(varM), varD(varD), insGenPtr(insGenPtr)
 {
     type       = CcuRepType::SHR;
     instrCount = insGenPtr->GetInstrCount(type);
 }
 
-CcuRepShR::CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Address &addrD, const Variable &varN, const Variable &varM)
+CcuRepShR::CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varN, const Variable &varM)
     : subType(ShiftSubType::ADDR_EQUALS_VAR_SHIFT_VAR), shiftType(ShiftType::LOGICAL_SHIFT), varN(varN), varM(varM),
       addrD(addrD), insGenPtr(insGenPtr)
 {
@@ -40,7 +40,7 @@ CcuRepShR::CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Address &addrD, const
     instrCount = insGenPtr->GetInstrCount(type);
 }
 
-CcuRepShR::CcuRepShR(CcuInsGeneraterBase* insGenPtr, const Address &addrD, const Variable &varM)
+CcuRepShR::CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varM)
     : subType(ShiftSubType::ADDR_SHIFT_ASSIGN_VAR), shiftType(ShiftType::LOGICAL_SHIFT), varM(varM), addrD(addrD), insGenPtr(insGenPtr)
 {
     type       = CcuRepType::SHR;

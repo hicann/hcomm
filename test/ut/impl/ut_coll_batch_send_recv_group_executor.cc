@@ -1246,10 +1246,10 @@ TEST_F(CollBatchSendRecvGroupExecutorTest, ProcessNewRankSendSlice_TwoSlicesSame
     LINK fakeLink = MakeFakeLink();
     SetupOpTransportForRank(1, fakeLink);
 
-    u8 buf[64];
+    std::vector<u8> buf(64);
     executor_->sendDataSlicesBySendStream_.resize(2);
-    executor_->sendDataSlicesBySendStream_[0].emplace_back(buf, 16, 1);
-    executor_->sendDataSlicesBySendStream_[0].emplace_back(buf + 16, 32, 1);
+    executor_->sendDataSlicesBySendStream_[0].emplace_back(buf.data(), 16, 1);
+    executor_->sendDataSlicesBySendStream_[0].emplace_back(buf.data() + 16, 32, 1);
 
     executor_->sendCurPhase_.assign(2, 0);
     executor_->sendLoadedSize_.assign(2, 0);
@@ -1261,6 +1261,7 @@ TEST_F(CollBatchSendRecvGroupExecutorTest, ProcessNewRankSendSlice_TwoSlicesSame
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(executor_->sendLoadedSize_[0], 32u);
     EXPECT_EQ(pending, 1u);
+    algRes_.slaveStreams.clear();
 }
 
 // ============================================================================

@@ -9,7 +9,7 @@
  */
 
 #include "ccu_rep_v1.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_api_exception.h"
 #include <gtest/gtest.h>
 #include <string>
@@ -21,32 +21,32 @@ namespace {
 
 class CcuRepControlTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
     void TearDown() override {}
 };
 
 class CcuRepFuncBlockTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
 };
 
 class CcuRepFuncCallTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
 };
 
 class CcuRepJumpTest : public ::testing::Test {
 protected:
     void SetUp() override {}
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
 };
 
 class CcuRepJumpLabelTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
 };
 
@@ -355,7 +355,7 @@ TEST_F(CcuRepJumpLabelTest, AppendRep)
 
 TEST_F(CcuRepControlTest, CcuRepJumpBase_Reference)
 {
-    CcuInsGeneraterV1 insGen;
+    CcuInsGeneratorV1 insGen;
     CcuRepContext context;
     Variable targetInstrId(&context);
     CcuRepJumpLabel jumpLabel(&insGen, "testLabel");
@@ -380,7 +380,7 @@ TEST_F(CcuRepControlTest, CcuRepJumpBase_Reference)
 
 // TEST_F(CcuRepControlTest, CcuRepTranslator_CheckTypeNullptr_Throw)
 // {
-//     CcuInsGeneraterV1 insGen;
+//     CcuInsGeneratorV1 insGen;
 //     CcuRepReferenceManager funcManager(0);
 //     funcManager.SetRefBlock("nullFunc", nullptr);
 

@@ -7,8 +7,8 @@
 
 #include "ccu_rep_v1.h"
 #include "string_util.h"
-#include "ccu_ins_generater_v1.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_v1.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
 
 #include "ccu_api_exception.h"
@@ -16,7 +16,7 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, CompletedEvent sem, uint16_t mask)
+CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneratorBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, CompletedEvent sem, uint16_t mask)
     : insGenPtr(insGenPtr), dst(dst), src(src), len(len), sem(sem), mask(mask)
 {
     type       = CcuRepType::LOCAL_CPY;
@@ -24,7 +24,7 @@ CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalA
     useCcuBuffer = false;
 }
 
-CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, uint16_t dataType, uint16_t opType, CompletedEvent sem,
+CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneratorBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, uint16_t dataType, uint16_t opType, CompletedEvent sem,
                            uint16_t mask)
     : insGenPtr(insGenPtr), dst(dst), src(src), len(len), sem(sem), mask(mask), dataType(dataType), opType(opType) 
 {
@@ -35,7 +35,7 @@ CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalA
     useCcuBuffer = false;
 }
 
-CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len,
+CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneratorBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len,
                            const std::vector<CcuBuf> &bufs, CompletedEvent sem, uint16_t mask)
     : insGenPtr(insGenPtr), dst(dst), src(src), len(len), bufs(bufs), sem(sem), mask(mask)
 {
@@ -46,7 +46,7 @@ CcuRepLocCpy::CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalA
 
 void CcuRepLocCpy::ValidateInsGeneratorForLocCpy()
 {
-    CcuInsGeneraterV1* tmpPtrV1 = dynamic_cast<CcuInsGeneraterV1*>(insGenPtr);
+    CcuInsGeneratorV1* tmpPtrV1 = dynamic_cast<CcuInsGeneratorV1*>(insGenPtr);
     if (tmpPtrV1 && useCcuBuffer) {
         // 使用了A6场景的ms中转搬运
         Hccl::THROW<Hccl::CcuApiException>("Cannot translate CcuRepLocCpy for A5 when useCcuBuffer is true!");

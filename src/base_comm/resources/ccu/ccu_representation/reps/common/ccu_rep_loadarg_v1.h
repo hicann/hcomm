@@ -15,7 +15,7 @@ namespace CcuRep {
 
 class CcuRepLoadArg : public CcuRepBase {
 public:
-    CcuRepLoadArg(CcuInsGeneraterBase* insGenPtr, const Variable &var, uint16_t argId, uint16_t fullArgId);
+    CcuRepLoadArg(CcuInsGeneratorBase* insGenPtr, const Variable &var, uint16_t argId, uint16_t fullArgId);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
 
@@ -25,7 +25,7 @@ public:
     uint16_t GetFullArgId() const { return fullArgId; }
 
 private:
-    CcuInsGeneraterBase* insGeneratorPtr_{nullptr};
+    CcuInsGeneratorBase* insGeneratorPtr_{nullptr};
     Variable var;
     uint16_t argId{0};
     uint16_t fullArgId{0};

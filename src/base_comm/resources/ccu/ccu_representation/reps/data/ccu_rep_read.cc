@@ -14,21 +14,21 @@
 #include "hcomm_c_adpt.h"
 
 #include "../../../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRead::CcuRepRead(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, LocalAddr loc, RemoteAddr rem, Variable len, CompletedEvent sem,
+CcuRepRead::CcuRepRead(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, LocalAddr loc, RemoteAddr rem, Variable len, CompletedEvent sem,
                        uint16_t mask)
     : insGenPtr(insGenPtr), channel(channel), loc(loc), rem(rem), len(len), sem(sem), mask(mask)
 {
     type       = CcuRepType::READ;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
-CcuRepRead::CcuRepRead(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, LocalAddr loc, RemoteAddr rem, Variable len, uint16_t dataType,
+CcuRepRead::CcuRepRead(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, LocalAddr loc, RemoteAddr rem, Variable len, uint16_t dataType,
                        uint16_t opType, CompletedEvent sem, uint16_t mask)
     : insGenPtr(insGenPtr), channel(channel), loc(loc), rem(rem), len(len), sem(sem), mask(mask), dataType(dataType), opType(opType),
       reduceFlag(1)

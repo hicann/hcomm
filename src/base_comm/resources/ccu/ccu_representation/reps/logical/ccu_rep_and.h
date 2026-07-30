@@ -19,8 +19,8 @@ namespace CcuRep {
 
 class CcuRepAnd : public CcuRepBase {
 public:
-    explicit CcuRepAnd(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
-    explicit CcuRepAnd(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varB);
+    explicit CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
+    explicit CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB);
     bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
     Variable GetVarA()
     {
@@ -50,7 +50,7 @@ private:
     Variable varB;
     Variable varC;
 
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
 };
 
 }; // namespace CcuRep

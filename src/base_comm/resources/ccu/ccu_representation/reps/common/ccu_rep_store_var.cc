@@ -15,7 +15,7 @@
 #include "exception_util.h"
 #include "ccu_api_exception.h"
 
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
  
 namespace hcomm {
@@ -23,7 +23,7 @@ namespace CcuRep {
 
 using namespace Hccl;
  
-CcuRepStoreVar::CcuRepStoreVar(CcuInsGeneraterBase* insGeneratorPtr, const Variable &var, const Variable &dst, uint32_t num, bool hscbFlag) :
+CcuRepStoreVar::CcuRepStoreVar(CcuInsGeneratorBase* insGeneratorPtr, const Variable &var, const Variable &dst, uint32_t num, bool hscbFlag) :
     insGeneratorPtr_(insGeneratorPtr), var(var), dst(dst), num(num), hscbFlag(hscbFlag)
 {
     // for A6 only

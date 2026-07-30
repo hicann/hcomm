@@ -19,10 +19,10 @@ namespace CcuRep {
 
 class CcuRepShL : public CcuRepBase {
 public:
-    CcuRepShL(CcuInsGeneraterBase* insGenPtr, const Variable &varD, const Variable &varN, const Variable &varM);
-    CcuRepShL(CcuInsGeneraterBase* insGenPtr, const Variable &varD, const Variable &varM);
-    CcuRepShL(CcuInsGeneraterBase* insGenPtr, const Address &addrD, const Variable &varN, const Variable &varM);
-    CcuRepShL(CcuInsGeneraterBase* insGenPtr, const Address &addrD, const Variable &varM);
+    explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varN, const Variable &varM);
+    explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varM);
+    explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varN, const Variable &varM);
+    explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varM);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
 
     std::string Describe() override;
@@ -35,7 +35,7 @@ private:
     Variable     varD;
     Address      addrD;
 
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
 
 public:
     ShiftSubType GetShiftSubType() { return subType; }

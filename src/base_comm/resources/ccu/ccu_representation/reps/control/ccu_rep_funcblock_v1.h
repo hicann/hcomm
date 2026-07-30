@@ -16,7 +16,7 @@ namespace CcuRep {
 
 class CcuRepFuncBlock : public CcuRepBlock {
 public:
-    explicit CcuRepFuncBlock(CcuInsGeneraterBase* insGenPtr, const std::string &label);
+    explicit CcuRepFuncBlock(CcuInsGeneratorBase* insGenPtr, const std::string &label);
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
     uint16_t InstrCount() override;

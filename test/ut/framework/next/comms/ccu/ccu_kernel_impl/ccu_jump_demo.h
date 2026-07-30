@@ -323,3 +323,201 @@ CcuResult CcuNestedInIfIfDemoKernel(CcuKernelArg arg)
     return CcuResult::CCU_SUCCESS;
 }
 
+// ======================== CCU_IF Relational Demo (< <= > >=) ========================
+// 覆盖 CcuKernel::IfBegin 中 LT/LE/GT/GE 四个新分支。四条 CCU_IF 之间独立，
+// 触发 IfBegin->JumpGE/JumpGT/JumpLE/JumpLT 全部四种反向跳转 rep。
+
+struct CcuIfRelationalDemoKernelArg {
+    uint32_t value;
+    uint64_t bound;
+};
+
+CcuResult CcuIfRelationalDemoKernel(CcuKernelArg arg)
+{
+    auto *args = static_cast<CcuIfRelationalDemoKernelArg *>(arg);
+
+    ccu::Variable var;
+    var = args->value;
+
+    ccu::Variable result;
+    result = 0;
+
+    ccu::Variable addend;
+
+    CCU_IF(var < args->bound) {
+        addend = 1;
+        result = result + addend;
+    }
+    CCU_IF(var <= args->bound) {
+        addend = 2;
+        result = result + addend;
+    }
+    CCU_IF(var > args->bound) {
+        addend = 4;
+        result = result + addend;
+    }
+    CCU_IF(var >= args->bound) {
+        addend = 8;
+        result = result + addend;
+    }
+
+    return CcuResult::CCU_SUCCESS;
+}
+
+// ======================== CCU_IF Relational Demo (with else, GE) ========================
+// CCU_IF+CCU_ELSE 单独覆盖一次 GE 分支，验证反向跳转到 elseLabel 时后续 else 块的正确性。
+
+struct CcuIfElseRelationalDemoKernelArg {
+    uint32_t value;
+    uint64_t threshold;
+};
+
+CcuResult CcuIfElseRelationalDemoKernel(CcuKernelArg arg)
+{
+    auto *args = static_cast<CcuIfElseRelationalDemoKernelArg *>(arg);
+
+    ccu::Variable var;
+    var = args->value;
+
+    ccu::Variable result;
+    result = 0;
+
+    ccu::Variable addend;
+
+    CCU_IF(var >= args->threshold) {
+        addend = 100;
+        result = result + addend;
+    } CCU_ELSE {
+        addend = 200;
+        result = result + addend;
+    }
+
+    return CcuResult::CCU_SUCCESS;
+}
+
+// ======================== CCU_WHILE Relational Demo (LT) ========================
+// 覆盖 CcuKernel::WhileBegin 中 LT 分支：反向跳转成 JumpGE 退出循环。
+
+struct CcuWhileRelationalDemoKernelArg {
+    uint32_t loopCount;
+};
+
+CcuResult CcuWhileRelationalDemoKernel(CcuKernelArg arg)
+{
+    auto *args = static_cast<CcuWhileRelationalDemoKernelArg *>(arg);
+
+    ccu::Variable counter;
+    counter = 0;
+
+    ccu::Variable one;
+    one = 1;
+
+    ccu::Variable accumulator;
+    accumulator = 0;
+
+    ccu::Variable step;
+    step = 10;
+
+    CCU_WHILE(counter < args->loopCount) {
+        accumulator = accumulator + step;
+        counter = counter + one;
+    }
+
+    return CcuResult::CCU_SUCCESS;
+}
+
+// ======================== CCU_DO ... CCU_WHILE Relational Demo (LE) ========================
+// 覆盖 CcuKernel::DoWhileEnd 中 LE 分支：同向跳转成 JumpLE 回跳到 begin。
+
+struct CcuDoWhileRelationalDemoKernelArg {
+    uint32_t loopCount;
+};
+
+CcuResult CcuDoWhileRelationalDemoKernel(CcuKernelArg arg)
+{
+    auto *args = static_cast<CcuDoWhileRelationalDemoKernelArg *>(arg);
+
+    ccu::Variable counter;
+    counter = 0;
+
+    ccu::Variable one;
+    one = 1;
+
+    ccu::Variable accumulator;
+    accumulator = 0;
+
+    ccu::Variable step;
+    step = 10;
+
+    CCU_DO {
+        accumulator = accumulator + step;
+        counter = counter + one;
+    } CCU_WHILE(counter <= args->loopCount);
+
+    return CcuResult::CCU_SUCCESS;
+}
+
+// ======================== CCU Variable-Variable Control Flow Demo ========================
+struct CcuVarVarControlFlowDemoKernelArg {
+    uint32_t valueA;
+    uint32_t valueB;
+    uint32_t loopCount;
+};
+
+CcuResult CcuVarVarControlFlowDemoKernel(CcuKernelArg arg)
+{
+    auto *args = static_cast<CcuVarVarControlFlowDemoKernelArg *>(arg);
+
+    ccu::Variable varA;
+    varA = args->valueA;
+
+    ccu::Variable varB;
+    varB = args->valueB;
+
+    ccu::Variable result;
+    result = 0;
+
+    ccu::Variable addend;
+
+    CCU_IF(varA == varB) {
+        addend = 1;
+        result = result + addend;
+    } CCU_ELSE {
+        addend = 2;
+        result = result + addend;
+    }
+
+    CCU_IF(varA < varB) {
+        addend = 4;
+        result = result + addend;
+    }
+
+    CCU_IF(varA >= varB) {
+        addend = 8;
+        result = result + addend;
+    }
+
+    ccu::Variable counter;
+    counter = 0;
+
+    ccu::Variable limit;
+    limit = args->loopCount;
+
+    ccu::Variable one;
+    one = 1;
+
+    CCU_WHILE(counter < limit) {
+        result = result + one;
+        counter = counter + one;
+    }
+
+    ccu::Variable counter2;
+    counter2 = 0;
+
+    CCU_DO {
+        result = result + one;
+        counter2 = counter2 + one;
+    } CCU_WHILE(counter2 != limit);
+
+    return CcuResult::CCU_SUCCESS;
+}

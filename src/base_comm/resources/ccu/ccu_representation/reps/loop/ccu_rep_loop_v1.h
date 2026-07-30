@@ -18,8 +18,8 @@ namespace CcuRep {
 
 class CcuRepLoop : public CcuRepBase {
 public:
-    explicit CcuRepLoop(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label, const Variable &loopParam);
-    explicit CcuRepLoop(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label, 
+    explicit CcuRepLoop(CcuInsGeneratorBase* insGeneratorPtr, const std::string &label, const Variable &loopParam);
+    explicit CcuRepLoop(CcuInsGeneratorBase* insGeneratorPtr, const std::string &label, 
         const Variable &loopParam, const Variable &loopIterNum, const Variable &loopGsaOffset);
     bool               Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string        Describe() override;
@@ -36,7 +36,7 @@ public:
 private:
     void ValidateInsGeneratorForLoop();
 
-    CcuInsGeneraterBase*             insGeneratorPtr_;
+    CcuInsGeneratorBase*             insGeneratorPtr_;
     std::string                      label;
     std::shared_ptr<CcuRepLoopBlock> loopBlock{nullptr};
 
@@ -46,6 +46,7 @@ private:
     CcuInstr *instr{nullptr};
 
     bool supportCcuV1{false};
+    bool supportCcuV2{false};
 };
 
 }; // namespace CcuRep

@@ -88,7 +88,7 @@ public:
     CcuResult GeneTaskParams(const uint64_t *taskArgs, uint32_t argsNum,
         std::vector<CcuTaskParam> &taskParams);
 
-    void SetInsGenerater(CcuRep::CcuInsGeneraterBase* insGeneraterBase);
+    void SetInsGenerater(CcuRep::CcuInsGeneratorBase* insGeneratorBase);
     void SetCcuVersion(CcuVersion version) { ccuVersion_ = version; }
     // 该友元函数用于在context类外创建Variable并被context内的资源管理器管理
     friend CcuRep::Variable CcuRep::CreateVariable(CcuRep::CcuRepContext *context);
@@ -218,14 +218,15 @@ public:
     CcuResult LoopCreate(CcuLoop *loop);
     CcuResult LoopBodyEnter(CcuLoop loop);
     CcuResult LoopBodyExit(CcuLoop loop);
+    // 建组/加环统一以版本化 cfg 为准;旧 config 的转换在 C ABI 适配层完成。
     CcuResult LoopGroupCreate(CcuLoopGroup *group, uint32_t maxLoopNum,
-        const CcuLoopGroupConfig *config);
+        const CcuLoopGroupCfg *cfg);
     CcuResult LoopGroupCreateFromVar(CcuLoopGroup *group, uint32_t maxLoopNum,
         CcuVariableHandle parallelVarHandle, CcuVariableHandle offsetVarHandle);
     CcuResult LoopGroupCreateFromVarV2(CcuLoopGroup *group, uint32_t maxLoopNum,
         CcuVariableHandle parallelVarV2, CcuVariableHandle offsetVarV2, CcuVariableHandle varOffsetVar);
     CcuResult LoopGroupAddLoop(CcuLoopGroup group,
-        CcuLoop loop, const CcuLoopConfig *config);
+        CcuLoop loop, const CcuLoopCfg *cfg);
     CcuResult LoopGroupAddLoopFromVar(CcuLoopGroup group,
         CcuLoop loop, CcuVariableHandle loopParamVar);
     CcuResult LoopGroupAddLoopFromVarV2(CcuLoopGroup group,
@@ -445,7 +446,7 @@ private:
     };
 
     struct LoopGroupDescriptor {
-        CcuLoopGroupConfig config;
+        CcuLoopGroupCfg config;
         uint64_t totalLoopNum{0};
         uint32_t loopCount{0};
         CcuRep::Variable parallelVar;

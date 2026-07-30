@@ -36,20 +36,28 @@
          uid##_p != nullptr;                                                \
          uid##_p = nullptr)                                                 \
     for (const char *uid##_dwLbl = _CcuDoWhileStackPopForWhile(),           \
-             *uid##_sen = (const char *)1;                                  \
+             *uid##_sen = reinterpret_cast<const char *>(1);                \
          uid##_sen != nullptr;                                              \
          uid##_sen = nullptr)                                               \
     for (int uid##_rc = (uid##_dwLbl != nullptr)                            \
-                 ? (int)CCU_SUCCESS                                         \
-                 : (int)CcuWhileBegin(uid##_ce.var->handle,                 \
-                       uid##_ce.imm, uid##_ce.cond, CCU_LABEL(uid)),        \
+                 ? static_cast<int>(CCU_SUCCESS)                            \
+                 : (uid##_ce.isVarCompare                                   \
+                     ? static_cast<int>(CcuWhileBeginVar(uid##_ce.var->handle, \
+                           uid##_ce.rhsVar->handle, uid##_ce.cond,          \
+                           CCU_LABEL(uid)))                                 \
+                     : static_cast<int>(CcuWhileBegin(uid##_ce.var->handle, \
+                           uid##_ce.imm, uid##_ce.cond, CCU_LABEL(uid)))),  \
              uid##_done = 0;                                                \
-         uid##_rc == (int)CCU_SUCCESS && !uid##_done;                       \
+         uid##_rc == static_cast<int>(CCU_SUCCESS) && !uid##_done;          \
          uid##_done = 1,                                                    \
              uid##_rc = (uid##_dwLbl != nullptr)                            \
-                 ? (int)CcuDoWhileEnd(uid##_ce.var->handle,                 \
-                       uid##_ce.imm, uid##_ce.cond, uid##_dwLbl)            \
-                 : (int)CcuWhileEnd(CCU_LABEL(uid)))
+                 ? (uid##_ce.isVarCompare                                   \
+                     ? static_cast<int>(CcuDoWhileEndVar(uid##_ce.var->handle, \
+                           uid##_ce.rhsVar->handle, uid##_ce.cond,          \
+                           uid##_dwLbl))                                    \
+                     : static_cast<int>(CcuDoWhileEnd(uid##_ce.var->handle, \
+                           uid##_ce.imm, uid##_ce.cond, uid##_dwLbl)))      \
+                 : static_cast<int>(CcuWhileEnd(CCU_LABEL(uid))))
 
 #define CCU_IF(expr)                                                        \
     CCU_IF_EXPAND(expr, CCU_CONCAT(__ccu_if_, __COUNTER__))
@@ -62,13 +70,16 @@
              *uid##_p = &uid##_ce;                                          \
          uid##_p != nullptr;                                                \
          uid##_p = nullptr)                                                 \
-    for (int uid##_rc =                                                     \
-             (int)CcuIfBegin(uid##_ce.var->handle, uid##_ce.imm,            \
-                 uid##_ce.cond, CCU_LABEL(uid)),                            \
-             uid##_done = (uid##_rc == (int)CCU_SUCCESS                     \
+    for (int uid##_rc = (uid##_ce.isVarCompare                              \
+                 ? static_cast<int>(CcuIfBeginVar(uid##_ce.var->handle,     \
+                       uid##_ce.rhsVar->handle, uid##_ce.cond,              \
+                       CCU_LABEL(uid)))                                     \
+                 : static_cast<int>(CcuIfBegin(uid##_ce.var->handle,        \
+                       uid##_ce.imm, uid##_ce.cond, CCU_LABEL(uid)))),      \
+             uid##_done = (uid##_rc == static_cast<int>(CCU_SUCCESS)        \
                  ? (_CcuIfStackPush(CCU_LABEL(uid)), 0)                     \
                  : 1);                                                      \
-         uid##_rc == (int)CCU_SUCCESS && uid##_done == 0;                   \
+         uid##_rc == static_cast<int>(CCU_SUCCESS) && uid##_done == 0;      \
          uid##_done = 1,                                                    \
              ((void)CcuFlushPendingIfs(),                                   \
               _CcuIfStackMarkBodyDone(), (void)0))
@@ -84,11 +95,11 @@
              *uid##_sen = uid##_lbl;                                        \
          uid##_sen != nullptr;                                              \
          uid##_sen = nullptr)                                               \
-    for (int uid##_rc = (int)CcuIfElse(uid##_lbl),                          \
+    for (int uid##_rc = static_cast<int>(CcuIfElse(uid##_lbl)),             \
              uid##_done = 0;                                                \
-         uid##_rc == (int)CCU_SUCCESS && !uid##_done;                       \
+         uid##_rc == static_cast<int>(CCU_SUCCESS) && !uid##_done;          \
          uid##_done = 1,                                                    \
-             uid##_rc = (int)CcuIfEnd(uid##_lbl))
+             uid##_rc = static_cast<int>(CcuIfEnd(uid##_lbl)))
 
 #define CCU_DO                                                              \
     CCU_DO_EXPAND(CCU_CONCAT(__ccu_dw_, __COUNTER__))
@@ -97,9 +108,9 @@
     CCU_DO_IMPL(uid)
 
 #define CCU_DO_IMPL(uid)                                                    \
-    for (int uid##_rc = (int)CcuDoWhileBegin(CCU_LABEL(uid)),               \
+    for (int uid##_rc = static_cast<int>(CcuDoWhileBegin(CCU_LABEL(uid))),  \
              uid##_done = 0;                                                \
-         uid##_rc == (int)CCU_SUCCESS && !uid##_done;                       \
+         uid##_rc == static_cast<int>(CCU_SUCCESS) && !uid##_done;          \
          uid##_done = 1,                                                    \
              _CcuDoWhileStackPush(CCU_LABEL(uid)))
 

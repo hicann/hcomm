@@ -6,15 +6,15 @@
  */
 
 #include "ccu_rep_v1.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "string_util.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepBufLocWrite::CcuRepBufLocWrite(CcuInsGeneraterBase* insGenPtr, CcuBuf src, LocalAddr dst, Variable len, CompletedEvent sem, uint32_t mask)
+CcuRepBufLocWrite::CcuRepBufLocWrite(CcuInsGeneratorBase* insGenPtr, CcuBuf src, LocalAddr dst, Variable len, CompletedEvent sem, uint32_t mask)
     : insGenPtr(insGenPtr), src(src), dst(dst), len(len), sem(sem), mask(mask)
 {
     type       = CcuRepType::BUF_LOC_WRITE;

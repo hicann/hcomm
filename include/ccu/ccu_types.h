@@ -46,6 +46,10 @@ typedef enum {
 typedef enum {
     CCU_CONDITION_EQ = 0,
     CCU_CONDITION_NE = 1,
+    CCU_CONDITION_LT = 2,
+    CCU_CONDITION_LE = 3,
+    CCU_CONDITION_GT = 4,
+    CCU_CONDITION_GE = 5,
 } CcuConditionType;
 
 typedef uint64_t CcuLoop;
@@ -63,8 +67,37 @@ typedef struct {
     uint32_t addrOffset;
     uint32_t ccuBufferOffset;
     uint32_t eventOffset;
-    
 } CcuLoopGroupConfig;
+
+// magic 标识配置已初始化;version + size 决定尾部哪些字段有效,新字段仅可在尾部追加以保持 ABI 兼容。
+#define CCU_CFG_MAGIC_WORD 0xCC0CF000u
+#define CCU_LOOP_CFG_VERSION 1u
+#define CCU_LOOPGROUP_CFG_VERSION 1u
+
+typedef struct {
+    uint32_t magic;
+    uint32_t version;
+    uint32_t size;
+    uint32_t reserved;
+} CcuCfgHeader;
+
+typedef struct {
+    CcuCfgHeader header;
+    uint64_t addrOffset;
+    uint64_t iterNum;
+    uint64_t reserved[4];
+} CcuLoopCfg;
+
+typedef struct {
+    CcuCfgHeader header;
+    uint32_t cloneNum;
+    uint32_t cloneLoopOffset;
+    uint32_t addrOffset;
+    uint32_t ccuBufferOffset;
+    uint32_t eventOffset;
+    uint32_t varOffset;   // A6 专属,旧 CcuLoopGroupConfig 不含此字段
+    uint32_t reserved[8];
+} CcuLoopGroupCfg;
 
 typedef uint64_t CcuInsHandle;
 
@@ -85,6 +118,24 @@ typedef uint64_t CcuRemoteAddrHandle;
 typedef void *CcuKernelArg;
 
 #ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#ifdef __cplusplus
+static inline void CcuLoopCfgInit(CcuLoopCfg *cfg)
+{
+    cfg->header.magic = CCU_CFG_MAGIC_WORD;
+    cfg->header.version = CCU_LOOP_CFG_VERSION;
+    cfg->header.size = static_cast<uint32_t>(sizeof(CcuLoopCfg));
+    cfg->header.reserved = 0u;
+}
+
+static inline void CcuLoopGroupCfgInit(CcuLoopGroupCfg *cfg)
+{
+    cfg->header.magic = CCU_CFG_MAGIC_WORD;
+    cfg->header.version = CCU_LOOPGROUP_CFG_VERSION;
+    cfg->header.size = static_cast<uint32_t>(sizeof(CcuLoopGroupCfg));
+    cfg->header.reserved = 0u;
 }
 #endif // __cplusplus
 

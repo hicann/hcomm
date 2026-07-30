@@ -15,7 +15,8 @@
 #include "adapter_rts.h"
 #include "ccu_assist_v1.h"
 #include "dev_buffer.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
+#include "ccu_ins_generator_v2.h"
 #include "ccu_dev_mgr_imp.h"
 
 #include "ccu_rep_base_v1.h"
@@ -81,12 +82,20 @@ HcclResult CcuKernelMgr::Init()
     kernelMap_.clear();
 
     CHK_RET(CcuDevMgrImp::GetCcuVersion(devLogicId_, ccuVersion_));
+    HCCL_INFO("[CcuKernelMgr] Get CcuVersion[%d](0: CcuV1, 1: CcuV2, 2: Invalid)", ccuVersion_);
     if (ccuVersion_ == CcuVersion::INVALID) {
-        HCCL_RUN_WARNING("[CcuKernelMgr][%s] Invalid chip type.", __func__);
+        HCCL_ERROR("[CcuKernelMgr][%s] Invalid chip type, abort Init.", __func__);
+        return HcclResult::HCCL_E_INTERNAL;
     }
-    
-    HCCL_INFO("[CcuKernelMgr] Init CcuInsGeneraterV1");
-    insGenePtr = std::make_shared<CcuRep::CcuInsGeneraterV1>();
+
+    if (ccuVersion_ == CcuVersion::CCU_V2) {
+        HCCL_INFO("[CcuKernelMgr] Init CcuInsGeneratorV2");
+        insGenePtr = std::make_shared<CcuRep::CcuInsGeneratorV2>();
+        return HcclResult::HCCL_SUCCESS;
+    }
+
+    HCCL_INFO("[CcuKernelMgr] Init CcuInsGeneratorV1");
+    insGenePtr = std::make_shared<CcuRep::CcuInsGeneratorV1>();
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -305,7 +314,7 @@ static void LoadRes(std::unique_ptr<CcuKernel> &kernel, CcuResPack &resPack)
 
 static CcuResult AllocInstrRes(std::unique_ptr<CcuKernel> &kernel, const int32_t devLogicId)
 {
-    const uint32_t instrCount = kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum() + kernel->GetConstValue2VarMap().size();
+    const uint32_t instrCount = kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum(devLogicId) + kernel->GetConstValue2VarMap().size();
     const uint32_t dieId = kernel->GetDieId();
     ResInfo insInfo(0, 0);
     CCU_CHK_RET(CcuDevMgrImp::AllocIns(devLogicId, dieId, instrCount, insInfo));
@@ -330,9 +339,10 @@ CcuResult CcuKernelMgr::PrepareConstValueResources()
         const auto &curRepType = repVec[index]->Type();
         CcuRep::CcuRepBase* curRepPtr = repVec[index].get();
         CCU_CHK_PTR_NULL(curRepPtr);
+        HCCL_DEBUG("Current rep[%d] ptr[%p] repType[%d]", index, curRepPtr, curRepType);
  
         // 遍历每个rep，包括repBlock中的每个rep，将常量资源需求记录在currkernel中
-        insGenePtr->PrepareConstValue(curRepPtr, transDep, currKernel_.get());
+        CCU_CHK_RET(insGenePtr->PrepareConstValue(curRepPtr, transDep, currKernel_.get()));
         if (curRepType == CcuRep::CcuRepType::BLOCK || curRepType == CcuRep::CcuRepType::FUNC_BLOCK ||
             curRepType == CcuRep::CcuRepType::LOOP_BLOCK)
         {
@@ -340,7 +350,7 @@ CcuResult CcuKernelMgr::PrepareConstValueResources()
             CCU_CHK_PTR_NULL(curRepBlockPtr);
             for (const auto &repInBlock : curRepBlockPtr->GetReps())
             {
-                insGenePtr->PrepareConstValue(repInBlock.get(), transDep, currKernel_.get());
+                CCU_CHK_RET(insGenePtr->PrepareConstValue(repInBlock.get(), transDep, currKernel_.get()));
             }
         }
     }
@@ -590,7 +600,7 @@ CcuResult CcuKernelMgr::Translate(const std::vector<CcuKernelHandle> &kernelHand
 
 static HcclResult ReleaseInstrRes(CcuKernel *kernel, const int32_t devLogicId)
 {
-    const uint32_t instrCount = kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum() + kernel->GetConstValue2VarMap().size();
+    const uint32_t instrCount = kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum(devLogicId) + kernel->GetConstValue2VarMap().size();
     const ResInfo insInfo{kernel->GetInstrId(), instrCount};
     const uint8_t dieId = static_cast<uint8_t>(kernel->GetDieId());
     HCCL_INFO("[CcuKernelMgr][%s] devLogicId[%d], dieId[%u], startId[%u], count[%u]",
@@ -690,7 +700,7 @@ HcclResult CcuKernelMgr::InstantiationTranslator(const uint16_t dieId)
 
         // 统计&合并refManager和translaotr所有资源REQ
         auto refMangerResReq = CcuRep::CcuRepReferenceManager::GetResReq(dieId);
-        auto transLatorResReq = CcuRep::CcuRepTranslator::GetResReq(dieId);
+        auto transLatorResReq = CcuRep::CcuRepTranslator::GetResReq(devLogicId_, dieId);
         MergeCcuResReq(totalResReq, refMangerResReq);
         MergeCcuResReq(totalResReq, transLatorResReq);
     }

@@ -10,7 +10,7 @@
 #include "exception_util.h"
 #include "ccu_api_exception.h"
 
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
@@ -18,7 +18,7 @@ namespace CcuRep {
 
 using namespace Hccl;
 
-CcuRepLoadArg::CcuRepLoadArg(CcuInsGeneraterBase* insGenPtr, const Variable &var, uint16_t argId, uint16_t fullArgId) :
+CcuRepLoadArg::CcuRepLoadArg(CcuInsGeneratorBase* insGenPtr, const Variable &var, uint16_t argId, uint16_t fullArgId) :
     insGeneratorPtr_(insGenPtr), var(var), argId(argId), fullArgId(fullArgId)
 {
     type       = CcuRepType::LOAD_ARG;

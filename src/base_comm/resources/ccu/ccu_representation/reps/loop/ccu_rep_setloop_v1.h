@@ -15,13 +15,13 @@ namespace CcuRep {
 
 class CcuRepSetLoop : public CcuRepBase {
 public:
-    CcuRepSetLoop(CcuInsGeneraterBase* insGeneratorPtr, const Variable &loopParam, const Executor &executor, const Variable &var);
+    CcuRepSetLoop(CcuInsGeneratorBase* insGeneratorPtr, const Variable &loopParam, const Executor &executor, const Variable &var);
 
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
 
 private:
-    CcuInsGeneraterBase* insGeneratorPtr_{nullptr};
+    CcuInsGeneratorBase* insGeneratorPtr_{nullptr};
 
 public:
     Variable loopParam;

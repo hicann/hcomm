@@ -7,11 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef CCU_INS_GENERATER_BASE
-#define CCU_INS_GENERATER_BASE
+#ifndef CCU_INS_GENERATOR_BASE
+#define CCU_INS_GENERATOR_BASE
 
-#include <iostream>
-#include <string>
 #include "ccu_rep_base_v1.h"
 #include "ccu_datatype_v1.h"
 #include "ccu_microcode_v1.h"
@@ -22,12 +20,12 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuInsGeneraterBase {
+class CcuInsGeneratorBase {
 public:
-    CcuInsGeneraterBase() {}
+    CcuInsGeneratorBase() {}
 
     // 虚析构函数，确保派生类对象正确析构
-    virtual ~CcuInsGeneraterBase() = default;
+    virtual ~CcuInsGeneratorBase() = default;
     // data
     virtual HcclResult CcuRepBufLocReadTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufLocRead* repBufLocRead, const TransDep &dep) = 0;
     virtual HcclResult CcuRepBufLocWriteTranslate(CcuKernel* ccuKernel, CcuInstr *&instr, CcuRepBufLocWrite* repBufLocWrite, const TransDep &dep) = 0;
@@ -102,7 +100,7 @@ public:
 
     virtual uint32_t GetInstrCount(CcuRepType repType) = 0;
 
-    virtual HcclResult PrepareConstValue(const CcuRepBase* repPtr, const TransDep &dep, CcuKernel *ccuKernel) {
+    virtual HcclResult PrepareConstValue(CcuRepBase* repPtr, const TransDep &dep, CcuKernel *ccuKernel) {
         // A5使用基类空实现；A6需要根据repType做不同处理
         (void)repPtr;
         (void)dep;

@@ -10,14 +10,14 @@
 #include "exception_util.h"
 #include "ccu_api_exception.h"
 #include "hcomm_c_adpt.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "../../../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRemPostVar::CcuRepRemPostVar(CcuInsGeneraterBase* insGenPtr, Variable param, const ChannelHandle channel, uint16_t paramIndex,
+CcuRepRemPostVar::CcuRepRemPostVar(CcuInsGeneratorBase* insGenPtr, Variable param, const ChannelHandle channel, uint16_t paramIndex,
                                    uint16_t semIndex, uint16_t mask)
     : insGenPtr(insGenPtr), param(param), channel(channel), paramIndex(paramIndex), semIndex(semIndex), mask(mask)
 {

@@ -10,15 +10,15 @@
 #include "exception_util.h"
 #include "hcomm_c_adpt.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "../../../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"
 #include "ccu_kernel.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepWrite::CcuRepWrite(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, CompletedEvent sem,
+CcuRepWrite::CcuRepWrite(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len, CompletedEvent sem,
                          uint16_t mask)
     : insGenPtr(insGenPtr), channel(channel), rem(rem), loc(loc), len(len), sem(sem), mask(mask)
 {
@@ -26,13 +26,13 @@ CcuRepWrite::CcuRepWrite(CcuInsGeneraterBase* insGenPtr, const ChannelHandle cha
     instrCount = insGenPtr->GetInstrCount(type);
 }
 
-CcuRepWrite::CcuRepWrite(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len,
+CcuRepWrite::CcuRepWrite(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem, LocalAddr loc, Variable len,
                          uint16_t dataType, uint16_t opType, CompletedEvent sem, uint16_t mask)
     : insGenPtr(insGenPtr), channel(channel), rem(rem), loc(loc), len(len), sem(sem), mask(mask), 
       dataType(dataType), opType(opType), reduceFlag(1)
 {
     type = CcuRepType::WRITE;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
 bool CcuRepWrite::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)

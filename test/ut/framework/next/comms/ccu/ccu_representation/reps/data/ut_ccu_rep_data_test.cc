@@ -18,7 +18,7 @@
 #include "ccu_rep_loccpy_v1.h"
 #include "ccu_rep_remMem_v1.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 
 #include "hcomm_c_adpt.h"
 
@@ -70,7 +70,7 @@ void ResetStubs()
 
 class CcuRepReadTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -85,7 +85,7 @@ protected:
 
 class CcuRepWriteTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -100,7 +100,7 @@ protected:
 
 class CcuRepBufReadTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -115,7 +115,7 @@ protected:
 
 class CcuRepBufWriteTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -130,14 +130,14 @@ protected:
 
 class CcuRepBufLocReadTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
     void TearDown() override {}
 };
 
 class CcuRepBufLocWriteTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {}
     void TearDown() override {}
 };
@@ -146,19 +146,19 @@ class CcuRepBufReduceTest : public ::testing::Test {
 protected:
     void SetUp() override {}
     void TearDown() override {}
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
 };
 
 class CcuRepLocCpyTest : public ::testing::Test {
 protected:
     void SetUp() override {}
     void TearDown() override {}
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
 };
 
 class CcuRepRemMemTest : public ::testing::Test {
 protected:
-    CcuInsGeneraterV1 insGen {};
+    CcuInsGeneratorV1 insGen {};
     void SetUp() override {
         ResetStubs();
         mockChannel = new MockCcuUrmaChannel(100, 0);
@@ -407,7 +407,7 @@ TEST_F(CcuRepBufLocReadTest, Describe)
 
 TEST_F(CcuRepBufLocReadTest, Translate)
 {
-    CcuInsGeneraterV1 insGen;
+    CcuInsGeneratorV1 insGen;
     CcuRepContext context;
     Variable len{&context};
     CompletedEvent sem{&context};
@@ -460,7 +460,7 @@ TEST_F(CcuRepBufLocWriteTest, Describe)
 
 TEST_F(CcuRepBufLocWriteTest, Translate)
 {
-    CcuInsGeneraterV1 insGen;
+    CcuInsGeneratorV1 insGen;
     CcuRepContext context;
     Variable len{&context};
     CompletedEvent sem{&context};

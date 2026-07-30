@@ -70,6 +70,20 @@ CcuResult CcuAllocDemoKernel(CcuKernelArg arg)
 
     return CcuResult::CCU_SUCCESS;
 }
+CcuResult CcuAddrArithV2DemoKernel(CcuKernelArg arg)
+{
+    (void)arg;
+    ccu::Address addrA, addrB, addrC;
+    ccu::Variable varA, varB, varC;
+    addrA = 0x1000;
+    addrB = 0x2000;
+    varA = 3;
+    varB = 5;
+    const uint16_t imm = 0x40;
+
+    addrC = addrA + imm;
+    return CcuResult::CCU_SUCCESS;
+}
 CcuResult CcuLocalAddrDemoKernel(CcuKernelArg arg)
 {
     auto *args = static_cast<CcuVarAddKernelArg *>(arg);
@@ -225,5 +239,34 @@ CcuResult CcuRemoteWriteKernel(CcuKernelArg arg)
     ccu::EventWait(evt);
     ccu::WriteReduce(args->channelHandle, dst, src, len, HCCL_DATA_TYPE_FP16, HCCL_REDUCE_SUM, evt);
     ccu::EventWait(evt);
+    return CcuResult::CCU_SUCCESS;
+}
+struct CcuVariableComputingKernelArg {
+    uint64_t varA;
+    uint64_t varB;
+};
+CcuResult CcuVariableComputingKernel(CcuKernelArg arg)
+{
+    auto *args = static_cast<CcuVarAddKernelArg *>(arg);
+    ccu::Variable varA, varB, result;
+    varA = 1024;
+    varB = 2048;
+    result = varA + varB;
+    result = varA - varB;
+    result = varA * varB;
+    result = varA + 100;
+    result = varA - 50;
+    result = varA * 3;
+    result -= varB;
+    result *= varB;
+    result -= 7;
+    result *= 2;
+    result = varA & varB;
+    result = varA | varB;
+    result = varA ^ varB;
+    result = ~varA;
+    result &= varB;
+    result |= varB;
+    result ^= varB;
     return CcuResult::CCU_SUCCESS;
 }

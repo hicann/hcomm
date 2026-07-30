@@ -296,7 +296,7 @@ TEST_F(SymmetricMemoryAgentTest, ut_ExchangeInfo_When_SendIsFailed_Expect_Return
     MOCKER_CPP(&HcclSocket::IRecv)
         .stubs()
         .with(outBoundP(reinterpret_cast<void*>(&dataPkt), sizeof(Packet)), mockcpp::any(), outBound(len))
-        .will(returnValue(HCCL_SUCCESS));
+        .will(returnValue(HCCL_E_TCP_TRANSFER));
     MOCKER_CPP(&HcclSocket::Send, HcclResult(HcclSocket::*)(const void *, u64))
         .stubs()
         .will(returnValue(HCCL_E_TCP_TRANSFER));

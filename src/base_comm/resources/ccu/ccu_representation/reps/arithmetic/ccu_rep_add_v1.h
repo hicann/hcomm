@@ -16,21 +16,21 @@ namespace CcuRep {
 class CcuRepAdd : public CcuRepBase {
 public:
     // support ccuV1 & ccuV2
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Address &addrA, const Variable &varB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Address &addrA, const Address &addrB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Address &addrA, const Variable &offset);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Variable &varA, const Variable &offset);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Address &addrA, const Variable &varB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Address &addrA, const Address &addrB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const Variable &offset);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Variable &varA, const Variable &offset);
 
     // only support ccuV2
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Variable &varA, const uint16_t immedB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Variable &varA, const uint16_t immedB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Address &addrA, const uint16_t immedB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Address &addrA, const uint16_t immedB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Variable &varA, const uint16_t immedB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Address &addrA, const uint16_t immedB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Variable &varC, const Address &addrA, const Address &addrB);
-    explicit CcuRepAdd(CcuInsGeneraterBase* insGenPtr, const Address &addrC, const Variable &varA, const Variable &varB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const uint16_t immedB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Variable &varA, const uint16_t immedB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Address &addrA, const uint16_t immedB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const uint16_t immedB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const uint16_t immedB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Address &addrA, const uint16_t immedB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Address &addrA, const Address &addrB);
+    explicit CcuRepAdd(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const Variable &varB);
 
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
@@ -47,7 +47,7 @@ private:
     void ValidateInsGenPtrForAdd();
     void SetCommonInfo();
 
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     AddSubType subType{AddSubType::INVALID};
 
     Address addrA;

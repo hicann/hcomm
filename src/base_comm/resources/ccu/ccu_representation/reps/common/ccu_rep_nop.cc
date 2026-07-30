@@ -10,7 +10,7 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
@@ -18,10 +18,10 @@ namespace CcuRep {
 
 using namespace Hccl;
 
-CcuRepNop::CcuRepNop(CcuInsGeneraterBase* insGeneratorPtr) : insGeneratorPtr_(insGeneratorPtr)
+CcuRepNop::CcuRepNop(CcuInsGeneratorBase* insGeneratorPtr) : insGeneratorPtr_(insGeneratorPtr)
 {
     type       = CcuRepType::NOP;
-    instrCount = 1;
+    instrCount = insGeneratorPtr_->GetInstrCount(type);
 }
 
 bool CcuRepNop::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)

@@ -20,7 +20,7 @@ namespace CcuRep {
  
 class CcuRepStoreVar : public CcuRepBase {
 public:
-    CcuRepStoreVar(CcuInsGeneraterBase* insGeneratorPtr, const Variable &var, const Variable &dst, uint32_t num = 1, bool hscbFlag = false);
+    CcuRepStoreVar(CcuInsGeneratorBase* insGeneratorPtr, const Variable &var, const Variable &dst, uint32_t num = 1, bool hscbFlag = false);
     bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
     std::string Describe() override;
  
@@ -31,7 +31,7 @@ public:
     bool GetHscbFlag() { return hscbFlag; }
  
 private:
-    CcuInsGeneraterBase* insGeneratorPtr_{nullptr};
+    CcuInsGeneratorBase* insGeneratorPtr_{nullptr};
     Variable var;
     Variable dst;
     uint32_t num;

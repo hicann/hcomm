@@ -13,12 +13,12 @@
 #include "string_util.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLocWaitNotify::CcuRepLocWaitNotify(CcuInsGeneraterBase* insGenPtr, const LocalNotify &notify, const uint32_t mask, bool isProfiling)
+CcuRepLocWaitNotify::CcuRepLocWaitNotify(CcuInsGeneratorBase* insGenPtr, const LocalNotify &notify, const uint32_t mask, bool isProfiling)
     : insGenPtr(insGenPtr), notify_(notify), mask_(mask), isProfiling_(isProfiling)
 {
     type       = CcuRepType::LOC_WAIT_NOTIFY;

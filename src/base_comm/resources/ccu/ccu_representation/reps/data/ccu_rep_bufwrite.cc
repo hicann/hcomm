@@ -10,20 +10,20 @@
 #include "exception_util.h"
 #include "ccu_api_exception.h"
 #include "hcomm_c_adpt.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 #include "../../../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_kernel.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepBufWrite::CcuRepBufWrite(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, CcuBuf src, RemoteAddr dst, Variable len, CompletedEvent sem,
+CcuRepBufWrite::CcuRepBufWrite(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, CcuBuf src, RemoteAddr dst, Variable len, CompletedEvent sem,
                                uint16_t mask)
     : insGenPtr(insGenPtr), channel(channel), src(src), dst(dst), len(len), sem(sem), mask(mask)
 {
     type       = CcuRepType::BUF_WRITE;
-    instrCount = 1;
+    instrCount = insGenPtr->GetInstrCount(type);
 }
 
 bool CcuRepBufWrite::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)

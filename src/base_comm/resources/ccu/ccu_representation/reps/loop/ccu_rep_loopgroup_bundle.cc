@@ -9,7 +9,7 @@
  */
 
 #include "ccu_rep_loopgroup_bundle_v1.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 #include "ccu_api_exception.h"
 #include "exception_util.h"
 #include "string_util.h"
@@ -19,14 +19,14 @@ namespace CcuRep {
 
 using namespace Hccl;
 
-CcuRepLoopGroupBundle::CcuRepLoopGroupBundle(CcuInsGeneraterBase* insGenPtr, const CcuLoopGroupConfig &config,
+CcuRepLoopGroupBundle::CcuRepLoopGroupBundle(CcuInsGeneratorBase* insGenPtr, const CcuLoopGroupCfg &config,
                                              const Variable &parallelVar, const Variable &offsetVar)
     : insGenPtr_(insGenPtr), config_(config), parallelVar_(parallelVar), offsetVar_(offsetVar)
 {
     type = CcuRepType::LOOPGROUP;
 }
 
-CcuRepLoopGroupBundle::CcuRepLoopGroupBundle(CcuInsGeneraterBase* insGenPtr,
+CcuRepLoopGroupBundle::CcuRepLoopGroupBundle(CcuInsGeneratorBase* insGenPtr,
                                              const Variable &parallelVar, const Variable &offsetVar)
     : insGenPtr_(insGenPtr), parallelVar_(parallelVar), offsetVar_(offsetVar), layout_(Layout::PackedVar)
 {

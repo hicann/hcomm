@@ -14,7 +14,7 @@ namespace CcuRep {
 
 class CcuRepJumpLabel : public CcuRepBlock {
 public:
-    explicit CcuRepJumpLabel(CcuInsGeneraterBase* insGeneratorPtr, const std::string &label);
+    explicit CcuRepJumpLabel(CcuInsGeneratorBase* insGeneratorPtr, const std::string &label);
     std::string Describe() override;
 };
 

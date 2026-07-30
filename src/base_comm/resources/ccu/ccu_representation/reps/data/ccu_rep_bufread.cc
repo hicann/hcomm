@@ -9,12 +9,12 @@
 #include "ccu_api_exception.h"
 #include "hcomm_c_adpt.h"
 #include "../../../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"
-#include "ccu_ins_generater_base.h"
+#include "ccu_ins_generator_base.h"
 
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepBufRead::CcuRepBufRead(CcuInsGeneraterBase* insGenPtr, const ChannelHandle channel, RemoteAddr src, CcuBuf dst, Variable len, CompletedEvent sem,
+CcuRepBufRead::CcuRepBufRead(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr src, CcuBuf dst, Variable len, CompletedEvent sem,
                              uint32_t mask)
     : insGenPtr(insGenPtr), channel(channel), src(src), dst(dst), len(len), sem(sem), mask(mask)
 {

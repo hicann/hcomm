@@ -20,8 +20,9 @@ class CcuKernel;
 
 namespace CcuRep {
 
-class CcuInsGeneraterBase;
-class CcuInsGeneraterV1;
+class CcuInsGeneratorBase;
+class CcuInsGeneratorV1;
+class CcuInsGeneratorV2;
 
 struct TransDep {
     int32_t  logicalId;

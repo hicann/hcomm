@@ -17,11 +17,13 @@
 #include "ccu_condition_v1.h"
 #include "ccu_repeat_v1.h"
 #include "ccu_interface_assist_v1.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
+#include "ccu_ins_generator_v2.h"
 
 #include "ccu_api_exception.h"
 
 #include <gtest/gtest.h>
+#include <mockcpp/mockcpp.hpp>
 #include <string>
 #include <memory>
 
@@ -31,8 +33,15 @@ namespace {
 
 class CcuRepInterfaceTest : public ::testing::Test {
 protected:
-    void SetUp() override {}
-    void TearDown() override {}
+    void SetUp() override {
+        static CcuInsGeneratorV2 insGen;
+        MOCKER_CPP(&CcuRepContext::GetInsGenerator).stubs().will(
+            returnValue(static_cast<CcuInsGeneratorBase *>(&insGen)));
+    }
+    void TearDown() override {
+        mockcpp::GlobalMockObject::verify();
+        mockcpp::GlobalMockObject::reset();
+    }
 };
 
 TEST_F(CcuRepInterfaceTest, CcuPhyRes_IdAndDieId)
@@ -121,7 +130,8 @@ TEST_F(CcuRepInterfaceTest, Address_CopyConstructor)
 
 TEST_F(CcuRepInterfaceTest, AppendToContext_NullContext)
 {
-    auto nop = std::make_shared<CcuRepNop>(nullptr);
+    CcuInsGeneratorV1 insGen;
+    auto nop = std::make_shared<CcuRepNop>(&insGen);
     EXPECT_THROW(AppendToContext(nullptr, nop), Hccl::CcuApiException);
 }
 
@@ -170,7 +180,7 @@ TEST_F(CcuRepInterfaceTest, FuncBlock_ConstructorAndDestructor)
 TEST_F(CcuRepInterfaceTest, FuncCall_ConstructorWithLabel)
 {
     CcuRepContext context;
-    CcuInsGeneraterV1 insGen;
+    CcuInsGeneratorV1 insGen;
     context.SetInsGenerater(&insGen);
     FuncCall funcCall(&context, "testCall");
     funcCall.AppendToContext();
@@ -182,7 +192,7 @@ TEST_F(CcuRepInterfaceTest, FuncCall_ConstructorWithLabel)
 TEST_F(CcuRepInterfaceTest, FuncCall_ConstructorWithVariable)
 {
     CcuRepContext context;
-    CcuInsGeneraterV1 insGen;
+    CcuInsGeneratorV1 insGen;
     context.SetInsGenerater(&insGen);
     Variable funcAddr(&context);
     FuncCall funcCall(&context, funcAddr);
@@ -291,7 +301,7 @@ TEST_F(CcuRepInterfaceTest, LoopBlock_OperatorParentheses)
 TEST_F(CcuRepInterfaceTest, FuncCall_OperatorParentheses)
 {
     CcuRepContext context;
-    CcuInsGeneraterV1 insGen;
+    CcuInsGeneratorV1 insGen;
     context.SetInsGenerater(&insGen);
     FuncCall funcCall(&context, "testCall");
     funcCall();

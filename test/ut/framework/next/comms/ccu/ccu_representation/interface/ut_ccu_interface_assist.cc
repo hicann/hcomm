@@ -14,7 +14,7 @@
 #include "ccu_kernel.h"
 #include "exception_util.h"
 #include "ccu_api_exception.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 
 using namespace hcomm;
 
@@ -41,7 +41,7 @@ protected:
 
 TEST_F(AppendToContextTest, Ut_AppendToContext_When_NullContext_Expect_ShouldThrowException)
 {
-    CcuRep::CcuInsGeneraterV1 insGen;
+    CcuRep::CcuInsGeneratorV1 insGen;
     std::shared_ptr<CcuRep::CcuRepBase> rep = std::make_shared<CcuRep::CcuRepBlock>(&insGen, "test_rep");
     
     EXPECT_THROW(

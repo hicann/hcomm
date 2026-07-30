@@ -15,12 +15,12 @@ namespace CcuRep {
 
 class CcuRepLocCpy : public CcuRepBase {
 public:
-    CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, CompletedEvent sem, uint16_t mask);
-    CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, uint16_t dataType, uint16_t opType, CompletedEvent sem,
+    CcuRepLocCpy(CcuInsGeneratorBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, CompletedEvent sem, uint16_t mask);
+    CcuRepLocCpy(CcuInsGeneratorBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len, uint16_t dataType, uint16_t opType, CompletedEvent sem,
                  uint16_t mask);
 
-    // 临时验证
-    CcuRepLocCpy(CcuInsGeneraterBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len,
+    // A6场景预埋
+    CcuRepLocCpy(CcuInsGeneratorBase* insGenPtr, LocalAddr dst, LocalAddr src, Variable len,
                  const std::vector<CcuBuf> &bufs, CompletedEvent sem, uint16_t mask);
 
     bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
@@ -48,7 +48,7 @@ public:
 private:
     void ValidateInsGeneratorForLocCpy();
 
-    CcuInsGeneraterBase* insGenPtr{nullptr};
+    CcuInsGeneratorBase* insGenPtr{nullptr};
     LocalAddr   dst;
     LocalAddr   src;
     Variable len;

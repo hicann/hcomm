@@ -22,7 +22,7 @@
 #include "ccu_rep_rempostvar_v1.h"
 #include "ccu_rep_bufread_v1.h"
 #include "ccu_rep_bufwrite_v1.h"
-#include "ccu_ins_generater_v1.h"
+#include "ccu_ins_generator_v1.h"
 
 #define private public
 #define protected public
@@ -293,7 +293,8 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoRead_When_Normal_Expect_ChannelIdF
     len.Reset(15);
     sem.Reset(16);
 
-    auto rep = std::make_shared<CcuRep::CcuRepRead>(nullptr, static_cast<ChannelHandle>(101),
+    CcuRep::CcuInsGeneratorV1 insGen{};
+    auto rep = std::make_shared<CcuRep::CcuRepRead>(&insGen, static_cast<ChannelHandle>(101),
         CcuRep::LocalAddr(locAddr, locToken), CcuRep::RemoteAddr(remAddr, remToken), len, sem, 0x5A);
 
     HcommChannelDesc desc{};
@@ -337,7 +338,7 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoWrite_When_Normal_Expect_ChannelId
     len.Reset(25);
     sem.Reset(26);
 
-    CcuRep::CcuInsGeneraterV1 insGen{};
+    CcuRep::CcuInsGeneratorV1 insGen{};
     auto rep = std::make_shared<CcuRep::CcuRepWrite>(&insGen, static_cast<ChannelHandle>(102),
         CcuRep::RemoteAddr(remAddr, remToken), CcuRep::LocalAddr(locAddr, locToken), len, sem, 0xA5);
 
@@ -369,7 +370,7 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoWrite_When_Normal_Expect_ChannelId
 
 TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoRemPostSem_When_Normal_Expect_IdsFromHandle)
 {
-    CcuRep::CcuInsGeneraterV1 insGen{};
+    CcuRep::CcuInsGeneratorV1 insGen{};
     auto rep = std::make_shared<CcuRep::CcuRepRemPostSem>(&insGen, static_cast<ChannelHandle>(201), 3, 0x70);
 
     HcommChannelDesc desc{};
@@ -407,7 +408,7 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoRemPostSem_When_Normal_Expect_IdsF
 
 TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoRemWaitSem_When_Normal_Expect_IdsFromHandle)
 {
-    CcuRep::CcuInsGeneraterV1 insGen{};
+    CcuRep::CcuInsGeneratorV1 insGen{};
     auto rep = std::make_shared<CcuRep::CcuRepRemWaitSem>(&insGen, static_cast<ChannelHandle>(202), 4, 0x80);
 
     HcommChannelDesc desc{};
@@ -447,7 +448,7 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoRemPostVar_When_Normal_Expect_IdsF
 {
     CcuRep::Variable param;
     param.Reset(31);
-    CcuRep::CcuInsGeneraterV1 insGen{};
+    CcuRep::CcuInsGeneratorV1 insGen{};
     auto rep = std::make_shared<CcuRep::CcuRepRemPostVar>(&insGen, param, static_cast<ChannelHandle>(203), 5, 6, 0x90);
 
     HcommChannelDesc desc{};
@@ -502,7 +503,7 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoBufRead_When_Normal_Expect_Channel
     len.Reset(33);
     sem.Reset(34);
 
-    CcuRep::CcuInsGeneraterV1 insGen{};
+    CcuRep::CcuInsGeneratorV1 insGen{};
     auto rep = std::make_shared<CcuRep::CcuRepBufRead>(&insGen, static_cast<ChannelHandle>(204),
         CcuRep::RemoteAddr(srcAddr, srcToken), dst, len, sem, 0x12);
 
@@ -547,7 +548,7 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoBufWrite_When_Normal_Expect_Channe
     len.Reset(43);
     sem.Reset(44);
 
-    CcuRep::CcuInsGeneraterV1 insGen{};
+    CcuRep::CcuInsGeneratorV1 insGen{};
     auto rep = std::make_shared<CcuRep::CcuRepBufWrite>(&insGen, static_cast<ChannelHandle>(205),
         src, CcuRep::RemoteAddr(dstAddr, dstToken), len, sem, 0x34);
 
@@ -583,7 +584,7 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoBufWrite_When_Normal_Expect_Channe
 
 TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoRemPostSem_When_GetChannelFail_Expect_EmptyErrorInfo)
 {
-    CcuRep::CcuInsGeneraterV1 insGen{};
+    CcuRep::CcuInsGeneratorV1 insGen{};
     auto rep = std::make_shared<CcuRep::CcuRepRemPostSem>(&insGen, static_cast<ChannelHandle>(206), 3, 0x70);
 
     MOCKER(HcommChannelGet)
@@ -606,7 +607,7 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoRemPostVar_When_GetSignalFail_Expe
 {
     CcuRep::Variable param;
     param.Reset(31);
-    CcuRep::CcuInsGeneraterV1 insGen{};
+    CcuRep::CcuInsGeneratorV1 insGen{};
     auto rep = std::make_shared<CcuRep::CcuRepRemPostVar>(&insGen, param, static_cast<ChannelHandle>(207), 5, 6, 0x90);
 
     HcommChannelDesc desc{};
@@ -641,7 +642,7 @@ TEST_F(GetChannelByHandleTest, Ut_GenErrorInfoRemPostVar_When_GetVariableFail_Ex
 {
     CcuRep::Variable param;
     param.Reset(31);
-    CcuRep::CcuInsGeneraterV1 insGen{};
+    CcuRep::CcuInsGeneratorV1 insGen{};
     auto rep = std::make_shared<CcuRep::CcuRepRemPostVar>(&insGen, param, static_cast<ChannelHandle>(208), 5, 6, 0x90);
 
     HcommChannelDesc desc{};

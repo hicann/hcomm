@@ -32,6 +32,8 @@ namespace ccu {
 // ==================== 类型别名 ====================
 using LoopConfig      = ::CcuLoopConfig;
 using LoopGroupConfig = ::CcuLoopGroupConfig;
+using LoopCfg         = ::CcuLoopCfg;
+using LoopGroupCfg    = ::CcuLoopGroupCfg;
 
 // ==================== 资源创建 ====================
 
