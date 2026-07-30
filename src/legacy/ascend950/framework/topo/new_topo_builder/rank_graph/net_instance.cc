@@ -485,6 +485,17 @@ std::map<std::string, std::vector<IpAddress>> NetInstance::Peer::GetPortAddrMapL
     return portAddrMapLayer0_;
 }
 
+bool NetInstance::Peer::TryGetLayer0Address(const std::string &port, IpAddress &addr) const
+{
+    // 端口归属以 RankTable layer 0 的地址映射为准。
+    auto addrIt = portAddrMapLayer0_.find(port);
+    if (addrIt == portAddrMapLayer0_.end() || addrIt->second.empty()) {
+        return false;
+    }
+    addr = addrIt->second.front();
+    return true;
+}
+
 PlaneId NetInstance::Fabric::GetPlaneId() const
 {
     return planeId_;

@@ -45,6 +45,7 @@ public:
 private:
     std::shared_ptr<TopoInfo>          LoadTopoInfo(const std::string &topoPath);
     std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> CreateGraph(const std::vector<EdgeInfo> &edges) const;
+    void BuildPhyTopo(const TopoInfo &topoInfo) const;
     std::shared_ptr<TopoInfo> topoInfo_;
     std::mutex phyTopoMutex;
 };

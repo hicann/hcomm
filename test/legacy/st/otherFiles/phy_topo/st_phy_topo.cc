@@ -214,34 +214,27 @@ protected:
     void TearDown() override {}
 };
 
-TEST_F(PhyTopoTest, St_AddTopoGraph_When_TopoNotNullAndNetLayerNotExist_Expect_ReturnTopo)
+TEST_F(PhyTopoTest, St_AddTopoGraph_When_TopoNotNull_Expect_ReturnTopo)
 {
     std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo = std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
-    u32 netLayer = 1;
-    phyTopo.AddTopoGraph(netLayer, topo);
-    EXPECT_EQ(phyTopo.GetTopoGraph(netLayer), topo);
+    phyTopo.AddTopoGraph(topo);
+    EXPECT_EQ(phyTopo.GetTopoGraph(), topo);
 }
 
-TEST_F(PhyTopoTest, St_GetTopoGraph_When_NetLayerExist_Expect_ReturnTopo)
+TEST_F(PhyTopoTest, St_GetTopoGraph_When_TopoNotAdded_Expect_ReturnNullptr)
 {
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo1 =
-        std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo2 =
-        std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
-    u32 netLayer1 = 1;
-    u32 netLayer2 = 2;
-    phyTopo.AddTopoGraph(netLayer1, topo1);
-    phyTopo.AddTopoGraph(netLayer2, topo2);
-    EXPECT_EQ(phyTopo.GetTopoGraph(netLayer1), topo1);
-    EXPECT_EQ(phyTopo.GetTopoGraph(netLayer2), topo2);
+    EXPECT_EQ(phyTopo.GetTopoGraph(), nullptr);
 }
 
-TEST_F(PhyTopoTest, St_GetTopoGraph_When_NetLayerNoExist_Expect_ReturnNullptr)
+TEST_F(PhyTopoTest, St_Clear_When_TopoAdded_Expect_ResetTopoAndInitFlag)
 {
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo1 =
+    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo =
         std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
-    u32 netLayer1 = 1;
-    u32 netLayer2 = 2;
-    phyTopo.AddTopoGraph(netLayer1, topo1);
-    EXPECT_EQ(phyTopo.GetTopoGraph(netLayer2), nullptr);
+    phyTopo.AddTopoGraph(topo);
+    phyTopo.InitFinish();
+
+    phyTopo.Clear();
+
+    EXPECT_EQ(phyTopo.GetTopoGraph(), nullptr);
+    EXPECT_FALSE(phyTopo.IsInitFinished());
 }

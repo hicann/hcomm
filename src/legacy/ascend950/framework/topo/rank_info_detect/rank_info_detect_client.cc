@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <algorithm>
 #include <thread>
 #include "rank_info_detect_client.h"
 #include "root_handle_v2.h"
@@ -27,6 +28,26 @@
 
 namespace Hccl {
 constexpr u32 HOST_CONTROL_PORT_COUNT = 15;
+
+namespace {
+bool IsHostRdmaLink(const std::shared_ptr<PhyTopo::Link> &link)
+{
+    if (link == nullptr || link->GetSourceIFace() == nullptr ||
+        link->GetSourceIFace()->GetPos() != AddrPosition::HOST) {
+        return false;
+    }
+    const std::set<LinkProtocol> &protocols = link->GetLinkProtocols();
+    return std::any_of(protocols.begin(), protocols.end(), [](const LinkProtocol &protocol) {
+        return LinkProtocol2LinkProtoType(protocol) == LinkProtoType::RDMA;
+    });
+}
+
+bool HasMatchingPort(const AddressInfo &addrInfo, const std::set<std::string> &phyPorts)
+{
+    return std::any_of(addrInfo.ports.begin(), addrInfo.ports.end(),
+        [&phyPorts](const std::string &port) { return phyPorts.count(port) != 0; });
+}
+} // namespace
 
 void RankInfoDetectClient::Setup(RankTableInfo &rankTable)
 {
@@ -479,29 +500,30 @@ void RankInfoDetectClient::HostListenPortDetect(NewRankInfo &rankInfo)
     auto devLogicId = HrtGetDevice();
     u32 devPhyId = rankInfo.deviceId;
     for (auto &rankLevelInfo : rankInfo.rankLevelInfos) {
-        shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> graph = PhyTopo::GetInstance()->GetTopoGraph(rankLevelInfo.netLayer);
+        // 物理图不区分逻辑层，按 RankTable 端口匹配当前层。
+        auto graph = PhyTopo::GetInstance()->GetTopoGraph();
         if (graph == nullptr) {
-            HCCL_DEBUG("[RankInfoDetectClient::%s]Can't find the layout %u Graph!", __func__, rankLevelInfo.netLayer);
+            HCCL_DEBUG("[RankInfoDetectClient::%s] Physical topo graph is nullptr.", __func__);
             continue;
         }
         std::vector<std::shared_ptr<PhyTopo::Link>> links = graph->GetEdges(rankInfo.localId);
         for (auto &link : links) {
-            if (link->GetSourceIFace()->GetPos() != AddrPosition::HOST) {
+            if (!IsHostRdmaLink(link)) {
                 continue;
             }
-            const std::set<LinkProtocol> &protocols = link->GetLinkProtocols();
-            for (auto &protocol : protocols) {
-                LinkProtoType protoType = LinkProtocol2LinkProtoType(protocol);
-                if (protoType != LinkProtoType::RDMA || rankLevelInfo.rankAddrs.empty()) {
-                    continue;
-                }
-                HCCL_DEBUG("[SocketManager::%s] find the host rdma link %s", __func__, link->Describe().c_str());
-                const IpAddress& hostIp = rankLevelInfo.rankAddrs[0].addr;
-                uint32_t hostPort = 0;
-                SetupHostListenPort(devLogicId, devPhyId, hostIp, hostPort);
-                rankInfo.hostPort = hostPort;
-                return;
+            const auto &phyPorts = link->GetSourceIFace()->GetPorts();
+            // 使用物理 Host RDMA 端口对应的地址，不默认取首个地址。
+            auto addrIt = std::find_if(rankLevelInfo.rankAddrs.begin(), rankLevelInfo.rankAddrs.end(),
+                [&phyPorts](const AddressInfo &addrInfo) { return HasMatchingPort(addrInfo, phyPorts); });
+            if (addrIt == rankLevelInfo.rankAddrs.end()) {
+                continue;
             }
+            HCCL_DEBUG("[SocketManager::%s] find the host rdma link %s", __func__, link->Describe().c_str());
+            const IpAddress &hostIp = addrIt->addr;
+            uint32_t hostPort = 0;
+            SetupHostListenPort(devLogicId, devPhyId, hostIp, hostPort);
+            rankInfo.hostPort = hostPort;
+            return;
         }
     }
 }

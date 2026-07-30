@@ -41,21 +41,25 @@ const std::string RankTable2pClos = R"(
 			 {
               "addr_type": "IPV4",
               "addr": "192.168.100.11",
+              "plane_id": "planeA",
               "ports": [ "0/1" ]
             },
 			{
               "addr_type": "IPV4",
               "addr": "192.168.100.12",
+              "plane_id": "planeB",
               "ports": [ "0/2" ]
             },
             {
               "addr_type": "IPV4",
               "addr": "192.168.100.13",
+              "plane_id": "planeC",
               "ports": [ "0/3" ]
             },
 			{
               "addr_type": "IPV4",
               "addr": "192.168.100.14",
+              "plane_id": "planeD",
               "ports": [ "0/4" ]
             }
           ],
@@ -88,21 +92,25 @@ const std::string RankTable2pClos = R"(
 			 {
               "addr_type": "IPV4",
               "addr": "192.168.100.21",
+              "plane_id": "planeA",
               "ports": [ "1/1" ]
             },
 			{
               "addr_type": "IPV4",
               "addr": "192.168.100.22",
+              "plane_id": "planeB",
               "ports": [ "1/2" ]
             },
             {
               "addr_type": "IPV4",
               "addr": "192.168.100.23",
+              "plane_id": "planeC",
               "ports": [ "1/3" ]
             },
 			{
               "addr_type": "IPV4",
               "addr": "192.168.100.24",
+              "plane_id": "planeD",
               "ports": [ "1/4" ]
             }
           ],
@@ -143,11 +151,13 @@ const std::string RANK_TABLE_4P_REPLACE_RANK1 = R"(
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.101",
+                    "plane_id": "planeA",
                     "ports": [ "0/1" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.102",
+                    "plane_id": "planeB",
                     "ports": [ "0/2" ]
 					},
 					{
@@ -188,11 +198,13 @@ const std::string RANK_TABLE_4P_REPLACE_RANK1 = R"(
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.111",
+                    "plane_id": "planeC",
                     "ports": [ "1/1" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.112",
+                    "plane_id": "planeD",
                     "ports": [ "1/2" ]
 					},
 					{
@@ -244,41 +256,49 @@ const std::string RANK_TABLE_4P_REPLACE_RANK1 = R"(
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.100",
+                    "plane_id": "planeA",
                     "ports": [ "0/0" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.101",
+                    "plane_id": "planeA",
                     "ports": [ "0/1" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.102",
+                    "plane_id": "planeA",
                     "ports": [ "0/2" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.103",
+                    "plane_id": "planeA",
                     "ports": [ "0/3" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.104",
+                    "plane_id": "planeB",
                     "ports": [ "0/4" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.105",
+                    "plane_id": "planeB",
                     "ports": [ "0/5" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.106",
+                    "plane_id": "planeB",
                     "ports": [ "0/6" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.107",
+                    "plane_id": "planeB",
                     "ports": [ "0/7" ]
 					},
 					{
@@ -289,41 +309,49 @@ const std::string RANK_TABLE_4P_REPLACE_RANK1 = R"(
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.110",
+                    "plane_id": "planeC",
                     "ports": [ "1/0" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.111",
+                    "plane_id": "planeC",
                     "ports": [ "1/1" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.112",
+                    "plane_id": "planeC",
                     "ports": [ "1/2" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.113",
+                    "plane_id": "planeC",
                     "ports": [ "1/3" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.114",
+                    "plane_id": "planeD",
                     "ports": [ "1/4" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.115",
+                    "plane_id": "planeD",
                     "ports": [ "1/5" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.116",
+                    "plane_id": "planeD",
                     "ports": [ "1/6" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.117",
+                    "plane_id": "planeD",
                     "ports": [ "1/7" ]
 					},
 					{
@@ -354,11 +382,13 @@ const std::string RANK_TABLE_4P_REPLACE_RANK1 = R"(
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.101",
+                    "plane_id": "planeA",
                     "ports": [ "0/1" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.102",
+                    "plane_id": "planeB",
                     "ports": [ "0/2" ]
 					},
 					{
@@ -399,11 +429,13 @@ const std::string RANK_TABLE_4P_REPLACE_RANK1 = R"(
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.111",
+                    "plane_id": "planeC",
                     "ports": [ "1/1" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.112",
+                    "plane_id": "planeD",
                     "ports": [ "1/2" ]
 					},
 					{
@@ -459,11 +491,13 @@ const std::string RANK_TABLE_4P_REPLACE_RANK1 = R"(
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.101",
+                    "plane_id": "planeA",
                     "ports": [ "0/1" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.102",
+                    "plane_id": "planeB",
                     "ports": [ "0/2" ]
 					},
 					{
@@ -504,11 +538,13 @@ const std::string RANK_TABLE_4P_REPLACE_RANK1 = R"(
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.111",
+                    "plane_id": "planeC",
                     "ports": [ "1/1" ]
 					},
 					{
 					"addr_type": "IPV4",
                     "addr": "192.168.164.112",
+                    "plane_id": "planeD",
                     "ports": [ "1/2" ]
 					},
 					{

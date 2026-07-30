@@ -56,6 +56,53 @@ protected:
     }
 };
 
+TEST_F(RankGraph64Plus1Test, Ut_GetPeer2PlaneEdges_When_MultiPortNoiseNotInLayer0_Expect_Ignored)
+{
+    auto phyTopoGraph = std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
+    auto phyPeer = std::make_shared<PhyTopo::Peer>(64);
+    auto phyFabric = std::make_shared<PhyTopo::Fabric>();
+    const NodeId peerNodeId = PhyTopo::Peer::GetId(64);
+    const NodeId fabricNodeId = PhyTopo::Fabric::GetId();
+    phyTopoGraph->AddNode(peerNodeId, phyPeer);
+    phyTopoGraph->AddNode(fabricNodeId, phyFabric);
+
+    auto rankPeer = std::make_shared<NetInstance::Peer>(0, 64, 64, 0);
+    const std::vector<std::set<std::string>> physicalPlanePortGroups = {
+        {"0/0", "0/1", "0/2", "0/3"},
+        {"0/4", "0/5", "0/6", "0/7"},
+        {"1/0", "1/1", "1/2", "1/3"},
+        {"1/4", "1/5", "1/6", "1/7"},
+    };
+    std::map<std::string, std::vector<IpAddress>> layer0PortAddrMap;
+    layer0PortAddrMap["1/0"] = {IpAddress("192.168.0.1")};
+    rankPeer->SetPortPortAddrMapLayer0(layer0PortAddrMap);
+
+    PhyTopo::LinkAttributes linkAttrs;
+    linkAttrs.linktype = LinkType::PEER2NET;
+    linkAttrs.protocols = {LinkProtocol::UB_CTP};
+    for (u32 planeId = 0; planeId < static_cast<u32>(physicalPlanePortGroups.size()); ++planeId) {
+        auto edge = std::make_shared<PhyTopo::Link>(
+            phyPeer, phyFabric, linkAttrs, TopoType::CLOS, planeId);
+        edge->SetSourceIface(std::make_shared<PhyTopo::ConnInterface>(
+            physicalPlanePortGroups[planeId], AddrPosition::DEVICE, LinkType::PEER2NET, linkAttrs.protocols));
+        phyTopoGraph->AddEdge(peerNodeId, fabricNodeId, edge);
+    }
+
+    auto noiseEdge = std::make_shared<PhyTopo::Link>(
+        phyPeer, phyFabric, linkAttrs, TopoType::CLOS, 2);
+    noiseEdge->SetSourceIface(std::make_shared<PhyTopo::ConnInterface>(
+        std::set<std::string>{"9/0", "9/1", "9/2", "9/3"}, AddrPosition::DEVICE,
+        LinkType::PEER2NET, linkAttrs.protocols));
+    phyTopoGraph->AddEdge(peerNodeId, fabricNodeId, noiseEdge);
+
+    UpdaterFor64Plus1 updater;
+    std::shared_ptr<PhyTopo::Link> matchedEdge;
+    EXPECT_NO_THROW(matchedEdge = updater.GetPeer2PlaneEdges(
+        2, rankPeer, phyTopoGraph, BACKUP_TO_PLANE_ADDR_NUM, linkAttrs.protocols));
+    ASSERT_NE(matchedEdge, nullptr);
+    EXPECT_EQ(matchedEdge->GetTopoInstId(), 2);
+}
+
 TEST_F(RankGraph64Plus1Test, test_4p_without_backup)
 {
     // ranktable不使用备份, topo文件也无备份信息
@@ -120,14 +167,24 @@ TEST_F(RankGraph64Plus1Test, test_RankGraph_Build_without_Backup)
         EXPECT_EQ(rankGraph->peers_[i]->GetNodeId(), i);
         EXPECT_EQ(rankGraph->peers_[i]->GetLevels().size(), 2);
     }
+    // topo 中 net_layer=99 的 0/9 噪声端口不能污染 rankTable 定义的 layer 0 接口
+    for (const auto &rankPeer : rankGraph->peers_) {
+        const auto layer0Ifaces = rankPeer.second->GetIfacesByLayer(0);
+        EXPECT_FALSE(layer0Ifaces.empty());
+        for (const auto &iface : layer0Ifaces) {
+            ASSERT_NE(nullptr, iface);
+            EXPECT_EQ(0, iface->GetPorts().count("0/9"));
+        }
+    }
     // check fabGroups
     // check level0 az0-rack0
     NetInstance* netInstL0 = rankGraph->GetNetInstanceByNetInstId(0, "az0-rack0");
     EXPECT_NE(netInstL0, nullptr);
     EXPECT_EQ(netInstL0->rankIds, expectRanks);
     EXPECT_EQ(netInstL0->peers.size(), 4);
-    EXPECT_EQ(netInstL0->fabrics.size(), 4);
-    EXPECT_EQ(netInstL0->vGraph.nodes.size(), 8);
+    ASSERT_EQ(netInstL0->fabrics.size(), 1);
+    EXPECT_EQ(netInstL0->vGraph.nodes.size(), 5);
+    EXPECT_EQ(netInstL0->fabrics[0]->GetPlaneId(), "0");
 
     for (u32 i = 1; i < expectRanks.size() - 1; i++) {  
         EXPECT_EQ(netInstL0->vGraph.edges[0][i][0]->source_->GetNodeId(), 0);
@@ -172,8 +229,8 @@ TEST_F(RankGraph64Plus1Test, test_RankGraph_Build_with_Backup)
     EXPECT_NE(netInstL0, nullptr);
     EXPECT_EQ(netInstL0->rankIds, expectRanks);
     EXPECT_EQ(netInstL0->peers.size(), 4);
-    EXPECT_EQ(netInstL0->fabrics.size(), 4); // netLayer0支持peer2net的边rankGraph会有4个fabric
-    EXPECT_EQ(netInstL0->vGraph.nodes.size(), 8);
+    EXPECT_EQ(netInstL0->fabrics.size(), 1); // rankTable未配置plane_id，所有地址归入默认plane 0
+    EXPECT_EQ(netInstL0->vGraph.nodes.size(), 5);
     for (u32 i = 1; i < expectRanks.size() - 1; i++) {  
     EXPECT_EQ(netInstL0->vGraph.edges[0][i][0]->source_->GetNodeId(), 0);
     EXPECT_EQ(netInstL0->vGraph.edges[0][i][0]->target_->GetNodeId(), i);
@@ -227,8 +284,8 @@ TEST_F(RankGraph64Plus1Test, test_checkpoint_normal_to_backup)
     EXPECT_NE(netInstL0, nullptr);
     EXPECT_EQ(netInstL0->rankIds, expectRanks);
     EXPECT_EQ(netInstL0->peers.size(), 4);
-    EXPECT_EQ(netInstL0->fabrics.size(), 4);
-    EXPECT_EQ(netInstL0->vGraph.nodes.size(), 8);
+    EXPECT_EQ(netInstL0->fabrics.size(), 1);
+    EXPECT_EQ(netInstL0->vGraph.nodes.size(), 5);
     for (u32 i = 1; i < expectRanks.size() - 1; i++) {  
         EXPECT_EQ(netInstL0->vGraph.edges[0][i][0]->source_->GetNodeId(), 0);
         EXPECT_EQ(netInstL0->vGraph.edges[0][i][0]->target_->GetNodeId(), i);
@@ -281,8 +338,8 @@ TEST_F(RankGraph64Plus1Test, test_checkpoint_normal_switch_pod_without_backup)
     EXPECT_NE(netInstL0, nullptr);
     EXPECT_EQ(netInstL0->rankIds, expectRanks);
     EXPECT_EQ(netInstL0->peers.size(), 4);
-    EXPECT_EQ(netInstL0->fabrics.size(), 4);
-    EXPECT_EQ(netInstL0->vGraph.nodes.size(), 8);
+    EXPECT_EQ(netInstL0->fabrics.size(), 1);
+    EXPECT_EQ(netInstL0->vGraph.nodes.size(), 5);
     for (u32 i = 1; i < expectRanks.size() - 1; i++) {  
         EXPECT_EQ(netInstL0->vGraph.edges[0][i][0]->source_->GetNodeId(), 0);
         EXPECT_EQ(netInstL0->vGraph.edges[0][i][0]->target_->GetNodeId(), i);

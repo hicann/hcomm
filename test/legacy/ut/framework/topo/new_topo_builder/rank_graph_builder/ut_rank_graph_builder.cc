@@ -124,30 +124,39 @@ TEST_F(RankGraphBuilderTest, Ut_Build_When_OnePTopoFileWithoutEdge_Expect_Succes
     EXPECT_EQ(peer->GetLocalId(), 0);
 }
 
-TEST_F(RankGraphBuilderTest, Ut_BuildFromRankTable_When_NetLayerInconsistent_Expect_InvalidParamsException)
+TEST_F(RankGraphBuilderTest, Ut_BuildFromRankTable_When_ValidRankTable_Expect_Success)
 {
     // 校验BuildFromRankTable的Add(RankId, Peer)
     // when
     MOCKER_CPP(&PhyTopoBuilder::Build).stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    // 本用例只验证 RankTable 建图，不依赖物理拓扑构建。
+    MOCKER_CPP(&RankGraphBuilder::AddTopoDescFabricInfo).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&RankGraph::InitInnerRanks).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&DetourService::InsertDetourLinks).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     MOCKER_CPP(&RankGraphBuilder::BuildPeer2PeerLinks).stubs().will(ignoreReturnValue());
+    MOCKER_CPP(&RankGraphBuilder::UpdateTopoInstForMyRankOnly).stubs().will(ignoreReturnValue());
     MOCKER_CPP(&RankGraphBuilder::AddFabricInfo).stubs().will(ignoreReturnValue());
     // then
     RankGraphBuilder rankGraphBuilder;
-    EXPECT_THROW(rankGraphBuilder.Build(RankTable3p, "topo.json", 0), InvalidParamsException);
+    std::unique_ptr<RankGraph> rankGraph;
+    EXPECT_NO_THROW(rankGraph = rankGraphBuilder.Build(RankTable3p, "topo.json", 0));
+    EXPECT_NE(rankGraph, nullptr);
 }
 
-TEST_F(RankGraphBuilderTest, ut_Build_When_4pRankTable_Expect_Success)
+TEST_F(RankGraphBuilderTest, Ut_Build_When_TopoWithoutNetLayer_Expect_UseRankTableLayers)
 {
     PhyTopo::GetInstance()->Clear();
     RankGraphBuilder rankGraphBuilder;
     std::unique_ptr<RankGraph> rankGraph = rankGraphBuilder.Build(RankTable_4p, "topo.json", 0);
-    EXPECT_NE(nullptr, rankGraph);
+    ASSERT_NE(nullptr, rankGraph);
+    const std::set<u32> expectedLevels = {0, 1, 2};
+    EXPECT_EQ(3, rankGraph->GetLevelNum());
+    EXPECT_EQ(expectedLevels, rankGraph->GetLevels(0));
     std::vector<std::string> netIds = {"az0-rack0", "az0", "all"};
-    for (s32 rankId = 0; rankId < 3; rankId++) {
-                for (u32 netLayer = 0; netLayer < 3; netLayer++) {
+    for (s32 rankId = 0; rankId < 4; rankId++) {
+        for (u32 netLayer = 0; netLayer < 3; netLayer++) {
             const NetInstance *fabGroup = rankGraph->GetNetInstanceByRankId(netLayer, rankId);
+            ASSERT_NE(nullptr, fabGroup);
             EXPECT_EQ(netIds[netLayer], fabGroup->GetNetInstId());
 
             EXPECT_EQ(true, fabGroup->HasNode(NetInstance::Peer(rankId, 0, 0, 0).GetLocalId()));
@@ -160,6 +169,11 @@ TEST_F(RankGraphBuilderTest, ut_Build_When_4pRankTable_Expect_Success)
             }
         }
     }
+
+    const NetInstance *layer0 = rankGraph->GetNetInstanceByNetInstId(0, "az0-rack0");
+    ASSERT_NE(nullptr, layer0);
+    EXPECT_TRUE(layer0->fabrics.empty());
+    EXPECT_EQ(4, layer0->vGraph.nodes.size());
 
     std::vector<NetInstance::Path> pathsLayer0 = rankGraph->GetPaths(0, 0, 1);
     EXPECT_EQ(1, pathsLayer0.size());
@@ -185,8 +199,90 @@ TEST_F(RankGraphBuilderTest, ut_Build_When_4pRankTable_Expect_Success)
     EXPECT_EQ(htonl(0xC0A8650B), pathsLayer1[0].links[1].GetTargetIface()->GetAddr().GetBinaryAddress().addr.s_addr);
 
     std::vector<NetInstance::Path> pathsLayer2 = rankGraph->GetPaths(2, 2, 3);
-    EXPECT_EQ(1, pathsLayer1.size());
-    EXPECT_EQ(2, pathsLayer1[0].links.size());
+    EXPECT_EQ(1, pathsLayer2.size());
+    EXPECT_EQ(2, pathsLayer2[0].links.size());
+}
+
+TEST_F(RankGraphBuilderTest, Ut_RecoverBuild_When_SameTopoInstHasDifferentPlanes_Expect_CreateFabricByPlaneId)
+{
+    PhyTopo::GetInstance()->Clear();
+    const std::string rankTableString = R"({
+        "version": "2.0",
+        "rank_count": 1,
+        "rank_list": [
+            {
+                "rank_id": 0,
+                "device_id": 0,
+                "local_id": 0,
+                "level_list": [
+                    {
+                        "net_layer": 0,
+                        "net_instance_id": "rank-group-0",
+                        "net_type": "TOPO_FILE_DESC",
+                        "rank_addr_list": [
+                            {
+                                "addr_type": "IPV4",
+                                "addr": "192.168.0.1",
+                                "ports": ["0/1"],
+                                "plane_id": "planeA"
+                            },
+                            {
+                                "addr_type": "IPV4",
+                                "addr": "192.168.0.2",
+                                "ports": ["0/2"],
+                                "plane_id": "planeB"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    })";
+    const std::string topoString = R"({
+        "version": "2.0",
+        "peer_count": 1,
+        "peer_list": [{"local_id": 0}],
+        "edge_count": 2,
+        "edge_list": [
+            {
+                "link_type": "PEER2NET",
+                "protocols": ["UB_CTP"],
+                "topo_type": "CLOS",
+                "topo_instance_id": 7,
+                "local_a": 0,
+                "local_a_ports": ["0/1"],
+                "position": "DEVICE"
+            },
+            {
+                "link_type": "PEER2NET",
+                "protocols": ["UB_CTP"],
+                "topo_type": "CLOS",
+                "topo_instance_id": 7,
+                "local_a": 0,
+                "local_a_ports": ["0/2"],
+                "position": "DEVICE"
+            }
+        ]
+    })";
+
+    JsonParser parser;
+    RankTableInfo rankTableInfo;
+    TopoInfo topoInfo;
+    parser.ParseString(rankTableString, rankTableInfo);
+    parser.ParseString(topoString, topoInfo);
+
+    RankGraphBuilder rankGraphBuilder;
+    std::unique_ptr<RankGraph> rankGraph = rankGraphBuilder.RecoverBuild(rankTableInfo, topoInfo, 0);
+    ASSERT_NE(nullptr, rankGraph);
+    NetInstance *layer0 = rankGraph->GetNetInstanceByNetInstId(0, "rank-group-0");
+    ASSERT_NE(nullptr, layer0);
+    ASSERT_EQ(2, layer0->GetFabrics().size());
+    std::set<PlaneId> planeIds;
+    for (const auto &fabric : layer0->GetFabrics()) {
+        ASSERT_NE(nullptr, fabric);
+        planeIds.insert(fabric->GetPlaneId());
+    }
+    EXPECT_EQ((std::set<PlaneId>{"planeA", "planeB"}), planeIds);
 }
 
 TEST_F(RankGraphBuilderTest, Init_error)
@@ -224,6 +320,29 @@ TEST_F(RankGraphBuilderTest, CreateSubFabGroups_error_1)
     EXPECT_EQ(HCCL_E_INTERNAL, ret);
 }
 
+TEST_F(RankGraphBuilderTest, Ut_ConstructConnI_When_PortMapEmpty_Expect_OnlyPcieCreatesD2hIface)
+{
+    const std::map<std::string, std::vector<IpAddress>> emptyPortAddrMap;
+    auto pcieIface = std::make_shared<PhyTopo::ConnInterface>(
+        std::set<std::string>{"0/0"}, AddrPosition::DEVICE, LinkType::PEER2PEER,
+        std::set<LinkProtocol>{LinkProtocol::PCIE});
+    MOCKER(HrtRaSocketGetVnicIpInfos).stubs();
+
+    auto pcieNetIfaces = ConstructConnIFromPhyTopoConnIAndPortMap(
+        pcieIface, emptyPortAddrMap, TopoType::CLOS, 0, 0);
+
+    ASSERT_EQ(1, pcieNetIfaces.size());
+    EXPECT_EQ(std::set<std::string>{"d2h"}, pcieNetIfaces[0]->GetPorts());
+    EXPECT_EQ(std::set<LinkProtocol>{LinkProtocol::PCIE}, pcieNetIfaces[0]->GetLinkProtocols());
+
+    auto unmatchedIface = std::make_shared<PhyTopo::ConnInterface>(
+        std::set<std::string>{"0/9"}, AddrPosition::DEVICE, LinkType::PEER2PEER,
+        std::set<LinkProtocol>{LinkProtocol::UB_CTP});
+    auto unmatchedNetIfaces = ConstructConnIFromPhyTopoConnIAndPortMap(
+        unmatchedIface, emptyPortAddrMap, TopoType::CLOS, 0, 0);
+
+    EXPECT_TRUE(unmatchedNetIfaces.empty());
+}
 TEST_F(RankGraphBuilderTest, Ut_RankGraphBuilderRecoverBuild_When_Invalid_Expect_InvalidParamsException)
 {
     RankTableInfo rankTableInfo;

@@ -253,9 +253,10 @@ void SocketManager::ServerInitAll(NewRankInfo &rankInfo)
     u32 localId = rankInfo.localId;
     u32 devicePhyId = rankInfo.deviceId;
     for (auto &rankLevelInfo : rankInfo.rankLevelInfos) {
-        shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> graph = PhyTopo::GetInstance()->GetTopoGraph(rankLevelInfo.netLayer);
+        // 物理图不区分逻辑层，按 RankTable 端口筛选当前层链路。
+        auto graph = PhyTopo::GetInstance()->GetTopoGraph();
         if (graph == nullptr) {
-            HCCL_DEBUG("[SocketManager::%s]Can't find the layout %u Graph!", __func__, rankLevelInfo.netLayer);
+            HCCL_DEBUG("[SocketManager::%s] Physical topo graph is nullptr.", __func__);
             continue;
         }
         std::vector<std::shared_ptr<PhyTopo::Link>> links = graph->GetEdges(localId);
@@ -270,7 +271,7 @@ void SocketManager::ServerInitAll(NewRankInfo &rankInfo)
                 LinkProtoType protoType = LinkProtocol2LinkProtoType(protocol);
                 const std::set<std::string>  &ports = link->GetSourceIFace()->GetPorts();
                 for (auto &rankAddr : rankLevelInfo.rankAddrs) {
-                    // topo查得网口使用则打开建链
+                    // 仅为当前 RankTable 层命中的物理端口创建监听。
                     std::set<std::string> intersectSet;
                     std::set_intersection(ports.begin(), ports.end(), rankAddr.ports.begin(), rankAddr.ports.end(), std::inserter(intersectSet, intersectSet.begin()));
                     if (intersectSet.empty()) {

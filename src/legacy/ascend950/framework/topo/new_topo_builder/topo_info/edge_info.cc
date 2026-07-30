@@ -42,15 +42,7 @@ const unordered_map<string, AddrPosition> EdgeInfo::strToAddrPosition =
 
 void EdgeInfo::Deserialize(const nlohmann::json &edgeInfoJson)
 {
-    std::string msgNetLayer = "[EdgeInfo::Deserialize] error occurs when parser object of propName \"net_layer\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgNetLayer,
-        netLayer = GetJsonPropertyUInt(edgeInfoJson, "net_layer");
-    );
-    if (netLayer > MAX_VALUE_LEVEL) {
-        THROW<InvalidParamsException>(StringFormat(
-            "[EdgeInfo::%s] netLayer value[%u] is out of range[0, %u].", __func__, netLayer, MAX_VALUE_LEVEL));
-    }
-
+    // net_layer 不再解析，物理边只保留连接属性。
     DeserializeProtocol(edgeInfoJson);
 
     if (edgeInfoJson.contains("topo_type")) {
@@ -180,9 +172,8 @@ void EdgeInfo::DeserializePort(const nlohmann::json &edgeInfoJson, std::string p
 
 bool EdgeInfo::operator==(const EdgeInfo &other) const
 {
-    return netLayer == other.netLayer && linkType == other.linkType && protocols == other.protocols &&
-           topoType == other.topoType && topoInstId == other.topoInstId && CompareEndpoints(other) &&
-           position == other.position;
+    return linkType == other.linkType && protocols == other.protocols && topoType == other.topoType &&
+           topoInstId == other.topoInstId && CompareEndpoints(other) && position == other.position;
 }
 
 // 比较EndpointA和B
@@ -264,7 +255,6 @@ std::string EdgeInfo::Describe() const
     string localBPortsStr = DescribePorts(localBPorts);
 
     std::string description = "EdgeInfo{";
-    description += StringFormat("netLayer=%u", netLayer);
     description += StringFormat("topoType=%s", topoType.Describe().c_str());
     description += StringFormat(", topoInstanceId=%u", topoInstId);
     description += StringFormat(", protocols=%s", protocolStr.str().c_str());
@@ -294,7 +284,8 @@ std::string EdgeInfo::DescribePorts(std::set<std::string> ports) const
 
 void EdgeInfo::GetBinStream(BinaryStream &binaryStream) const
 {
-    binaryStream << netLayer << static_cast<u32>(linkType) << static_cast<u32>(topoType) << topoInstId;
+    // 保留旧快照占位字段，不参与拓扑语义。
+    binaryStream << LEGACY_BINARY_LAYER << static_cast<u32>(linkType) << static_cast<u32>(topoType) << topoInstId;
     binaryStream << protocols.size();
     for (LinkProtocol protocol : protocols) {
         binaryStream << static_cast<u32>(protocol);
@@ -317,7 +308,8 @@ void EdgeInfo::GetBinStream(BinaryStream &binaryStream) const
 
 EdgeInfo::EdgeInfo(BinaryStream &binaryStream)
 {
-    binaryStream >> netLayer;
+    u32 ignoredBinaryLayer;
+    binaryStream >> ignoredBinaryLayer;
     u32 linkTypeTmp;
     binaryStream >> linkTypeTmp;
     linkType = static_cast<LinkType::Value>(linkTypeTmp);

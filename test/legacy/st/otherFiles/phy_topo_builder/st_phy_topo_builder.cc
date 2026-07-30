@@ -214,13 +214,8 @@ std::unique_ptr<PhyTopo> PhyTopoBuilderBuildStub(const std::string &topoPath)
     std::unique_ptr<PhyTopo> phyTopo = std::make_unique<PhyTopo>();
     PhyTopoBuilder phyTopoBuilder;
     auto topoInfo = phyTopoBuilder.LoadTopoInfo(topoPath);
-    // 根据topoInfo，按netLayer构造Graph
-    for (const auto &iter : topoInfo->edges) {
-        auto netLayer = iter.first;
-        auto graph = phyTopoBuilder.CreateGraph(iter.second);
-        phyTopo->AddTopoGraph(netLayer, graph);
-        HCCL_DEBUG("[PhyTopoBuilder::%s]Build netLayer[%u] topo graph success.", __func__, netLayer);
-    }
+    auto graph = phyTopoBuilder.CreateGraph(topoInfo->edges);
+    phyTopo->AddTopoGraph(graph);
     return phyTopo;
 }
 
@@ -277,7 +272,7 @@ TEST_F(PhyTopoBuilderTest, St_PhyTopoBuilder_When_ValidTopoPath_Expect_ReturnEdg
     std::string topoPath = "./topo.json";
     MOCKER_CPP(&PhyTopoBuilder::LoadTopoInfo).stubs().will(invoke(LoadTopoInfoStub));
     std::unique_ptr<PhyTopo> phyTopo = PhyTopoBuilderBuildStub(topoPath);
-    auto graph = phyTopo->GetTopoGraph(0);
+    auto graph = phyTopo->GetTopoGraph();
     size_t totalEdgeNum = 0;
 
     // 遍历所有源节点
@@ -306,7 +301,7 @@ TEST_F(PhyTopoBuilderTest, St_PhyTopoBuilder_When_DiffProtocols_Expect_ReturnEdg
     std::string topoPath = "./topo.json";
     MOCKER_CPP(&PhyTopoBuilder::LoadTopoInfo).stubs().will(invoke(LoadTopoInfoWithDiffProtocols));
     std::unique_ptr<PhyTopo> phyTopo = PhyTopoBuilderBuildStub(topoPath);
-    auto graph = phyTopo->GetTopoGraph(0);
+    auto graph = phyTopo->GetTopoGraph();
     size_t totalEdgeNum = 0;
 
     // 遍历所有源节点
