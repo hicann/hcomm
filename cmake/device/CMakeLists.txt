@@ -69,6 +69,7 @@ add_cann_sign_file(
     INPUT "cann-hcomm-compat.tar.gz"
     CONFIG "${HCOMM_DIR}/scripts/package/sign.xml"
     RESULT_VAR "cann_hcomm_compat_signed_file"
+    VERSION "${CANN_VERSION_hcomm_VERSION}"
     DEPENDS pack_cann_hcomm_compat
 )
 
@@ -85,6 +86,7 @@ add_cann_sign_file(
     INPUT "cann-hccd-compat.tar.gz"
     CONFIG "${HCOMM_DIR}/scripts/package/sign.xml"
     RESULT_VAR "cann_hccd_compat_signed_file"
+    VERSION "${CANN_VERSION_hcomm_VERSION}"
     DEPENDS pack_cann_hccd_compat sign_cann_hcomm_compat
 )
 
@@ -101,6 +103,7 @@ add_cann_sign_file(
     INPUT "aicpu_hcomm.tar.gz"
     CONFIG "${HCOMM_DIR}/scripts/package/sign.xml"
     RESULT_VAR "aicpu_hcomm_signed_file"
+    VERSION "${CANN_VERSION_hcomm_VERSION}"
     DEPENDS pack_aicpu_hcomm sign_cann_hccd_compat
 )
 

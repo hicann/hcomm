@@ -37,7 +37,6 @@ set(HCOMM_DIR         "${CMAKE_CURRENT_SOURCE_DIR}")
 set(HCC_TOOLCHAIN_DIR "${ASCEND_CANN_PACKAGE_PATH}/toolkit/toolchain/hcc")
 set(HCC_CXX_COMPILER  "${HCC_TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-g++")
 set(HCC_C_COMPILER    "${HCC_TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-gcc")
-set(HCC_C_AR          "${HCC_TOOLCHAIN_DIR}/bin/aarch64-target-linux-gnu-ar")
 
 # 交叉编译场景（x86机器上编译arm包）
 if(ENABLE_BUILD_AARCH)
@@ -140,36 +139,7 @@ elseif(BUILD_OPEN_PROJECT)
 
     # Device 侧编译构建
     if(ENABLE_DEVICE)
-        include(ExternalProject)
-        ExternalProject_Add(hcomm_device
-            SOURCE_DIR ${HCOMM_DIR}/cmake/device
-            BINARY_DIR ${HCOMM_DEVICE_BUILD_PATH}
-            CMAKE_ARGS
-                -DTOOLCHAIN_DIR=${HCC_TOOLCHAIN_DIR}
-                -DCMAKE_TOOLCHAIN_FILE=${HCOMM_DIR}/cmake/aarch64-hcc-toolchain.cmake
-                -DCMAKE_C_COMPILER=${HCC_C_COMPILER}
-                -DCMAKE_CXX_COMPILER=${HCC_CXX_COMPILER}
-                -DCMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER}
-                -DCMAKE_CXX_COMPILER_LAUNCHER=${CMAKE_CXX_COMPILER_LAUNCHER}
-                -DCMAKE_C_AR=${HCC_C_AR}
-                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                -DCMAKE_INSTALL_PREFIX=${HCOMM_DEVICE_INSTALL_PATH}
-                -DASCEND_INSTALL_PATH=${ASCEND_INSTALL_PATH}
-                -DBUILD_OPEN_PROJECT=${BUILD_OPEN_PROJECT}
-                -DCANN_3RD_LIB_PATH=${CANN_3RD_LIB_PATH}
-                -DENABLE_SIGN=${ENABLE_SIGN}
-                -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT}
-                -DVERSION_INFO=${VERSION_INFO}
-            INSTALL_COMMAND ${CMAKE_CPACK_COMMAND}
-            BUILD_ALWAYS TRUE
-        )
-
-        # 安装 device 侧编译产物
-        install(FILES
-            ${HCOMM_DEVICE_BUILD_PATH}/device-hcomm.tar.gz
-            DESTINATION .
-            COMPONENT hcomm
-        )
+        add_cann_device_project(hcomm)
     endif()
 
     set(HCCL_HEAD

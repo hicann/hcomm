@@ -34,10 +34,6 @@ set(HI_PYTHON                     "python3"                       CACHE   STRING
 message(STATUS "config.cmake BUILD_OPEN_PROJECT=${BUILD_OPEN_PROJECT}")
 message(STATUS "config.cmake PRODUCT=${PRODUCT} PRODUCT_SIDE=${PRODUCT_SIDE}")
 
-# Device 构建、安装目录
-set(HCOMM_DEVICE_BUILD_PATH   ${CMAKE_BINARY_DIR}/device_build)
-set(HCOMM_DEVICE_INSTALL_PATH ${CMAKE_BINARY_DIR}/device_install)
-
 set(INSTALL_LIBRARY_DIR        ${CMAKE_SYSTEM_PROCESSOR}-linux/lib64)
 set(INSTALL_INCLUDE_DIR        ${CMAKE_SYSTEM_PROCESSOR}-linux/include)
 set(INSTALL_PKG_INCLUDE_DIR    ${CMAKE_SYSTEM_PROCESSOR}-linux/pkg_inc)

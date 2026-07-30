@@ -26,7 +26,6 @@ ENABLE_EXPERIMENTAL="OFF"
 CANN_3RD_LIB_PATH="${CURRENT_DIR}/third_party"
 CUSTOM_SIGN_SCRIPT=""
 ENABLE_SIGN="false"
-VERSION_INFO="8.5.0"
 
 MOCK_FWK_HLT="0"
 
@@ -272,7 +271,7 @@ function usage() {
   echo "  sh build.sh --pkg [-h | --help] [-j<N>]"
   echo "              [--cann_3rd_lib_path=<PATH>] [-p|--package-path <PATH>]"
   echo "              [--asan]"
-  echo "              [--sign-script <PATH>] [--enable-sign] [--version <VERSION>]"
+  echo "              [--sign-script <PATH>] [--enable-sign]"
   echo ""
   echo "Options:"
   echo "    -h, --help     Print usage"
@@ -288,8 +287,6 @@ function usage() {
   echo "                   Set sign-script's path to <PATH>"
   echo "    --enable-sign"
   echo "                   Enable to sign"
-  echo "    --version <VERSION>"
-  echo "                   Set sign version to <VERSION>"
   echo "    -u, --ut       Run all unit tests (UT)"
   echo "    -s, --st       Run all system tests (ST)"
   echo "    --noexec       Run build and skip executing tests"
@@ -468,10 +465,6 @@ while [[ $# -gt 0 ]]; do
         CUSTOM_SIGN_SCRIPT="$(realpath $2)"
         shift 2
         ;;
-    --version)
-        VERSION_INFO="$2"
-        shift 2
-        ;;
     *)
         log "Error: Undefined option: $1"
         usage
@@ -514,7 +507,6 @@ CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_EXPERIMENTAL=${ENABLE_EXPERIMENTAL}"
 
 CUSTOM_OPTION="${CUSTOM_OPTION} -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_SIGN=${ENABLE_SIGN}"
-CUSTOM_OPTION="${CUSTOM_OPTION} -DVERSION_INFO=${VERSION_INFO}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DPRODUCT=ascend"
 
 CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_TEST=${ENABLE_TEST}"
