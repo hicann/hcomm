@@ -46,7 +46,7 @@ public:
 private:
     std::unique_ptr<LocalRdmaRmaBufferMgr> localRdmaRmaBufferMgr_{};
     std::vector<RegedBufferEntry<Hccl::LocalRdmaRmaBuffer>> allRegisteredBuffers_;
-    std::vector<std::shared_ptr<Hccl::LocalRdmaRmaBuffer>> activeHandles_;
+    std::vector<std::shared_ptr<Hccl::LocalRdmaRmaBuffer>> handlesRecords_;
     std::unordered_map<EndpointDesc, std::unique_ptr<RemoteRdmaRmaBufferMgr>> remoteRdmaRmaBufferMgrs_;
 };
 }

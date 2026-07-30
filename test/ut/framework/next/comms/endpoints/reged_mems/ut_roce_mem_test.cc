@@ -190,3 +190,102 @@ TEST_F(RoceRegedMemMgrTest, Ut_GetParamsFromMemDesc_When_DescLenEqualSize_Expect
     HcclResult ret = roceRegedMemMgrPtr->GetParamsFromMemDesc(buffer, descLen, endpointDesc, dto);
     EXPECT_EQ(HCCL_SUCCESS, ret);
 }
+
+// 父+子集注册 → 先解注册父(soft-delete) → 验证handlesRecords_和allBuffers_状态 → 再解注册子
+TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_UnregisterParentFirst_Expect_ParentSoftDeleted)
+{
+    RoceRegedMemMgr roceRegedMemMgr{};
+    HcommMem mem0;
+    mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem0.addr = (void*)0x7000;
+    mem0.size = 4096;
+    void *parentHandle = nullptr;
+    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(mem0, "parent", &parentHandle), HCCL_SUCCESS);
+    auto* parentBuf = static_cast<Hccl::LocalRdmaRmaBuffer*>(parentHandle);
+    hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(),
+        static_cast<uint64_t>(parentBuf->GetSize()));
+    EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 1u);
+    EXPECT_EQ(roceRegedMemMgr.handlesRecords_.size(), 1u);
+
+    // 子集注册（alias）
+    HcommMem mem1;
+    mem1.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem1.addr = (void*)0x7000;
+    mem1.size = 512;
+    void *childHandle = nullptr;
+    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(mem1, "child", &childHandle), HCCL_SUCCESS);
+    EXPECT_NE(childHandle, parentHandle);
+    EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 2u);
+    EXPECT_EQ(roceRegedMemMgr.handlesRecords_.size(), 2u);
+    EXPECT_EQ(roceRegedMemMgr.allRegisteredBuffers_.size(), 2u);
+
+    // 先解注册父（ref 2→1，IsInTree=true，父标记为soft-deleted）
+    EXPECT_EQ(roceRegedMemMgr.UnregisterMemory(parentHandle), HCCL_SUCCESS);
+    EXPECT_TRUE(roceRegedMemMgr.localRdmaRmaBufferMgr_->Find(parentKey).first);
+    EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 1u);
+
+    // 验证：handlesRecords_中已移除父，但allBuffers_中父标记为soft-deleted
+    EXPECT_EQ(roceRegedMemMgr.handlesRecords_.size(), 1u);
+    EXPECT_EQ(roceRegedMemMgr.allRegisteredBuffers_.size(), 2u);
+
+    auto itParent = std::find_if(roceRegedMemMgr.allRegisteredBuffers_.begin(),
+        roceRegedMemMgr.allRegisteredBuffers_.end(),
+        [parentBuf](const auto& e) { return e.first.get() == parentBuf; });
+    ASSERT_NE(itParent, roceRegedMemMgr.allRegisteredBuffers_.end());
+    EXPECT_TRUE(itParent->second);
+
+    auto itChild = std::find_if(roceRegedMemMgr.allRegisteredBuffers_.begin(),
+        roceRegedMemMgr.allRegisteredBuffers_.end(),
+        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    ASSERT_NE(itChild, roceRegedMemMgr.allRegisteredBuffers_.end());
+    EXPECT_FALSE(itChild->second);
+
+    // 再解注册子（ref 1→0，tree entry removed，子从allBuffers_擦除）
+    EXPECT_EQ(roceRegedMemMgr.UnregisterMemory(childHandle), HCCL_SUCCESS);
+    EXPECT_FALSE(roceRegedMemMgr.localRdmaRmaBufferMgr_->Find(parentKey).first);
+    EXPECT_EQ(GetRef(*roceRegedMemMgr.localRdmaRmaBufferMgr_, parentKey), 0u);
+    EXPECT_EQ(roceRegedMemMgr.handlesRecords_.size(), 0u);
+
+    // 验证：子已从allBuffers_中移除
+    itChild = std::find_if(roceRegedMemMgr.allRegisteredBuffers_.begin(),
+        roceRegedMemMgr.allRegisteredBuffers_.end(),
+        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    EXPECT_EQ(itChild, roceRegedMemMgr.allRegisteredBuffers_.end());
+}
+
+// GetAllMemHandles: 空记录 → 注册 → 多次注册 → 解注册 → 验证句柄数
+TEST_F(RoceRegedMemMgrTest, ut_RoceRegedMemMgr_When_GetAllMemHandles_Expect_CorrectCount)
+{
+    RoceRegedMemMgr roceRegedMemMgr{};
+
+    void *handles = nullptr;
+    uint32_t count = 99U;
+    EXPECT_EQ(roceRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 0U);
+    EXPECT_EQ(handles, nullptr);
+
+    HcommMem mem;
+    mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
+    mem.addr = (void*)0x8000;
+    mem.size = 4096;
+    void *h1 = nullptr;
+    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
+
+    EXPECT_EQ(roceRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 1U);
+    EXPECT_NE(handles, nullptr);
+
+    void *h2 = nullptr;
+    ASSERT_EQ(roceRegedMemMgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
+
+    EXPECT_EQ(roceRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 2U);
+
+    EXPECT_EQ(roceRegedMemMgr.UnregisterMemory(h1), HCCL_SUCCESS);
+    EXPECT_EQ(roceRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 1U);
+
+    EXPECT_EQ(roceRegedMemMgr.UnregisterMemory(h2), HCCL_SUCCESS);
+    EXPECT_EQ(roceRegedMemMgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
+    EXPECT_EQ(count, 0U);
+}

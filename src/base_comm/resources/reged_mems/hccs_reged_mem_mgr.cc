@@ -72,6 +72,7 @@ HcclResult HccsRegedMemMgr::RegisterMemory(HcommMem mem, const char *memTag, voi
 
     *memHandle = static_cast<void *>(localIpcRmaBuffer.get());
     allRegisteredBuffers_.emplace_back(localIpcRmaBuffer, false);
+    handlesRecords_.push_back(localIpcRmaBuffer);
 
     HCCL_INFO("[%s] addr[%p] size[%u] memHandle[%p] allRegisteredBuffers_.size[%d]done",
         __FUNCTION__, mem.addr, mem.size, *memHandle, allRegisteredBuffers_.size());
@@ -117,6 +118,7 @@ HcclResult HccsRegedMemMgr::UnregisterMemory(void* memHandle)
     for (auto it = allRegisteredBuffers_.begin(); it != allRegisteredBuffers_.end(); it++) {
         if (it->first.get() == buffer) {
             HCCL_INFO("[%s] addr[%p] size[%u] memHandle[%p]", __FUNCTION__, addr, size, memHandle);
+            handlesRecords_.erase(std::remove(handlesRecords_.begin(), handlesRecords_.end(), it->first), handlesRecords_.end());
             if (!localIpcRmaBufferMgr->IsInTree(ownKey)) {
                 it = allRegisteredBuffers_.erase(it);
             } else {
@@ -425,7 +427,12 @@ HcclResult HccsRegedMemMgr::MemoryCloseRemoteIpc()
 HcclResult HccsRegedMemMgr::GetAllMemHandles(void **memHandles, uint32_t *memHandleNum)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
-    return GetAllMemHandlesImpl(allRegisteredBuffers_, activeHandles_, memHandles, memHandleNum, "HccsRegedMemMgr");
+    CHK_PTR_NULL(memHandles);
+    CHK_PTR_NULL(memHandleNum);
+    *memHandleNum = static_cast<uint32_t>(handlesRecords_.size());
+    *memHandles = handlesRecords_.empty() ? nullptr : static_cast<void *>(handlesRecords_.data());
+    HCCL_INFO("[HccsRegedMemMgr][GetAllMemHandles] memHandleNum[%u]", *memHandleNum);
+    return HCCL_SUCCESS;
 }
 
 HcclResult HccsRegedMemMgr::GetRemoteIpcRmaBuffer(std::vector<CommMem> &remoteIpcRmaBufferVec)
