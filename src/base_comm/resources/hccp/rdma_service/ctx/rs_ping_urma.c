@@ -175,6 +175,7 @@ STATIC int RsPingCommonInitJettyWithAttr(struct RsPingCtxCb *pingCb,
     jfsCfg.user_ctx = 0;
 
     jfrCfg.depth = attr->ub.qpAttr.cap.maxRecvWr;
+    jfrCfg.flag.bs.token_policy = URMA_TOKEN_PLAIN_TEXT;
     jfrCfg.trans_mode = URMA_TM_UM;
     jfrCfg.max_sge = (uint8_t)attr->ub.qpAttr.cap.maxRecvSge;
     jfrCfg.min_rnr_timer = URMA_TYPICAL_MIN_RNR_TIMER;
@@ -647,7 +648,7 @@ STATIC int RsPingCommonImportJetty(urma_context_t *urmaCtx, struct PingQpInfo *t
     tokenValue.token = target->ub.tokenValue;
     rjetty.trans_mode = URMA_TM_UM;
     rjetty.type = URMA_JETTY;
-    rjetty.flag.bs.order_type = 0;
+    rjetty.flag.bs.token_policy = URMA_TOKEN_PLAIN_TEXT;
     rjetty.tp_type = URMA_UTP;
 
     *importTjetty = RsUrmaImportJetty(urmaCtx, &rjetty, &tokenValue);

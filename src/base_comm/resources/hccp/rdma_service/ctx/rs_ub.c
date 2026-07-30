@@ -301,7 +301,7 @@ STATIC int RsUbDevShareJfrInit(struct RsUbDevCb *devCb)
     CHK_PRT_RETURN(devCb->shareJfc == NULL, hccp_err("RsUrmaCreateJfc failed, errno:%d", errno), -ENOMEM);
 
     jfrCfg.depth = CQ_DEFAULT_MIN_RECV_DEPTH;
-    jfrCfg.flag.bs.tag_matching = URMA_NO_TAG_MATCHING;
+    jfrCfg.flag.bs.token_policy = URMA_TOKEN_PLAIN_TEXT;
     jfrCfg.trans_mode = URMA_TM_RM;
     jfrCfg.max_sge = QP_DEFAULT_MIN_CAP_RECV_SGE;
     jfrCfg.min_rnr_timer = URMA_TYPICAL_MIN_RNR_TIMER;
