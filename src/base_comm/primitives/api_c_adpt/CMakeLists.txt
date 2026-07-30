@@ -12,6 +12,11 @@ add_subdirectory(ccu)
 
 set(src_list
     hcomm_c_adpt.cc
+    hcomm_endpoint_c_adpt.cc
+    hcomm_mem_c_adpt.cc
+    hcomm_channel_c_adpt.cc
+    hcomm_thread_c_adpt.cc
+    hcomm_engine_ctx_c_adpt.cc
     endpoint_map.cc
     hccl_comm_socket_c_adpt.cc
 )
