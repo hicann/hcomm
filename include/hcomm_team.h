@@ -26,13 +26,6 @@ typedef enum {
 } HcommTeamWindowFlag;
 
 typedef struct {
-    uint32_t signalCount;
-    uint32_t counterCount;
-    uint32_t barrierCount;
-    uint32_t reserved[5];
-} HcommTeamSyncMemRequirement;
-
-typedef struct {
     CommAbiHeader header;
     uint32_t memberNum;
     uint32_t selfMemberId;

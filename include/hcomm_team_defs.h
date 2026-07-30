@@ -27,6 +27,12 @@ typedef uint64_t *HcommTeamHandle;
  */
 typedef uint64_t *HcommWindowHandle;
 
+typedef struct {
+    uint32_t signalCount;
+    uint32_t counterCount;
+    uint32_t barrierCount;
+    uint32_t reserved[5];
+} HcommTeamSyncMemRequirement;
 
 #ifdef __cplusplus
 }
