@@ -621,10 +621,10 @@ TEST_F(SymmetricMemoryTest, ut_AllocSymmetricMem_When_Normal_Expect_ReturnNonNul
 {  
     u32 tmp = 1;
     void* mockDevWin = static_cast<void*>(&tmp);
-    MOCKER_CPP(HcclMemAlloc)
+    MOCKER_CPP(HcommMemAlloc)
         .stubs()
         .with()
-        .will(returnValue(HCCL_SUCCESS));
+        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
     MOCKER_CPP(&SymmetricMemory::RegisterSymmetricMem)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), outBoundP(&mockDevWin, sizeof(mockDevWin)))
@@ -638,12 +638,12 @@ TEST_F(SymmetricMemoryTest, ut_AllocSymmetricMem_When_Normal_Expect_ReturnNonNul
     EXPECT_NE(devWin, nullptr);
 }
 
-TEST_F(SymmetricMemoryTest, ut_AllocSymmetricMem_When_HcclMemAllocFails_Expect_ReturnNull)
+TEST_F(SymmetricMemoryTest, ut_AllocSymmetricMem_When_HcommMemAllocFails_Expect_ReturnNull)
 {  
-    MOCKER_CPP(HcclMemAlloc)
+    MOCKER_CPP(HcommMemAlloc)
         .stubs()
         .with()
-        .will(returnValue(HCCL_E_INTERNAL));
+        .will(returnValue(static_cast<HcommResult>(HCCL_E_INTERNAL)));
     std::vector<RankInfo> rankInfoList(2);
     HcclIpAddress localVnicIp;
     std::shared_ptr<SymmetricMemoryAgent> symmetricMemoryAgent_ = std::make_shared<SymmetricMemoryAgent>(nullptr, 0,
@@ -655,10 +655,10 @@ TEST_F(SymmetricMemoryTest, ut_AllocSymmetricMem_When_HcclMemAllocFails_Expect_R
 
 TEST_F(SymmetricMemoryTest, ut_AllocSymmetricMem_When_RegisterSymmetricMemFails_Expect_ReturnNull)
 {  
-    MOCKER_CPP(HcclMemAlloc)
+    MOCKER_CPP(HcommMemAlloc)
         .stubs()
         .with()
-        .will(returnValue(HCCL_SUCCESS));
+        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
     MOCKER_CPP(&SymmetricMemory::RegisterSymmetricMem)
         .stubs()
         .with()
@@ -705,10 +705,10 @@ TEST_F(SymmetricMemoryTest, ut_DeleteSymmetricWindow_When_Normal_Expect_ReturnHC
     EXPECT_EQ(ret, HCCL_SUCCESS);
     u32 tmp = 1;
     void* mockDevWin = static_cast<void*>(&tmp);
-    MOCKER_CPP(HcclMemAlloc)
+    MOCKER_CPP(HcommMemAlloc)
         .stubs()
         .with()
-        .will(returnValue(HCCL_SUCCESS));
+        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
     MOCKER_CPP(&SymmetricMemory::RegisterSymmetricMem)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), outBoundP(&mockDevWin, sizeof(mockDevWin)))
@@ -721,10 +721,10 @@ TEST_F(SymmetricMemoryTest, ut_DeleteSymmetricWindow_When_Normal_Expect_ReturnHC
 TEST_F(SymmetricMemoryTest, ut_FreeSymmetricMem_When_Normal_Expect_ReturnNonNullptr)
 {  
     void* mockDevWin = new u32(1);
-    MOCKER_CPP(HcclMemAlloc)
+    MOCKER_CPP(HcommMemAlloc)
         .stubs()
         .with()
-        .will(returnValue(HCCL_SUCCESS));
+        .will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
     MOCKER_CPP(&SymmetricMemory::RegisterSymmetricMem)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), outBoundP(&mockDevWin, sizeof(mockDevWin)))
