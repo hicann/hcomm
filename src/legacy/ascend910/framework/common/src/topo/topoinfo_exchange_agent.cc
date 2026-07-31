@@ -11,6 +11,7 @@
 #include "topoinfo_exchange_agent.h"
 #include <iostream>
 #include <sstream>
+#include <cstring>
 #include "externalinput_pub.h"
 #include "adapter_error_manager_pub.h"
 #include "config.h"
@@ -379,6 +380,12 @@ HcclResult TopoInfoExchangeAgent::TryRecvFromServer(std::shared_ptr<HcclSocket> 
     
     if (ret == HCCL_SUCCESS) {
         HCCL_RUN_INFO("[%s]recvMes %s", __func__, recvMsgBuf);
+        // 校验收到的是否正确，server端使用的是固定消息
+        if (strncmp(recvMsgBuf, TOPO_EXCHANGE_CHECK_MESSAGE, sizeof(TOPO_EXCHANGE_CHECK_MESSAGE)) != 0) {
+            HCCL_ERROR("[%s]recv message check failed, expect [%s], but recv [%s]",
+                __func__, TOPO_EXCHANGE_CHECK_MESSAGE, recvMsgBuf);
+            return HCCL_E_INTERNAL;
+        }
     } else if (retryTime < AGENT_MAX_RETRY_TIME) {
         HCCL_RUN_WARNING("[%s]client recv from server failed, will try to connect with server again.", __func__);
     } else {

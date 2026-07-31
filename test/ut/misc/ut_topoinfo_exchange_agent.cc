@@ -23,6 +23,7 @@
 
 #define protected public
 #define TEST_RANK_SIZE 4
+constexpr u32 AGENT_MAX_RETRY_TIME = 3;
 
 using namespace std;
 using namespace hccl;
@@ -333,6 +334,97 @@ TEST_F(TopoExchangeAgentTest, VerifyClusterSuperPodInfo_MissingSuperPodId_Return
     EXPECT_EQ(ret, HCCL_E_PARA);
     
     GlobalMockObject::verify();
+}
+
+// TryRecvFromServer 测试桩函数
+static HcclResult stub_Recv_CorrectMessage(HcclSocket *that, void *buf, uint32_t len, uint32_t timeout)
+{
+    memcpy_s(buf, len, TOPO_EXCHANGE_CHECK_MESSAGE, sizeof(TOPO_EXCHANGE_CHECK_MESSAGE));
+    return HCCL_SUCCESS;
+}
+
+static HcclResult stub_Recv_WrongMessage(HcclSocket *that, void *buf, uint32_t len, uint32_t timeout)
+{
+    constexpr char wrongMsg[] = "WrongMessage";
+    memcpy_s(buf, len, wrongMsg, sizeof(wrongMsg));
+    return HCCL_SUCCESS;
+}
+
+static HcclResult stub_Recv_Timeout(HcclSocket *that, void *buf, uint32_t len, uint32_t timeout)
+{
+    return HCCL_E_TIMEOUT;
+}
+
+TEST_F(TopoExchangeAgentTest, TryRecvFromServer_CorrectMessage_ReturnSuccess)
+{
+    u32 retryTime = AGENT_MAX_RETRY_TIME;
+    u32 timeout = 3000;
+    MOCKER(GetExternalInputHcclLinkTimeOut).stubs().will(returnValue(timeout * retryTime));
+    MOCKER_CPP(static_cast<HcclResult (hccl::HcclSocket::*)(void*, uint32_t, uint32_t)>(&hccl::HcclSocket::Recv),
+               HcclResult(hccl::HcclSocket::*)(void*, uint32_t, uint32_t))
+        .stubs()
+        .with(mockcpp::any())
+        .will(invoke(stub_Recv_CorrectMessage));
+
+    HcclNetDevCtx netDevCtx;
+    std::shared_ptr<HcclSocket> socket = std::make_shared<HcclSocket>(netDevCtx);
+    HcclIpAddress localIp(1694542016);
+    u32 serverPort = 60000;
+    string identifier = "test";
+    HcclBasicRankInfo localRankInfo;
+    localRankInfo.deviceType = DevType::DEV_TYPE_910_93;
+    TopoInfoExchangeAgent agent(localIp, serverPort, identifier, netDevCtx, localRankInfo);
+
+    HcclResult ret = agent.TryRecvFromServer(socket, retryTime);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(TopoExchangeAgentTest, TryRecvFromServer_WrongMessage_ReturnInternalError)
+{
+    u32 retryTime = AGENT_MAX_RETRY_TIME;
+    u32 timeout = 3000;
+    MOCKER(GetExternalInputHcclLinkTimeOut).stubs().will(returnValue(timeout * retryTime));
+    MOCKER_CPP(static_cast<HcclResult (hccl::HcclSocket::*)(void*, uint32_t, uint32_t)>(&hccl::HcclSocket::Recv),
+               HcclResult(hccl::HcclSocket::*)(void*, uint32_t, uint32_t))
+        .stubs()
+        .with(mockcpp::any())
+        .will(invoke(stub_Recv_WrongMessage));
+
+    HcclNetDevCtx netDevCtx;
+    std::shared_ptr<HcclSocket> socket = std::make_shared<HcclSocket>(netDevCtx);
+    HcclIpAddress localIp(1694542016);
+    u32 serverPort = 60000;
+    string identifier = "test";
+    HcclBasicRankInfo localRankInfo;
+    localRankInfo.deviceType = DevType::DEV_TYPE_910_93;
+    TopoInfoExchangeAgent agent(localIp, serverPort, identifier, netDevCtx, localRankInfo);
+
+    HcclResult ret = agent.TryRecvFromServer(socket, retryTime);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+}
+
+TEST_F(TopoExchangeAgentTest, TryRecvFromServer_RecvFailed_ReturnError)
+{
+    u32 retryTime = AGENT_MAX_RETRY_TIME;
+    u32 timeout = 3000;
+    MOCKER(GetExternalInputHcclLinkTimeOut).stubs().will(returnValue(timeout * retryTime));
+    MOCKER_CPP(static_cast<HcclResult (hccl::HcclSocket::*)(void*, uint32_t, uint32_t)>(&hccl::HcclSocket::Recv),
+               HcclResult(hccl::HcclSocket::*)(void*, uint32_t, uint32_t))
+        .stubs()
+        .with(mockcpp::any())
+        .will(invoke(stub_Recv_Timeout));
+
+    HcclNetDevCtx netDevCtx;
+    std::shared_ptr<HcclSocket> socket = std::make_shared<HcclSocket>(netDevCtx);
+    HcclIpAddress localIp(1694542016);
+    u32 serverPort = 60000;
+    string identifier = "test";
+    HcclBasicRankInfo localRankInfo;
+    localRankInfo.deviceType = DevType::DEV_TYPE_910_93;
+    TopoInfoExchangeAgent agent(localIp, serverPort, identifier, netDevCtx, localRankInfo);
+
+    HcclResult ret = agent.TryRecvFromServer(socket, retryTime);
+    EXPECT_EQ(ret, HCCL_E_TIMEOUT);
 }
 
 TEST_F(TopoExchangeAgentTest, VerifyClusterSuperPodInfo_DuplicateSuperDeviceId_ReturnParaError)
