@@ -89,6 +89,7 @@ HcclResult hrtSetWorkModeAicpu(bool workModeAicpu);
 HcclResult hrtGetDeviceSatMode(aclrtFloatOverflowMode *floatOverflowMode);
 HcclResult hrtGetDevicePhyIdByIndex(u32 deviceLogicId, u32 &devicePhyId, bool isRefresh = false);
 HcclResult hrtGetDeviceIndexByPhyId(u32 devicePhyId, u32 &deviceLogicId);
+HcclResult hrtGetLogicDevIdByUserDevId(s32 userDevId, s32 &logicDevId);
 HcclResult hrtGetPairDevicePhyId(u32 localDevPhyId, u32 &pairDevPhyId);
 HcclResult PrintMemoryAttr(const void *memAddr);
 HcclResult hrtCtxGetOverflowAddr(void **overflowAddr);

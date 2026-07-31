@@ -220,6 +220,7 @@ DevType HrtGetDeviceType();
 s32     HrtDeviceGetBareTgid();
 void    HrtGetSocVer(std::string &socName);
 s32     HrtGetDevice();
+HcclResult HrtGetLogicDevIdByUserDevId(s32 userDevId, s32 &logicDevId);
 // 非主线程使用rts添加task情况下，需要先使用该函数通知RTS，将线程和 device logic id绑定
 void                  HrtSetDevice(s32 deviceLogicId);
 void                  HrtResetDevice(s32 deviceLogicId);

@@ -172,6 +172,23 @@ u32 HrtGetDeviceCount()
     return count;
 }
 
+HcclResult HrtGetLogicDevIdByUserDevId(s32 userDevId, s32 &logicDevId)
+{
+    DevType deviceType = HrtGetDeviceType();
+    if (deviceType == DevType::DEV_TYPE_NOSOC) {
+        logicDevId = 0;
+        return HCCL_SUCCESS;
+    }
+
+    aclError aclRet = aclrtGetLogicDevIdByUserDevId(userDevId, &logicDevId);  // userDevId 转 logicDevId
+    if (aclRet != ACL_SUCCESS) {
+        HCCL_ERROR("aclrtGetLogicDevIdByUserDevId failed, userDevId: %d, ret: %d", userDevId, aclRet);
+        return HCCL_E_RUNTIME;
+    }
+
+    return HCCL_SUCCESS;
+}
+
 constexpr char RTS_SO_NAME[] = "libruntime.so";
 DlRtsFunctionV2<RTS_SO_NAME> g_dlRts;
 HcclResult HrtResetXpuDevice(uint32_t devType, const uint32_t devId)

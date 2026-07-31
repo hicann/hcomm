@@ -441,6 +441,29 @@ HcclResult hrtGetDeviceIndexByPhyId(u32 devicePhyId, u32 &deviceLogicId)
     return HCCL_SUCCESS;
 };
 
+HcclResult hrtGetLogicDevIdByUserDevId(s32 userDevId, s32 &logicDevId)
+{
+#ifndef HCCD
+    DevType deviceType;
+    CHK_RET(hrtGetDeviceType(deviceType));
+    if (deviceType == DevType::DEV_TYPE_NOSOC) {
+        logicDevId = 0;
+        return HCCL_SUCCESS;
+    }
+
+    aclError ret = aclrtGetLogicDevIdByUserDevId(userDevId, &logicDevId);
+    if (ret != ACL_SUCCESS) {
+        HCCL_ERROR("aclrtGetLogicDevIdByUserDevId failed, return[%d], "\
+            "para: userDevId[%d], logicDevId[%d]", ret, userDevId, logicDevId);
+        return HCCL_E_RUNTIME;
+    }
+#else
+    logicDevId = userDevId;
+    HCCL_WARNING("[aclrtGetLogicDevIdByUserDevId]Does not support this interface.");
+#endif
+    return HCCL_SUCCESS;
+};
+
 HcclResult hrtGetPhyDeviceInfo(u32 devicePhysicId, s32 moduleType, s32 infoType, s64 &value)
 {
 #ifndef HCCD

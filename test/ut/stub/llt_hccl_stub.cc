@@ -2202,6 +2202,12 @@ int setDevPhyId(uint32_t devIndex)
     return DRV_ERROR_NONE;
 }
 
+aclError aclrtGetLogicDevIdByUserDevId(int32_t userDevId, int32_t *const logicDevId)
+{
+    *logicDevId = userDevId;
+    return ACL_SUCCESS;
+}
+
 aclError aclrtGetPhyDevIdByLogicDevId(int32_t logicDevId, int32_t *const phyDevId)
 {
     if (gBoardId == 0x2000) {

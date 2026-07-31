@@ -318,8 +318,11 @@ HcclResult IsSupportHccsAndSio(bool &flag)
     supportFeaturePara outputPara = { 0 };
     s32 deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
+    s32 logicDevId = 0;
+    // 调用驱动接口前需将userDevId转换为logicDevId
+    CHK_RET(hrtGetLogicDevIdByUserDevId(deviceId, logicDevId));
     inputPara.support_feature = CTRL_SUPPORT_SHMEM_MAP_EXBUS_MASK;
-    inputPara.devid = static_cast<unsigned int>(deviceId);
+    inputPara.devid = static_cast<unsigned int>(logicDevId);
     CHK_RET(hrtHalMemCtl(CTRL_TYPE_SUPPORT_FEATURE, &inputPara, sizeof(supportFeaturePara), &outputPara, &outputLen));
 
     if ((outputPara.support_feature & CTRL_SUPPORT_SHMEM_MAP_EXBUS_MASK) != 0) {

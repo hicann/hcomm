@@ -78,8 +78,12 @@ HcclResult HDCommunicate::VerifyDeviceMemoryRegisterSupport()
     struct supportFeaturePara output = { 0 };
     s32 deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
+    s32 logicDevId = 0;
+    // 调用驱动接口前需将userDevId转换为logicDevId
+    CHK_RET(hrtGetLogicDevIdByUserDevId(deviceId, logicDevId));
+    deviceLogicId_ = static_cast<u32>(logicDevId);
     input.support_feature = CTRL_SUPPORT_PCIE_BAR_MEM_MASK;
-    input.devid = static_cast<unsigned int>(deviceId);
+    input.devid = static_cast<unsigned int>(logicDevId);
     CHK_RET(hrtHalMemCtl(CTRL_TYPE_SUPPORT_FEATURE, &input, sizeof(struct supportFeaturePara), &output, &outputLen));
 
     if ((output.support_feature & CTRL_SUPPORT_PCIE_BAR_MEM_MASK) != 0) {
