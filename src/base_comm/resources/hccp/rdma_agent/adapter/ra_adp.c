@@ -1848,7 +1848,7 @@ STATIC void *RaPthread(void *arg)
     ret = pthread_detach(pthread_self());
     CHK_PRT_RETURN(ret, hccp_err("pthread detach failed ret %d", ret), NULL);
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_ra");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_ra", 0, 0, 0);
 
     RA_PTHREAD_MUTEX_LOCK(&gHdcInitPara.mutex);
     gHdcInitPara.threadStatus = THREAD_RUNNING;
@@ -2032,7 +2032,7 @@ STATIC void RaHwHdcInit(void *arg)
         return;
     }
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_hw_hdc");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_hw_hdc", 0, 0, 0);
 
     hccp_info("chip_id(%u)", chipId);
     gHdcInitPara.hdcFlag = 1;

@@ -158,7 +158,7 @@ STATIC void *RsEschedHandle(void *arg)
 
     ret = pthread_detach(pthread_self());
     CHK_PRT_RETURN(ret, hccp_err("pthread detach failed ret %d", ret), NULL);
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_rs_esched");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_rs_esched", 0, 0, 0);
     gRsEschedInfo.threadStatus = THREAD_RUNNING;
 
     while (1) {

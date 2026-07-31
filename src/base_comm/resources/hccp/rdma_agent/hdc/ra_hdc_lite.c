@@ -1158,7 +1158,7 @@ STATIC void *RaHdcLitePthread(void *arg)
     CHK_PRT_RETURN(pthread_detach(pthread_self()), hccp_err("pthread_detach failed! thread_id:%lu, errno:%d, phyId:%u",
         pthread_self(), errno, phyId), NULL);
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_hdc_lite");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_hdc_lite", 0, 0, 0);
 
     while (1) {
         if (rdmaHandle->threadStatus == LITE_THREAD_STATUS_DESTROY) {

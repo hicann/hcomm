@@ -101,7 +101,7 @@ STATIC void *RaAsyncPthread(void *arg)
     ret = pthread_detach(pthread_self());
     CHK_PRT_RETURN(ret != 0, hccp_err("pthread detach failed ret %d", ret), NULL);
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_ra_async");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_ra_async", 0, 0, 0);
 
     RA_PTHREAD_MUTEX_LOCK(&gHdcAsyncInitPara.mutex);
     gHdcAsyncInitPara.threadStatus = THREAD_RUNNING;
@@ -155,7 +155,7 @@ STATIC void RaHwAsyncHdcInit(void *arg)
         return;
     }
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_hw_async");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_hw_async", 0, 0, 0);
 
     hccp_info("chip_id(%u)", chipId);
     gHdcAsyncInitPara.hdcFlag = 1;

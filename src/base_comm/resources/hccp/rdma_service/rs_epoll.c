@@ -523,7 +523,7 @@ STATIC void *RsEpollHandle(void *arg)
     CHK_PRT_RETURN(pthread_detach(pthread_self()), hccp_err("pthread_detach failed! thread_id:%lu, errno:%d",
         pthread_self(), errno), NULL);
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_epoll");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_epoll", 0, 0, 0);
 
     rsCb = (struct rs_cb *)arg;
     gRsCb = rsCb;
@@ -656,7 +656,7 @@ STATIC void *RsConnectHandle(void *arg)
     CHK_PRT_RETURN(pthread_detach(pthread_self()), hccp_err("pthread_detach failed! thread_id:%lu, errno:%d",
         pthread_self(), errno), NULL);
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_connect");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_connect", 0, 0, 0);
 
     RsGetCurTime(&gConnectThreadInfo.lastCheckTime);
     ret = strncpy_s((char *)gConnectThreadInfo.pthreadName, sizeof(gConnectThreadInfo.pthreadName),

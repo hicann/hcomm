@@ -351,7 +351,7 @@ STATIC void RaHwAsyncHdcServerInit(void *arg)
         return;
     }
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_async_server");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_async_server", 0, 0, 0);
 
     // trigger server to connect session
     ret = RaHdcAsyncSessionConnect(&cfg);
@@ -381,7 +381,7 @@ STATIC void RaHwAsyncHdcClientInit(void *arg)
         return;
     }
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_async_client");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_async_client", 0, 0, 0);
 
     phyId = cfg.phyId;
     ret = DlDrvDeviceGetIndexByPhyId(phyId, &logicId);
@@ -573,7 +573,7 @@ STATIC void *RaHdcRecvMsgAsync(void *arg)
     ret = pthread_detach(pthread_self());
     CHK_PRT_RETURN(ret, hccp_err("pthread detach failed ret %d, phyId %u", ret, phyId), NULL);
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_ra_async");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_ra_async", 0, 0, 0);
 
     hccp_info("[async][ra_hdc_recv]thread[%d] phyId[%u] enter", getpid(), phyId);
     RaHwAsyncSetThreadStatus(phyId, THREAD_RUNNING);

@@ -87,7 +87,7 @@ STATIC void *RsPingHandle(void *arg)
     CHK_PRT_RETURN(pthread_detach(pthread_self()) != 0, hccp_err("pthread_detach failed! thread_id:%lu, errno:%d",
         pthread_self(), errno), NULL);
 
-    (void)prctl(PR_SET_NAME, (unsigned long)"hccp_ping");
+    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_ping", 0, 0, 0);
 
     rsCb = (struct rs_cb *)arg;
 
