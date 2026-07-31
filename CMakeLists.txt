@@ -92,6 +92,12 @@ message(STATUS "Detected JOBS: ${JOBS}")
 set(CMAKE_JOB_POOL_COMPILE "${JOBS}")
 set(CMAKE_JOB_POOL_LINK "${JOBS}")
 
+if(ENABLE_ASAN)
+    # GCC 13+ 编译器开启 ASAN 时，<regex> 系统库头文件中存在误报，若定义 -Werror 则会导致编译失败
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized")
+endif()
+
 if(ENABLE_TEST)
     enable_testing()
     include(cmake/config.cmake)
