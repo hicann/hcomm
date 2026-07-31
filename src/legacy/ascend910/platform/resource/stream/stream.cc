@@ -76,7 +76,7 @@ Stream::Stream(const StreamType streamType, bool isMainStream)
             rtStream, ctx_, streamId_, cqId_, logicCqid_);
     } else {
         RPT_ENV_ERR(true, "EI0007", std::vector<std::string>({"resource_type", "resource_info"}), \
-            std::vector<std::string>({"stream", std::string("hrtStreamCreateWithFlags, streamType:") + std::to_string(uint32_t(streamType))}));
+            std::vector<std::string>({"stream", std::string("StreamCreateWithFlags, streamType:") + std::to_string(uint32_t(streamType))}));
         HCCL_ERROR("[%s][%s]Construct stream by stream type failed, errNo[0x%016llx] rtStreamCreate error, ret[%d]",
             LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
     }
