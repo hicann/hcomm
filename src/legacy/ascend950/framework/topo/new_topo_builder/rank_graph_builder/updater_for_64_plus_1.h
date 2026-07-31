@@ -14,7 +14,6 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
-#include <set>
 #include "rank_table_info.h"
 #include "rank_gph.h"
 #include "phy_topo.h"
@@ -39,9 +38,8 @@ public:
 private:
     void UpdateNetInstance(NetInstance* fabricGroup, LocalId localId, LocalId replacedLocalId, const RankTableInfo* rankTable) const;
     std::string GetPortFromSet(std::set<string> &ports, u32 linkIdx) const;
-    std::shared_ptr<PhyTopo::Link> GetPeer2PlaneEdges(u32 backupPlaneId, shared_ptr<NetInstance::Peer> peer,
-        std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> phyTopoGraph, u32 expectedPortNum,
-        const std::set<LinkProtocol> &expectedProtocols = {}) const;
+    std::shared_ptr<PhyTopo::Link> GetPeer2PlaneEdges(u32 backupPlaneId, shared_ptr<NetInstance::Peer> peer, 
+        std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> phyTopoGraph) const;
     void AddPeer2BackupLinks(std::shared_ptr<NetInstance::Peer> peer, std::shared_ptr<NetInstance::Peer> backupPeer,
                              LocalId replacedLocalId, NetInstance* netInstance, const RankTableInfo* rankTable) const;
     bool IsSameX(LocalId srcLocalId, LocalId dstLocalId) const;

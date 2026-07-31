@@ -109,7 +109,6 @@ public:
         std::set<u32> GetLevels() const;
         NetInstancePtr   GetNetInstance(u32 level) const;
         std::map<std::string, std::vector<IpAddress>> GetPortAddrMapLayer0() const;
-        bool TryGetLayer0Address(const std::string &port, IpAddress &addr) const;
         void SetPortPortAddrMapLayer0(std::map<std::string, std::vector<IpAddress>> portAddrMap);
         std::string   Describe() const override;
     private:

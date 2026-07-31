@@ -214,9 +214,13 @@ std::unique_ptr<PhyTopo> PhyTopoBuilderBuildStub(const std::string &topoPath)
     std::unique_ptr<PhyTopo> phyTopo = std::make_unique<PhyTopo>();
     PhyTopoBuilder phyTopoBuilder;
     auto topoInfo = phyTopoBuilder.LoadTopoInfo(topoPath);
-    // topoInfo 中的全部物理边构造成一张 Graph。
-    auto graph = phyTopoBuilder.CreateGraph(topoInfo->edges);
-    phyTopo->AddTopoGraph(graph);
+    // 根据topoInfo，按netLayer构造Graph
+    for (const auto &iter : topoInfo->edges) {
+        auto netLayer = iter.first;
+        auto graph = phyTopoBuilder.CreateGraph(iter.second);
+        phyTopo->AddTopoGraph(netLayer, graph);
+        HCCL_DEBUG("[PhyTopoBuilder::%s]Build netLayer[%u] topo graph success.", __func__, netLayer);
+    }
     return phyTopo;
 }
 
@@ -234,13 +238,11 @@ protected:
 
     virtual void SetUp()
     {
-        PhyTopo::GetInstance()->Clear();
         std::cout << "A Test case in PhyTopoBuilderTest SetUP" << std::endl;
     }
 
     virtual void TearDown()
     {
-        PhyTopo::GetInstance()->Clear();
         GlobalMockObject::verify();
         std::cout << "A Test case in PhyTopoBuilderTest TearDown" << std::endl;
     }
@@ -275,7 +277,7 @@ TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_ValidTopoPath_Expect_ReturnEdg
     std::string topoPath = "./topo.json";
     MOCKER_CPP(&PhyTopoBuilder::LoadTopoInfo).stubs().will(invoke(LoadTopoInfoStub));
     std::unique_ptr<PhyTopo> phyTopo = PhyTopoBuilderBuildStub(topoPath);
-    auto graph = phyTopo->GetTopoGraph();
+    auto graph = phyTopo->GetTopoGraph(0);
     size_t totalEdgeNum = 0;
 
     // 遍历所有源节点
@@ -288,41 +290,15 @@ TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_ValidTopoPath_Expect_ReturnEdg
         }
     }
 
-    EXPECT_EQ(totalEdgeNum, 8);
+    EXPECT_EQ(totalEdgeNum, 6);
 }
 
 
-TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_EdgeRepeat_Expect_MergeEdge)
+TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_EdgeRepeat_Expect_Expection)
 {
     std::string topoPath = "./test_topo.json";
     MOCKER_CPP(&PhyTopoBuilder::LoadTopoInfo).stubs().will(invoke(LoadTopoInfoWithRepeatEdge));
-    std::unique_ptr<PhyTopo> phyTopo;
-    EXPECT_NO_THROW(phyTopo = PhyTopoBuilderBuildStub(topoPath));
-    ASSERT_NE(phyTopo, nullptr);
-    auto graph = phyTopo->GetTopoGraph();
-    ASSERT_NE(graph, nullptr);
-    EXPECT_EQ(graph->GetEdges(PhyTopo::Peer::GetId(0), PhyTopo::Peer::GetId(1)).size(), 1);
-    EXPECT_EQ(graph->GetEdges(PhyTopo::Peer::GetId(1), PhyTopo::Peer::GetId(0)).size(), 1);
-}
-
-TEST_F(PhyTopoBuilderTest, Ut_BuildPhyTopo_When_NoEdges_Expect_KeepIsolatedPeers)
-{
-    TopoInfo topoInfo;
-    topoInfo.version = "2.0";
-    topoInfo.peerCount = 3;
-    for (u32 localId = 0; localId < topoInfo.peerCount; ++localId) {
-        PeerInfo peer;
-        peer.localId = localId;
-        topoInfo.peers.emplace_back(peer);
-    }
-
-    PhyTopoBuilder phyTopoBuilder;
-    phyTopoBuilder.BuildPhyTopo(topoInfo);
-
-    auto graph = PhyTopo::GetInstance()->GetTopoGraph();
-    ASSERT_NE(graph, nullptr);
-    EXPECT_EQ(graph->nodes.size(), 3);
-    EXPECT_TRUE(graph->edges.empty());
+    EXPECT_THROW(PhyTopoBuilderBuildStub(topoPath), std::exception);
 }
 
 TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_DiffProtocols_Expect_ReturnEdgeNum)
@@ -330,7 +306,7 @@ TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_DiffProtocols_Expect_ReturnEdg
     std::string topoPath = "./topo.json";
     MOCKER_CPP(&PhyTopoBuilder::LoadTopoInfo).stubs().will(invoke(LoadTopoInfoWithDiffProtocols));
     std::unique_ptr<PhyTopo> phyTopo = PhyTopoBuilderBuildStub(topoPath);
-    auto graph = phyTopo->GetTopoGraph();
+    auto graph = phyTopo->GetTopoGraph(0);
     size_t totalEdgeNum = 0;
 
     // 遍历所有源节点

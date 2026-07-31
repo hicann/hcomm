@@ -21,9 +21,9 @@
  
 namespace Hccl {
 
+constexpr unsigned int MAX_VALUE_LEVEL = 7;
 constexpr u32 PORT_MAX_LENGTH = 32;
 constexpr u32 MAX_PORTS_SIZE = 64;
-constexpr u32 LEGACY_BINARY_LAYER = 0;
  
 class EdgeInfo {
 public:
@@ -31,6 +31,7 @@ public:
     EdgeInfo(BinaryStream& binaryStream);
     ~EdgeInfo() {};
     
+    u32          netLayer{0};
     LinkType     linkType;
     TopoType     topoType{TopoType::CLOS};
     u32          topoInstId{0};

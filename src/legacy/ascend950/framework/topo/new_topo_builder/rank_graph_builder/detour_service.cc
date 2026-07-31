@@ -47,9 +47,8 @@ vector<shared_ptr<PhyTopo::Link>> GetLinks(NodeId srcId, NodeId dstId,
     if (phyTopoGraph == nullptr) {
         THROW<NullPtrException>(StringFormat("[GetLinks] phyTopoGraphis nullptr"));
     }
-    // 统一物理图中仅 P2P 边可作为绕路候选。
     phyTopoGraph->TraverseEdge(srcId, dstId, [&](shared_ptr<PhyTopo::Link> link) {
-        if (link != nullptr && link->GetType() == LinkType::PEER2PEER) {
+        if (link != nullptr) {
             links.emplace_back(link);
             return;
         }
@@ -67,12 +66,8 @@ void AddDetourLink(NetInstance *innerNetInst, const DetourData &data,
     if (src2detVec.size() == 0 || det2dstVec.size() == 0) {
         return;
     }
-    if (innerNetInst == nullptr) {
+    if(innerNetInst == nullptr) {
         THROW<NullPtrException>(StringFormat("[AddDetourLink] innerGroup is nullptr"));
-    }
-    if (data.srcNetInstPeer == nullptr || data.dstNetInstPeer == nullptr) {
-        THROW<NullPtrException>(
-            StringFormat("[DetourService][InsertDetourLinks][AddDetourLink] virtual peer is nullptr"));
     }
     u32 hop = 2; // 目前绕路hop一定是2
     for (const auto &src2detLink : src2detVec) {
@@ -103,20 +98,13 @@ void AddDetourLink(NetInstance *innerNetInst, const DetourData &data,
             std::set<string> src2detPorts = src2detLink->GetSourceIFace()->GetPorts();
             std::set<string> det2dstPorts = det2dstLink->GetTargetIFace()->GetPorts();
             if (src2detPorts.size() != 1 || det2dstPorts.size() != 1) {
-                HCCL_WARNING(
-                    "[DetourService][InsertDetourLinks][AddDetourLink] Ignore unmatched P2P candidate, "
-                    "srcPortNum[%zu] dstPortNum[%zu]", src2detPorts.size(), det2dstPorts.size());
-                continue;
+                THROW<InvalidParamsException>("[DetourService][InsertDetourLinks][AddDetourLink] Peer to Peer port num error");
             }
             
-            // 绕路两端口均须属于 RankTable layer 0。
-            IpAddress src2detAddr;
-            IpAddress det2dstAddr;
-            if (!data.srcNetInstPeer->TryGetLayer0Address(*src2detPorts.begin(), src2detAddr) ||
-                !data.dstNetInstPeer->TryGetLayer0Address(*det2dstPorts.begin(), det2dstAddr)) {
-                HCCL_WARNING("[DetourService][InsertDetourLinks][AddDetourLink] Ignore P2P candidate not in layer0");
-                continue;
-            }
+            // 取出对应的端口，然后去ranktableInfo中查对应端口的地址信息
+            // todo 逻辑判断一下只取第一个端口是否正确？ 
+            IpAddress src2detAddr = data.srcNetInstPeer->GetPortAddrMapLayer0()[*src2detPorts.begin()][0];
+            IpAddress det2dstAddr = data.dstNetInstPeer->GetPortAddrMapLayer0()[*det2dstPorts.begin()][0];
 
             // 构造InterFace对象用于后续生成Link
             shared_ptr<NetInstance::ConnInterface> sourceIface = make_shared<NetInstance::ConnInterface>(src2detAddr, 
@@ -135,6 +123,9 @@ void AddDetourLink(NetInstance *innerNetInst, const DetourData &data,
             innerNetInst->AddLink(recvEdge);
 
             data.srcNetInstPeer->AddConnInterface(0, sourceIface);
+            if(data.dstNetInstPeer == nullptr) {
+                THROW<NullPtrException>(StringFormat("[DetourService][InsertDetourLinks][AddDetourLink] dstVirtPeer is nullptr"));
+            }
             data.dstNetInstPeer->AddConnInterface(0, targetIface);
 
             HCCL_DEBUG("[DetourService][AddDetourLink] add SEND_ONLY and RECV_ONLY two links: linkType[%s]"
@@ -307,7 +298,7 @@ void AddDetourLinks(const PhyTopo *phyTopo, RankGraph *rankGraph,
                     std::unordered_map<LocalId, u32>                                     &tableIds, 
                     const RankTableInfo                                                  *rankTable)
 {
-    auto phyTopoGraph = phyTopo->GetTopoGraph();
+    auto phyTopoGraph = phyTopo->GetTopoGraph(0);
     NetInstance *innerNetInst = rankGraph->GetNetInstanceByRankId(0, rankGraph->GetMyRank());
     if (innerNetInst == nullptr) {
         THROW<NullPtrException>(StringFormat("[DetourService] innerNetInst is nullptr"));

@@ -11,6 +11,7 @@
 #ifndef NEW_TOPO_INFO_H
 #define NEW_TOPO_INFO_H
 
+#include <map>
 #include <vector>
 #include <unordered_set>
 
@@ -27,7 +28,7 @@ public:
     u32                                  peerCount{0};
     u32                                  edgeCount{0};
     std::vector<PeerInfo>                peers;
-    std::vector<EdgeInfo>                edges;
+    std::map<u32, std::vector<EdgeInfo>> edges;
     void                                 Deserialize(const nlohmann::json &topoInfoJson);
     std::string                          Describe() const;
     void                                 Dump() const;

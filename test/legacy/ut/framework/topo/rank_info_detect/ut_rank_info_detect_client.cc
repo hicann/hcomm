@@ -358,9 +358,9 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_EmptyRankLevelInfos_Exp
     PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
 }
 
-TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoMatchingPort_Expect_HostPortUnchanged)
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoTopoGraph_Expect_NoThrow)
 {
-    // Given: the rank address port does not match the HOST+RDMA physical link port
+    // Given: rankInfo with rankLevelInfos but netLayer doesn't match any built topo graph
     NewRankInfo rankInfo;
     rankInfo.rankId = 0;
     rankInfo.deviceId = 0;
@@ -369,7 +369,6 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoMatchingPort_Expect_H
     AddressInfo addrInfo;
     addrInfo.addr = IpAddress("192.168.1.1");
     addrInfo.socketPort_ = 0;
-    addrInfo.ports.insert("0/0");
     RankLevelInfo levelInfo;
     levelInfo.netLayer = 0;
     levelInfo.rankAddrs.push_back(addrInfo);
@@ -382,15 +381,16 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoMatchingPort_Expect_H
         .stubs()
         .will(returnValue(topoFilePath));
 
-    // When & Then: the unified physical graph is scanned, but the unmatched port is ignored
+    // When: PhyTopo built but netLayer=0 has no graph → GetTopoGraph returns nullptr
+    // Then: skip nullptr graph, log debug, continue, return without error
     EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
     EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
     PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
 }
 
-TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_MultipleUnmatchedPorts_Expect_HostPortUnchanged)
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_MultipleRankLevelInfos_Expect_NoThrow)
 {
-    // Given: multiple rankLevelInfos, none with a port matching the HOST+RDMA physical link
+    // Given: multiple rankLevelInfos, none with a matching topo graph
     NewRankInfo rankInfo;
     rankInfo.rankId = 0;
     rankInfo.deviceId = 0;
@@ -400,7 +400,6 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_MultipleUnmatchedPorts_
         AddressInfo addrInfo;
         addrInfo.addr = IpAddress(StringFormat("192.168.%u.1", i + 1));
         addrInfo.socketPort_ = 0;
-        addrInfo.ports.insert(StringFormat("2/%u", i));
         RankLevelInfo levelInfo;
         levelInfo.netLayer = i;
         levelInfo.rankAddrs.push_back(addrInfo);
@@ -414,7 +413,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_MultipleUnmatchedPorts_
         .stubs()
         .will(returnValue(topoFilePath));
 
-    // When & Then: all unmatched ports are ignored
+    // When & Then: iterate all level infos, all graphs nullptr, no throw
     EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
     EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
     PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
@@ -422,15 +421,15 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_MultipleUnmatchedPorts_
 
 TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_RdmaLinkEmptyRankAddrs_Expect_Continue)
 {
-    // Given: the physical topology has a HOST+ROCE link, but rankAddrs is empty
+    // Given: topohost.json has HOST+ROCE at netLayer=3, but rankAddrs is empty
     NewRankInfo rankInfo;
     rankInfo.rankId = 0;
     rankInfo.deviceId = 0;
     rankInfo.localId = 0;
 
     RankLevelInfo levelInfo;
-    levelInfo.netLayer = 3;
-    // rankAddrs is left empty, so no physical port can be matched
+    levelInfo.netLayer = 3;  // HOST+ROCE link at netLayer=3
+    // rankAddrs left EMPTY — triggers rankLevelInfo.rankAddrs.empty() check
     rankInfo.rankLevelInfos.push_back(levelInfo);
 
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
@@ -440,7 +439,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_RdmaLinkEmptyRankAddrs_
         .stubs()
         .will(returnValue(topoFilePath));
 
-    // When & Then: the HOST+RDMA link is ignored and hostPort remains unchanged
+    // When & Then: ROCE → RDMA but rankAddrs.empty() → skip, hostPort unchanged
     PhyTopo::GetInstance()->Clear();
     EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
     EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
@@ -450,7 +449,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_RdmaLinkEmptyRankAddrs_
 // basePort configured, portRange empty → listenPort = basePort + devPhyId
 TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_BasePort_Expect_HostPortSet)
 {
-    // Given: a matching HOST+ROCE physical port and a configured basePort
+    // Given: HOST+ROCE link at netLayer=3, basePort configured
     EnvHostNicConfig fakeConfig;
     fakeConfig.hcclHostSocketPortRange = CfgField<std::vector<SocketPortRange>>{"HCCL_HOST_SOCKET_PORT_RANGE", {},
         [] (const std::string &s) -> std::vector<SocketPortRange> { return CastSocketPortRange(s, "HCCL_HOST_SOCKET_PORT_RANGE"); }};
@@ -467,9 +466,8 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_BasePort_Expect_HostPor
 
     AddressInfo addrInfo;
     addrInfo.addr = IpAddress("192.168.1.1");
-    addrInfo.ports.insert("1/0");
     RankLevelInfo levelInfo;
-    levelInfo.netLayer = 3;
+    levelInfo.netLayer = 3;  // HOST+ROCE link at netLayer=3
     levelInfo.rankAddrs.push_back(addrInfo);
     rankInfo.rankLevelInfos.push_back(levelInfo);
 
@@ -492,9 +490,10 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_BasePort_Expect_HostPor
     PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
 }
 
-TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_DevicePortOnly_Expect_HostPortUnchanged)
+TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoHostLink_Expect_HostPortUnchanged)
 {
-    // Given: the rank declares only a DEVICE physical port, not the HOST+RDMA port
+    // Given: topohost.json has HOST+ROCE at netLayer=3, but rankAddrs has DEV position instead
+    // This tests the path where graph has edges but none match HOST position
     NewRankInfo rankInfo;
     rankInfo.rankId = 0;
     rankInfo.deviceId = 0;
@@ -503,8 +502,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_DevicePortOnly_Expect_H
     AddressInfo addrInfo;
     addrInfo.addr = IpAddress("192.168.1.1");
     RankLevelInfo levelInfo;
-    addrInfo.ports.insert("0/0");
-    levelInfo.netLayer = 1;
+    levelInfo.netLayer = 1;  // netLayer=1 has DEV links, not HOST
     levelInfo.rankAddrs.push_back(addrInfo);
     rankInfo.rankLevelInfos.push_back(levelInfo);
 
@@ -515,11 +513,11 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_DevicePortOnly_Expect_H
         .stubs()
         .will(returnValue(topoFilePath));
 
-    // When: the unified graph contains both DEVICE and HOST links
+    // When: netLayer=1 graph exists but has no HOST position links
     PhyTopo::GetInstance()->Clear();
     EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
 
-    // Then: hostPort remains unchanged because only the DEVICE port matches
+    // Then: hostPort should remain at default since no HOST RDMA link found
     EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
     PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
 }
