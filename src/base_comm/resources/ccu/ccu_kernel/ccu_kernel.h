@@ -340,6 +340,7 @@ protected:
     // 使用channel中的Variable
     HcclResult CreateVariable(const ChannelHandle channel, uint32_t varIndex, CcuRep::Variable *var);
     CcuRep::Variable CreateVariable();
+    CcuRep::Variable CreateExpectVar();
     CcuRep::Variable CreateContinuousVariable();
     CcuRep::LocalAddr CreateLocalAddr();
     CcuRep::RemoteAddr CreateRemoteAddr();
