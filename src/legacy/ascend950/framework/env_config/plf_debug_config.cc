@@ -10,6 +10,7 @@
 #include "plf_debug_config.h"
 #include "env_config.h"
 #include "config_plf_log.h"
+#include <sstream>
 
 namespace Hccl {
 
@@ -19,41 +20,36 @@ static u64 ParseDebugConfig(const char* envName, u64 domainMask)
     if (env == nullptr) {
         return 0;
     }
+    std::string configDup(env);
 
-    bool invert = (env[0] == '^');
+    bool invert = (!configDup.empty() && configDup.front() == '^');
     // 第一个字符是'^', 使用取反模式，用户配置的项关闭，未配置的项打开
     u64 result = invert ? domainMask : 0ULL;
-
-    char* configDup = strdup(invert ? env + 1 : env); // 去掉'^'符号
-    if (configDup == nullptr) {
-        HCCL_ERROR("[%s] strdup failed, env[%s]", __func__, env);
-        return result;
+    if (invert) {
+        configDup.erase(configDup.begin()); // 去掉'^'符号
     }
-    char* left = nullptr;
-    char* subConfig = strtok_r(configDup, ",", &left); // 按逗号分割
-    while (subConfig != nullptr) {
+
+    std::istringstream stream(configDup);
+    std::string subConfig;
+    while (std::getline(stream, subConfig, ',')) {
+        if (subConfig.empty()) {
+            continue;
+        }
         u64 mask = 0;
-        if ((domainMask & PLF_TASK) && strcasecmp(subConfig, "TASK") == 0) {
+        if (((domainMask & PLF_TASK) != 0) && strcasecmp(subConfig.c_str(), "TASK") == 0) {
             mask = PLF_TASK;
-        } else if ((domainMask & PLF_ALG) && strcasecmp(subConfig, "ALG") == 0) {
+        } else if (((domainMask & PLF_ALG) != 0) && strcasecmp(subConfig.c_str(), "ALG") == 0) {
             mask = PLF_ALG;
-        } else if ((domainMask & PLF_RES) && strcasecmp(subConfig, "RESOURCE") == 0) {
+        } else if (((domainMask & PLF_RES) != 0) && strcasecmp(subConfig.c_str(), "RESOURCE") == 0) {
             mask = PLF_RES;
-        } else if ((domainMask & PLF_DATA_OP) && strcasecmp(subConfig, "DATA_OP") == 0) {
+        } else if (((domainMask & PLF_DATA_OP) != 0) && strcasecmp(subConfig.c_str(), "DATA_OP") == 0) {
             mask = PLF_DATA_OP;
         } else {
-            HCCL_ERROR("%s:%s subConfig:%s is not supported", envName, env, subConfig);
-            free(configDup);
+            HCCL_ERROR("%s:%s subConfig:%s is not supported", envName, env, subConfig.c_str());
             return 0;
         }
-        if (invert) {
-            result &= ~mask;
-        } else {
-            result |= mask;
-        }
-        subConfig = strtok_r(nullptr, ",", &left);
+        result = invert ? (result & ~mask) : (result | mask);
     }
-    free(configDup);
     HCCL_RUN_INFO("[HCCL_ENV] %s set by [%s] to [0x%llx]", envName, env, result);
     return result;
 }
