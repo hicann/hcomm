@@ -120,3 +120,23 @@ TEST_F(RemoteRmaBufferTest, remoterdmarmabuffer_describe_size)
     MOCKER(HrtRaGetKeyDescribe).stubs().will(returnValue(fakeKeyDesc));
     remoteRdmaRmaBuffer.Describe();
 }
+
+TEST_F(RemoteRmaBufferTest, remoteubrmabuffer_construct_with_addr_device)
+{
+    uintptr_t addr = 0x12345678;
+    u64 size = 0x1000;
+    u32 tokenId = 42;
+    u32 tokenValue = 7;
+    HcclMemType memType = HCCL_MEM_TYPE_DEVICE;
+    std::string memInfo = "test_device_mem";
+
+    RemoteUbRmaBuffer buffer(addr, size, tokenId, tokenValue, memType, memInfo);
+
+    EXPECT_EQ(buffer.GetAddr(), addr);
+    EXPECT_EQ(buffer.GetSize(), size);
+    EXPECT_EQ(buffer.tokenId, tokenId);
+    EXPECT_EQ(buffer.tokenValue, tokenValue);
+    EXPECT_EQ(buffer.GetMemType(), HCCL_MEM_TYPE_DEVICE);
+    EXPECT_STREQ(buffer.GetMemInfo().c_str(), memInfo.c_str());
+    EXPECT_EQ(buffer.GetRmaType(), RmaType::UB);
+};

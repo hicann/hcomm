@@ -28,17 +28,17 @@ struct RemoteMemCtx{
     bool                            &cacheValid;
     std::vector<T>                  &rmtBufferVec;
     std::vector<CommMem>            &remoteUserMems;
-    std::vector<std::string>        &tagCopies;
-    std::vector<char*>              &tagPointers;
+    std::vector<std::string>        &memInfoCopies;
+    std::vector<char*>              &memInfoPointers;
     CommMem                         **remoteMem;
     char                            ***memInfos;
     uint32_t                        *memNum;
 
     RemoteMemCtx(bool &cacheValid, std::vector<T> &rmtBufferVec,
-        std::vector<CommMem> &remoteUserMems, std::vector<std::string> &tagCopies, std::vector<char*> &tagPointers,
+        std::vector<CommMem> &remoteUserMems, std::vector<std::string> &memInfoCopies, std::vector<char*> &memInfoPointers,
         CommMem **remoteMem, char ***memInfos, uint32_t *memNum) :
         cacheValid(cacheValid), rmtBufferVec(rmtBufferVec), remoteUserMems(remoteUserMems),
-        tagCopies(tagCopies), tagPointers(tagPointers), remoteMem(remoteMem), memInfos(memInfos), memNum(memNum)
+        memInfoCopies(memInfoCopies), memInfoPointers(memInfoPointers), remoteMem(remoteMem), memInfos(memInfos), memNum(memNum)
     {};
 };
 
@@ -83,10 +83,10 @@ HcclResult GetRemoteUserMems(RemoteMemCtx<T> &remoteMemCtx)
     // 检查是否有缓存
     if (!remoteMemCtx.cacheValid) {
         remoteMemCtx.remoteUserMems.clear();
-        remoteMemCtx.tagCopies.clear();
-        remoteMemCtx.tagCopies.reserve(userMemCount);
-        remoteMemCtx.tagPointers.clear();
-        remoteMemCtx.tagPointers.reserve(userMemCount);
+        remoteMemCtx.memInfoCopies.clear();
+        remoteMemCtx.memInfoCopies.reserve(userMemCount);
+        remoteMemCtx.memInfoPointers.clear();
+        remoteMemCtx.memInfoPointers.reserve(userMemCount);
         for (uint32_t i = 0; i < userMemCount; ++i) {
             auto &rmtBuffer = remoteMemCtx.rmtBufferVec[i];
             if (rmtBuffer == nullptr) {
@@ -97,16 +97,16 @@ HcclResult GetRemoteUserMems(RemoteMemCtx<T> &remoteMemCtx)
             mem.addr = reinterpret_cast<void *>(rmtBuffer->GetAddr());
             mem.size = rmtBuffer->GetSize();
             remoteMemCtx.remoteUserMems.push_back(mem);
-            std::string tagCopy = rmtBuffer->GetMemInfo();
-            remoteMemCtx.tagCopies.push_back(std::move(tagCopy));
-            remoteMemCtx.tagPointers.push_back(const_cast<char*>(remoteMemCtx.tagCopies.back().c_str()));
+            std::string memInfoCopy = rmtBuffer->GetMemInfo();
+            remoteMemCtx.memInfoCopies.push_back(std::move(memInfoCopy));
+            remoteMemCtx.memInfoPointers.push_back(const_cast<char*>(remoteMemCtx.memInfoCopies.back().c_str()));
             HCCL_INFO("[%s] Found buffer[addr:%p, size:%llu, memInfo:%s]", __func__, mem.addr, mem.size,
-                remoteMemCtx.tagCopies.back().c_str());
+                remoteMemCtx.memInfoCopies.back().c_str());
         }
         remoteMemCtx.cacheValid = true;
     }
     *(remoteMemCtx.remoteMem) = remoteMemCtx.remoteUserMems.data();
-    *(remoteMemCtx.memInfos) = remoteMemCtx.tagPointers.data();
+    *(remoteMemCtx.memInfos) = remoteMemCtx.memInfoPointers.data();
     *(remoteMemCtx.memNum) = userMemCount;
     return HCCL_SUCCESS;
 }
