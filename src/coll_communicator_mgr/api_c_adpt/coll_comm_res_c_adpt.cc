@@ -526,11 +526,11 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
             CHK_RET(RankConsistencyCheckerV2::GetInstance(deviceLogicId).RecordRankTableCrcV2(rankTableCrc));
         }
         char hcommPkgName[] = "hcomm";
-        int hcommVersion = 0;
-        aclError aclRet = aclsysGetVersionNum(hcommPkgName, &hcommVersion);
+        char hcommVersionStr[CANN_VERSION_MAX_LEN + 1] = {0};
+        aclError aclRet = aclsysGetVersionStr(hcommPkgName, hcommVersionStr);
         CHK_PRT_RET(aclRet != ACL_SUCCESS,
-            HCCL_ERROR("[HcclChannelAcquire] aclsysGetVersionNum failed, aclRet[%d].", aclRet), HCCL_E_INTERNAL);
-        std::string curVersion = std::to_string(hcommVersion);
+            HCCL_ERROR("[HcclChannelAcquire] aclsysGetVersionStr failed, aclRet[%d].", aclRet), HCCL_E_INTERNAL);
+        std::string curVersion(hcommVersionStr);
         CHK_RET(RankConsistencyCheckerV2::GetInstance(deviceLogicId).RecordCannVersionV2(curVersion));
  
         const uint32_t opExpansionMode = myRank->GetOpExpansionMode();
