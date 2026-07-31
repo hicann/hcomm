@@ -77,6 +77,7 @@ static void SetupOkTask(uint8_t *base, const std::string &taskType,
 }
 
 // ===== Helper: wait for TaskRun to enter the while-loop =====
+// deviceMem 初始化为0，模拟 AllocAndRegKFCWorkSpace 在申请注册时已置零
 static void WaitForTaskRunLoop(uint8_t *flagPtr)
 {
     auto start = std::chrono::steady_clock::now();
@@ -174,7 +175,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TerminateFlag_Expect_Success)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize, commId, devId);
@@ -199,7 +200,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TerminateResponseFlag_Expect_Success)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize, commId, devId);
@@ -223,7 +224,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_InvalidFlag_Expect_Success)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize, commId, devId);
@@ -249,7 +250,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkCallbackNotFound_Expect_NotFound)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize, commId, devId);
@@ -275,7 +276,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkDataTooLarge_Expect_Error)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
     // deviceMemSize=1024 => shmemSize_=512 => leftSize_=512-273=239
 
@@ -302,7 +303,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkCallbackFails_Expect_Error)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize, commId, devId);
@@ -330,7 +331,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkFlow_Expect_Success)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     uint8_t *dpu2npuMem = deviceMem.data() + deviceMemSize / 2; // second half
@@ -530,7 +531,7 @@ TEST_F(TaskServiceTest, Ut_ExecuteTask_When_CallbackReturnsNonZero_Expect_CleanA
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize, commId, devId);
@@ -560,7 +561,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_ProcessTaskOkFails_Expect_WriteTerminate
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize, commId, devId);
@@ -587,7 +588,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkCallbackFails_Expect_Taskexception
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize, commId, devId);

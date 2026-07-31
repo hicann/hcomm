@@ -3498,21 +3498,33 @@ HcclResult CommunicatorImpl::AllocAndRegKFCWorkSpace(uint64_t size, const std::s
         return HCCL_E_NOT_SUPPORT;
     }
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[CommunicatorImpl::%s] HrtHalHostRegister failed, ret: %d, connect type: %ld", __func__, ret, it->second.connectType_);
-        if (it->second.va_ != nullptr) {
-            if (it->second.connectType_ == HOST_DEVICE_CONNECT_TYPE_PCIE) {
-                HrtFree(it->second.va_);
-            } else if (it->second.connectType_ == HOST_DEVICE_CONNECT_TYPE_UB) {
-                free(it->second.originVa_);
-                it->second.originVa_ = nullptr;
-            }
-            it->second.va_ = nullptr;
-        }
-        it->second.accessVA_ = nullptr;
-        return ret;
+        return CleanupKFCWorkSpaceOnFailure(it->second, ret);
+    }
+    auto ptr = it->second.connectType_ == HOST_DEVICE_CONNECT_TYPE_UB ? it->second.va_ : it->second.accessVA_;
+    errno_t cpyRet = memset_s(ptr, sizeof(uint8_t), 0, sizeof(uint8_t)); // 首字节作为信号标志位
+    if (cpyRet != EOK) {
+        HCCL_ERROR("[CommunicatorImpl::AllocAndRegKFCWorkSpace] set 0 failed: %d", cpyRet);
+        return HCCL_E_MEMORY; // 如果失败，会在~CommunicatorImpl中进行解注册与内存释放
     }
     HCCL_INFO("CommunicatorImpl::AllocAndRegKFCWorkSpace va_[%p], accessVA_[%p]", it->second.va_, it->second.accessVA_);
     return HCCL_SUCCESS;
+}
+
+HcclResult CommunicatorImpl::CleanupKFCWorkSpaceOnFailure(DpuShmem &shmem, HcclResult ret)
+{
+    HCCL_ERROR("[CommunicatorImpl::%s] HrtHalHostRegister failed, ret: %d, connect type: %ld", __func__, ret,
+               shmem.connectType_);
+    if (shmem.va_ != nullptr) {
+        if (shmem.connectType_ == HOST_DEVICE_CONNECT_TYPE_PCIE) {
+            HrtFree(shmem.va_);
+        } else if (shmem.connectType_ == HOST_DEVICE_CONNECT_TYPE_UB) {
+            free(shmem.originVa_);
+            shmem.originVa_ = nullptr;
+        }
+        shmem.va_ = nullptr;
+    }
+    shmem.accessVA_ = nullptr;
+    return ret;
 }
 
 HcclResult CommunicatorImpl::GetKFCWorkSpaceVA(const std::string &memTag, const uint64_t *size, void **addr, bool *newCreated)
