@@ -221,6 +221,17 @@ STATIC int RsNdaMemcpy(void *dst, size_t dstSize, void *src, size_t srcSize, uin
     return ndaCb->ndaOps.memcpy_s(dst, dstSize, src, srcSize, direct);
 }
 
+STATIC void RsNdaFreeUbDbCb(struct NdaUbDbCb *ndaDbCb)
+{
+    if (ndaDbCb->refCnt != 0) {
+        return;
+    }
+
+    RsListDel(&ndaDbCb->list);
+    free(ndaDbCb);
+    ndaDbCb = NULL;
+}
+
 STATIC void *RsNdaDbMmapHostVa(struct RsNdaCb *ndaCb, struct doorbell_map_desc *desc)
 {
     uint64_t alignHva = AlignDown(desc->hva, (uint64_t)RA_RS_4K_PAGE_SIZE);
@@ -271,41 +282,41 @@ STATIC void *RsNdaDbMmapUbRes(struct RsNdaCb *ndaCb, struct doorbell_map_desc *d
     struct res_map_info_out resInfoOut = {0};
     struct res_map_info_in resInfoIn = {0};
     unsigned int logicId = gRsCb->logicId;
-    struct NdaUbDbCb *ndaGuidCb = NULL;
+    struct NdaUbDbCb *ndaDbCb = NULL;
+    uint64_t dva = 0;
     int ret = 0;
 
-    ret = RsGetNdaUbDbCb(ndaCb, desc->ub_res.guid_l, desc->ub_res.guid_h, &ndaGuidCb);
+    ret = RsGetNdaUbDbCb(ndaCb, desc->ub_res.guid_l, desc->ub_res.guid_h, &ndaDbCb);
     if (ret == 0) {
-        ndaGuidCb->refCnt++;
-        return (void *)(uintptr_t)ndaGuidCb->dva;
+        goto map_db;
     }
 
-    ndaGuidCb = (struct NdaUbDbCb *)calloc(1, sizeof(struct NdaUbDbCb));
-    CHK_PRT_RETURN(ndaGuidCb == NULL, hccp_err("ndaGuidCb calloc failed"), NULL);
+    ndaDbCb = (struct NdaUbDbCb *)calloc(1, sizeof(struct NdaUbDbCb));
+    CHK_PRT_RETURN(ndaDbCb == NULL, hccp_err("ndaDbCb calloc failed"), NULL);
+    ndaDbCb->guidL = desc->ub_res.guid_l;
+    ndaDbCb->guidH = desc->ub_res.guid_h;
+    ndaDbCb->guidIdx = ndaCb->ndaUbCb.ndaDbGuidCnt;
+    RsListAddTail(&ndaDbCb->list, &ndaCb->ndaUbCb.ndaDbList);
+    ndaCb->ndaUbCb.ndaDbGuidCnt++;
 
+map_db:
     RsNdaMapPrivPrepare(desc, &resMapIn);
     resInfoIn.target_proc_type = PROCESS_CP1;
     resInfoIn.res_type = RES_ADDR_TYPE_NDA_URMA_DB;
-    resInfoIn.res_id = RsNdaGenerateResId(resMapIn.db_idx, ndaCb->ndaUbCb.ndaDbGuidCnt);
+    resInfoIn.res_id = RsNdaGenerateResId(resMapIn.db_idx, ndaDbCb->guidIdx);
     resInfoIn.priv_len = sizeof(struct NdaUbResMapPrivInfo);
     resInfoIn.priv = (void *)&resMapIn;
     ret = DlHalResAddrMapV2(logicId, &resInfoIn, &resInfoOut);
     if (ret != 0) {
-        hccp_err("map resAddr failed, chipId:%u logicId:%u ret:%d", gRsCb->chipId, logicId, ret);
-        free(ndaGuidCb);
-        ndaGuidCb = NULL;
+        hccp_err("DlHalResAddrMapV2 failed, chipId:%u logicId:%u resId:0x%x ret:%d",
+            gRsCb->chipId, logicId, resInfoIn.res_id, ret);
+        RsNdaFreeUbDbCb(ndaDbCb);
         return NULL;
     }
 
-    ndaGuidCb->dva = resInfoOut.va + (desc->ub_res.bits.offset % (uint64_t)RA_RS_4K_PAGE_SIZE);
-    ndaGuidCb->guidL = desc->ub_res.guid_l;
-    ndaGuidCb->guidH = desc->ub_res.guid_h;
-    ndaGuidCb->guidIdx = ndaCb->ndaUbCb.ndaDbGuidCnt;
-
-    ndaGuidCb->refCnt++;
-    RsListAddTail(&ndaGuidCb->list, &ndaCb->ndaUbCb.ndaDbList);
-    ndaCb->ndaUbCb.ndaDbGuidCnt++;
-    return (void *)(uintptr_t)ndaGuidCb->dva;
+    ndaDbCb->refCnt++;
+    dva = resInfoOut.va + (desc->ub_res.bits.offset % (uint64_t)RA_RS_4K_PAGE_SIZE);
+    return (void *)(uintptr_t)dva;
 }
 
 STATIC void *RsNdaDbMmap(struct doorbell_map_desc *desc)
@@ -357,32 +368,27 @@ STATIC int RsNdaDbUnmapUbRes(struct RsNdaCb *ndaCb, void *ptr, struct doorbell_m
     struct NdaUbResMapPrivInfo resMapIn = {0};
     struct res_map_info_in resInfoIn = {0};
     unsigned int logicId = gRsCb->logicId;
-    struct NdaUbDbCb *ndaGuidCb = NULL;
+    struct NdaUbDbCb *ndaDbCb = NULL;
     int ret = 0;
 
-    ret = RsGetNdaUbDbCb(ndaCb, desc->ub_res.guid_l, desc->ub_res.guid_h, &ndaGuidCb);
+    ret = RsGetNdaUbDbCb(ndaCb, desc->ub_res.guid_l, desc->ub_res.guid_h, &ndaDbCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("RsGetNdaUbDbCb failed, chipId:%u guidL:0x%llx guidH:0x%llx",
         gRsCb->chipId, desc->ub_res.guid_l, desc->ub_res.guid_h), ret);
-
-    ndaGuidCb->refCnt--;
-    if (ndaGuidCb->refCnt != 0) {
-        return ret;
-    }
 
     RsNdaMapPrivPrepare(desc, &resMapIn);
     resInfoIn.target_proc_type = PROCESS_CP1;
     resInfoIn.res_type = RES_ADDR_TYPE_NDA_URMA_DB;
-    resInfoIn.res_id = RsNdaGenerateResId(resMapIn.db_idx, ndaGuidCb->guidIdx);
+    resInfoIn.res_id = RsNdaGenerateResId(resMapIn.db_idx, ndaDbCb->guidIdx);
     resInfoIn.priv_len = sizeof(struct NdaUbResMapPrivInfo);
     resInfoIn.priv = (void *)&resMapIn;
     ret = DlHalResAddrUnmapV2(logicId, &resInfoIn);
     if (ret != 0) {
-        hccp_err("DlHalResAddrUnmapV2 failed, chipId:%u logicId:%u ret:%d", gRsCb->chipId, logicId, ret);
+        hccp_err("DlHalResAddrUnmapV2 failed, chipId:%u logicId:%u resId:0x%x ret:%d",
+            gRsCb->chipId, logicId, resInfoIn.res_id, ret);
     }
 
-    RsListDel(&ndaGuidCb->list);
-    free(ndaGuidCb);
-    ndaGuidCb = NULL;
+    ndaDbCb->refCnt--;
+    RsNdaFreeUbDbCb(ndaDbCb);
     return ret;
 }
 
