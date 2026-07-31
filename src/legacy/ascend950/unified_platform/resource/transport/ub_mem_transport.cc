@@ -621,7 +621,7 @@ HcclResult UbMemTransport::RecvDataSize()
 {
     // 接收数据包尺寸
     bool ret = false;
-    HCCL_DEBUG("Starting to recv message size[%u] bytes, isHost_[%d]", sizeof(exchangeDataSize), isHost_);
+    HCCL_DEBUG("Starting to recv message size[%zu] bytes, isHost_[%d]", sizeof(exchangeDataSize), isHost_);
     if (isHost_) {
         ret = socket->Recv(&exchangeDataSize, sizeof(exchangeDataSize));
     } else {
@@ -640,7 +640,7 @@ HcclResult UbMemTransport::RecvDataSize()
 HcclResult UbMemTransport::SendExchangeData()
 {
     bool ret = false;
-    HCCL_DEBUG("Starting to send message size[%u] bytes, isHost_[%d]", sendData.size(), isHost_);
+    HCCL_DEBUG("Starting to send message size[%zu] bytes, isHost_[%d]", sendData.size(), isHost_);
     if (isHost_) {
         ret = socket->Send(sendData.data(), sendData.size());
     } else {
@@ -651,7 +651,7 @@ HcclResult UbMemTransport::SendExchangeData()
         HCCL_ERROR("[UbMemTransport::SendExchangeData] Send data failed");
         return HCCL_E_INTERNAL;
     }
-    HCCL_INFO("send data %s, size=%llu", GetLinkDescInfo().c_str(), sendData.size());
+    HCCL_INFO("send data %s, size=%zu", GetLinkDescInfo().c_str(), sendData.size());
     return HCCL_SUCCESS;
 }
 
@@ -659,7 +659,7 @@ HcclResult UbMemTransport::RecvExchangeData()
 {
     recvData.resize(exchangeDataSize);
     bool ret = false;
-    HCCL_DEBUG("Starting to recv message size[%u] bytes, isHost_[%d]", recvData.size(), isHost_);
+    HCCL_DEBUG("Starting to recv message size[%zu] bytes, isHost_[%d]", recvData.size(), isHost_);
     if (isHost_) {
         ret = socket->Recv(recvData.data(), recvData.size());
     } else {
@@ -671,13 +671,13 @@ HcclResult UbMemTransport::RecvExchangeData()
         return HCCL_E_INTERNAL;
     }
 
-    HCCL_INFO("recv data %s, size=%llu", GetLinkDescInfo().c_str(), recvData.size());
+    HCCL_INFO("recv data %s, size=%zu", GetLinkDescInfo().c_str(), recvData.size());
     return HCCL_SUCCESS;
 }
 
 HcclResult UbMemTransport::RecvDataProcess(bool &needSendFinish)
 {
-    HCCL_INFO("RecvDataProcess: link=%s, size=%llu, exchangeDataSize=%u", GetLinkDescInfo().c_str(), recvData.size(),
+    HCCL_INFO("RecvDataProcess: link=%s, size=%zu, exchangeDataSize=%u", GetLinkDescInfo().c_str(), recvData.size(),
                exchangeDataSize);
     BinaryStream binaryStream(recvData);
     HcclResult ret = HandshakeMsgUnpack(binaryStream);

@@ -199,7 +199,7 @@ HcclResult TopoMatchConcurrMeshNHR::GenerateLevel0(
     CHK_RET(FindLevel0Block(rankMatLevel0, gcdDim1Size, gcdDim0Size, myRank_, level0Ranks, level0Topo));
 
     CHK_PRT_RET((level0Topo[0].size() != gcdDim0Size || level0Topo[1].size() != gcdDim1Size),
-                HCCL_ERROR("[CollAlgFactory] [TopoMatchConcurrMeshNHR] Rank [%d], Invalid level0Topo size[%u][%u]",
+                HCCL_ERROR("[CollAlgFactory] [TopoMatchConcurrMeshNHR] Rank [%d], Invalid level0Topo size[%zu][%zu]",
                            myRank_, level0Topo[0].size(), level0Topo[1].size()),
                 HcclResult::HCCL_E_PARA);
     vTopo.push_back(level0Topo);

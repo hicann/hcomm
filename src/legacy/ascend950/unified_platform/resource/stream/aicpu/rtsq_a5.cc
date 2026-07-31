@@ -243,7 +243,7 @@ void RtsqA5::NotifyWait(u32 notifyId)
 void RtsqA5::NotifyWait(u32 notifyId, u32 timeout)
 {
     BuildA5SqeNotifyWait(streamId_, taskId_, notifyId, timeout, GetCurrSqeBuffer());
-    HCCL_INFO("RtsqA5::NotifyWait: streamId %u, taskId %u, notifyId %u, timeout %u", streamId_, taskId_, notifyId, timeout);
+    HCCL_INFO("RtsqA5::NotifyWait: streamId %u, taskId %u, notifyId %u, timeout[%u ms]", streamId_, taskId_, notifyId, timeout);
     RefreshInfo();
 }
 
@@ -264,7 +264,7 @@ void RtsqA5::Cnt1toNNotifyWait(u32 notifyId, u32 value)
 void RtsqA5::Cnt1toNNotifyRecord(u32 notifyId, u32 value)
 {
     BuildA5SqeCnt1toNNotifyRecord(streamId_, taskId_, notifyId, value, GetCurrSqeBuffer());
-    HCCL_INFO("RtsqA5::Cnt1toNNotifyWait: streamId %u, taskId %u, notifyId %u", streamId_, taskId_, notifyId);
+    HCCL_INFO("RtsqA5::Cnt1toNNotifyRecord: streamId %u, taskId %u, notifyId %u", streamId_, taskId_, notifyId);
     RefreshInfo();
 }
 
@@ -392,7 +392,7 @@ void RtsqA5::CCoreNotifyRecord(u64 recordAddr, u64 curTurnCntAddr)
 void RtsqA5::P2PWriteValue(u64 remoteAddr, u32 writeValue)
 {
     BuildA5SqeP2pWriteValue(streamId_, taskId_, remoteAddr, writeValue, GetCurrSqeBuffer());
-    HCCL_INFO("RtsqA5::P2PWriteValue: streamId %u, taskId %u, remoteAddr %llu, writeValue %llu",
+    HCCL_INFO("RtsqA5::P2PWriteValue: streamId %u, taskId %u, remoteAddr %llu, writeValue %u",
         streamId_, taskId_, remoteAddr, writeValue);
     RefreshInfo();
 }

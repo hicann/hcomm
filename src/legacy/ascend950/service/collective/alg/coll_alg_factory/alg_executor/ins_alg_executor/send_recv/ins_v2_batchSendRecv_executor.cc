@@ -438,8 +438,8 @@ HcclResult InsV2BatchSendRecvExecutor<AlgTopoMatch>::CalcRes(const RankGraph *ra
                 i, j, vTopo_[i][j]);
         }
     }
-    HCCL_DEBUG("[InsV2BatchSendRecvExecutor][CalcRes]topoInfo.virtRanks[%u], topoInfo.virtRankMap[%u],"\
-        "topoInfo.vTopo[%u]", algResReq.topoInfo.virtRanks.size(),
+    HCCL_DEBUG("[InsV2BatchSendRecvExecutor][CalcRes]topoInfo.virtRanks[%zu], topoInfo.virtRankMap[%zu],"\
+        "topoInfo.vTopo[%zu]", algResReq.topoInfo.virtRanks.size(),
         algResReq.topoInfo.virtRankMap.size(), algResReq.topoInfo.vTopo.size());
 
     // calculate required insQues and prepare queue

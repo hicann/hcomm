@@ -133,7 +133,7 @@ HcclResult CcuTempReduceMeshMem2Mem2D::GenExtIns(const TempFuncs          &tempF
         ccuInsReduceMeshMem2Mem2D.Init(dimSize_, static_cast<uint32_t>(myRank_), rootId_, axisId, inputAddr, outputAddr,
                                        sliceSize, xAxisSize, yAxisSize, token, op_, tempVTopo_);
 
-        HCCL_INFO("[CcuTempReduceMeshMem2Mem2D] Run Init: myRank_[%d],  inputAddr[%llu],"
+        HCCL_INFO("[CcuTempReduceMeshMem2Mem2D] Run Init: myRank_[%d], inputAddr[%llu],"
                   "outputAddr[%llu], sliceSize[%llu], xAxisSize[%llu], yAxisSize[%llu], axisId_[%u]",
                   myRank_, inputAddr, outputAddr, sliceSize, xAxisSize, yAxisSize, axisId);
 

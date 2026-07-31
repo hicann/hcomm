@@ -29,7 +29,7 @@ HcclResult InsTempAllGatherMesh1DOpt::CalcRes(AlgTempResReq &tempResReq)
 {
     HCCL_DEBUG("[InsTempAllGatherMesh1DOpt] Enter CalcRes");
     tempResReq.queNum = tempVTopo_[0].size();
-    HCCL_INFO("LGC tempVTopo_.size() is [%llu], AllGather queNum is [%llu]", tempVTopo_.size(), tempResReq.queNum);
+    HCCL_INFO("LGC tempVTopo_.size() is [%zu], AllGather queNum is [%llu]", tempVTopo_.size(), tempResReq.queNum);
     tempResReq.streamNum = tempResReq.queNum;
     tempResReq.queNotifys = CreateMasterSlaveQueNotifiesRequest(tempResReq.queNum);
     HCCL_DEBUG("[InsTempAllGatherMesh1DOpt] CalcRes queNotifys size[%zu]", tempResReq.queNotifys.size());

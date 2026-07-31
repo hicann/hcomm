@@ -161,7 +161,7 @@ HcclResult InsTempScatterMesh1D::RunMeshTx(u32 myAlgRank, u32 repeatTimes, const
         DataSlice dstSlice(dstBuffType, dstOffset, sliceSize);
         for (u32 j = 0; j < linkNum; j++) {
             CHK_PRT_RET(count >= tempInsQues.size(),
-                HCCL_ERROR("[InsTempScatterMesh1D] count=%u, tempInsQues.size=%u", count, tempInsQues.size()),
+                HCCL_ERROR("[InsTempScatterMesh1D] count=%u, tempInsQues.size=%zu", count, tempInsQues.size()),
                 HcclResult::HCCL_E_INTERNAL);
             LinkData &neighborLinkData = neighborLinkDatas[j];
 

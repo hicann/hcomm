@@ -44,7 +44,7 @@ CcuContextBroadcastMesh2D::CcuContextBroadcastMesh2D(const CcuCtxArg &arg, const
     dimId_.emplace_back(rankId_ / dimSize_[0]);
     localId_ = dimId_[axisId_];
     localSize_ = dimSize_[axisId_];
-    HCCL_INFO("[CcuContextBroadcastMesh2D] RankId[%u], DimSize0[%u], DimSize1[%u], localId[%u], lcoalSize[%u].",
+    HCCL_INFO("[CcuContextBroadcastMesh2D] RankId[%u], DimSize0[%llu], DimSize1[%llu], localId[%llu], lcoalSize[%llu].",
         rankId_, dimSize_[0], dimSize_[1], localId_, localSize_);
     rootId_ = ctxArg->op_.root;
     dataType_ = ctxArg->op_.dataType;

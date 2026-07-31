@@ -55,7 +55,7 @@ HcclResult InsTempReduceScatterMesh1DOpt::GenExtIns(const TempFuncs &tempFuncs, 
     opMode_              = tempFuncs.opMode;
     enableCounterNotify_ = tempFuncs.enableCounterNotify;
     queNum_ = tempVTopo_[0].size();
-    HCCL_INFO("LGC tempVTopo_.size() is [%llu], ReduceScatter queNum is [%llu]", tempVTopo_.size(), queNum_);
+    HCCL_INFO("LGC tempVTopo_.size() is [%zu], ReduceScatter queNum is [%llu]", tempVTopo_.size(), queNum_);
     processSize_ = tempAlgParams.sliceSize;
     HCCL_INFO("[InsTempReduceScatterMesh1DOpt] Run Start");
     // 这里不支持绕路的时候，应该就用原始的tempInsQues就行

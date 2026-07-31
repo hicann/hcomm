@@ -775,7 +775,7 @@ void HrtRaSocketWhiteListAdd(SocketHandle socketHandle, vector<RaSocketWhitelist
 
             int sret = strcpy_s(wlistInfo.tag, sizeof(wlistInfo.tag), wlists[idx].tag.c_str());
             if (sret != EOK) {
-                MACRO_THROW(InternalException, StringFormat("[Add][RaSocketWhiteList]errNo[0x%016llx]errName[HCCL_E_MEMORY] memory copy failed. params: socketHandle[%p], return: ret[%d], wlistInfo.tag size=%d,  wlists[%d].tag size=%d",
+                MACRO_THROW(InternalException, StringFormat("[Add][RaSocketWhiteList]errNo[0x%016llx]errName[HCCL_E_MEMORY] memory copy failed. params: socketHandle[%p], return: ret[%d], wlistInfo.tag size=%zu,  wlists[%zu].tag size=%zu",
                     HCOM_ERROR_CODE(HcclResult::HCCL_E_MEMORY), socketHandle, sret, sizeof(wlistInfo.tag), idx, sizeof(wlists[idx].tag.c_str())));
             }
             HCCL_INFO("add whitelistInfo tag=[%s], remoteIp[%s]",
@@ -785,16 +785,16 @@ void HrtRaSocketWhiteListAdd(SocketHandle socketHandle, vector<RaSocketWhitelist
 
         s32 ret = RaSocketWhiteListAdd(socketHandle, wlistInfoVec.data(), wlistInfoVec.size());
         if (ret != 0) {
-            MACRO_THROW(NetworkApiException, StringFormat("[Add][RaSocketWhiteList]errNo[0x%016llx]errName[HCCL_E_TCP_CONNECT] ra white list add fail, call RaSocketWhiteListAdd failed, socketHandle[%p], num=%llu, return[%d].",
+            MACRO_THROW(NetworkApiException, StringFormat("[Add][RaSocketWhiteList]errNo[0x%016llx]errName[HCCL_E_TCP_CONNECT] ra white list add fail, call RaSocketWhiteListAdd failed, socketHandle[%p], num=%zu, return[%d].",
                 HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), socketHandle, wlistInfoVec.size() + startIdx, ret));
         }
-        HCCL_INFO("add white list: num[%llu], remain [%llu].", addListNum, (wlistNum - addListNum));
+        HCCL_INFO("add white list: num[%zu], remain [%zu].", addListNum, (wlistNum - addListNum));
 
         wlistInfoVec.clear();
         wlistNum -= addListNum;
         startIdx += addListNum;
     }
-    HCCL_INFO("[HrtRaSocketWhiteListAdd] Success. Total add num [%llu]", wlists.size());
+    HCCL_INFO("[HrtRaSocketWhiteListAdd] Success. Total add num [%zu]", wlists.size());
 }
 
 void HrtRaSocketWhiteListDel(SocketHandle socketHandle, vector<RaSocketWhitelist> &wlists)
@@ -815,7 +815,7 @@ void HrtRaSocketWhiteListDel(SocketHandle socketHandle, vector<RaSocketWhitelist
 
             int sret = strcpy_s(wlistInfo.tag, sizeof(wlistInfo.tag), wlists[idx].tag.c_str());
             if (sret != EOK) {
-                auto msg = StringFormat("[Del][RaSocketWhiteList]errNo[0x%016llx] memory copy failed. ret[%d], wlistInfo.tag size[%d], wlists[%d].tag size[%d]",
+                auto msg = StringFormat("[Del][RaSocketWhiteList]errNo[0x%016llx] memory copy failed. ret[%d], wlistInfo.tag size[%zu], wlists[%zu].tag size[%zu]",
                                         HCOM_ERROR_CODE(HcclResult::HCCL_E_MEMORY), sret, sizeof(wlistInfo.tag), idx, sizeof(wlists[idx].tag.c_str()));
                 MACRO_THROW(InternalException, msg);
             }
@@ -824,16 +824,16 @@ void HrtRaSocketWhiteListDel(SocketHandle socketHandle, vector<RaSocketWhitelist
 
         s32 ret = RaSocketWhiteListDel(socketHandle, wlistInfoVec.data(), wlistInfoVec.size());
         if (ret != 0) {
-            MACRO_THROW(NetworkApiException, StringFormat("[Del][RaSocketWhiteList]errNo[0x%016llx] ra white list del fail, call RaSocketWhiteListDel failed, num=%llu, return[%d].",
+            MACRO_THROW(NetworkApiException, StringFormat("[Del][RaSocketWhiteList]errNo[0x%016llx] ra white list del fail, call RaSocketWhiteListDel failed, num=%zu, return[%d].",
                 HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), wlists.size(), ret));
         }
-        HCCL_INFO("del white list: num[%llu], remain [%llu].", delListNum, (wlistNum - delListNum));
+        HCCL_INFO("del white list: num[%zu], remain [%zu].", delListNum, (wlistNum - delListNum));
 
         wlistInfoVec.clear();
         wlistNum -= delListNum;
         startIdx += delListNum;
     }
-    HCCL_INFO("[HrtRaSocketWhiteListDel] Success. Total delete num[%llu]", wlists.size());
+    HCCL_INFO("[HrtRaSocketWhiteListDel] Success. Total delete num[%zu]", wlists.size());
 }
 
 std::mutex g_deviceVnicIpMutex;
@@ -1985,7 +1985,7 @@ RequestHandle RaSocketConnectOneAsync(RaSocketConnectParam &in)
     int sret = strcpy_s(connInfo.tag, sizeof(connInfo.tag), in.tag.c_str());
     if (sret != 0) {
         MACRO_THROW(NetworkApiException, StringFormat(
-            "[%s] copy tag[%s] to hccp tag failed, ret=%d, connInfo.tag size=%d, in.tag size=%d",
+            "[%s] copy tag[%s] to hccp tag failed, ret=%d, connInfo.tag size=%zu, in.tag size=%zu",
             __func__, in.tag.c_str(), sret, sizeof(connInfo.tag), sizeof(in.tag.c_str())));
     }
 
@@ -2068,7 +2068,7 @@ RaSocketFdHandleParam RaGetOneSocket(u32 role, RaSocketGetParam &param)
 
     int sret = strcpy_s(socketInfo.tag, sizeof(socketInfo.tag), param.tag.c_str());
     if (sret != 0) {
-        MACRO_THROW(NetworkApiException, StringFormat("[%s] failed, copy tag[%s] to hccp failed, ret=%d, socketInfo.tag size=%d, param.tag size=%d",
+        MACRO_THROW(NetworkApiException, StringFormat("[%s] failed, copy tag[%s] to hccp failed, ret=%d, socketInfo.tag size=%zu, param.tag size=%zu",
             __func__, param.tag.c_str(), sret, sizeof(socketInfo.tag), sizeof(param.tag.c_str())));
     }
     
@@ -2710,7 +2710,7 @@ HcclResult HrtRaCtxQpDestoryBatch(const RdmaHandle handle, const std::unordered_
         auto                    waitPollTimeOutMs = std::chrono::milliseconds(pollTimeoutMs);
         while (true) {
             if ((std::chrono::steady_clock::now() - startTime) >= waitPollTimeOutMs) {
-                HCCL_ERROR("[%s]poll timeout, originalJettyCount[%u], undeleteJettyCount[%u].", __func__, jettyHandles.size(), failJettyHandles.size());
+                HCCL_ERROR("[%s]poll timeout, originalJettyCount[%zu], undeleteJettyCount[%zu].", __func__, jettyHandles.size(), failJettyHandles.size());
                 return HCCL_E_TIMEOUT;
             }
             ReqHandleResult result = ReqHandleResult::INVALID_PARA;
@@ -2727,7 +2727,7 @@ HcclResult HrtRaCtxQpDestoryBatch(const RdmaHandle handle, const std::unordered_
 
         // 检查是否删除完成
         if (delNum > del_qp_handle.size()) {
-            HCCL_ERROR("[%s] run RaCtxQpDestroyBatchAsync error, del jetty num[%u] greater than all jetty num[%u].", __func__, delNum, del_qp_handle.size());
+            HCCL_ERROR("[%s] run RaCtxQpDestroyBatchAsync error, del jetty num[%u] greater than all jetty num[%zu].", __func__, delNum, del_qp_handle.size());
             return HCCL_E_INTERNAL;
         } else if (del_qp_handle.size() == delNum) {
             qp_handle.erase(qp_handle.begin(), qp_handle.begin() + delNum);
@@ -2739,7 +2739,7 @@ HcclResult HrtRaCtxQpDestoryBatch(const RdmaHandle handle, const std::unordered_
             break;
         }
     }
-    HCCL_INFO("[%s] run success, originalJettyCount[%u], undeleteJettyCount[%u].", __func__, jettyHandles.size(), failJettyHandles.size());
+    HCCL_INFO("[%s] run success, originalJettyCount[%zu], undeleteJettyCount[%zu].", __func__, jettyHandles.size(), failJettyHandles.size());
     return HCCL_SUCCESS;
 }
 
@@ -2809,7 +2809,7 @@ HcclResult HrtGetCcuMemInfo(void* tlv_handle, uint32_t udieIdx, uint64_t memType
 
 HcclResult HrtRaGetEidByIp(RdmaHandle handle, const vector<IpAddress>& ipV4AddrList, vector<IpAddress>& eidAddrList)
 {
-    HCCL_INFO("[HrtRaGetEidByIp] begain, ipV4AddrList size=%u", ipV4AddrList.size());
+    HCCL_INFO("[HrtRaGetEidByIp] begain, ipV4AddrList size=%zu", ipV4AddrList.size());
     size_t ipV4AddrListSize = ipV4AddrList.size();
     unsigned int num = ipV4AddrListSize;
     IpInfo ipInfoList[num] = {};
@@ -2829,7 +2829,7 @@ HcclResult HrtRaGetEidByIp(RdmaHandle handle, const vector<IpAddress>& ipV4AddrL
 
     if (num != ipV4AddrList.size()) {
         HCCL_ERROR("call RaGetEidByIp failed, The number of ipInfoList and eidList is inconsistent, "
-                   "ipV4AddrList size =%d, eidList size =%d",
+                   "ipV4AddrList size =%zu, eidList size =%u",
             ipV4AddrList.size(),
             num);
         return HCCL_E_INTERNAL;
@@ -2839,7 +2839,7 @@ HcclResult HrtRaGetEidByIp(RdmaHandle handle, const vector<IpAddress>& ipV4AddrL
         IpAddress eidAddr = HccpEidToIpAddress(eidList[i]);
         eidAddrList.push_back(eidAddr);
     }
-    HCCL_INFO("[HrtRaGetEidByIp] success, eidAddrList size=%u", eidAddrList.size());
+    HCCL_INFO("[HrtRaGetEidByIp] success, eidAddrList size=%zu", eidAddrList.size());
     return HCCL_SUCCESS;
 }
 

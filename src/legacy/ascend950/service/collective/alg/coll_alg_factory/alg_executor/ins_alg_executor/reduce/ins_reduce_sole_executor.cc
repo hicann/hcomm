@@ -273,7 +273,7 @@ HcclResult InsReduceSoleExecutor<AlgTopoMatch, InsAlgTemplate>::OrchestrateOpbas
         HCCL_ERROR("[InsReduceSoleExecutor][OrchestrateOpbase] maxLoopOutputCount is zero!");
         return HcclResult::HCCL_E_INTERNAL;
     }
-    HCCL_INFO("[InsReduceSoleExecutor][OrchestrateOpbase] Actual maxLoopOutputCount: [%lu].", maxLoopOutputCount);
+    HCCL_INFO("[InsReduceSoleExecutor][OrchestrateOpbase] Actual maxLoopOutputCount: [%llu].", maxLoopOutputCount);
 
     u64 loopTimes = outputCount / maxLoopOutputCount + static_cast<u64>(outputCount % maxLoopOutputCount != 0);
     for (u32 loop = 0; loop < loopTimes; loop++) {

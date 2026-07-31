@@ -54,10 +54,10 @@ HcclResult TransportUrmaMem::FillRmaBufferSlice(const RmaOpMem &localMem, const 
     remoteRmaBufferSlice.size = byteSize;
     remoteRmaBufferSlice.buf =  remoteBuffer;
 
-    HCCL_INFO("[TransportUrmaMem][FillRmaBufferSlice] Local [%p], buff[%lu], offset[%u], after mapping is [%llu], Datasize is [%llu].",
+    HCCL_INFO("[TransportUrmaMem][FillRmaBufferSlice] Local [%p], buff[%llu], offset[%llu], after mapping is [%llu], Datasize is [%llu].",
         localAddr, localBuffer.second->GetBuf()->GetAddr(), localDataOffSet, localRmaBufferSlice.addr, byteSize);
 
-    HCCL_INFO("[TransportUrmaMem][FillRmaBufferSlice] rmt [%p], buff[%lu], offset[%u], after mapping is [%llu], Datasize is [%llu].",
+    HCCL_INFO("[TransportUrmaMem][FillRmaBufferSlice] rmt [%p], buff[%llu], offset[%llu], after mapping is [%llu], Datasize is [%llu].",
         remoteAddr, remoteBuffer->GetAddr(), remoteDataOffSet, remoteRmaBufferSlice.addr, byteSize);
 
     return HCCL_SUCCESS;

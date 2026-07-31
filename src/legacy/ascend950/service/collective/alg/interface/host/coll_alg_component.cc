@@ -332,7 +332,7 @@ HcclResult CollAlgComponent::Orchestrate(const CollAlgOperator &op, const CollAl
     bool isAlltoAll =
         (op.opType == OpType::ALLTOALL) || (op.opType == OpType::ALLTOALLV) || (op.opType == OpType::ALLTOALLVC);
     if ((rankSize_ == 1) && (op.inputMem == nullptr || op.outputMem == nullptr)) {
-        HCCL_INFO("CollAlgComponent] rankSize = 1 and inputMem or outputMem is nullptr. Do nothing.");
+        HCCL_INFO("[CollAlgComponent] rankSize = 1 and inputMem or outputMem is nullptr. Do nothing.");
         return HcclResult::HCCL_SUCCESS;
     } else if ((rankSize_ == 1) && (!isAlltoAll)) {
         HCCL_INFO("[CollAlgComponent] rankSize = 1, copy from input to output.");

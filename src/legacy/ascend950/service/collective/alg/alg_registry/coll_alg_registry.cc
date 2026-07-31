@@ -46,7 +46,7 @@ void CollAlgRegistry::PrintAllImpls()
         HCCL_DEBUG("-------------------------------------");
         HCCL_DEBUG("type name is %s", iter.first.Describe().c_str());
         for (auto &alg : iter.second) {
-            HCCL_DEBUG("    alg name is  %s", alg.first.c_str());
+            HCCL_DEBUG("    alg name is %s", alg.first.c_str());
             if (alg.second == nullptr) {
                 HCCL_DEBUG("    alg func is nullptr");
             }
@@ -62,7 +62,7 @@ std::map<OpType, std::vector<std::string>> CollAlgRegistry::GetAvailAlgs()
         HCCL_DEBUG("type name is %s", iter.first.Describe().c_str());
         std::vector<std::string> tmpAvailAlgs;
         for (auto &alg : iter.second) {
-            HCCL_DEBUG("    alg name is  %s", alg.first.c_str());
+            HCCL_DEBUG("    alg name is %s", alg.first.c_str());
             tmpAvailAlgs.push_back(alg.first);
             if (alg.second == nullptr) {
                 HCCL_DEBUG("    alg func is nullptr");

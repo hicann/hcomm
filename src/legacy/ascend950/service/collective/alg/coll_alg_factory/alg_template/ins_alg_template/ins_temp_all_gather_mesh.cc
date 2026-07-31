@@ -202,7 +202,7 @@ HcclResult InsTempAllGatherMesh1D::SingleRunMesh(
     CHK_RET(CalcDataSplitRateForLinks(neighborLinkDatas, dataSplitRate));
     for (u32 j = 0; j < linkNum; j++) {
         CHK_PRT_RET(queIdx >= tempInsQues.size(),
-            HCCL_ERROR("[SingleRunMesh] queIdx=%u, tempInsQues.size=%u", queIdx, tempInsQues.size()),
+            HCCL_ERROR("[SingleRunMesh] queIdx=%u, tempInsQues.size=%zu", queIdx, tempInsQues.size()),
             HcclResult::HCCL_E_INTERNAL);
         LinkData &neighborLinkData = neighborLinkDatas[j];
         std::vector<DataSlice> txSrcSlices, txDstSlices, rxSrcSlices, rxDstSlices;
@@ -232,7 +232,7 @@ HcclResult InsTempAllGatherMesh1D::RunMesh(
         }
         CHK_PRT_RET(tempLinks_.at(connectedRank).empty(),
             HCCL_ERROR(
-                "[InsTempAllGatherMesh1D] connectedRank=%d, tempLinks_.size=%u", connectedRank, tempLinks_.size()),
+                "[InsTempAllGatherMesh1D] connectedRank=%d, tempLinks_.size=%zu", connectedRank, tempLinks_.size()),
             HcclResult::HCCL_E_INTERNAL);
         // SingleRunMesh函数中会自动移动curInsQues队列下标
         CHK_PRT_RET(SingleRunMesh(myAlgRank, connectedRank, tempInsQues, queIdx),

@@ -188,7 +188,7 @@ HcclResult MultiSendReduceCounter(const MultiDataReduceInfo &sendInfo, std::vect
     }
 
     CHK_PRT_RET(!DevCapability::GetInstance().IsSupportStarsPollNetCq(),
-                HCCL_ERROR("[InsCollAlgFactory] [AlgDataTrans] MultiSendReduceCounter: inter-rank CounterNotify is  "
+                HCCL_ERROR("[InsCollAlgFactory] [AlgDataTrans] MultiSendReduceCounter: inter-rank CounterNotify is "
                            "supported only when device supports StarsPollNetCq."),
                 HcclResult::HCCL_E_INTERNAL);
 

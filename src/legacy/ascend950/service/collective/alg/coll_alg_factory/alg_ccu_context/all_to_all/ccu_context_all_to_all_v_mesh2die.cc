@@ -54,7 +54,7 @@ CcuContextAllToAllVMesh2Die::CcuContextAllToAllVMesh2Die(const CcuCtxArg &arg,
     selfBit_ = 1 << logicId_;
     allBit_  = ((1 << peerSize_) - 1) & (~(withMyRank_ ? selfBit_ : 0));
 
-    HCCL_INFO("[CcuContextAllToAllVMesh2Die] RankId[%u], rankSize[%u], localSize[%u], peerSize[%u], logicId[%u], "
+    HCCL_INFO("[CcuContextAllToAllVMesh2Die] RankId[%u], rankSize[%llu], localSize[%u], peerSize[%u], logicId[%u], "
         "withMyRank[%u]", rankId_, rankSize_, localSize_, peerSize_, logicId_, withMyRank_);
 }
 
@@ -334,7 +334,7 @@ std::vector<uint64_t> CcuContextAllToAllVMesh2Die::GeneArgs(const CcuTaskArg &ar
     }
 
     HCCL_DEBUG("[CcuContextAllToAllVMesh2Die][GeneArgs] RankId[%u], inputAddr[%#llx], outputAddr[%#llx], "
-        "xnMaxTransportSize[%llu], args[%u]", rankId_, inputAddr, outputAddr, MAX_TRANSPORT_SIZE, taskParams.size());
+        "xnMaxTransportSize[%llu], args[%zu]", rankId_, inputAddr, outputAddr, MAX_TRANSPORT_SIZE, taskParams.size());
 
     return taskParams;
 }

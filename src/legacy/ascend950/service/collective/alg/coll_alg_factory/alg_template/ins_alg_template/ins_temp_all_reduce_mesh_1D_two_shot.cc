@@ -134,7 +134,7 @@ HcclResult InsTempAllReduceMesh1DTwoShot::GenExtIns(const TempFuncs &tempFuncs, 
 
     u64 dataSizePerVolume = DataTypeSizeGet(dataType_);
     CHK_PRT_RET((tempRankSize_ * dataSizePerVolume) + tempAlgParams.sliceSize > tempAlgParams.buffInfo.scratchBuffSize,
-        HCCL_ERROR("[InsTempAllReduceMesh1DTwoShot]Rank [%d], Input size:[%llu], BfSize:[%llu]  Insufficient buffer!",
+        HCCL_ERROR("[InsTempAllReduceMesh1DTwoShot]Rank [%d], Input size:[%llu], BfSize:[%llu] Insufficient buffer!",
             myRank_,
             tempAlgParams.sliceSize,
             tempAlgParams.buffInfo.scratchBuffSize),
@@ -163,7 +163,7 @@ HcclResult InsTempAllReduceMesh1DTwoShot::GenExtIns(const TempFuncs &tempFuncs, 
 
     std::vector<std::vector<InsQuePtr>> tempInsQuesVec;
     u32 queNumPerlink = tempInsQues.size() / linkNum;
-    HCCL_INFO("tempInsQues.size()=%u,queNumPerlink=%u",tempInsQues.size(),queNumPerlink);
+    HCCL_INFO("tempInsQues.size()=%zu,queNumPerlink=%u",tempInsQues.size(),queNumPerlink);
     for (uint32_t linkIdx = 0; linkIdx < linkNum; linkIdx++) {
         tempInsQuesVec.emplace_back(tempInsQues.begin() + linkIdx * queNumPerlink, tempInsQues.begin() + (linkIdx+1) * queNumPerlink);
     }

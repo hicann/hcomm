@@ -39,7 +39,7 @@ CcuContextAllReduceMesh1DOneShot::CcuContextAllReduceMesh1DOneShot(const CcuCtxA
         HCCL_INFO("[CcuContextAllReduceMesh1DOneShot] outputDataType is [INVALID], set outputDataType to[%s]",
             outputDataType_.Describe().c_str());
     }
-    HCCL_INFO("[CcuContextAllReduceMesh1DOneShot] Init, CtxArgs are notifySignal_[%s], rankId[%u], rankSize[%u], dataType[%s], "
+    HCCL_INFO("[CcuContextAllReduceMesh1DOneShot] Init, CtxArgs are notifySignal_[%s], rankId[%u], rankSize[%llu], dataType[%s], "
         "outputDataType[%s], reduceOp[%s]", notifySignal_.c_str(), rankId_, rankSize_, dataType_.Describe().c_str(),
         outputDataType_.Describe().c_str(), reduceOp_.Describe().c_str());
 }

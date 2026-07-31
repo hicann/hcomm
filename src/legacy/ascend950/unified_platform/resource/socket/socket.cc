@@ -74,7 +74,7 @@ void Socket::PrintErrorSocketInfo()
 {
     HCCL_ERROR("Socket::GetStatus failed.");
     HCCL_ERROR("Please check if env HCCL_SOCKET_IFNAME is set correctly, "
-               "which can be verified by checking localIp and remoteIp in socket info:");
+               "which can be verified by checking localIp and remoteIp in the socket info as follows.");
     HCCL_ERROR("%s", Describe().c_str());
 }
 

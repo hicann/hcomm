@@ -220,7 +220,7 @@ HcclResult InsTempAllReduceMesh2DTwoShot::InitInnerParams(const TempFuncs &tempF
     u32 times = 2;
     chunkSize_ = RoundUp(tempAlgParams.sliceSize, (M_ * N_ * times * dataSizePerVolume)) * dataSizePerVolume;
     CHK_PRT_RET((chunkSize_ * M_ * N_ * times) > tempAlgParams.buffInfo.scratchBuffSize,
-        HCCL_ERROR("[InsTempAllReduceMesh2DTwoShot]Rank [%d], Input size:[%llu], BfSize:[%llu]  Insufficient buffer!",
+        HCCL_ERROR("[InsTempAllReduceMesh2DTwoShot]Rank [%d], Input size:[%llu], BfSize:[%llu] Insufficient buffer!",
             myRank_,
             tempAlgParams.sliceSize,
             tempAlgParams.buffInfo.scratchBuffSize),

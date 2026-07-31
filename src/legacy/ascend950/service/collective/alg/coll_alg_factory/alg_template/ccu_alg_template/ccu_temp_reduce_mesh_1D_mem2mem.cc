@@ -107,7 +107,7 @@ HcclResult CcuTempReduceMeshMem2Mem1D::GenExtIns(const TempFuncs          &tempF
         }
         links.push_back(pair.second[0]);
     }
-    HCCL_DEBUG("[CcuTempReduceMeshMem2Mem1D] links.size[%llu]", links.size());
+    HCCL_DEBUG("[CcuTempReduceMeshMem2Mem1D] links.size[%zu]", links.size());
     ccuIns.SetLinks(links);
  
     RankGroup rankGroup;

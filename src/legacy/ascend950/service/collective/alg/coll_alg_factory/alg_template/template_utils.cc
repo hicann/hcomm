@@ -176,7 +176,7 @@ HcclResult CalcResLinksMesh2D(const RankId myRank, const std::vector<std::vector
             u32 neighborAlgRank = (myAlgRank + 1 + queIdx) % (tempVTopo[dim].size());
             CHK_PRT_RET(neighborAlgRank > (tempVTopo[dim].size() - 1),
                 HCCL_ERROR("[CalcResLinksMesh2D] neighborAlgRank[%u] is invalid,"\
-                        "the Max rank[%u].", neighborAlgRank, tempVTopo[dim].size() - 1);,
+                        "the Max rank[%zu].", neighborAlgRank, tempVTopo[dim].size() - 1);,
                 HcclResult::HCCL_E_INTERNAL);
             RankId neighborRank = tempVTopo[dim][neighborAlgRank];
             tempResReq.links[neighborRank] = linkNumBtwPeers;

@@ -36,7 +36,7 @@ CcuContextScatterMesh1D::CcuContextScatterMesh1D(
     rankSize_                   = ctxArg->dimSize_[0];
     rootId_                     = ctxArg->rootId_;
 
-    HCCL_INFO("[CcuContextScatterMesh1D] CtxArg: rankId[%u] rankSize[%u]", rankId_, rankSize_);
+    HCCL_INFO("[CcuContextScatterMesh1D] CtxArg: rankId[%u] rankSize[%llu]", rankId_, rankSize_);
 }
 
 void CcuContextScatterMesh1D::InitResource()
@@ -47,7 +47,7 @@ void CcuContextScatterMesh1D::InitResource()
     if (transports.size() == 0) {
         THROW<NullPtrException>(StringFormat("CcuContextScatterMesh1D transports is empty"));
     }
-    HCCL_INFO("[CcuContextScatterMesh1D]transports.size: [%u]", transports.size());
+    HCCL_INFO("[CcuContextScatterMesh1D]transports.size: [%zu]", transports.size());
     uint16_t transportIdx = 0;
     // 按照rank号从小到大遍历transports，遇到本rank就填充本地资源，否则依次取远端资源，要求给框架返回的Link同样是按顺序排列的
     for (uint64_t peerId = 0; peerId < rankSize_; peerId++) {

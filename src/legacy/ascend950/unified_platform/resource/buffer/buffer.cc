@@ -80,11 +80,11 @@ bool Buffer::Contains(uintptr_t bufAddr, size_t bufSize) const
 
 Buffer Buffer::Range(std::size_t offset, std::size_t givenSize) const
 {
-    HCCL_INFO("[Buffer::Range] offset[%llu] givenSize[%llu] size[%llu]", offset, givenSize, size_);
+    HCCL_INFO("[Buffer::Range] offset[%zu] givenSize[%zu] size[%zu]", offset, givenSize, size_);
     if (addr_ != 0 && (offset + givenSize) <= size_) {
         return Buffer(addr_ + offset, givenSize);
     } else {
-        HCCL_WARNING("Buffer range[%llu] size[%llu Byte] error or addr[0x%llx] null", offset + givenSize, size_, addr_);
+        HCCL_WARNING("Buffer range[%zu] size[%zu Byte] error or addr[0x%llx] null", offset + givenSize, size_, addr_);
         return Buffer(0, 0);
     }
 }

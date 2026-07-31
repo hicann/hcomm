@@ -83,7 +83,7 @@ HcclResult InsAlltoAllSoleExecutor<AlgTopoMatch, InsAlgTemplate>::CalcResOffload
             rankGraph->GetPaths(0, myRank_, rankIdx);
         std::vector<NetInstance::Path> tmpPaths1 =
             rankGraph->GetPaths(1, myRank_, rankIdx);
-        HCCL_INFO("[InsAlltoAllSoleExecutor]tmpPaths0.size() = %u,tmpPaths1.size() = %u", tmpPaths0.size(), tmpPaths1.size());
+        HCCL_INFO("[InsAlltoAllSoleExecutor]tmpPaths0.size() = %zu,tmpPaths1.size() = %zu", tmpPaths0.size(), tmpPaths1.size());
         rank2PathNumMap[rankIdx] = tmpPaths0.size() + tmpPaths1.size();
     }
     

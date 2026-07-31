@@ -68,7 +68,7 @@ namespace Hccl {
         CHK_PTR_NULL(rankGraphPtr_);
         RankGraph *rankGraph = static_cast<RankGraph *>(rankGraphPtr_);
         if (rankGraph->GetPeer(rankId) == nullptr) {
-            HCCL_ERROR("[GetPeer] rankGraph peer is null!");
+            HCCL_ERROR("[GetDeviceId] rankGraph peer is null!");
             return HCCL_E_PTR;
         }
         *deviceId = rankGraph->GetPeer(rankId)->GetDeviceId();
@@ -108,7 +108,7 @@ namespace Hccl {
 
         auto it = netTypeMap.find(type);
         if (it == netTypeMap.end()) {
-            HCCL_ERROR("[GetInstTopoTypeByNetLayer] netType[%d] not in netTypeMap", type);
+            HCCL_ERROR("[GetInstTopoTypeByNetLayer] netType[%s] not in netTypeMap", type.Describe().c_str());
             return HCCL_E_PARA;
         }
         *topoType = it->second;
@@ -188,7 +188,7 @@ namespace Hccl {
             commAddr.type = COMM_ADDR_TYPE_IP_V6;
             commAddr.addr6 = ipAddr.GetBinaryAddress().addr6;
         } else {
-            HCCL_ERROR("[IRankGraph::GetLinks] invalid commAddrType");
+            HCCL_ERROR("[SetCommAddress] invalid commAddrType");
             return HCCL_E_INTERNAL;
         }
         return HCCL_SUCCESS;
@@ -385,7 +385,7 @@ namespace Hccl {
         Hccl::TopoType type;
         HcclResult ret = rankGraph->GetTopoType(netLayer, topoInstId, type);
         if (ret != HCCL_SUCCESS) {
-            HCCL_ERROR("[IRankGraph::GetTopoType] Failed to get topo type at netLayer [%u] topoInstId [%u] ret=%d", netLayer, topoInstId, ret);
+            HCCL_ERROR("[IRankGraph::GetTopoType] Failed to get topo type at netLayer [%u] topoInstId [%u] ret[%d]", netLayer, topoInstId, ret);
             return ret;
         }
         static const std::unordered_map<Hccl::TopoType, CommTopo> topoTypeMap = {
@@ -417,7 +417,7 @@ namespace Hccl {
         u32 num = 0;
         auto ret = rankGraph->GetRanksByTopoInst(netLayer, topoInstId, ranksVec_, num);
         if (ret != HCCL_SUCCESS) {
-            HCCL_ERROR("[IRankGraph::GetRanksByTopoInst] Failed to get ranks at netLayer [%u] topoInstId [%u] ret=%d", netLayer, topoInstId, ret);
+            HCCL_ERROR("[IRankGraph::GetRanksByTopoInst] Failed to get ranks at netLayer [%u] topoInstId [%u] ret[%d]", netLayer, topoInstId, ret);
             return ret;
         }
         *ranks = ranksVec_.data();

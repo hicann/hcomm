@@ -122,7 +122,7 @@ HcclResult P2PEnableManager::DisableP2P(uint32_t localDeviceLogicID, std::vector
             CHK_RET(DisableP2P(localDeviceLogicID, remoteDevicePhysicID));
         }
     } catch (HcclException &e) {
-        HCCL_ERROR(e.what());
+        HCCL_ERROR("%s", e.what());
         return e.GetErrorCode();
     } catch (...) {
         HCCL_ERROR("Unknown error occurs!");

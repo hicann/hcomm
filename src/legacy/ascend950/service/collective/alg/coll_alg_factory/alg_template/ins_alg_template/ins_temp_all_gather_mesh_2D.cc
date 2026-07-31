@@ -42,7 +42,7 @@ HcclResult InsTempAllGatherMesh2D::CalcRes(AlgTempResReq &tempResReq)
 
     tempResReq.streamNum = tempResReq.queNum;
     tempResReq.queNotifys = CreateMasterSlaveQueNotifiesRequest(tempResReq.queNum);
-    HCCL_DEBUG("InsTempAllGatherMesh2D::CalcRes queNotifys size[%u]", tempResReq.queNotifys.size());
+    HCCL_DEBUG("InsTempAllGatherMesh2D::CalcRes queNotifys size[%zu]", tempResReq.queNotifys.size());
 
     QId centerQ = 0;
     tempResReq.localWaitGroupCntNotify.emplace_back(centerQ, 0);
@@ -201,7 +201,7 @@ HcclResult InsTempAllGatherMesh2D::RunMesh(const u32 myAlgRank, RankId globalSrc
 
             CHK_PRT_RET(
                 queIdx >= tempInsQues.size() or tempLinks_.at(connectedRank).size() <= 0,
-                HCCL_ERROR("InsTempAllGatherMesh2D: tempInsQues.size()=%u, connectedRank=%d, tempLinks_.size()=%u, ",
+                HCCL_ERROR("InsTempAllGatherMesh2D: tempInsQues.size()=%zu, connectedRank=%d, tempLinks_.size()=%zu, ",
                         tempInsQues.size(), connectedRank, tempLinks_.size()), HcclResult::HCCL_E_INTERNAL);
             InsQuePtr         currQue          = tempInsQues[queIdx];
             LinkData&         neighborLinkData = tempLinks_.at(connectedRank)[0];

@@ -48,7 +48,7 @@ CcuContextBroadcastMesh1DMem2Mem::CcuContextBroadcastMesh1DMem2Mem(
                   outputDataType_.Describe().c_str());
     }
 
-    HCCL_INFO("[CcuContextBroadcastMesh1DMem2Mem] init end, ctxArg->dimSize size[%u] rankSize[%llu].",
+    HCCL_INFO("[CcuContextBroadcastMesh1DMem2Mem] init end, ctxArg->dimSize size[%zu] rankSize[%llu].",
               ctxArg->dimSize_.size(), rankSize_);
 }
 
@@ -57,7 +57,7 @@ void CcuContextBroadcastMesh1DMem2Mem::InitResource()
     if (transports.size() == 0) {
         THROW<NullPtrException>(StringFormat("CcuContextBroadcastMesh1DMem2Mem transports is empty"));
     }
-    HCCL_INFO("[CcuContextBroadcastMesh1DMem2Mem]transports.size: [%u]", transports.size());
+    HCCL_INFO("[CcuContextBroadcastMesh1DMem2Mem]transports.size: [%zu]", transports.size());
     uint16_t transportIdx = 0;
     // 按照rank号从小到大遍历transports，遇到本rank就填充本地资源，否则依次取远端资源，要求给框架返回的Link同样是按顺序排列的
     for (uint16_t peerId = 0; peerId < rankSize_; peerId++) {

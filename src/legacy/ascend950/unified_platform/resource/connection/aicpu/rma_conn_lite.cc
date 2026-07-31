@@ -20,7 +20,7 @@ RmaConnLite::RmaConnLite(const UbJettyLiteId &id, const UbJettyLiteAttr &attr, c
     : dieId_(id.dieId_), funcId_(id.funcId_), jettyId_(id.jettyId_), dbAddr_(attr.dbAddr_), sqVa_(attr.sqVa_),
       sqDepth_(attr.sqDepth_), jfcPollMode_(attr.jfcPollMode_), tpn_(attr.tpn_), rmtEid_(rmtEid)
 {
-    HCCL_INFO("RmaConnLite id.dieId %u, id.funcId %u, id.jettyId %u, attr.dbaddr %llu, attr.sqVa %u, attr.sqDepth %u",
+    HCCL_INFO("RmaConnLite id.dieId %u, id.funcId %u, id.jettyId %u, attr.dbaddr %llu, attr.sqVa %llu, attr.sqDepth %u",
                id.dieId_, id.funcId_, id.jettyId_, attr.dbAddr_, attr.sqVa_, attr.sqDepth_);
 }
 

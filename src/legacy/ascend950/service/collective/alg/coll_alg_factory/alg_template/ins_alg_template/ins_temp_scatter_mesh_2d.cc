@@ -37,7 +37,7 @@ namespace Hccl {
         tempResReq.streamNum = queNum;
         tempResReq.queNotifys = CreateMasterSlaveQueNotifiesRequest(tempResReq.queNum);
 
-        HCCL_DEBUG("InsTempScatterMesh2D::CalcRes queNotifys size[%u]", tempResReq.queNotifys.size());
+        HCCL_DEBUG("InsTempScatterMesh2D::CalcRes queNotifys size[%zu]", tempResReq.queNotifys.size());
 
         QId centerQ = 0;
         tempResReq.localWaitGroupCntNotify.emplace_back(centerQ, 0);
@@ -52,7 +52,7 @@ namespace Hccl {
                 u32 neighborAlgRank = (myAlgRank + 1 + queIdx) % (tempVTopo_[dim].size());
                 if (neighborAlgRank > (tempVTopo_[dim].size() - 1)) {
                     HCCL_ERROR("[CollAlgFactory] [InsTempScatterMesh2D] neighborAlgRank[%u] is invalid,"\
-                        "the Max rank[%u].", neighborAlgRank, tempVTopo_[dim].size() - 1);
+                        "the Max rank[%zu].", neighborAlgRank, tempVTopo_[dim].size() - 1);
                     return HcclResult::HCCL_E_PARA;
                 }
 

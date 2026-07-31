@@ -40,7 +40,7 @@ void HcclUBDmaDBSqe::Config(u16 streamId, u16 taskId, u16 jettyid, u8 funcId, u1
     sqe->funcId1 = funcId;
     sqe->piValue1 = piValue;
     sqe->dieId1 = dieId;
-    HCCL_INFO("[SQE]HcclUBDmaDBSqe streamId=%u, taskId=%u, jettyid=%u, funcId=%u, dieId=%u, piValue=%u\n",
+    HCCL_INFO("[SQE]HcclUBDmaDBSqe streamId=%u, taskId=%u, jettyid=%u, funcId=%u, dieId=%u, piValue=%u",
                streamId, taskId, jettyid, funcId, dieId, piValue);
 }
 
@@ -75,7 +75,7 @@ void HcclUBNotifyWaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
     
-    HCCL_INFO("[SQE]HcclUBNotifyWaitSqe streamId=%u, taskId=%hu, notifyId:%llu\n", streamId, taskId, notifyId);
+    HCCL_INFO("[SQE]HcclUBNotifyWaitSqe streamId=%u, taskId=%u, notifyId=%llu", streamId, taskId, notifyId);
 }
 
 u64 HcclUBNotifyWaitSqe::GetSqe()
@@ -107,7 +107,7 @@ void HcclUBNotifyRecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     sqe->header.rtStreamId = streamId;
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
-    HCCL_INFO("[SQE]HcclUBNotifyRecordSqe streamId=%u, taskId=%hu, notifyId:%llu\n", streamId, taskId, notifyId);
+    HCCL_INFO("[SQE]HcclUBNotifyRecordSqe streamId=%u, taskId=%u, notifyId=%llu", streamId, taskId, notifyId);
 }
 
 u64 HcclUBNotifyRecordSqe::GetSqe()
@@ -133,7 +133,7 @@ void HcclUBCntNotifyNto1RecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
-    HCCL_INFO("[SQE]HcclUBCntNotifyNto1RecordSqe streamId=%u, taskId=%u, notifyId=%u, cntValue=%u\n",
+    HCCL_INFO("[SQE]HcclUBCntNotifyNto1RecordSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u",
                 streamId, taskId, notifyId, cntValue);
 }
 
@@ -160,7 +160,7 @@ void HcclUBCntNotify1toNWaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId, 
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
-    HCCL_INFO("[SQE]HcclUBCntNotify1toNWaitSqe streamId=%u, taskId=%u, notifyId=%u, cntValue=%u\n",
+    HCCL_INFO("[SQE]HcclUBCntNotify1toNWaitSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u",
                 streamId, taskId, notifyId, cntValue);
 }
 
@@ -187,7 +187,7 @@ void HcclUBCntNotifyNto1WaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId, 
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
-    HCCL_INFO("[SQE]HcclUBCntNotifyNto1WaitSqe streamId=%u, taskId=%u, notifyId=%u, cntValue=%u\n",
+    HCCL_INFO("[SQE]HcclUBCntNotifyNto1WaitSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u",
                 streamId, taskId, notifyId, cntValue);
 }
 
@@ -214,7 +214,7 @@ void HcclUBCntNotify1toNRecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
-    HCCL_INFO("[SQE]HcclUBCntNotify1toNRecordSqe streamId=%u, taskId=%u, notifyId=%u, cntValue=%u\n",
+    HCCL_INFO("[SQE]HcclUBCntNotify1toNRecordSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u",
                 streamId, taskId, notifyId, cntValue);
 }
 
@@ -286,11 +286,11 @@ void HcclUBMemcpySqe::Config(u16 streamId, u16 taskId, RtDataType rtDataType, Rt
         static_cast<uint32_t>((static_cast<uint64_t>(*dst) & 0xffffffff00000000U) >> UINT32_BIT_NUM);
     sqe->mapamPartId = partId;
 
-    HCCL_INFO("[SQE]HcclUBMemcpySqe dataType=%u,rtReduceOp =%u, count=%lu, src=%p, dst=%p, partId=%u, streamId=%u, \
-               taskId=%u\n", rtDataType, rtReduceOp, count, src, dst, partId, streamId, taskId);
+    HCCL_INFO("[SQE]HcclUBMemcpySqe dataType=%u,rtReduceOp =%u, count=%llu, src=%p, dst=%p, partId=%u, streamId=%u, \
+               taskId=%u", rtDataType, rtReduceOp, count, src, dst, partId, streamId, taskId);
     HCCL_INFO("[SQE]HcclUBMemcpySqe sqe->opcode=%u sqe->u.strideMode0.srcAddrLow=0x%x, \
                sqe->u.strideMode0.srcAddrHigh=0x%x,sqe->u.strideMode0.dstAddrLow=0x%x, \
-               sqe->u.strideMode0.dstAddrHigh=0x%x\n", sqe->opcode,
+               sqe->u.strideMode0.dstAddrHigh=0x%x", sqe->opcode,
                sqe->u.strideMode0.srcAddrLow, sqe->u.strideMode0.srcAddrHigh,
                sqe->u.strideMode0.dstAddrLow, sqe->u.strideMode0.dstAddrHigh);
 }

@@ -86,7 +86,7 @@ HcclResult HcclMemDeregV2(const HcclBuf *buf)
 HcclResult HcclMemExportV2(HcclBuf *buf, char **outDesc, uint64_t *outDescLen)
 {
     if (buf == nullptr || buf->handle == nullptr || outDesc == nullptr || outDescLen == nullptr) {
-        HCCL_ERROR("[%s] buf[%p] or buf->hanele or outDesc[%p] or outDescLen[%p] is null",
+        HCCL_ERROR("[%s] buf[%p] or buf->handle or outDesc[%p] or outDescLen[%p] is null",
             __func__, buf, outDesc, outDescLen);
         return HCCL_E_PTR;
     }
@@ -98,7 +98,7 @@ HcclResult HcclMemExportV2(HcclBuf *buf, char **outDesc, uint64_t *outDescLen)
     dto->Serialize(localRdmaRmaBufferStream);
     std::vector<char> tempLocalMemDesc;
     localRdmaRmaBufferStream.Dump(tempLocalMemDesc);
-    HCCL_DEBUG("[%s] dump data size [%u]", __func__, tempLocalMemDesc.size());
+    HCCL_DEBUG("[%s] dump data size [%zu]", __func__, tempLocalMemDesc.size());
     // 判断内存描述符是否正确导出
     if (tempLocalMemDesc.empty()) {
         HCCL_ERROR("[%s] tempLocalMemDesc export failed.", __func__);
@@ -108,7 +108,7 @@ HcclResult HcclMemExportV2(HcclBuf *buf, char **outDesc, uint64_t *outDescLen)
     // 内存描述符拷贝
     *outDescLen = tempLocalMemDesc.size();
     if (memcpy_s(*outDesc, TRANSPORT_EMD_ESC_SIZE, tempLocalMemDesc.data(), tempLocalMemDesc.size()) != EOK) {
-        HCCL_ERROR("[%s] tempLocalMemDesc copy error. aim size:[%llu]", __func__, tempLocalMemDesc.size());
+        HCCL_ERROR("[%s] tempLocalMemDesc copy error. aim size:[%zu]", __func__, tempLocalMemDesc.size());
         return HCCL_E_INTERNAL;
     }
 

@@ -52,8 +52,8 @@ HcclResult CcuTempAllGatherMeshMem2Mem2D::CalcRes(AlgTempResReq &tempResReq)
         THROW<InvalidParamsException>(StringFormat("[CcuTempAllGatherMeshMem2Mem2D] Rank[%d], Invalid IODieNum[%u].",
             myRank_, dieNum));
     }
-    HCCL_INFO("[CcuTempAllGatherMeshMem2Mem2D] Rank[%d] requiredQueNum[%u] VtopoSize[%u], VtopoSize0[%u] "
-        "VtopoSize1[%u].", myRank_, tempResReq.queNum, tempVTopo_.size(), tempVTopo_[0].size(), tempVTopo_[1].size());
+    HCCL_INFO("[CcuTempAllGatherMeshMem2Mem2D] Rank[%d] requiredQueNum[%u] VtopoSize[%zu], VtopoSize0[%zu] "
+        "VtopoSize1[%zu].", myRank_, tempResReq.queNum, tempVTopo_.size(), tempVTopo_[0].size(), tempVTopo_[1].size());
 
     uint32_t myAlgRank;
     for (u32 dim = 0; dim < tempVTopo_.size(); dim++) {

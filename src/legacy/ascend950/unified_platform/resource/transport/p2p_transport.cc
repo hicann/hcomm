@@ -189,7 +189,7 @@ void P2PTransport::SendPid()
     pidMsgSize = data.size();
     socket->SendAsync(&data[0], data.size());
 
-    HCCL_INFO("send pid %s, size=%llu, data=0x%s", GetLinkDescInfo().c_str(), data.size(),
+    HCCL_INFO("send pid %s, size=%zu, data=0x%s", GetLinkDescInfo().c_str(), data.size(),
                Bytes2hex(data.data(), data.size()).c_str());
 }
 
@@ -197,7 +197,7 @@ void P2PTransport::RecvPid()
 {
     std::vector<char> data(pidMsgSize);
     socket->RecvAsync(reinterpret_cast<u8 *>(&data[0]), data.size());
-    HCCL_INFO("recv pid %s, size=%llu, data=%s", GetLinkDescInfo().c_str(), data.size(),
+    HCCL_INFO("recv pid %s, size=%zu, data=%s", GetLinkDescInfo().c_str(), data.size(),
                Bytes2hex(data.data(), data.size()).c_str());
 
     BinaryStream binaryStream(data);
@@ -242,7 +242,7 @@ void P2PTransport::RecvDataSize()
 void P2PTransport::SendExchangeData()
 {
     socket->SendAsync(&sendData[0], sendData.size());
-    HCCL_INFO("send data %s, size=%llu, data=0x%s", GetLinkDescInfo().c_str(), sendData.size(),
+    HCCL_INFO("send data %s, size=%zu, data=0x%s", GetLinkDescInfo().c_str(), sendData.size(),
                Bytes2hex(sendData.data(), sendData.size()).c_str());
 }
 
@@ -250,13 +250,13 @@ void P2PTransport::RecvExchangeData()
 {
     recvData.resize(exchangeDataSize);
     socket->RecvAsync(reinterpret_cast<u8 *>(&recvData[0]), recvData.size());
-    HCCL_INFO("RecvExchangeData recv data %s, size=%llu, data=%s", GetLinkDescInfo().c_str(), recvData.size(),
+    HCCL_INFO("RecvExchangeData recv data %s, size=%zu, data=%s", GetLinkDescInfo().c_str(), recvData.size(),
                Bytes2hex(recvData.data(), recvData.size()).c_str());
 }
 
 void P2PTransport::ProcessRecvData()
 {
-    HCCL_INFO("ProcessRecvData recv data %s, size=%llu, data=%s", GetLinkDescInfo().c_str(), recvData.size(),
+    HCCL_INFO("ProcessRecvData recv data %s, size=%zu, data=%s", GetLinkDescInfo().c_str(), recvData.size(),
                Bytes2hex(recvData.data(), recvData.size()).c_str());
 
     BinaryStream binaryStream(recvData);

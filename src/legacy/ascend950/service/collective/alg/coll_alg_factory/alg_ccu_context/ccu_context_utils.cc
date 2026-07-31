@@ -54,7 +54,7 @@ HcclResult GenerateCcuCtxSignature(CcuCtxSignature &sig, CcuInstType instType, c
         sig.Append<char>('P');
     } else {
         THROW<InvalidParamsException>(
-            StringFormat("GenerateCcuCtxSignature failed: unexpected tempVTopoSize[%u]", tempVTopo.size()));
+            StringFormat("GenerateCcuCtxSignature failed: unexpected tempVTopoSize[%zu]", tempVTopo.size()));
     }
     return HcclResult::HCCL_SUCCESS;
 }

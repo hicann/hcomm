@@ -95,7 +95,7 @@ void BaseMemTransport::ConnVecPack(BinaryStream &binaryStream)
 
 void BaseMemTransport::HandshakeMsgPack(BinaryStream &binaryStream)
 {
-    HCCL_INFO("[BaseMemTransport::%s] start pack %s handshakeMsg, size=%u, accelerator=%s", 
+    HCCL_INFO("[BaseMemTransport::%s] start pack %s handshakeMsg, size=%zu, accelerator=%s", 
         __func__, transportType.Describe().c_str(), attr.handshakeMsg.size(), attr.opAcceState.Describe().c_str());
     binaryStream << static_cast<u32>(attr.opAcceState);
     binaryStream << attr.handshakeMsg;
@@ -119,7 +119,7 @@ HcclResult BaseMemTransport::HandshakeMsgUnpack(BinaryStream &binaryStream)
     binaryStream >> rmtHandshakeMsg;
 
     if (attr.handshakeMsg.size() != rmtHandshakeMsg.size()) {
-        HCCL_ERROR("[BaseMemTransport::HandshakeMsgUnpack] handshakeMsg size=%u is not equal to rmt=%u",
+        HCCL_ERROR("[BaseMemTransport::HandshakeMsgUnpack] handshakeMsg size=%zu is not equal to rmt=%zu",
                    attr.handshakeMsg.size(), rmtHandshakeMsg.size());
         return HCCL_E_PARA;
     }
@@ -147,7 +147,7 @@ string BaseMemTransport::DescribeSocket() const
 
 HcclResult BaseMemTransport::CheckLocNotify(CommonLocRes &res)
 {
-    HCCL_INFO("%s notify check start, notifyNum=%u", GetLinkDescInfo().c_str(), res.notifyVec.size());
+    HCCL_INFO("%s notify check start, notifyNum=%zu", GetLinkDescInfo().c_str(), res.notifyVec.size());
     // notify 不允许出现空指针情况
     for (auto &it : res.notifyVec) {
         if (it == nullptr) {
@@ -156,13 +156,13 @@ HcclResult BaseMemTransport::CheckLocNotify(CommonLocRes &res)
         }
         HCCL_INFO("locNotify=%s", it->Describe().c_str());
     }
-    HCCL_INFO("%s notify check ok, notifyNum=%u", GetLinkDescInfo().c_str(), res.notifyVec.size());
+    HCCL_INFO("%s notify check ok, notifyNum=%zu", GetLinkDescInfo().c_str(), res.notifyVec.size());
     return HCCL_SUCCESS;
 }
 
 void BaseMemTransport::CheckLocBuffer(CommonLocRes &res)
 {
-    HCCL_INFO("%s buffer check start, bufferNum=%u", GetLinkDescInfo().c_str(), res.bufferVec.size());
+    HCCL_INFO("%s buffer check start, bufferNum=%zu", GetLinkDescInfo().c_str(), res.bufferVec.size());
     u32 bufIndex = 0;
     for (auto &it : res.bufferVec) {
         if (it == nullptr) {
@@ -173,12 +173,12 @@ void BaseMemTransport::CheckLocBuffer(CommonLocRes &res)
         bufIndex++;
     }
 
-    HCCL_INFO("%s buffer check ok, bufferNum=%u", GetLinkDescInfo().c_str(), res.bufferVec.size());
+    HCCL_INFO("%s buffer check ok, bufferNum=%zu", GetLinkDescInfo().c_str(), res.bufferVec.size());
 }
 
 HcclResult BaseMemTransport::CheckLocConn(CommonLocRes &res)
 {
-    HCCL_INFO("%s connection check start, connNum=%u", GetLinkDescInfo().c_str(), res.connVec.size());
+    HCCL_INFO("%s connection check start, connNum=%zu", GetLinkDescInfo().c_str(), res.connVec.size());
     for (auto &it : res.connVec) {
         if (it == nullptr) {
             HCCL_ERROR("[BaseMemTransport::CheckLocConn] %s conn is nullptr", GetLinkDescInfo().c_str());
@@ -186,7 +186,7 @@ HcclResult BaseMemTransport::CheckLocConn(CommonLocRes &res)
         }
         HCCL_INFO("conn=%s", it->Describe().c_str());
     }
-    HCCL_INFO("%s connection check ok, connNum=%u", GetLinkDescInfo().c_str(), res.connVec.size());
+    HCCL_INFO("%s connection check ok, connNum=%zu", GetLinkDescInfo().c_str(), res.connVec.size());
     return HCCL_SUCCESS;
 }
 

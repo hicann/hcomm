@@ -36,7 +36,7 @@ void HcclNotifyWaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     sqe->header.rtStreamId = streamId;
     sqe->camelBack           = notifyId;
     sqe->header.taskId      = taskId;
-    HCCL_INFO("[SQE] notify wait: notifyId=%lu, streamId=%u, taskId=%u.", notifyId, streamId, taskId);
+    HCCL_INFO("[SQE] notify wait: notifyId=%llu, streamId=%u, taskId=%u.", notifyId, streamId, taskId);
 }
 
 u64 HcclNotifyWaitSqe::GetSqe()
@@ -55,7 +55,7 @@ void HcclNotifyRecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     sqe->header.rtStreamId = streamId;
     sqe->camelBack           = notifyId;
     sqe->header.taskId      = taskId;
-    HCCL_INFO("[SQE] notify record: notifyId=%lu, streamId=%u, taskId=%u.", notifyId, streamId, taskId);
+    HCCL_INFO("[SQE] notify record: notifyId=%llu, streamId=%u, taskId=%u.", notifyId, streamId, taskId);
 }
 u64 HcclNotifyRecordSqe::GetSqe()
 {
@@ -78,7 +78,7 @@ void HcclWriteValueSqe::Config(u16 streamId, u16 taskId, u64 notifyWRAddr)
     sqe->header.taskId      = taskId;
     sqe->writeAddrLow      = GetAddrLow(notifyWRAddr);
     sqe->writeAddrHigh     = GetAddrHigh(notifyWRAddr) & MASK_17_BIT;
-    HCCL_INFO("[SQE] write value: writePtr=0x%llu, streamId=%u, taskId=%u.", notifyWRAddr, streamId, taskId);
+    HCCL_INFO("[SQE] write value: writePtr=0x%llx, streamId=%u, taskId=%u.", notifyWRAddr, streamId, taskId);
 }
 
 u64 HcclWriteValueSqe::GetSqe()
@@ -107,7 +107,7 @@ void HcclSdmaSqe::Config(u16 streamId, u16 taskId, const u64 src, u32 length, Rt
         = ((rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_ADD) || (rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_MAX)
            || (rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_MIN) || (rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_EQUAL));
     sqe->opcode = isReduce ? GetSdmaOpCode(static_cast<u32>(rtReduceOp), static_cast<u8>(rtDataType)) : 0U;
-    HCCL_INFO("[SQE]MemcpySqe copyKind=%u,Opcode=0x%x, streamId=%u, len=%u, src:%llu, dst:%llu",
+    HCCL_INFO("[SQE]MemcpySqe copyKind=%u,Opcode=0x%x, streamId=%u, len=%u, src:0x%llx, dst:0x%llx",
               static_cast<u32>(rtReduceOp), static_cast<u32>(sqe->opcode), streamId, length, src, dst);
     sqe->length = length;
 

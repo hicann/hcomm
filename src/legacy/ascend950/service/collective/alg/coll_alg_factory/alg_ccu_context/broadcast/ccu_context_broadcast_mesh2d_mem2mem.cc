@@ -46,7 +46,7 @@ CcuContextBroadcastMeshMem2Mem2D::CcuContextBroadcastMeshMem2Mem2D(const CcuCtxA
     dimId_.emplace_back(rankId_ / dimSize_[0]);
     localId_   = dimId_[axisId_];
     localSize_ = dimSize_[axisId_];
-    HCCL_INFO("[CcuContextBroadcastMeshMem2Mem2D] RankId[%u], DimSize0[%u], DimSize1[%u], localId[%u], lcoalSize[%u]",
+    HCCL_INFO("[CcuContextBroadcastMeshMem2Mem2D] RankId[%u], DimSize0[%llu], DimSize1[%llu], localId[%llu], lcoalSize[%llu]",
         rankId_, dimSize_[0], dimSize_[1], localId_, localSize_);
     dataType_ = ctxArg->op_.dataType;
 

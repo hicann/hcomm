@@ -116,7 +116,7 @@ HcclResult InsTempAllReduceMesh1DTwoShotMeshChunk::GenExtIns(const TempFuncs &te
 
     u64 dataSizePerVolume = DataTypeSizeGet(dataType_);
     CHK_PRT_RET((tempRankSize_ * dataSizePerVolume) + tempAlgParams.sliceSize > tempAlgParams.buffInfo.scratchBuffSize,
-        HCCL_ERROR("[InsTempAllReduceMesh1DTwoShotMeshChunk]Rank [%d], Input size:[%llu], BfSize:[%llu]  Insufficient buffer!",
+        HCCL_ERROR("[InsTempAllReduceMesh1DTwoShotMeshChunk]Rank [%d], Input size:[%llu], BfSize:[%llu] Insufficient buffer!",
             myRank_,
             tempAlgParams.sliceSize,
             tempAlgParams.buffInfo.scratchBuffSize),

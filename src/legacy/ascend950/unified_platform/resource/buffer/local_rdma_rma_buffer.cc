@@ -25,7 +25,7 @@ LocalRdmaRmaBuffer::LocalRdmaRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle r
     const uintptr_t bufAddr = buf->GetAddr();
     size_t bufSize = buf->GetSize();
     if (bufAddr == 0 || bufSize <= 0) {
-        HCCL_ERROR("[LocalRdmaRmaBuffer]buffer size[%llu Byte] and addr[%llu] should be greater than 0.", bufAddr,
+        HCCL_ERROR("[LocalRdmaRmaBuffer]buffer size[%zu Byte] and addr[%zu] should be greater than 0.", bufAddr,
                    bufSize);
         THROW<InvalidParamsException>("[%s] failed, param error.", __func__);
     }

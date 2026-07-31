@@ -239,7 +239,7 @@ void CcuContextScatterMesh2D::RelaySendFor1D(std::vector<CcuRep::Memory> &relayS
             dst.token = token_[i];
             // i,j的顺序为先本轴(axisId), 再另外一个轴(anotherAxisId)
             globalId = CoordinateToGlobalId(i, j);
-            HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] src globalId[%u], curRank[%u], j[%llu], i[%llu] ",
+            HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] src globalId[%llu], curRank[%u], j[%llu], i[%llu] ",
                       globalId, rankId_, j, i);
             src.addr = input_;
             CcuMultiply(src, stride_, globalId);  // src偏移：src +=  stride_ * globalId
@@ -254,7 +254,7 @@ void CcuContextScatterMesh2D::RelaySendFor1D(std::vector<CcuRep::Memory> &relayS
             relayDst.emplace_back(dst);
         }
     }
-    HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] relaySrcSize[%llu], relayDstSize_[%zu] ", relaySrc.size(),
+    HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] relaySrcSize[%zu], relayDstSize_[%zu] ", relaySrc.size(),
               relayDst.size());
     CcuWrite1DMesh(relaySrc, relayDst, axisSliceSize_[axisId_]);
     return;
@@ -268,16 +268,16 @@ void CcuContextScatterMesh2D::RelaySendFor1D(std::vector<CcuRep::Memory> &relayS
 void CcuContextScatterMesh2D::PrepareAndTransferRootRelayInfo(std::vector<CcuRep::Memory> &relaySrc,
                                                               std::vector<CcuRep::Memory> &relayDst)
 {
-    HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] start axisId_[%u]", axisId_);
+    HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] start axisId_[%llu]", axisId_);
     // 准备中转数据： i 为所有对端，负责中转数据，所有数据均发至i上； j为中转目的地
-    HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] axisId[%llu], dimSize_[%u] ", axisId_,
+    HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] axisId[%llu], dimSize_[%llu] ", axisId_,
               dimSize_[1 - axisId_]);
     for (uint64_t j = 0; j < dimSize_[1 - axisId_]; j++) {
         if (j != dimId_[1 - axisId_]) {
             RelaySendFor1D(relaySrc, relayDst, j);
         }
     }
-    HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] Done axisId_[%u]", axisId_);
+    HCCL_INFO("[CcuContextScatterMesh2D][PrepareRootSendInfo] Done axisId_[%llu]", axisId_);
     return;
 }
 
@@ -348,8 +348,8 @@ void CcuContextScatterMesh2D::RelaySend(std::vector<CcuRep::Memory> &relaySrc, s
             src.token = token_[i];
             dst.token = token_[i];
             globalId = CoordinateToGlobalId(i, dimId_[1 - axisId_]);
-            HCCL_INFO("[CcuContextScatterMesh2D][PrepareRelaySendInfo] src globalId[%u], curRank[%u], axisId[%u], "
-                      "i:[%u], localId[%u]",
+            HCCL_INFO("[CcuContextScatterMesh2D][PrepareRelaySendInfo] src globalId[%llu], curRank[%u], axisId[%llu], "
+                      "i:[%llu], localId[%llu]",
                       globalId, rankId_, axisId_, i, localId_);
             src.addr = scratch_[localId_];
             CcuMultiply(src, sliceSize_, globalId);
@@ -459,7 +459,7 @@ void CcuContextScatterMesh2D::RelaySendAlgorithm()
 
 void CcuContextScatterMesh2D::NonDirectRecvAlgorithm()
 {
-    HCCL_INFO("[CcuContextScatterMesh2D][NonDirectRecvAlgorithm] start, dimIdX_[%u], dimIdY_[%u]", dimId_[0],
+    HCCL_INFO("[CcuContextScatterMesh2D][NonDirectRecvAlgorithm] start, dimIdX_[%llu], dimIdY_[%llu]", dimId_[0],
               dimId_[1]);
     PrepareVariables();
     LoadArgs();
@@ -469,7 +469,7 @@ void CcuContextScatterMesh2D::NonDirectRecvAlgorithm()
     Sync(CKE_IDX_1);  // 前同步
     Sync(CKE_IDX_0);  // 后同步
     AxisSync(1);
-    HCCL_INFO("[CcuContextScatterMesh2D][NonDirectRecvAlgorithm] Done, dimIdX_[%u], dimIdY_[%u]", dimId_[0], dimId_[1]);
+    HCCL_INFO("[CcuContextScatterMesh2D][NonDirectRecvAlgorithm] Done, dimIdX_[%llu], dimIdY_[%llu]", dimId_[0], dimId_[1]);
     return;
 }
 

@@ -40,7 +40,7 @@ CcuContextReduceScatterVMeshMem2Mem1D::CcuContextReduceScatterVMeshMem2Mem1D(con
             outputDataType_.Describe().c_str());
     }
     reduceOp_ = ctxArg->op_.reduceOp;
-    HCCL_INFO("[CcuContextReduceScatterVMeshMem2Mem1D] Init, CtxArgs are rankId[%u], rankSize_[%u], dataType[%s], "
+    HCCL_INFO("[CcuContextReduceScatterVMeshMem2Mem1D] Init, CtxArgs are rankId[%u], rankSize_[%llu], dataType[%s], "
         "outputDataType[%s], reduceOp[%s]", rankId_, rankSize_, dataType_.Describe().c_str(),
         outputDataType_.Describe().c_str(), reduceOp_.Describe().c_str());
 }

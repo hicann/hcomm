@@ -68,7 +68,7 @@ HcclResult TopoMatchPartialMesh::MatchTopo(std::vector<std::vector<RankId>> &vTo
 HcclResult TopoMatchPartialMesh::SetTargetRanks(std::set<u32>& targetRanks)
 {
     batchSendRecvtargetRanks_ = targetRanks;
-    HCCL_DEBUG("[CollAlgFactory][TopoMatchPartialMesh] SetTargetRanks batchSendRecvtargetRanks_ size[%u]",
+    HCCL_DEBUG("[CollAlgFactory][TopoMatchPartialMesh] SetTargetRanks batchSendRecvtargetRanks_ size[%zu]",
         batchSendRecvtargetRanks_.size());
     return HcclResult::HCCL_SUCCESS;
 }

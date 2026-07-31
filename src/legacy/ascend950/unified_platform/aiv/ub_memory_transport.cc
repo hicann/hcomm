@@ -30,9 +30,9 @@ LocalIpcRmaBuffer *UbMemoryTransport::GetLocMemBuffer(const u32 bufIndex) const
 {
     HCCL_INFO("[%s] start", __func__);
     if (bufIndex >= localBufferVec.size()) {
-        HCCL_ERROR("[%s] bufIndex[%u] is invalid, size[%u]", __func__, bufIndex, localBufferVec.size());
+        HCCL_ERROR("[%s] bufIndex[%u] is invalid, size[%zu]", __func__, bufIndex, localBufferVec.size());
         THROW<InternalException>(
-            StringFormat("[%s] bufIndex[%u] is invalid, size[%u]", __func__, bufIndex, localBufferVec.size()));
+            StringFormat("[%s] bufIndex[%u] is invalid, size[%zu]", __func__, bufIndex, localBufferVec.size()));
     }
     return localBufferVec[bufIndex].get();
 }
@@ -41,9 +41,9 @@ RemoteIpcRmaBuffer *UbMemoryTransport::GetRmtMemBuffer(const u32 bufIndex) const
 {
     HCCL_INFO("[%s] start", __func__);
     if (bufIndex >= rmtBufferVec.size()) {
-        HCCL_ERROR("[%s] bufIndex[%u] is invalid, size[%u]", __func__, bufIndex, rmtBufferVec.size());
+        HCCL_ERROR("[%s] bufIndex[%u] is invalid, size[%zu]", __func__, bufIndex, rmtBufferVec.size());
         THROW<InternalException>(
-            StringFormat("[%s] bufIndex[%u] is invalid, size[%u]", __func__, bufIndex, rmtBufferVec.size()));
+            StringFormat("[%s] bufIndex[%u] is invalid, size[%zu]", __func__, bufIndex, rmtBufferVec.size()));
     }
     return rmtBufferVec[bufIndex].get();
 }
@@ -55,10 +55,10 @@ UbMemoryTransport::UBTransportStatus UbMemoryTransport::GetStatus()
     try {
         status = StateMachine();
     } catch (HcclException &e) {
-        HCCL_ERROR(e.what());
+        HCCL_ERROR("%s", e.what());
         return UbMemoryTransport::UBTransportStatus::CONNECT_FAILED;
     } catch (exception &e) {
-        HCCL_ERROR(e.what());
+        HCCL_ERROR("%s", e.what());
         return UbMemoryTransport::UBTransportStatus::CONNECT_FAILED;
     } catch (...) {
         HCCL_ERROR("Unknown error occured when StateMachine!");
@@ -139,7 +139,7 @@ void UbMemoryTransport::RecvMemInfo()
 {
     recvDataMsg.resize(exchangeDataSize);
     socket->RecvAsync(reinterpret_cast<u8 *>(&recvDataMsg[0]), recvDataMsg.size());
-    HCCL_INFO("recv data, size=%llu, data=%s", recvDataMsg.size(), Bytes2hex(recvDataMsg.data(), recvDataMsg.size()).c_str());
+    HCCL_INFO("recv data, size=%zu, data=%s", recvDataMsg.size(), Bytes2hex(recvDataMsg.data(), recvDataMsg.size()).c_str());
 }
 
 void UbMemoryTransport::RecvMemProcess()
@@ -167,7 +167,7 @@ void UbMemoryTransport::HandshakeMsgUnpack(BinaryStream &binaryStream)
     binaryStream >> rmtHandshakeMsg;
 
     if (localHandshakeMsg.size() != rmtHandshakeMsg.size()) {
-        THROW<InvalidParamsException>(StringFormat("handshakeMsg size=%u is not equal to rmt=%u",
+        THROW<InvalidParamsException>(StringFormat("handshakeMsg size=%zu is not equal to rmt=%zu",
                                                          localHandshakeMsg.size(), rmtHandshakeMsg.size()));
     }
 

@@ -45,7 +45,7 @@ InnerNetDev::InnerNetDev(const NetDevInfo &info)
         }
         isValid_ = true;
     } catch (const NetworkApiException &e) {
-        HCCL_ERROR(e.what());
+        HCCL_ERROR("%s", e.what());
         isValid_ = false;
     }
 }

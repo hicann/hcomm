@@ -98,7 +98,7 @@ HcclResult IAicpuTsThread::NotifyWait(uint32_t notifyId, uint32_t timeout) const
 {
     RtsqBase *rtsqA5 = static_cast<StreamLite *>(streamLiteVoidPtr_)->GetRtsq();
 
-    HCCL_INFO("[IAicpuTsThread::%s] at Stream id [%u], notifyId [%u], timeout [%u]", __func__,
+    HCCL_INFO("[IAicpuTsThread::%s] at Stream id [%u], notifyId [%u], timeout [%u ms]", __func__,
         static_cast<StreamLite *>(streamLiteVoidPtr_)->GetId(), notifyId, timeout);
 
     rtsqA5->NotifyWait(notifyId, timeout);
@@ -123,7 +123,7 @@ HcclResult IAicpuTsThread::SdmaCopy(uint64_t dstAddr, uint64_t srcAddr, uint64_t
     // SDMA单个任务最大支持4GB的数据量，超过4GB需要分多次提交
     // 为了避免不必要的依赖和复杂性，这里不直接使用DeviceCapacity中定义的SDMA_SEND_MAX_SIZE，而是直接使用4GB的值
     if (sizeByte > 0x100000000ULL) {  
-        HCCL_ERROR("[%s] sizeByte [%ld] exceeds 4GB", __func__, sizeByte);
+        HCCL_ERROR("[%s] sizeByte [%llu] exceeds 4GB", __func__, (unsigned long long)sizeByte);
         return HCCL_E_PARA;
     }
 
@@ -132,7 +132,8 @@ HcclResult IAicpuTsThread::SdmaCopy(uint64_t dstAddr, uint64_t srcAddr, uint64_t
     uint32_t sizeByteNarrowed = static_cast<uint32_t>(sizeByte);
 
     HCCL_INFO("[IAicpuTsThread::%s] at Stream id [%u], dstAddr [%llx], srcAddr [%llx], sizeByteNarrowed [%u]", __func__,
-        static_cast<StreamLite *>(streamLiteVoidPtr_)->GetId(), dstAddr, srcAddr, sizeByteNarrowed);
+        static_cast<StreamLite *>(streamLiteVoidPtr_)->GetId(), (unsigned long long)dstAddr, (unsigned long long)srcAddr,
+        sizeByteNarrowed);
 
     rtsqA5->SdmaCopy(srcAddr, dstAddr, sizeByteNarrowed, 0);
 
@@ -140,12 +141,12 @@ HcclResult IAicpuTsThread::SdmaCopy(uint64_t dstAddr, uint64_t srcAddr, uint64_t
 }
 
 HcclResult IAicpuTsThread::SdmaReduce(uint64_t dstAddr, uint64_t srcAddr, uint64_t sizeByte, uint32_t dataTypeRaw,
-                                          uint32_t reduceOpRaw) const
+                                           uint32_t reduceOpRaw) const
 {
     // SDMA单个任务最大支持4GB的数据量，超过4GB需要分多次提交
     // 为了避免不必要的依赖和复杂性，这里不直接使用DeviceCapacity中定义的SDMA_SEND_MAX_SIZE，而是直接使用4GB的值
     if (sizeByte > 0x100000000ULL) {
-        HCCL_ERROR("[%s] sizeByte [%ld] exceeds 4GB", __func__, sizeByte);
+        HCCL_ERROR("[%s] sizeByte [%llu] exceeds 4GB", __func__, (unsigned long long)sizeByte);
         return HCCL_E_PARA;
     }
 
@@ -160,7 +161,8 @@ HcclResult IAicpuTsThread::SdmaReduce(uint64_t dstAddr, uint64_t srcAddr, uint64
 
     HCCL_INFO("[IAicpuTsThread::%s] at Stream id [%u], dstAddr [%llx], srcAddr [%llx], sizeByteNarrowed [%u], dataType "
               "[%u][%s], reduceOp [%u][%s]",
-        __func__, static_cast<StreamLite *>(streamLiteVoidPtr_)->GetId(), dstAddr, srcAddr, sizeByteNarrowed,
+        __func__, static_cast<StreamLite *>(streamLiteVoidPtr_)->GetId(), (unsigned long long)dstAddr,
+        (unsigned long long)srcAddr, sizeByteNarrowed,
         dataTypeRaw, dataType.Describe().c_str(), reduceOpRaw, reduceOp.Describe().c_str());
 
     rtsqA5->SdmaReduce(srcAddr, dstAddr, sizeByteNarrowed, 0, reduceIn);

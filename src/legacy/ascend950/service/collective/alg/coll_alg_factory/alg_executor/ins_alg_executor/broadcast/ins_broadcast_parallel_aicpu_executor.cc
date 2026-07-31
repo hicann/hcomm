@@ -239,7 +239,7 @@ HcclResult InsBroadcastParallelAiCpuExecutor<AlgTopoMatch, InsAlgTemplate0, InsA
     // 申请算法模板所需资源
     if (resReqIntraScatter.queNum == 0 || resReqInterScatter.queNum == 0 || resReqIntraAllGather.queNum == 0
         || resReqInterAllGather.queNum == 0) {
-        HCCL_ERROR("queNum  must larger than 0.");
+        HCCL_ERROR("queNum must larger than 0.");
         return HcclResult::HCCL_E_INTERNAL;
     }
     u32 intraQueNum = max(resReqIntraScatter.queNum, resReqIntraAllGather.queNum);

@@ -293,11 +293,11 @@ HcclResult BaseSelector::CalcLevel0TopoShape(TopoInfo &topoInfo) const
     u32 topoInstNum2 = 2;
  	u32 topoInstNum3 = 3;
     CHK_PRT_RET(topoInfo.topoInstDetailsOfLayer.size() <= netLayer,
-        HCCL_ERROR("[BaseSelector][CalcLevel0TopoShape] topoInstNumOfLayer size[%u] <= netLayer[%u]", topoInfo.topoInstDetailsOfLayer.size(), netLayer),
+        HCCL_ERROR("[BaseSelector][CalcLevel0TopoShape] topoInstNumOfLayer size[%zu] <= netLayer[%u]", topoInfo.topoInstDetailsOfLayer.size(), netLayer),
         HCCL_E_INTERNAL);
     TopoInstDetails &level0TopoInstDetails = topoInfo.topoInstDetailsOfLayer[netLayer];
     CHK_PRT_RET(topoInfo.netLayerDetails.localNetInsSizeOfLayer.size() <= netLayer,
-        HCCL_ERROR("[BaseSelector][CalcLevel0TopoShape] localNetInsSizeOfLayer size[%u] <= netLayer[%u]", topoInfo.netLayerDetails.localNetInsSizeOfLayer.size(), netLayer),
+        HCCL_ERROR("[BaseSelector][CalcLevel0TopoShape] localNetInsSizeOfLayer size[%zu] <= netLayer[%u]", topoInfo.netLayerDetails.localNetInsSizeOfLayer.size(), netLayer),
         HCCL_E_INTERNAL);
     u32 level0LocalRankSize = topoInfo.netLayerDetails.localNetInsSizeOfLayer[netLayer];
 
@@ -373,7 +373,7 @@ void BaseSelector::CalcTopoShape(TopoInfo &topoInfo) const
     CHK_PRT_THROW(ExtractTopoDetails(topoInfo) != HCCL_SUCCESS,
         HCCL_ERROR("[BaseSelector][CalcTopoShape] ExtractTopoDetails Failed"),
         InvalidParamsException, "ExtractTopoDetails Failed");
-    HCCL_INFO("[BaseSelector][ExtractTopoDetails] topoInstDetails size[%u]", topoInfo.topoInstDetailsOfLayer.size());
+    HCCL_INFO("[BaseSelector][ExtractTopoDetails] topoInstDetails size[%zu]", topoInfo.topoInstDetailsOfLayer.size());
 
     CHK_PRT_THROW(CalcLevel0TopoShape(topoInfo),
         HCCL_ERROR("[BaseSelector][CalcTopoShape] CalcLevel0TopoShape Failed"),
@@ -389,12 +389,12 @@ bool BaseSelector::IsLayerAllConnetedWithTopo(const TopoInfo &topoInfo, const u3
         NullPtrException, "[IsLayerAllConnetedWithTopo] rankGraph is nullptr");
 
     CHK_PRT_RET(topoInfo.netLayerDetails.localNetInsSizeOfLayer.size() <= netLayer,
-        HCCL_WARNING("[BaseSelector][IsLayerAllConnetedWithTopo] localNetInsSizeOfLayer size[%u] <= netLayer[%u]",
+        HCCL_WARNING("[BaseSelector][IsLayerAllConnetedWithTopo] localNetInsSizeOfLayer size[%zu] <= netLayer[%u]",
         topoInfo.netLayerDetails.localNetInsSizeOfLayer.size(), netLayer), false);
     u32 localRankSize = topoInfo.netLayerDetails.localNetInsSizeOfLayer[netLayer];
 
     CHK_PRT_RET(topoInfo.topoInstDetailsOfLayer.size() <= netLayer,
-        HCCL_WARNING("[BaseSelector][IsLayerAllConnetedWithTopo] topoInstDetailsOfLayer size[%u] <= netLayer[%u]",
+        HCCL_WARNING("[BaseSelector][IsLayerAllConnetedWithTopo] topoInstDetailsOfLayer size[%zu] <= netLayer[%u]",
         topoInfo.topoInstDetailsOfLayer.size(), netLayer), false);
 
     auto rankNumForTopoTypeItr = topoInfo.topoInstDetailsOfLayer[netLayer].rankNumForTopoType.find(topoType);

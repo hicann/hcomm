@@ -90,7 +90,7 @@ HcclResult CcuTempBroadcastMesh1DMem2Mem::GenExtIns(const TempFuncs          &te
         }
         links.push_back(pair.second[0]);
     }
-    HCCL_DEBUG("[CcuTempBroadcastMesh1DMem2Mem] links.size[%llu]", links.size());
+    HCCL_DEBUG("[CcuTempBroadcastMesh1DMem2Mem] links.size[%zu]", links.size());
     ccuIns.SetLinks(links);
     RankGroup rankGroup;
     for (auto &peer : tempVTopo_[0]) {

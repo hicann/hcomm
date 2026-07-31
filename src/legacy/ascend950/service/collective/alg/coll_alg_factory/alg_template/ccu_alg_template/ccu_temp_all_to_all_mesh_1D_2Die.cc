@@ -108,7 +108,7 @@ HcclResult CcuTempAllToAllMesh1D2Die::GenExtIns(const TempFuncs          &tempFu
         rankGroup[linkData[0].GetLocalDieId()].AddRank(peerRankId);
     }
 
-    HCCL_INFO("[CcuTempAllToAllMesh1D2Die] linksDie0Size[%llu], linksDie1Size[%llu]", linksDie[0].size(),
+    HCCL_INFO("[CcuTempAllToAllMesh1D2Die] linksDie0Size[%zu], linksDie1Size[%zu]", linksDie[0].size(),
               linksDie[1].size());
 
     rankGroup[0].AddRank(myRank_);

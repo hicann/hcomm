@@ -50,7 +50,7 @@ CcuContextAllReduceMeshMem2Mem1D::CcuContextAllReduceMeshMem2Mem1D(
     if (ctxArg->dimSize_.size() > 0) {
         rankSize_ = ctxArg->dimSize_[0];
     }
-    HCCL_INFO("[CcuContextAllReduceMeshMem2Mem1D] Init, CtxArgs are rankId[%u], rankSize_[%u], dataType[%s], "
+    HCCL_INFO("[CcuContextAllReduceMeshMem2Mem1D] Init, CtxArgs are rankId[%u], rankSize_[%llu], dataType[%s], "
               "outputDataType[%s], reduceOp[%s]",
               rankId_, rankSize_, dataType_.Describe().c_str(), outputDataType_.Describe().c_str(),
               reduceOp_.Describe().c_str());
@@ -61,7 +61,7 @@ void CcuContextAllReduceMeshMem2Mem1D::InitResource()
     if (transports.size() == 0) {
         THROW<NullPtrException>(StringFormat("CcuContextAllReduceMeshMem2Mem1D transports is empty"));
     }
-    HCCL_INFO("[CcuContextAllReduceMeshMem2Mem1D]transports.size: [%u]", transports.size());
+    HCCL_INFO("[CcuContextAllReduceMeshMem2Mem1D]transports.size: [%zu]", transports.size());
     uint16_t transportIdx = 0;
     // 按照rank号从小到大遍历transports，遇到本rank就填充本地资源，否则依次取远端资源，要求给框架返回的Link同样是按顺序排列的
     for (uint64_t peerId = 0; peerId < rankSize_; peerId++) {

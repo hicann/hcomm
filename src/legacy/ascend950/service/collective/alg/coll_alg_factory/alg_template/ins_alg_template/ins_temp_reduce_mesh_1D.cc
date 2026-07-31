@@ -63,10 +63,10 @@ HcclResult InsTempReduceMesh1D::GenExtIns(const TempFuncs &tempFuncs, const Temp
 
     CHK_PRT_RET(tempRankSize_ == 0, HCCL_ERROR("[InsTempReduceMesh1D] rankSize is 0"), HcclResult::HCCL_E_INTERNAL);
     CHK_PRT_RET(tempVTopo_.size() != 1,
-        HCCL_ERROR("[InsTempReduceMesh1D] level num of vtopo need to be 1, current is [%u]", tempVTopo_.size()),
+        HCCL_ERROR("[InsTempReduceMesh1D] level num of vtopo need to be 1, current is [%zu]", tempVTopo_.size()),
         HcclResult::HCCL_E_INTERNAL);
     CHK_PRT_RET(tempVTopo_.at(0).size() != tempRankSize_,
-        HCCL_ERROR("[InsTempReduceMesh1D] rank num of level 0 in vtopo should be equal to rankSize[%u], current is [%u]",
+        HCCL_ERROR("[InsTempReduceMesh1D] rank num of level 0 in vtopo should be equal to rankSize[%u], current is [%zu]",
         tempRankSize_, tempVTopo_.at(0).size()), HcclResult::HCCL_E_INTERNAL);
     CHK_PRT_RET(root_ == INVALID_U32, HCCL_ERROR("[InsTempReduceMesh1D] root is invalid"), HcclResult::HCCL_E_INTERNAL);
 
@@ -75,7 +75,7 @@ HcclResult InsTempReduceMesh1D::GenExtIns(const TempFuncs &tempFuncs, const Temp
 
     queNum_ = tempRankSize_;
     CHK_PRT_RET(tempInsQues.size() != queNum_,
-        HCCL_ERROR("[InsTempReduceMesh1D] resource queNum[%u] is invalid, need[%u]", tempInsQues.size(), queNum_),
+        HCCL_ERROR("[InsTempReduceMesh1D] resource queNum[%zu] is invalid, need[%u]", tempInsQues.size(), queNum_),
         HcclResult::HCCL_E_INTERNAL);
 
     CHK_PRT_RET(tempVirtRankMap_.count(myRank_) == 0,

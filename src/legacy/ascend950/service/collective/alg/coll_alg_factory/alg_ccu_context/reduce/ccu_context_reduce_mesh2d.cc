@@ -42,7 +42,7 @@ CcuContextReduceMesh2D::CcuContextReduceMesh2D(const CcuCtxArg &arg, const std::
     localId_ = dimId_[axisId_]; // 本rank所在的行/列
     localSize_ = dimSize_[axisId_]; // 本rank所在的行/列的总数
 
-    HCCL_INFO("[CcuContextReduceMesh2D] RankId[%u], DimSize0[%u], DimSize1[%u], localId[%u], lcoalSize[%u]",
+    HCCL_INFO("[CcuContextReduceMesh2D] RankId[%u], DimSize0[%llu], DimSize1[%llu], localId[%llu], lcoalSize[%llu]",
         rankId_, dimSize_[0], dimSize_[1], localId_, localSize_);
 
     dataType_ = ctxArg->op_.dataType;

@@ -39,7 +39,7 @@ RemoteUbRmaBuffer* UrmaDirectTransport::GetRmtBuffer() const
     HCCL_INFO("[%s] start", __func__);
     if (rmtBufferVec.size() != RMT_BUFFER_VEC_SIZE) {
         THROW<InternalException>(
-            StringFormat("[%s] rmtBufferVec is not [%u], size[%u]", __func__,  rmtBufferVec.size(), RMT_BUFFER_VEC_SIZE));
+            StringFormat("[%s] rmtBufferVec is not [%zu], size[%zu]", __func__,  rmtBufferVec.size(), RMT_BUFFER_VEC_SIZE));
     }
     auto rmtBuf = rmtBufferVec[RMT_BUFFER_INDEX].get();
     CHECK_NULLPTR(rmtBuf, "[UrmaDirectTransport::GetRmtBuffer] rmtBuf is nullptr!");
@@ -66,7 +66,7 @@ HcclAiRMAWQ UrmaDirectTransport::GetAiRMAWQ()
 
     size_t connNum = commonLocRes.connVec.size();
     if (connNum != CONN_NUM) {
-        THROW<InternalException>("[UrmaDirectTransport::%s] connNum[%llu] is not [%llu]",
+        THROW<InternalException>("[UrmaDirectTransport::%s] connNum[%zu] is not [%zu]",
             __func__, connNum, CONN_NUM);
     }
     auto conn = reinterpret_cast<DevUbCtpConnection *>(commonLocRes.connVec[0]);
@@ -102,7 +102,7 @@ HcclAiRMACQ UrmaDirectTransport::GetAiRMACQ()
     }
     size_t connNum = commonLocRes.connVec.size();
     if (connNum != CONN_NUM) {
-        THROW<InternalException>("[UrmaDirectTransport::%s] connNum[%llu] is not [%llu]",
+        THROW<InternalException>("[UrmaDirectTransport::%s] connNum[%zu] is not [%zu]",
             __func__, connNum, CONN_NUM);
     }
     auto conn = reinterpret_cast<DevUbCtpConnection *>(commonLocRes.connVec[0]);
@@ -129,7 +129,7 @@ void UrmaDirectTransport::SendExchangeData()
     socket->SendAsync(sendData.data(), sendData.size());
     exchangeDataSize = sendData.size();
 
-    HCCL_INFO("send data %s, size=%llu", GetLinkDescInfo().c_str(), exchangeDataSize);
+    HCCL_INFO("send data %s, size=%u", GetLinkDescInfo().c_str(), exchangeDataSize);
 }
 
 void UrmaDirectTransport::BufferVecPack(BinaryStream &binaryStream)
@@ -180,7 +180,7 @@ void UrmaDirectTransport::RecvExchangeData()
     recvData.resize(exchangeDataSize);
     socket->RecvAsync(reinterpret_cast<u8 *>(recvData.data()), recvData.size());
 
-    HCCL_INFO("recv data %s, size=%llu", GetLinkDescInfo().c_str(), recvData.size());
+    HCCL_INFO("recv data %s, size=%zu", GetLinkDescInfo().c_str(), recvData.size());
 }
 
 bool UrmaDirectTransport::ConnVecUnpackProc(BinaryStream &binaryStream)
@@ -247,7 +247,7 @@ void UrmaDirectTransport::RmtBufferVecUnpackProc(u32 locNum, BinaryStream &binar
 
 bool UrmaDirectTransport::RecvDataProcess()
 {
-    HCCL_INFO("RecvDataProcess: link=%s, size=%llu, exchangeDataSize=%u", GetLinkDescInfo().c_str(), recvData.size(),
+    HCCL_INFO("RecvDataProcess: link=%s, size=%zu, exchangeDataSize=%u", GetLinkDescInfo().c_str(), recvData.size(),
             exchangeDataSize);
     BinaryStream binaryStream(recvData);
     HandshakeMsgUnpack(binaryStream);

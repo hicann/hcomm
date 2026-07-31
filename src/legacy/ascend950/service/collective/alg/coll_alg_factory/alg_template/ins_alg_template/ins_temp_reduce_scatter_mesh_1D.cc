@@ -149,7 +149,7 @@ HcclResult InsTempReduceScatterMesh1D::RunReduceScatter(const ResLinks &tempLink
         std::vector<float> dataSplitRate(linkNum);
         CHK_RET(CalcDataSplitRateForLinks(neighborLinkDatas, dataSplitRate));
         for (u32 linkIdx = 0; linkIdx < linkNum; linkIdx++) {
-            CHK_PRT_RET(queIdx >= tempInsQues.size(), HCCL_ERROR("[InsTempReduceScatterMesh1D][RunReduceScatter] queIdx [%u] >= tempInsQues.size() [%lu].", queIdx, tempInsQues.size()),
+            CHK_PRT_RET(queIdx >= tempInsQues.size(), HCCL_ERROR("[InsTempReduceScatterMesh1D][RunReduceScatter] queIdx [%u] >= tempInsQues.size() [%zu].", queIdx, tempInsQues.size()),
                 HcclResult::HCCL_E_INTERNAL);
             InsQuePtr currQue = tempInsQues[queIdx + 1];
             queIdx++;

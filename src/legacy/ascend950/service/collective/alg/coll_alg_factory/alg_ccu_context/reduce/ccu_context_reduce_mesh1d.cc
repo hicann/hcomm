@@ -48,12 +48,12 @@ CcuContextReduceMesh1D::CcuContextReduceMesh1D(const CcuCtxArg &arg, const std::
         rankSize_ = ctxArg->dimSize_[0];
     }
 
-    HCCL_INFO("[CcuContextReduceMesh1D] CtxArg: rankId[%u] rankSize[%u]",
+    HCCL_INFO("[CcuContextReduceMesh1D] CtxArg: rankId[%u] rankSize[%llu]",
         rankId_, rankSize_);
 
     reduceOp_ = ctxArg->op_.reduceOp;
     rootId_ = ctxArg->rootId_;
-    HCCL_INFO("[CcuContextReduceMesh1D] init end, ctxArg->dimSize size[%u] rankSize[%llu]", ctxArg->dimSize_.size(), rankSize_);
+    HCCL_INFO("[CcuContextReduceMesh1D] init end, ctxArg->dimSize size[%zu] rankSize[%llu]", ctxArg->dimSize_.size(), rankSize_);
 }
 
 void CcuContextReduceMesh1D::InitResource()
@@ -61,7 +61,7 @@ void CcuContextReduceMesh1D::InitResource()
     if (transports.size() == 0) {
         THROW<NullPtrException>(StringFormat("CcuContextReduceMesh1D transports is empty"));
     }
-    HCCL_INFO("[CcuContextReduceMesh1D]transports.size: [%u]", transports.size());
+    HCCL_INFO("[CcuContextReduceMesh1D]transports.size: [%zu]", transports.size());
     uint16_t transportIdx = 0;
     // 按照rank号从小到大遍历transports，遇到本rank就填充本地资源，否则依次取远端资源，要求给框架返回的Link同样是按顺序排列的
     for (uint16_t peerId = 0; peerId < rankSize_; peerId++) {

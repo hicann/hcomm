@@ -47,7 +47,7 @@ HcclResult InsTempReduceMesh2D::CalcRes(AlgTempResReq &tempResReq)
     CHK_RET(CalcResLinksConcurrMesh(myRank_, tempRankSize_, tempVTopo_, linkNumBtwPeers_, tempResReq));
 
     HCCL_INFO("[InsTempReduceMesh2D] Calculate communication resources finished, queNum[%u], streamNum[%u], "
-              "queNotifyNum[%u] linkNum[%u]", tempResReq.queNum, tempResReq.streamNum, tempResReq.queNotifys.size(),
+              "queNotifyNum[%zu] linkNum[%zu]", tempResReq.queNum, tempResReq.streamNum, tempResReq.queNotifys.size(),
               tempResReq.links.size());
 
     return HcclResult::HCCL_SUCCESS;
@@ -234,8 +234,8 @@ HcclResult InsTempReduceMesh2D::SplitInsQues(std::vector<InsQuePtr> &tempInsQues
     xTempInsQues = std::vector<InsQuePtr>(tempInsQues.begin(), tempInsQues.begin() + axisRankSize_[AXIS_X]);
     yTempInsQues = std::vector<InsQuePtr>(tempInsQues.begin() + axisRankSize_[AXIS_X], tempInsQues.end());
 
-    HCCL_INFO("[InsTempReduceMesh2D] splitInsQues success, ctrlTempInsQuesNum[%u], xTempInsQuesNum[%u], "
-              "yTempInsQuesNum[%u]", ctrlTempInsQues.size(), xTempInsQues.size(), yTempInsQues.size());
+    HCCL_INFO("[InsTempReduceMesh2D] splitInsQues success, ctrlTempInsQuesNum[%zu], xTempInsQuesNum[%zu], "
+              "yTempInsQuesNum[%zu]", ctrlTempInsQues.size(), xTempInsQues.size(), yTempInsQues.size());
 
     return HcclResult::HCCL_SUCCESS;
 }

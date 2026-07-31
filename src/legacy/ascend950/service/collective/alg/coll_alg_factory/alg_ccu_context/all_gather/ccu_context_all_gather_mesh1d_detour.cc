@@ -26,7 +26,7 @@ void CcuContextAllGatherMeshDetour1D::ProcessTransports(const std::vector<CcuTra
     // 构建detourTransport
     if (transports.size() % (rankSize_ - 1) != 0) {
         THROW<InvalidParamsException>(StringFormat(
-            "Invalid TransportsNum[%u] for rankSize_[%u]", transports.size(), rankSize_));
+            "Invalid TransportsNum[%zu] for rankSize_[%llu]", transports.size(), rankSize_));
     }
 
     for (uint64_t i = 0; i < pathNumPerPeer_; i++) {

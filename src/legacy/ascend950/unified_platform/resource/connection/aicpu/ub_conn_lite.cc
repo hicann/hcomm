@@ -156,7 +156,7 @@ void UbConnLite::ProcessSlices(const RmaBufSliceLite &loc, const RmtRmaBufSliceL
         sliceNum++;
     }
 
-    HCCL_INFO("[UbConnLite::%s] end, locBufSize[%u], sliceNUm[%u], sliceSize[%u], lastSliceSize[%u]", __func__,
+    HCCL_INFO("[UbConnLite::%s] end, locBufSize[%llu], sliceNUm[%llu], sliceSize[%llu], lastSliceSize[%llu]", __func__,
               locBufSize, sliceNum, sliceSize, lastSliceSize);
 }
 
@@ -206,7 +206,7 @@ void UbConnLite::ProcessSlicesWithNotify(
         processOneSliceWithNotify(lastLocSlice, lastRmtSlice, slicePos);
     }
 
-    HCCL_INFO("[UbConnLite::%s] end, locBufSize[%u], sliceNUm[%u], sliceSize[%u], lastSliceSize[%u]", __func__,
+    HCCL_INFO("[UbConnLite::%s] end, locBufSize[%llu], sliceNUm[%llu], sliceSize[%llu], lastSliceSize[%llu]", __func__,
               locBufSize, sliceNum, sliceSize, lastSliceSize);
 }
 
@@ -256,7 +256,7 @@ void UbConnLite::ProcessOneWqeWithNotify(const RmaBufSliceLite &loc, const RmtRm
                                          SlicePosition slicePos, const StreamLite &stream)
 {
     (void)stream;
-    HCCL_INFO("[UbConnLite::%s] start, locSize[%u], opCode[%u]", __func__, loc.GetSize(), opCode);
+    HCCL_INFO("[UbConnLite::%s] start, locSize[%llu], opCode[%u]", __func__, loc.GetSize(), opCode);
 
     // sqOffset是用于计算Ubjetty中下wqe位置的偏移，小于sqDepth
     u32 sqOffset = pi % sqDepth_; 

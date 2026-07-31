@@ -41,7 +41,7 @@ CcuContextBroadcastMesh1D::CcuContextBroadcastMesh1D(const CcuCtxArg &arg, const
 
 void CcuContextBroadcastMesh1D::CreateAllVariables()
 {
-    HCCL_INFO("[CcuContextBroadcastMesh1D]transports.size: [%u]", transports.size());
+    HCCL_INFO("[CcuContextBroadcastMesh1D]transports.size: [%zu]", transports.size());
     uint16_t transportIdx = 0;
     input_ = CreateVariable();
     if (transports.size() == 0) {

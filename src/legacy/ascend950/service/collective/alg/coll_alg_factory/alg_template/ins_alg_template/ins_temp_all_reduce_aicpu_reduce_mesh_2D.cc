@@ -41,7 +41,7 @@ HcclResult InsTempAllReduceAicpuReduceMesh2D::CalcRes(AlgTempResReq &tempResReq)
 
     tempResReq.streamNum = tempResReq.queNum;
     tempResReq.queNotifys = CreateMasterSlaveQueNotifiesRequest(tempResReq.queNum);
-    HCCL_DEBUG("InsTempAllReduceAicpuReduceMesh2D::CalcRes queNotifys size[%u]", tempResReq.queNotifys.size());
+    HCCL_DEBUG("InsTempAllReduceAicpuReduceMesh2D::CalcRes queNotifys size[%zu]", tempResReq.queNotifys.size());
 
     QId centerQ = 0;
     tempResReq.localWaitGroupCntNotify.emplace_back(centerQ, 0);

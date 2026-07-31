@@ -126,9 +126,9 @@ std::string PrimWaitGroup::Describe() const
     }
 
     if (parent.lock().get() == nullptr) {
-        return StringFormat("%s: qidNum[%u] qids[%s]", type.Describe().c_str(), qids.size(), qidsStr.c_str());
+        return StringFormat("%s: qidNum[%zu] qids[%s]", type.Describe().c_str(), qids.size(), qidsStr.c_str());
     } else {
-        return StringFormat("%s: parent[%u] qidNum[%u] qids[%s]", type.Describe().c_str(), parent.lock()->GetId(),
+        return StringFormat("%s: parent[%u] qidNum[%zu] qids[%s]", type.Describe().c_str(), parent.lock()->GetId(),
                             qids.size(), qidsStr.c_str());
     }
 }
@@ -349,7 +349,7 @@ void PrimRecvReduce::Append(const DataSlice &remoteSlice, const DataSlice &local
 
 std::string PrimGroup::Describe() const
 {
-    string desc     = StringFormat("%s: primSize[%u]", type.Describe().c_str(), prims.size());
+    string desc     = StringFormat("%s: primSize[%zu]", type.Describe().c_str(), prims.size());
     auto   primIter = prims.begin();
     for (; primIter != prims.end(); primIter++) {
         desc += (*primIter)->Describe() + "\n";

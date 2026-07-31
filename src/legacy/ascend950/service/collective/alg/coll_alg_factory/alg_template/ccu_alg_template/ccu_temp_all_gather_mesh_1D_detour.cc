@@ -138,7 +138,7 @@ void CcuTempAllGatherMeshDetour1D::ProcessLinks(std::vector<LinkData> &links, co
     if (sendLinks.size() != recvLinks.size() || directLinks.size() != tempRankSize_ - 1 ||
         sendLinks.size() % directLinks.size() != 0 || recvLinks.size() % directLinks.size() != 0) {
         THROW<InvalidParamsException>(StringFormat(
-            "[CcuTempAllGatherMeshDetour1D] directSize[%u]-sendSize[%u]-recvSize[%u].", directLinks.size(), sendLinks.size(), recvLinks.size()));
+            "[CcuTempAllGatherMeshDetour1D] directSize[%zu]-sendSize[%zu]-recvSize[%zu].", directLinks.size(), sendLinks.size(), recvLinks.size()));
     }
     for (uint32_t i = 0; i < directLinks.size(); i++) {
         HCCL_INFO("Peer[%d][%s]", directLinks[i].GetRemoteRankId(), directLinks[i].GetDirection().Describe().c_str());

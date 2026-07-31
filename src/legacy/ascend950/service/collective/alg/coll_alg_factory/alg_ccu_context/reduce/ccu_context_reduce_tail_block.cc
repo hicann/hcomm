@@ -41,7 +41,7 @@ CcuContextReduceTailBlock::CcuContextReduceTailBlock(const CcuCtxArg            
             outputDataType_.Describe().c_str());
     }
 
-    HCCL_INFO("[CcuContextReduceTailBlock] Init, CtxArgs are rankId[%u], rankSize[%u], notifySignal[%s], "
+    HCCL_INFO("[CcuContextReduceTailBlock] Init, CtxArgs are rankId[%u], rankSize[%llu], notifySignal[%s], "
                "reduceOp[%s], dataType[%s], outputDataType[%s]",
                rankId_, rankSize_, notifySignal_.c_str(), reduceOp_.Describe().c_str(), dataType_.Describe().c_str(),
                outputDataType_.Describe().c_str());
@@ -63,7 +63,7 @@ void CcuContextReduceTailBlock::Algorithm()
 
 void CcuContextReduceTailBlock::SyncMainBlock(uint32_t ctxSignalIndex)
 {
-    HCCL_INFO("[CcuContextReduceTailBlock] SyncMainBlock start,  ctxSignalIndex[%u]", ctxSignalIndex);
+    HCCL_INFO("[CcuContextReduceTailBlock] SyncMainBlock start, ctxSignalIndex[%u]", ctxSignalIndex);
     LocalCtxPost(mainBlockCtxSignal_, 1 << (1 + ctxSignalIndex * MISSION_NUM_2));
     LocalWait(tailBlockCtxSignal_, 1 << (0 + ctxSignalIndex * MISSION_NUM_2));
     HCCL_INFO("[CcuContextReduceTailBlock] SyncMainBlock end");

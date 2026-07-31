@@ -172,10 +172,10 @@ HcclResult CcuTempAllReduceMeshTwoShotMem2Mem2D::PrepareRankGroups()
     }
     CHK_PRT_RET(
         rankGroupX_.GetRanks().size() <= 1 || rankGroupY_.GetRanks().size() <= 1,
-        HCCL_ERROR("[PrepareRankGroups] Rank[%d] RankGroupX size[%zu] or RankGroupY size[%u] is not greater than 1. ",
+        HCCL_ERROR("[PrepareRankGroups] Rank[%d] RankGroupX size[%zu] or RankGroupY size[%zu] is not greater than 1. ",
                    myRank_, rankGroupX_.GetRanks().size(), rankGroupY_.GetRanks().size()),
         HcclResult::HCCL_E_PARA);
-    HCCL_INFO("[PrepareRankGroups] RankGroupX size[%u], RankGroupY size[%u].", rankGroupX_.GetRanks().size(),
+    HCCL_INFO("[PrepareRankGroups] RankGroupX size[%zu], RankGroupY size[%zu].", rankGroupX_.GetRanks().size(),
               rankGroupY_.GetRanks().size());
     return HcclResult::HCCL_SUCCESS;
 }
