@@ -59,6 +59,9 @@ namespace hccl
             HCCL_INFO("The current device just support this StandardCard case.");
             return true;
         }
+        if (isDiffDeviceType_) {
+            return false;
+        }
         return ((pairLinkInfo_[static_cast<u32>(LinkTypeInServer::HCCS_TYPE)].size() == 0) &&
                 (pairLinkInfo_[static_cast<u32>(LinkTypeInServer::HCCS_SW_TYPE)].size() == 0) &&
                 (pairLinkInfo_[static_cast<u32>(LinkTypeInServer::SIO_TYPE)].size() == 0));
@@ -339,9 +342,7 @@ namespace hccl
 
     HcclResult HcclCommunicatorAttrs::SetModuleInfo(const std::vector<RankInfo_t> &rankList)
     {
-        isDiffDeviceType_ = IsDiffDeviceType(rankList);
         isDiffDeviceModule_ = IsDiffDeviceModule(rankList);
-        HCCL_DEBUG("[SetModuleInfo]isDiffDeviceModule_[%u] isDiffDeviceType_[%u]", isDiffDeviceModule_, isDiffDeviceType_);
         multiModuleDiffDeviceNumMode_ = false;
         moduleNum_ = serverNum_;
 
