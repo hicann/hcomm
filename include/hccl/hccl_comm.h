@@ -141,7 +141,7 @@ extern HcclResult HcclGetRankSize(HcclComm comm, uint32_t *rankSize) HCOMM_WEAK_
  * @brief Get the rank id of this comm.
  *
  * @param comm A pointer identifying the communication resource based on.
- * @param rankSize  A pointer identifying the rank id.
+ * @param rank  A pointer identifying the rank id.
  * @return HcclResult
  */
 extern HcclResult HcclGetRankId(HcclComm comm, uint32_t *rank) HCOMM_WEAK_SYMBOL;
@@ -342,9 +342,9 @@ extern HcclResult HcclGroupStatusGet(bool *isGroupEnabled);
  *
  * @param comm A pointer identifying the communication resource based on.
  * @param addr A pointer identifying the user memory address.
- * @param size A size_t identifying the size of memory window.
+ * @param size A uint64_t identifying the size of memory window.
  * @param winHandle A pointer identifying the registered memory window handle.
- * @param flag The flag of this memory window, now only support 0
+ * @param flag The flag of this memory window, now only support 1
  * @return HcclResult
  */
 extern HcclResult HcclCommSymWinRegister(HcclComm comm, void *addr, uint64_t size, HcclCommSymWindow *winHandle, uint32_t flag);

@@ -45,19 +45,28 @@ HcclResult HcclRankGraphGetEndpointInfo(HcclComm comm, uint32_t rankId, const En
 
 ## 约束说明
 
-无
+无。
 
 ## 调用示例
 
 ```c
+// 通信域句柄
 HcclComm comm;
-uint32_t netLayer = 0;
+
+// 获取EndPoint数量
+uint32_t layer = 0;
 uint32_t topoInstId = 0;
 uint32_t num = 0;
-HcclRankGraphGetEndpointNum(comm, netLayer, topoInstId, &num);
+HcclRankGraphGetEndpointNum(comm, layer, topoInstId, &num);
+
+// 获取EndPoint描述列表
 uint32_t descNum = num;
-HcclRankGraphGetEndpointDesc(comm, netLayer, topoInstId, &descNum, endpointDesc);
-EndpointAttrBwCoeff bwCoeff{};
-uint32_t size = sizeof(EndpointAttrBwCoeff); //必须等于目标类型大小
+EndpointDesc endpointDesc[descNum];
+HcclRankGraphGetEndpointDesc(comm, layer, topoInstId, &descNum, endpointDesc);
+
+// 获取拓扑属性信息
+uint32_t rankId = 0; // 需要查询的端点所属的rank ID
+EndpointAttrBwCoeff bwCoeff = {0};
+uint32_t size = sizeof(EndpointAttrBwCoeff); // 必须等于目标类型大小
 HcclRankGraphGetEndpointInfo(comm, rankId, endpointDesc, ENDPOINT_ATTR_BW_COEFF, size, &bwCoeff);
 ```

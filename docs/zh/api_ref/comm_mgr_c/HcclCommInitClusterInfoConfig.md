@@ -61,7 +61,8 @@ HcclCommConfig config;
 HcclCommConfigInit(&config);
 // 按需修改通信域配置
 config.hcclBufferSize = 50;  // 共享数据的缓存区大小，单位为：MB，取值需 >= 1，默认值为：200
-std::strcpy(config.hcclCommName, "comm_1");
+strncpy(config.hcclCommName, "comm_1", COMM_NAME_MAX_LENGTH - 1);
+config.hcclCommName[COMM_NAME_MAX_LENGTH - 1] = '\0';
 // 初始化通信域
 HcclComm hcclComm;
 // 此样例以devId作为当前rank的rank id

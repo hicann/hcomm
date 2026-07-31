@@ -22,7 +22,7 @@
 
 基于rank table初始化HCCL，创建HCCL通信域。
 
-Rank table文件是一个JSON格式的文件，配置了参与集合通信的NPU资源信息，关于rank table文件的配置可参见[集群信息配置](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/cluster_info_config/README.md)。
+rank table文件是一个JSON格式的文件，配置了参与集合通信的NPU资源信息，关于rank table文件的配置可参见[集群信息配置](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/cluster_info_config/README.md)。
 
 ## 函数原型
 
@@ -34,7 +34,7 @@ HcclResult HcclCommInitClusterInfo(const char *clusterInfo, uint32_t rank, HcclC
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| clusterInfo | 输入 | Rank table的文件路径（含文件名），作为字符串最大长度为4096字节，含结束符。 |
+| clusterInfo | 输入 | rank table的文件路径（含文件名），作为字符串最大长度为4096字节，含结束符。 |
 | rank | 输入 | 本rank的id。<br>需要注意，此参数取值需要与rank table中对应的“rank_id”字段取值一致。 |
 | comm | 输出 | 将初始化后的通信域以指针的信息回传给调用者。<br>HcclComm类型的定义可参见[HcclComm](./data_type_definition/HcclComm.md)。 |
 

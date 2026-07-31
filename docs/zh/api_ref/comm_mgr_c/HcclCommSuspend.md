@@ -47,3 +47,27 @@ HcclResult HcclCommSuspend(HcclComm comm)
 
 - 本接口需要与[HcclCommResume](HcclCommResume.md)接口配对使用。
 - 本接口不能与集合通信、点对点通信的相关接口并发执行。
+
+## 调用示例
+
+```c
+// 设备资源初始化
+aclInit(NULL);
+aclrtSetDevice(devId);
+
+// 创建通信域
+HcclComm hcclComm;
+HcclRootInfo rootInfo;
+HcclGetRootInfo(&rootInfo);
+HcclCommInitRootInfo(8, &rootInfo, 0, &hcclComm);
+
+// 检测到片上内存UCE故障后，挂起通信域
+HcclCommSuspend(hcclComm);
+
+// 故障修复后，恢复通信域
+HcclCommResume(hcclComm);
+
+// 销毁通信域
+HcclCommDestroy(hcclComm);
+aclFinalize();
+```

@@ -52,10 +52,10 @@ HcclResult HcclRankGraphGetRanksByTopoInst(HcclComm comm, uint32_t netLayer, uin
 ```c
  //8卡通信域，同一个8p Mesh
 HcclComm comm;
-uint32_t netlayer = 0;
+uint32_t netLayer = 0;
 uint32_t topoInstId = 0;
 uint32_t *ranks;
 uint32_t rankNum;
-HcclRankGraphGetRanksByTopoInst( comm, netLayer, topoInstId,  &ranks, &rankNum )
+HcclRankGraphGetRanksByTopoInst(comm, netLayer, topoInstId, &ranks, &rankNum);
  // ranks = [0,1,2,…,7],  rankNum=8
 ```

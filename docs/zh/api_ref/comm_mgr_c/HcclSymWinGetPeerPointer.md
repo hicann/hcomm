@@ -36,7 +36,7 @@ HcclResult HcclSymWinGetPeerPointer(HcclCommSymWindow winHandle, size_t offset, 
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| winHandle | 输入 | 对称内存窗口资源句柄。 |
+| winHandle | 输入 | 对称内存窗口资源句柄。<br>HcclCommSymWindow类型的定义可参见[HcclCommSymWindow](./data_type_definition/HcclCommSymWindow.md)。 |
 | offset | 输入 | 使用[HcclCommSymWinGet](HcclCommSymWinGet.md)获取到的偏移量。 |
 | peerRank | 输入 | rank ID，取值范围：[0, rankSize)。 |
 | ptr | 输出 | 指向“对称内存窗口中对应地址”的指针。 |

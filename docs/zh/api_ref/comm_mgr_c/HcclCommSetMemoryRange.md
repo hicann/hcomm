@@ -51,3 +51,32 @@ HcclResult HcclCommSetMemoryRange(HcclComm comm, void *baseVirPtr, size_t size, 
 - 该接口仅支持在范围是单Server的通信域内调用，否则会报错。
 - 多次调用该接口时，输入的内存地址不能重复或存在区间交叠。
 - 其他约束请参见[通用约束](./zero_copy_readme.md)。
+
+## 调用示例
+
+```c
+// 设备资源初始化
+aclInit(NULL);
+aclrtSetDevice(devId);
+
+// 创建通信域
+HcclComm hcclComm;
+HcclRootInfo rootInfo;
+HcclGetRootInfo(&rootInfo);
+HcclCommInitRootInfo(8, &rootInfo, 0, &hcclComm);
+
+// 通过aclrtReserveMemAddress申请虚拟内存
+void *baseVirPtr = NULL;
+size_t size = 1024 * 1024 * 1024; // 1GB
+aclrtReserveMemAddress(&baseVirPtr, size, 0, NULL, 0);
+
+// 通知HCCL预留的虚拟内存地址
+HcclCommSetMemoryRange(hcclComm, baseVirPtr, size, 0, 0);
+
+// 后续可调用HcclCommActivateCommMemory激活内存并使用零拷贝功能
+// ...
+
+// 销毁通信域
+HcclCommDestroy(hcclComm);
+aclFinalize();
+```

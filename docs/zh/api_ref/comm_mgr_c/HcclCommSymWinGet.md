@@ -39,7 +39,7 @@ HcclResult HcclCommSymWinGet(HcclComm comm, void *ptr, size_t size, HcclCommSymW
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| comm | 输入 | HCCL通信域。 |
+| comm | 输入 | HCCL通信域。<br>HcclComm类型的定义可参见[HcclComm](./data_type_definition/HcclComm.md)。 |
 | ptr | 输入 | 已注册对称内存的地址指针，该内存需要已使用[HcclCommSymWinRegister](HcclCommSymWinRegister.md)接口进行注册。<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品的HCCS场景下，该地址为预留并完成物理内存映射的虚拟地址。<br>Ascend 950PR/Ascend 950DT的URMA场景下，该地址为已注册的Device内存地址。 |
 | size | 输入 | 对称内存窗口大小。<br>假设对称内存窗口大小为symSize，已注册对称内存的地址指针为addr，size需要满足以下条件：<br>  - size > 0<br>  - ptr+size <= addr + symSize |
 | winHandle | 输出 | 指向“对称内存窗口资源句柄”的指针。 |

@@ -25,16 +25,15 @@
 ## 函数原型
 
 ```c
-int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel, uint32_t timeout)
+int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel)
 ```
 
 ## 参数说明
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| thread | 输入 | 通信线程句柄。Host CPU侧调用时，该参数无作用，传入0即可。<br>ThreadHandle类型的定义可参见[ThreadHandle](../../../datatype_definition/ThreadHandle.md)。
+| thread | 输入 | 通信线程句柄。<br>ThreadHandle类型的定义可参见[ThreadHandle](../../../datatype_definition/ThreadHandle.md)。 |
 | channel | 输入 | 通信通道句柄，为[HcclChannelAcquire](../../../control_plane_api/comms_domain_resource_mgmt/HcclChannelAcquire.md)接口获取到的channels。<br>ChannelHandle类型的定义可参见[ChannelHandle](../../../datatype_definition/ChannelHandle.md)。 |
-| timeout | 输入 | 超时时间。 |
 
 ## 返回值
 
@@ -51,14 +50,14 @@ int32_t：接口成功返回0，其他失败。
 CommEngine engine = CommEngine::COMM_ENGINE_AICPU_TS;
 uint32_t threadNum = 1;
 uint32_t notifyNumPerThread = 1;
+HcclComm comm;
 ThreadHandle thread;
-HcclThreadAcquire(engine, threadNum, notifyNumPerThread, &thread);
+HcclThreadAcquire(comm, engine, threadNum, notifyNumPerThread, &thread);
 
 // 申请通信通道资源
 uint32_t channelNum = 1;
 HcclChannelDesc channelDesc;
 HcclChannelDescInit(&channelDesc, channelNum);
-HcclComm comm;
 ChannelHandle channel;
 HcclChannelAcquire(comm, engine, &channelDesc, channelNum, &channel);
 
@@ -76,6 +75,5 @@ uint64_t len = std::min(localBufferSize, remoteBufferSize);
 // 将对端内存的内容读到本端内存上
 HcommReadOnThread(thread, channel, localBuffer, remoteBuffer, len);
 
-uint32_t timeout = 120;
-HcommChannelDrainOnThread(thread, channel, timeout);
+HcommChannelDrainOnThread(thread, channel);
 ```

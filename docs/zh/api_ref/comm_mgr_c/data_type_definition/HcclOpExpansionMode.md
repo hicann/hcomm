@@ -7,8 +7,6 @@
 ## 定义原型
 
 ```c
-typedef HcclOpExpansionMode HcclConfigTypeOpExpansionMode;
-
 typedef enum {
     HCCL_OP_EXPANSION_MODE_INVALID  = -1,  /* 无效模式，未初始化或保留。 */
     HCCL_OP_EXPANSION_MODE_AI_CPU   = 0,   /* 在Device侧AI CPU上展开。 */
@@ -19,4 +17,6 @@ typedef enum {
     HCCL_OP_EXPANSION_MODE_CCU_SCHED = 5,  /* 在Device侧CCU上展开，使用调度模式（CCU作为调度器向UB引擎调度任务）。 */
     HCCL_OP_EXPANSION_AIV_ONLY      = 6,   /* 仅在Device侧Vector Core (AIV) 上展开，不随数据量变化进行模式切换。 */
 } HcclOpExpansionMode;
+
+typedef HcclOpExpansionMode HcclConfigTypeOpExpansionMode;
 ```

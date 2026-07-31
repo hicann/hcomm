@@ -197,7 +197,7 @@ extern int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notif
 
 /**
  * @brief 记录通知事件（生产者）
- * @param[in] streamHandle 异步流句柄
+ * @param[in] thread 通信线程句柄
  * @param[in] dstNotifyId 通知id
  * @return 执行状态码 int32_t
  */
@@ -205,9 +205,9 @@ extern int32_t HcommAclrtNotifyRecordOnThread(ThreadHandle thread, uint64_t dstN
 
 /**
  * @brief 等待通知事件（消费者）
- * @param[in] streamHandle 异步流句柄
+ * @param[in] thread 通信线程句柄
  * @param[in] notifyId 通知id
- * @param[in] timeOut 超时时间
+ * @param[in] timeOut 超时时间，单位：秒
  * @return 执行状态码 int32_t
  */
 extern int32_t HcommAclrtNotifyWaitOnThread(ThreadHandle thread, uint64_t notifyId, uint32_t timeOut);

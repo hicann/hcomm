@@ -10,7 +10,7 @@
 如上图所示，CCU通信算子支持多种算法实现，开发者可以根据拓扑信息选择最优通信算法：
 
 - Mesh算法实现：适用于Server内物理拓扑为Mesh的场景。
-- NHR算法实现：使用于多Server，且每个Server中取一个rank进行通信的场景。
+- NHR算法实现：适用于多Server，且每个Server中取一个rank进行通信的场景。
 
 > [!NOTE]说明
 >

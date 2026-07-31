@@ -37,5 +37,6 @@ typedef struct {
         } ubAttr;
     };
     uint32_t qos;             /* 通信域QoS与协议解耦 */
+    const char *channelName;  /* channel业务匹配标识，两端需相同；NULL表示匿名channel */
 } HcommChannelDesc;
 ```

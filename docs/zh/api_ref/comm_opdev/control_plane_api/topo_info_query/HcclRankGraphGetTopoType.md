@@ -50,5 +50,5 @@ HcclResult HcclRankGraphGetTopoType(HcclComm comm, uint32_t netLayer, uint32_t t
 ```c
 HcclComm comm;
 CommTopo topoType;
-HcclRankGraphGetTopoType(comm, netLayer=0, topoInstId=0, &topoType); // topoType=1 (1DMesh)
+HcclRankGraphGetTopoType(comm, 0, 0, &topoType); // topoType=1 (1DMesh)
 ```

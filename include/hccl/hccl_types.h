@@ -101,7 +101,7 @@ typedef enum {
 } HcclDataType;
 
 typedef enum {
-    HCCL_DETERMINISTIC = 0,     /**< 0: non-deterministic, 1: deterministic */
+    HCCL_DETERMINISTIC = 0,     /**< 0: non-deterministic, 1: deterministic, 2: strict(order-preserving) */
     HCCL_CONFIG_RESERVED
 } HcclConfig;
 

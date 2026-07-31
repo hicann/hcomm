@@ -50,8 +50,8 @@ CcuResult ReadReduce(ChannelHandle ch, LocalAddr local, RemoteAddr remote,
 | local | 输入/输出 | 本端HBM目标地址（`LocalAddr`）。调用前须写入有效初值；硬件完成后更新为归约结果。 |
 | remote | 输入 | 对端HBM源地址（`RemoteAddr`）。 |
 | len | 输入 | 操作字节数，类型为`Variable`（运行期可变长度）。 |
-| dataType | 输入 | 数据类型，取值见`HcclDataType`枚举。仅支持以下6种：`HCCL_DATA_TYPE_UINT8`、`HCCL_DATA_TYPE_INT16`、`HCCL_DATA_TYPE_INT32`、`HCCL_DATA_TYPE_FP16`、`HCCL_DATA_TYPE_FP32`、`HCCL_DATA_TYPE_BF16`；其他取值会被拒绝并抛出异常（携带错误码）。 |
-| opType | 输入 | 归约算子，取值见`HcclReduceOp`枚举。仅支持`HCCL_REDUCE_SUM`（求和）、`HCCL_REDUCE_MAX`（最大值）、`HCCL_REDUCE_MIN`（最小值）；`HCCL_REDUCE_PROD`不支持，传入会被拒绝并抛出异常（携带错误码）。 当采用SUM操作时低精度输入数据的求和结果会先进行精度上升然后再进行精度调整为与输入数据精度相同|
+| dataType | 输入 | 数据类型，取值见`HcclDataType`枚举。仅支持以下6种：`HCCL_DATA_TYPE_UINT8`、`HCCL_DATA_TYPE_INT16`、`HCCL_DATA_TYPE_INT32`、`HCCL_DATA_TYPE_FP16`、`HCCL_DATA_TYPE_FP32`、`HCCL_DATA_TYPE_BFP16`；其他取值会被拒绝并抛出异常（携带错误码）。 |
+| opType | 输入 | 归约算子，取值见`HcclReduceOp`枚举。仅支持`HCCL_REDUCE_SUM`（求和）、`HCCL_REDUCE_MAX`（最大值）、`HCCL_REDUCE_MIN`（最小值）；`HCCL_REDUCE_PROD`不支持，传入会被拒绝并抛出异常（携带错误码）。 当采用SUM操作时低精度输入数据的求和结果会先进行精度上升然后再进行精度调整为与输入数据精度相同。 |
 | event | 输入 | 完成事件对象。硬件归约读完成时自动置位`event[mask]`，下游调用`EventWait(event, mask)`等待。 |
 | mask | 输入 | 16位事件掩码。默认值为`1`（即bit0）。 |
 

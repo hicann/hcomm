@@ -25,7 +25,7 @@
 ## 函数原型
 
 ```c
-const char* HcclGetErrorString(HcclResult code)
+const char *HcclGetErrorString(HcclResult code)
 ```
 
 ## 参数说明
@@ -41,3 +41,29 @@ const char* HcclGetErrorString(HcclResult code)
 ## 约束说明
 
 无。
+
+## 调用示例
+
+```c
+// 设备资源初始化
+aclInit(NULL);
+aclrtSetDevice(devId);
+
+// 创建通信域
+HcclComm hcclComm;
+HcclRootInfo rootInfo;
+HcclGetRootInfo(&rootInfo);
+HcclCommInitRootInfo(8, &rootInfo, 0, &hcclComm);
+
+// 查询通信域异步错误并解析错误码
+HcclResult asyncError = HCCL_SUCCESS;
+HcclGetCommAsyncError(hcclComm, &asyncError);
+if (asyncError != HCCL_SUCCESS) {
+    const char *errStr = HcclGetErrorString(asyncError);
+    printf("comm async error: %s\n", errStr);
+}
+
+// 销毁通信域
+HcclCommDestroy(hcclComm);
+aclFinalize();
+```

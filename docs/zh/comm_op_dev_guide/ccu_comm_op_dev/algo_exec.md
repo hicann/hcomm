@@ -85,7 +85,7 @@ CcuResult CcuAllGatherMesh1DMem2MemKernel(CcuKernelArg arg)
     for (uint64_t peerId = 0; peerId < ctx.arg->rankSize; peerId++) {
         if (peerId != ctx.arg->rankId) {
             ctx.output[peerId] = ccu::GetResByChannel<ccu::Variable>(ctx.arg->channels[channelIdx], OUTPUT_XN_ID);
-        ctx.token[peerId] = ccu::GetResByChannel<ccu::Variable>(ctx.arg->channels[channelIdx], TOKEN_XN_ID);
+            ctx.token[peerId] = ccu::GetResByChannel<ccu::Variable>(ctx.arg->channels[channelIdx], TOKEN_XN_ID);
             channelIdx++;
         }
     }

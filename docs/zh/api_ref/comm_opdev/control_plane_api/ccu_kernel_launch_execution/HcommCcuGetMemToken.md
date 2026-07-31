@@ -58,7 +58,7 @@ CcuResult HcommCcuGetMemToken(uint64_t srcVa, uint64_t size, uint64_t *tokenInfo
 - `(srcVa, size)`须落在同一段已注册的连续内存区域内，跨区域或覆盖未注册内存区域会导致驱动返回错误。
 - Token的有效生命周期与对应内存的注册生命周期绑定，内存注销后Token失效。
 - 在跨rank通信场景中，本端Token须通过带外通道（非CCU数据面）传递给对端，由对端组装`RemoteAddr.token`，不能通过CCU数据面明文传输Token值。
-- 本接口只能在主机侧调用，不能在Kernel函数体内调用。
+- 本接口只能在Host侧调用，不能在Kernel函数体内调用。
 
 ## 调用示例
 

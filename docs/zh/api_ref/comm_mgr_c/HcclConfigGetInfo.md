@@ -34,7 +34,7 @@ HcclResult HcclConfigGetInfo(HcclComm comm, HcclConfigType cfgType, uint32_t inf
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| comm | 输入 | 通信域句柄。 |
+| comm | 输入 | 通信域句柄。<br>HcclComm类型的定义可参见[HcclComm](./data_type_definition/HcclComm.md)。 |
 | cfgType | 输入 | 需要查询的配置项类型，HcclConfigType的定义可参见[HcclConfigType](./data_type_definition/HcclConfigType.md)。 |
 | infoLen | 输入 | 目标配置类型的大小（字节），必须等于待查询配置类型的实际大小。 |
 | info | 输出 | 配置信息输出缓冲区，必须按目标配置类型对齐且可写。 |

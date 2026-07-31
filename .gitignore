@@ -36,6 +36,7 @@ __pycache__/
 .omo/
 .claude/
 .opencode/
+.codegraph/
 CLAUDE.md
 AGENTS.local.md
 

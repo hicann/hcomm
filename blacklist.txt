@@ -48,7 +48,6 @@ src/base_comm/resources/endpoint_pairs/channels/aicpu/aicpu_ts_p2p_channel.cc
 src/base_comm/resources/endpoint_pairs/channels/channel.cc
 src/base_comm/common/orion_adpt_utils.cc
 src/coll_communicator_mgr/dfx/taskException/host/hcclCommTaskException.cc
-src/common/launch_aicpu/launch_aicpu.cc
 src/legacy/ascend910/algorithm/impl/hccl_alg_device.cc
 src/legacy/ascend910/algorithm/impl/hccl_alg.cc
 src/legacy/ascend910/algorithm/impl/operator/all_reduce_operator.cc

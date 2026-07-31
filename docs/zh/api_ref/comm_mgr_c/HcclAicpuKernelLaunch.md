@@ -34,7 +34,7 @@ HcclResult HcclAicpuKernelLaunch(HcclComm comm, const HcclOpDesc *opInfo, const 
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| comm | 输入 | 集合通信操作所在的通信域。 |
+| comm | 输入 | 集合通信操作所在的通信域。<br>HcclComm类型的定义可参见[HcclComm](./data_type_definition/HcclComm.md)。 |
 | opInfo | 输入 | 算子描述参数，包含算子类型和名称相关参数。<br>HcclOpDesc类型的定义可参见数据类型[HcclOpDesc](./data_type_definition/HcclOpDesc.md)。 |
 | funcInfo | 输入 | 核函数信息，包含动态库名、函数名、参数及参数大小。<br>HcclKernelFuncInfo类型的定义可参见数据类型[HcclKernelFuncInfo](./data_type_definition/HcclKernelFuncInfo.md)。 |
 | aicpuThreadHandle | 输入 | AICPU通信主流线程句柄。<br>ThreadHandle类型的定义可参见[ThreadHandle](../comm_opdev/datatype_definition/ThreadHandle.md) |

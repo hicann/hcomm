@@ -42,9 +42,34 @@ HcclResult HcclGetCommAsyncError(HcclComm comm, HcclResult *asyncError)
 
 ## 返回值
 
-参见[HcclResult](./data_type_definition/HcclResult.md)类型，当前版本仅返回HCCL_E_REMOTE错误类型。
+参见[HcclResult](./data_type_definition/HcclResult.md)类型，接口成功返回HCCL_SUCCESS，失败返回对应错误码。
 
 ## 约束说明
 
 - 建立通信域后，才可调用此接口。
 - 通信域销毁后，不可调用此接口。
+
+## 调用示例
+
+```c
+// 设备资源初始化
+aclInit(NULL);
+aclrtSetDevice(devId);
+
+// 创建通信域
+HcclComm hcclComm;
+HcclRootInfo rootInfo;
+HcclGetRootInfo(&rootInfo);
+HcclCommInitRootInfo(8, &rootInfo, 0, &hcclComm);
+
+// 查询通信域内是否存在异步错误
+HcclResult asyncError;
+HcclGetCommAsyncError(hcclComm, &asyncError);
+if (asyncError == HCCL_E_REMOTE) {
+    // 通信域内发生了"RDMA ERROR CQE"错误，进行相应处理
+}
+
+// 销毁通信域
+HcclCommDestroy(hcclComm);
+aclFinalize();
+```
