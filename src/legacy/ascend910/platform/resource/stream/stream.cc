@@ -22,13 +22,15 @@ Stream::Stream(const Stream &that)
     : stream_(that.ptr()), device_id_(that.device_id_), stream_owner_(false), streamId_(that.streamId_),
     isMainStream_(that.isMainStream_), modeGotFlag_(that.modeGotFlag_), streamMode_(that.streamMode_),
     sqId_(that.sqId_), ctx_(that.ctx_), cqId_(that.cqId_), logicCqid_(that.logicCqid_),
-    sqeContext_(that.sqeContext_), cqeContext_(that.cqeContext_), streamInfo_(that.streamInfo_) {}
+    sqeContext_(that.sqeContext_), cqeContext_(that.cqeContext_), streamInfo_(that.streamInfo_),
+    invalidFlag_(that.invalidFlag_) {} // 共享销毁标志, 副本与owner持有同一份
 
 Stream::Stream(Stream &&that)
     : stream_(that.ptr()), device_id_(that.device_id_), stream_owner_(that.stream_owner_), streamId_(that.streamId_),
     isMainStream_(that.isMainStream_), modeGotFlag_(that.modeGotFlag_), streamMode_(that.streamMode_),
     sqId_(that.sqId_), ctx_(that.ctx_), cqId_(that.cqId_), logicCqid_(that.logicCqid_),
-    sqeContext_(that.sqeContext_), cqeContext_(that.cqeContext_), streamInfo_(that.streamInfo_)
+    sqeContext_(that.sqeContext_), cqeContext_(that.cqeContext_), streamInfo_(that.streamInfo_),
+    invalidFlag_(std::move(that.invalidFlag_)) // 转移销毁标志所有权, 源置空避免源析构影响
 {
     that.stream_ = nullptr;
     that.device_id_ = HCCL_DEVICE_NOT_SET;
@@ -133,6 +135,7 @@ Stream &Stream::operator=(const Stream &that)
 	    streamInfo_.sqBaseAddr = that.streamInfo_.sqBaseAddr;
 	    streamInfo_.sqDepth = that.streamInfo_.sqDepth;
 	    streamInfo_.sqId = that.streamInfo_.sqId;
+        invalidFlag_ = that.invalidFlag_; // 共享销毁标志, 副本与owner持有同一份
     }
     return *this;
 }
@@ -159,6 +162,7 @@ Stream Stream::operator=(Stream &&that)
         streamInfo_.sqBaseAddr = that.streamInfo_.sqBaseAddr;
         streamInfo_.sqDepth = that.streamInfo_.sqDepth;
         streamInfo_.sqId = that.streamInfo_.sqId;
+        invalidFlag_ = std::move(that.invalidFlag_); // 转移销毁标志所有权
     }
 
     that.stream_ = nullptr;
@@ -185,6 +189,11 @@ Stream Stream::operator=(Stream &&that)
 
 void Stream::DestroyStream()
 {
+    // owner销毁stream前先标记invalid, 让持有副本的dispatcher能感知并跳过, 避免访问悬空的sqeContext_
+    // 必须在hrtStreamDestroy之前置位, 确保并发遍历streamMap_的线程在此期间读到true
+    if (invalidFlag_ != nullptr) {
+        invalidFlag_->store(true, std::memory_order_relaxed);
+    }
     // 销毁stream
     if (stream_owner_ && stream_ != nullptr) {
         // stream需要在原ctx上销毁
