@@ -172,6 +172,11 @@ aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t *const p
     return RT_ERROR_NONE;
 }
 
+aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phyDevId)
+{
+    return RT_ERROR_NONE;
+}
+
 rtError_t rtGetPhyDeviceInfo(uint32_t phyId, int32_t moduleType, int32_t infoType, int64_t *val)
 {
     return RT_ERROR_NONE;
