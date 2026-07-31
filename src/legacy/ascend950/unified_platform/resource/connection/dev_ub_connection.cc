@@ -124,6 +124,7 @@ std::vector<char> DevUbConnection::GetUniqueId() const
     binaryStream << locEid.raw;
     binaryStream << maxReadSize;
     binaryStream << maxWriteSize;
+    binaryStream << static_cast<uint64_t>(jettyHandle);
 
     std::vector<char> result;
     binaryStream.Dump(result);

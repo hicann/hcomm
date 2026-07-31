@@ -161,3 +161,57 @@ TEST_F(HcommAdapterHccpTest, ut_HccpRaTlvRequestForCustomChannel_When_RaTlvReque
     EXPECT_EQ(ret, HCCL_E_NETWORK);
 }
 
+// ========== HrtRaDumpJettyContext 测试 ==========
+
+TEST_F(HcommAdapterHccpTest, Ut_HrtRaDumpJettyContext_When_JettyHandleIsNull_Expect_ReturnPtr)
+{
+    HcclResult ret = HrtRaDumpJettyContext(nullptr, 0);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(HcommAdapterHccpTest, Ut_HrtRaDumpJettyContext_When_RaCtxGetJettyContextFails_Expect_ReturnInternal)
+{
+    void *validHandle = reinterpret_cast<void*>(0x1234);
+    MOCKER(RaCtxGetJettyContext)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(-1));
+    HcclResult ret = HrtRaDumpJettyContext(validHandle, 1);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+}
+
+TEST_F(HcommAdapterHccpTest, Ut_HrtRaDumpJettyContext_When_ContextLenIsZero_Expect_ReturnInternal)
+{
+    void *validHandle = reinterpret_cast<void*>(0x1234);
+    unsigned int mockLen = 0;
+    MOCKER(RaCtxGetJettyContext)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&mockLen, sizeof(mockLen)))
+        .will(returnValue(0));
+    HcclResult ret = HrtRaDumpJettyContext(validHandle, 1);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+}
+
+TEST_F(HcommAdapterHccpTest, Ut_HrtRaDumpJettyContext_When_ContextLenExceedsMax_Expect_ReturnInternal)
+{
+    void *validHandle = reinterpret_cast<void*>(0x1234);
+    unsigned int mockLen = 600;
+    MOCKER(RaCtxGetJettyContext)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&mockLen, sizeof(mockLen)))
+        .will(returnValue(0));
+    HcclResult ret = HrtRaDumpJettyContext(validHandle, 1);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+}
+
+TEST_F(HcommAdapterHccpTest, Ut_HrtRaDumpJettyContext_When_Normal_Expect_ReturnSuccess)
+{
+    void *validHandle = reinterpret_cast<void*>(0x1234);
+    unsigned int mockLen = 256;
+    MOCKER(RaCtxGetJettyContext)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&mockLen, sizeof(mockLen)))
+        .will(returnValue(0));
+    HcclResult ret = HrtRaDumpJettyContext(validHandle, 7);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}

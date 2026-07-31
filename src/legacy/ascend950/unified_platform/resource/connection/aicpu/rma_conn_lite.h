@@ -58,6 +58,8 @@ public:
     Eid GetLocEid() const;
 
     u32 GetQpVa() const;
+    uint64_t GetJettyHandle() const;
+    uint32_t GetJettyId() const;
 
     virtual std::string Describe();
 
@@ -145,6 +147,7 @@ protected:
 
     Eid rmtEid_;
     Eid locEid_;
+    uint64_t jettyHandle_{0};
 };
 
 } // namespace Hccl

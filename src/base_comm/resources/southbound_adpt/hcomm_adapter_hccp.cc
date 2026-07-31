@@ -10,6 +10,9 @@
 
 #include "hcomm_adapter_hccp.h"
 
+#include <algorithm>
+
+#include "securec.h"
 #include "log.h"
 #include "orion_adpt_utils.h"
 #include "hccp_tlv.h"
@@ -21,6 +24,7 @@
 
 #include "hccp_tlv_hdc_manager.h"
 #include "exception_handler.h"
+#include "hccp_ctx_dfx.h"
 
 namespace hcomm {
 
@@ -554,6 +558,38 @@ HcclResult HccpRaGetDevBaseAttr(void *ctxHandle, struct DevBaseAttr *attr)
     }
     HCCL_INFO("HccpRaGetDevBaseAttr success, sqMaxDepth[%u], rqMaxDepth[%u], sqMaxSge[%u], rqMaxSge[%u], maxReadSize[%u], maxWriteSize[%u]",
         attr->sqMaxDepth, attr->rqMaxDepth, attr->sqMaxSge, attr->rqMaxSge, attr->maxReadSize, attr->maxWriteSize); 
+    return HCCL_SUCCESS;
+}
+
+HcclResult HrtRaDumpJettyContext(JettyHandle jettyHandle, u32 jettyId)
+{
+    CHK_PTR_NULL(jettyHandle);
+
+    uint8_t context[CONTEXT_MAX_LEN] = {0};
+    unsigned int len = CONTEXT_MAX_LEN;
+    int ret = RaCtxGetJettyContext(static_cast<void*>(jettyHandle), context, &len);
+
+    CHK_PRT_RET(ret != 0,
+        HCCL_ERROR("[HrtRaDumpJettyContext] RaCtxGetJettyContext failed, "
+                   "jettyId[%u], ret=%d", jettyId, ret), HCCL_E_INTERNAL);
+
+    CHK_PRT_RET(len == 0 || len > CONTEXT_MAX_LEN,
+        HCCL_ERROR("[HrtRaDumpJettyContext] invalid context len=%u, jettyId[%u]", len, jettyId),
+        HCCL_E_INTERNAL);
+
+    constexpr u32 bytesPerLine = 64;
+    for (u32 offset = 0; offset < len; offset += bytesPerLine) {
+        u32 bytesThisLine = std::min(len - offset, bytesPerLine);
+
+        char hexBuf[bytesPerLine * 2 + 1] = {0};
+        for (u32 i = 0; i < bytesThisLine; i++) {
+            snprintf_s(hexBuf + i * 2, sizeof(hexBuf) - i * 2, 2U,
+                       "%02x", context[offset + i]);
+        }
+
+        HCCL_ERROR("[HrtRaDumpJettyContext] jettyId=%u, len=%u, JettyContext:%s",
+                   jettyId, len, hexBuf);
+    }
     return HCCL_SUCCESS;
 }
 

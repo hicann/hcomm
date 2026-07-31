@@ -74,6 +74,8 @@ struct ParaDMA {
     Eid         rmtEid{};
     char        locAddr[ADD_LEN]{};
     char        rmtAddr[ADD_LEN]{};
+    uint64_t    jettyHandle{0};
+    uint32_t    jettyId{0};
 };
 
 struct ParaReduce {
@@ -87,6 +89,8 @@ struct ParaReduce {
     HcclDataType dataType{HcclDataType::HCCL_DATA_TYPE_RESERVED};
     Eid         locEid{};
  	Eid         rmtEid{};
+    uint64_t    jettyHandle{0};
+    uint32_t    jettyId{0};
 };
 
 struct ParaNotify {
@@ -148,20 +152,20 @@ private:
             case TaskParamType::TASK_UB: case TaskParamType::TASK_WRITE_WITH_NOTIFY:
             case TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY: case TaskParamType::TASK_DPU_INLINE_WRITE:
             case TaskParamType::TASK_DPU_WRITE_WITH_NOTIFY:
-                result += StringFormat(" src[%p] dst[%p] size[%zu] notifyID[%llu] dmaOp[%s] linkType[%s]",
+                result += StringFormat(" src[%p] dst[%p] size[%zu] notifyID[%llu] dmaOp[%s] linkType[%s] jettyHandle[%llu] jettyId[%u]",
                                        param.taskPara.DMA.src, param.taskPara.DMA.dst,
                                        param.taskPara.DMA.size, param.taskPara.DMA.notifyID,
                                        param.taskPara.DMA.dmaOp.Describe().c_str(),
-                                       param.taskPara.DMA.linkType.Describe().c_str());
+                                       param.taskPara.DMA.linkType.Describe().c_str(),
+                                       param.taskPara.DMA.jettyHandle, param.taskPara.DMA.jettyId);
                 break;
             case TaskParamType::TASK_REDUCE_INLINE: case TaskParamType::TASK_UB_REDUCE_INLINE:
             case TaskParamType::TASK_REDUCE_TBE:
-                result += StringFormat(" src[%p] dst[%p] size[%zu] notifyID[%llu] reduceOp[%d] dataType[%d] linkType[%s]",
-                                       param.taskPara.Reduce.src, param.taskPara.Reduce.dst,
-                                       param.taskPara.Reduce.size, param.taskPara.Reduce.notifyID,
-                                       static_cast<int>(param.taskPara.Reduce.reduceOp),
-                                       static_cast<int>(param.taskPara.Reduce.dataType),
-                                       param.taskPara.Reduce.linkType.Describe().c_str());
+                result += StringFormat(" src[%p] dst[%p] size[%zu] notifyID[%llu] reduceOp[%d] dataType[%d] linkType[%s] jettyHandle[%llu] "
+                                       "jettyId[%u]", param.taskPara.Reduce.src, param.taskPara.Reduce.dst, param.taskPara.Reduce.size,
+                                       param.taskPara.Reduce.notifyID, static_cast<int>(param.taskPara.Reduce.reduceOp),
+                                       static_cast<int>(param.taskPara.Reduce.dataType), param.taskPara.Reduce.linkType.Describe().c_str(),
+                                       param.taskPara.DMA.jettyHandle, param.taskPara.DMA.jettyId);
                 break;
             case TaskParamType::TASK_NOTIFY_RECORD: case TaskParamType::TASK_NOTIFY_WAIT:
             case TaskParamType::TASK_SEND_NOTIFY: case TaskParamType::TASK_DPU_NOTIFY_WAIT:

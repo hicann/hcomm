@@ -77,4 +77,14 @@ u32 RmaConnLite::GetQpVa() const
     return qpVa_;
 }
 
+uint64_t RmaConnLite::GetJettyHandle() const
+{
+    return jettyHandle_;
+}
+
+uint32_t RmaConnLite::GetJettyId() const
+{
+    return jettyId_;
+}
+
 } // namespace Hccl

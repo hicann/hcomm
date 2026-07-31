@@ -46,6 +46,8 @@ struct ErrorMessageReport {
     uint32_t rtCqErrorCode = 0;
     uint16_t ubCqeStatus = 0;
     uint8_t opType = 0;
+    uint64_t jettyHandle = 0;
+    uint32_t jettyId = 0;
 };
 
 } // namespace Hccl

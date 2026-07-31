@@ -13,6 +13,7 @@
 #include "coll_comm.h"
 #include "acl/acl_rt.h"
 #include "orion_adapter_hccp.h"
+#include "hcomm_adapter_hccp.h"
 #include <adapter_error_manager_pub.h>
 #include "op_type.h"
 #include "task_exception_handler.h"
@@ -719,6 +720,7 @@ void TaskExceptionHost::PrintUbDfxInfo(rtExceptionInfo_t *exceptionInfo, const H
         auto addr = Hccl::IpAddress(reverseAddr.GetReverseEid());
         u32 devPhyId = Hccl::HrtGetDevicePhyIdByIndex(exceptionInfo->deviceid);
         auto rdmaHandle = Hccl::RdmaHandleManager::GetInstance().GetByIp(devPhyId, addr);
+        HrtRaDumpJettyContext(reinterpret_cast<void*>(errorMessage.jettyHandle), errorMessage.jettyId);
         PrintUbRegisters(static_cast<s32>(exceptionInfo->deviceid), rdmaHandle);
     }
 }

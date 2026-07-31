@@ -39,6 +39,7 @@ struct UbConnLiteParam {
 
     Eid rmtEid;
     Eid locEid;
+    uint64_t jettyHandle{0};
 
     u32 maxReadSize;
     u32 maxWriteSize;

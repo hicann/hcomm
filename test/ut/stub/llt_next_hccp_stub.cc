@@ -301,4 +301,9 @@ void RaUbFreeTokenIdHandle(RdmaHandle handle, TokenIdHandle tokenIdHandle)
 {
 }
 
+}
+
+int RaCtxGetJettyContext(void *qpHandle, uint8_t context[], unsigned int *len)
+{
+    return 0;
 } // namespace Hccl

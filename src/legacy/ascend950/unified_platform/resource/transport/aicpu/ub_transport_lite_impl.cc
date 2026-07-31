@@ -400,6 +400,8 @@ void UbTransportLiteImpl::Post(u32 index, const StreamLite &stream)
     taskParam.taskPara.DMA.dmaOp       = DmaOp::HCCL_DMA_WRITE;
     taskParam.taskPara.DMA.locEid      = GetLocEid();
     taskParam.taskPara.DMA.rmtEid      = GetRmtEid();
+    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
+    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     HCCL_INFO("[UbTransportLiteImpl::%s] locEid[%s], rmtEid[%s]", __func__, GetLocEid().Describe().c_str(), GetRmtEid().Describe().c_str());
 
@@ -426,6 +428,8 @@ void UbTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite &stream, u
     taskParam.beginTime                = ProfGetCurCpuTimestamp();
     taskParam.taskPara.Notify.notifyID = notifyId;
     taskParam.taskPara.Notify.value    = 1;
+    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
+    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
 }
@@ -442,6 +446,8 @@ void UbTransportLiteImpl::ProfilingProcess(void *src, void *dst, u64 size, const
     taskParam.beginTime = ProfGetCurCpuTimestamp();
     FillTaskParamDmaPub(taskParam, dst, size, dmaOp);
     taskParam.taskPara.DMA.src = src;
+    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
+    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
 }
@@ -466,6 +472,8 @@ void UbTransportLiteImpl::ReduceProfilingProcess(void *src, void *dst, u64 size,
     taskParam.taskPara.Reduce.dataType = DataTypeToHcclDataType(reduceIn.dataType);
     taskParam.taskPara.Reduce.locEid   = GetLocEid();
     taskParam.taskPara.Reduce.rmtEid   = GetRmtEid();
+    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
+    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
 }
@@ -484,6 +492,8 @@ void UbTransportLiteImpl::WriteWithNotifyProfilingProcess(void *src, void *dst, 
     taskParam.taskPara.DMA.src = src;
     taskParam.taskPara.DMA.notifyID = notifyId;
     taskParam.taskPara.DMA.notifyValue = 1;
+    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
+    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
 }
@@ -508,6 +518,8 @@ void UbTransportLiteImpl::WriteReduceWithNotifyProfilingProcess(void *src, void 
     taskParam.taskPara.Reduce.dataType = DataTypeToHcclDataType(reduceIn.dataType);
     taskParam.taskPara.Reduce.locEid   = GetLocEid();
     taskParam.taskPara.Reduce.rmtEid   = GetRmtEid();
+    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
+    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
 }
@@ -525,6 +537,8 @@ void UbTransportLiteImpl::NotifyRecordProfilingProcess(void *dst, u64 size,
     FillTaskParamDmaPub(taskParam, dst, size, DmaOp::HCCL_DMA_WRITE);
     taskParam.taskPara.DMA.notifyID    = notifyId;
     taskParam.taskPara.DMA.notifyValue = 1;
+    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
+    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
 }
@@ -975,6 +989,8 @@ void UbTransportLiteImpl::WriteWithNotify(const RmaBufferLite &loc, const Buffer
     taskParam.taskPara.DMA.dmaOp    = DmaOp::HCCL_DMA_WRITE;
     taskParam.taskPara.DMA.locEid = GetLocEid();
     taskParam.taskPara.DMA.rmtEid = GetRmtEid();
+    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
+    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
 }
@@ -1012,6 +1028,8 @@ void UbTransportLiteImpl::WriteReduceWithNotify(const RmaBufferLite &loc, const 
     taskParam.taskPara.Reduce.dataType = DataTypeToHcclDataType(reduceIn.dataType);
     taskParam.taskPara.Reduce.locEid   = GetLocEid();
     taskParam.taskPara.Reduce.rmtEid   = GetRmtEid();
+    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
+    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
 }
@@ -1047,6 +1065,16 @@ Eid UbTransportLiteImpl::GetLocEid() const
 Eid UbTransportLiteImpl::GetRmtEid() const
 {
     return connVec[0]->GetRmtEid();
+}
+
+uint64_t UbTransportLiteImpl::GetJettyHandle() const
+{
+    return connVec[0]->GetJettyHandle();
+}
+
+uint32_t UbTransportLiteImpl::GetJettyId() const
+{
+    return connVec[0]->GetJettyId();
 }
 
 HcclResult UbTransportLiteImpl::Clean()

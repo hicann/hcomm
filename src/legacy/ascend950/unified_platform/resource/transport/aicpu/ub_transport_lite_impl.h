@@ -41,6 +41,8 @@ public:
 
     Eid GetLocEid() const;
     Eid GetRmtEid() const;
+    uint64_t GetJettyHandle() const;
+    uint32_t GetJettyId() const;
 
     void Post(u32 index, const StreamLite &stream) override;
 

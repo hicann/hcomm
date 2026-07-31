@@ -1327,7 +1327,13 @@ HcclResult CcuTaskException::PrintCcuUbRegisters(const std::vector<CcuErrorInfo>
     CHK_RET(RaBatchQueryJettyStatus(jettyHandles, jettyStatusVec, jettyNum));
 
     for (u32 i = 0; i < jettyNum; ++i) {
-        if (jettyStatusVec[i] == JettyStatus::ERROR) {
+        if (jettyStatusVec[i] == JettyStatus::ERROR || jettyStatusVec[i] == JettyStatus::SUSPENDED) {
+            HrtRaDumpJettyContext(ccuJettys[i]->GetJettyHandle(), ccuJettys[i]->GetJettyId());
+        }
+    }
+
+    for (u32 i = 0; i < jettyNum; ++i) {
+        if (jettyStatusVec[i] == JettyStatus::ERROR || jettyStatusVec[i] == JettyStatus::SUSPENDED) {
             auto rdmaHandle = ccuJettys[i]->GetRdmaHandle();
             HCCL_ERROR("[%s]jettyId[%u]", __func__, ccuJettys[i]->GetJettyId());
             PrintUbRegisters(devLogicId, rdmaHandle);

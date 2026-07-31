@@ -636,6 +636,7 @@ UbConnLite::UbConnLite(const UbConnLiteParam &liteParam)
 
     (void)memcpy_sp(rmtEid_.raw, URMA_EID_LEN, liteParam.rmtEid.raw, URMA_EID_LEN);
     (void)memcpy_sp(locEid_.raw, URMA_EID_LEN, liteParam.locEid.raw, URMA_EID_LEN);
+    jettyHandle_ = liteParam.jettyHandle;
     HCCL_INFO("%s", Describe().c_str());
 }
 
@@ -650,10 +651,10 @@ std::string UbConnLiteParam::Describe() const
 {
      return StringFormat("UbConnLiteParam[dieId=%u, funcId=%u, jettyId=%u, dbAddr=0x%llx, sqVa=0x%llx, sqDepth=%u, "
                         "jfcPollMode=%u, tpn=%u, dwqeCacheLocked=%d, sqCiAddr=0x%llx, rmtEid=%s, localEid=%s, "
-                        "maxReadSize=%u, maxWriteSize=%u]",
-                        dieId, funcId, jettyId, dbAddr, sqVa, sqDepth, jfcPollMode, tpn, dwqeCacheLocked, sqCiAddr,
-                        Bytes2hex(rmtEid.raw, sizeof(rmtEid.raw)).c_str(), Bytes2hex(locEid.raw, sizeof(locEid.raw)).c_str(),
-                        maxReadSize, maxWriteSize);
+                         "maxReadSize=%u, maxWriteSize=%u, jettyHandle=%llu]",
+                         dieId, funcId, jettyId, dbAddr, sqVa, sqDepth, jfcPollMode, tpn, dwqeCacheLocked, sqCiAddr,
+                         Bytes2hex(rmtEid.raw, sizeof(rmtEid.raw)).c_str(), Bytes2hex(locEid.raw, sizeof(locEid.raw)).c_str(),
+                         maxReadSize, maxWriteSize, jettyHandle);
 }
 
 UbConnLiteParam::UbConnLiteParam(std::vector<char> &uniqueId)
@@ -674,6 +675,7 @@ UbConnLiteParam::UbConnLiteParam(std::vector<char> &uniqueId)
     binaryStream >> locEid.raw;
     binaryStream >> maxReadSize;
     binaryStream >> maxWriteSize;
+    binaryStream >> jettyHandle;
 
     static auto lastPrintTime = std::chrono::steady_clock::now();
     const auto now = std::chrono::steady_clock::now();
