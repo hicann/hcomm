@@ -19,7 +19,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include/store
     ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
     ${CMAKE_SOURCE_DIR}/third_party
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
 )
 
 find_package(SQLite3 REQUIRED)

@@ -25,21 +25,27 @@ HcclSim::HcclVmResult SetCurRankId(uint32_t rankId);
 
 HcclSim::HcclVmResult GetCurRankId(uint32_t *rankId);
 
+void SetCurDeviceKey(uint32_t deviceKey);
+
+uint32_t GetCurDeviceKey();
+
 HcclSim::HcclVmResult GetSqBufferAddr(uint8_t **sqBuff);
 
 HcclSim::HcclVmResult GetPiValByJettyId(uint32_t jettyId, uint32_t *piValue);
 
 HcclSim::HcclVmResult UpdatePiValByJettyId(uint32_t jettyId, uint32_t piValue);
 
-void *GetRealPtrByDevPtrImpl(void *devPtr, const char *file, int line);
+uint64_t TransLocalAddrToVirtual(uint64_t devAddr);
 
-#define GetRealPtrByDevPtr(devPtr) GetRealPtrByDevPtrImpl(devPtr, __FILE__, __LINE__)
+uint64_t TransRemoteAddrToVirtualByRank(uint64_t devAddr, uint32_t rankId);
 
 uint32_t GetRankIdByDevAddr(uint64_t devAddr);
 
-HcclAicpuData *GetHcclAicpuDataShmPtr();
-
 uint32_t GetRankIdByIpAddr(std::string ipAddr);
+
+uint64_t GetDevMapperAddrByDevAddrImpl(uint64_t devAddr, const char *file, int line);
+
+#define GetDevMapperAddrByDevAddr(devAddr) GetDevMapperAddrByDevAddrImpl(devAddr, __FILE__, __LINE__)
 
 void UpdataKfcStatus(uint64_t d2hAddr);
 
@@ -48,6 +54,14 @@ void RegisterSignalHandler();
 uint32_t GetSqTail(uint32_t sqId);
 
 void UpdateSqTail(uint32_t sqId, uint32_t newTail);
+
+bool GetWqebufferByJettyId(uint64_t jettyId, uint64_t &wqeBuffer);
+
+void InitPipeFds(int h2dReadFd, int d2hWriteFd);
+
+int DeviceSendMsg(uint8_t cmd, const void *data, uint32_t dataLen);
+
+int DeviceRecvMsg(uint8_t &outCmd, void *outData, uint32_t maxLen, uint32_t &outDataLen);
 
 #ifdef __cplusplus
 }

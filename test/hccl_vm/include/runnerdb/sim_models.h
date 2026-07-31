@@ -271,14 +271,18 @@ enum VirMemType {
 
 typedef struct {
     uint64_t id;
-    uint64_t start_ptr;
+    uint64_t start_ptr;         // 按照卡分配的虚拟编址的地址
+    uint64_t dev_mapped_ptr;    // device进程打开共享内存后的地址
+    uint8_t is_dev_access;      // 0: dev不可直接访问, 1: dev可以直接访问
     uint64_t size;
     uint64_t ctx_id;
+    uint64_t device_id;         // Device表主键
+    uint64_t rank_id;           // 通信域RankId
     uint64_t phy_mem_id;
-    uint64_t owner_pid;
-    uint8_t src_type;//0: host 1: device
+    uint64_t owner_pid;         // host查找根据pid
+    uint8_t src_type;           // 0: host, 1: device
     uint8_t policy;
-    uint8_t is_freed;  // 0: using, 1: freed
+    uint8_t is_freed;           // 0: using, 1: freed
 } VirtualMemBlock;
 
 typedef struct {
@@ -491,6 +495,7 @@ typedef struct {
     uint64_t send_cq_handle;
     uint64_t recv_cq_handle;
     uint32_t sqDepth;
+    uint64_t sqBuffer;  // jetty下发wqe对应的buffer地址
     uint32_t rqDepth;
     uint8_t type;
     uint32_t jetty_id;

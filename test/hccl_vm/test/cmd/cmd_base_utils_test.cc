@@ -1304,15 +1304,12 @@ TEST_F(InstallUserPluginEdgeTest, SingleCharName) {
 class InitHvmEnvTest : public testing::Test {
 protected:
     void SetUp() override {
-        sim::MemoryManager::GetInstance().FreeMemByName("HcclAicpuData");
-        shm_unlink("HcclAicpuData");
         // 逐用例清掉 HcclCommPool 残留。
         sim::MemoryManager::GetInstance().FreeMemByName(sim::CommPoolPolicy::kPoolName);
         shm_unlink(sim::CommPoolPolicy::kPoolName);
         unsetenv("HCCL_OP_EXPANSION_MODE");
     }
     void TearDown() override {
-        sim::MemoryManager::GetInstance().FreeMemByName("HcclAicpuData");
         sim::MemoryManager::GetInstance().FreeMemByName(sim::CommPoolPolicy::kPoolName);
         unsetenv("HCCL_OP_EXPANSION_MODE");
     }
@@ -1322,18 +1319,13 @@ TEST_F(InitHvmEnvTest, InitializesSharedMemoryWithoutAivValidation) {
     HcclVmResult ret = InitHvmEnv("/nonexistent/path/for/ut", 2, false);
     EXPECT_EQ(ret, HCCL_SIM_HOST_SUCCESS_CMD);
 
-    void *shm = sim::MemoryManager::GetInstance().AcquireMemByName("HcclAicpuData");
-    ASSERT_NE(shm, nullptr);
-    sim::MemoryManager::GetInstance().ReleaseMemByName("HcclAicpuData");
-
     // clean 模式不建复用区 HcclCommPool。
     EXPECT_EQ(sim::MemoryManager::GetInstance().AcquireMemByName(sim::CommPoolPolicy::kPoolName), nullptr);
 }
 
 TEST_F(InitHvmEnvTest, FailsWhenCommPoolNameAlreadyExists) {
-    // 仅校验模式下池名被预先占用时，InitHvmEnv 建池失败、返回错误，且不创建 HcclAicpuData。
+    // 仅校验模式下池名被预先占用时，InitHvmEnv 建池失败、返回错误。
     ASSERT_NE(sim::MemoryManager::GetInstance().AllocMemByName(
         sim::CommPoolPolicy::kPoolName, 4096), nullptr);
     EXPECT_EQ(InitHvmEnv("/nonexistent/path/for/ut", 2, true), HCCL_SIM_HOST_ERROR_CMD);
-    EXPECT_EQ(sim::MemoryManager::GetInstance().AcquireMemByName("HcclAicpuData"), nullptr);
 }

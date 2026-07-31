@@ -99,6 +99,11 @@ bool TaskGraphGeneratorV3::IsMainStartNodeId(NodeId nodeId) const
     return mainStart_ != nullptr && nodeId == mainStartNodeId_;
 }
 
+StorageManager &TaskGraphGeneratorV3::GetStorageManager() const
+{
+    return storage_ == nullptr ? StorageManager::GetInstance() : *storage_;
+}
+
 TaskNode *TaskGraphGeneratorV3::GetNode(NodeId nodeId)
 {
     if (IsMainStartNodeId(nodeId)) {
@@ -445,7 +450,7 @@ HcclResult TaskGraphGeneratorV3::ExpandAivSubGraphs()
 {
     const size_t originalNodeCount = nodes_.size();
     AivExpandStats stats;
-    StorageManager &storage = StorageManager::GetInstance();
+    StorageManager &storage = GetStorageManager();
     std::vector<TaskAivGraph *> aivGraphs;
 
     for (size_t nodeIndex = 0; nodeIndex < originalNodeCount; ++nodeIndex) {
@@ -514,7 +519,7 @@ HcclResult TaskGraphGeneratorV3::ExpandCcuSubGraphs()
 {
     const size_t originalNodeCount = nodes_.size();
     CcuExpandStats stats;
-    StorageManager &storage = StorageManager::GetInstance();
+    StorageManager &storage = GetStorageManager();
     std::vector<TaskCcuGraph *> ccuGraphs;
 
     for (size_t nodeIndex = 0; nodeIndex < originalNodeCount; ++nodeIndex) {

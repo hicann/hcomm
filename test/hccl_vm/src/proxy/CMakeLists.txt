@@ -37,6 +37,7 @@ target_include_directories(hccl_proxy_level2 PRIVATE
         ${HCOMM_VM_ROOT_PATH}/src/host/hccl_vm
         ${HCOMM_VM_ROOT_PATH}/src/host/hccl_check_plugin
         ${HCOMM_VM_ROOT_PATH}/src/host/hccl_check_plugin/checker/utils
+        ${HCOMM_VM_ROOT_PATH}/src/common
 )
 
 target_include_directories(hccl_proxy_level2 PRIVATE
@@ -125,6 +126,7 @@ target_compile_options(hccl_proxy_level2 PRIVATE
 target_link_libraries(hccl_proxy_level2 PRIVATE
         -Wl,--whole-archive
         log
+        common
         runnerdb
         modeldb
         store
@@ -134,11 +136,11 @@ target_link_libraries(hccl_proxy_level2 PRIVATE
         rt
         SQLite::SQLite3
         JSON::JSON
-        ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.a
+        ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.a
 )
 
 install(TARGETS hccl_proxy_level2
-    DESTINATION "lib/x86_64"
+    DESTINATION "lib/${CMAKE_SYSTEM_PROCESSOR}"
     # 文件的权限 (755)
     PERMISSIONS
         OWNER_READ OWNER_WRITE OWNER_EXECUTE

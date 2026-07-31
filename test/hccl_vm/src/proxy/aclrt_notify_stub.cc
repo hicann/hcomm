@@ -25,7 +25,7 @@
 #include "runtime/base.h"
 #include "runtime/event.h"
 #include "db_sim_runner_ops.h"
-
+#include "db_sim_runner_common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,8 +61,13 @@ void PrintTaskMetaData(const HcclTaskMetaData &taskMeta)
 aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
 {
     (void) flag;
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     if (runner.current_ctx_id == 0) {

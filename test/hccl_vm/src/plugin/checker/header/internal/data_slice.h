@@ -15,19 +15,22 @@
 
 class DataSlice {
 public:
-    DataSlice() : type_(BufferType::INPUT), offset_(0), size_(0) {}
-    DataSlice(BufferType type, uint64_t offset, uint64_t size) : type_(type), offset_(offset), size_(size) {}
+    DataSlice() : type_(BufferType::INPUT), offset_(0), size_(0), rawAddr_(0) {}
+    DataSlice(BufferType type, uint64_t offset, uint64_t size) : type_(type), offset_(offset), size_(size), rawAddr_(0) {}
     std::string Describe() const { return StringFormat("DataSlice[type=%d, offset=0x%llX, size=0x%llX]", type_, offset_, size_); }
     inline BufferType GetType() const { return type_; }
     inline uint64_t GetOffset() const { return offset_; }
     inline uint64_t GetSize() const { return size_; }
+    inline uint64_t GetRawAddr() const { return rawAddr_; }
     void SetBufferType(const BufferType type) { type_ = type; }
     void SetOffset(uint64_t offset) { offset_ = offset; }
     void SetSize(uint64_t size) { size_ = size; }
+    void SetRawAddr(uint64_t rawAddr) { rawAddr_ = rawAddr; }
 private:
     BufferType type_;
     uint64_t   offset_;
     uint64_t   size_;
+    uint64_t   rawAddr_;
 };
 
 #endif

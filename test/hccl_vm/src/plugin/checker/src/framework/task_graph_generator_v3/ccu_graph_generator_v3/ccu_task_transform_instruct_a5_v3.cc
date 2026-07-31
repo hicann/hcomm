@@ -437,8 +437,8 @@ HcclResult TransformTransLocMemToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuG
     RankId rId;
     // todo: 后续插件通过读取vm的输出文件，重建memlayout的地址类型信息
     // 南向接口：input/output buffer同北向一样劫持算子入口函数；CCL buffer需要劫持北向接口HcclGetHcclBuffer
-    CHK_RET(StorageManager::GetInstance().GetSlice(locAddr, len, srcSlice));
-    CHK_RET(StorageManager::GetInstance().GetSlice(rmtAddr, len, dstSlice, &rId));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(locAddr, len, srcSlice));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(rmtAddr, len, dstSlice, &rId));
 
     RankId rmtRankId = g_allRankChannelInfo[rankId][dieId][channelId].dstRank;
     HCCL_VM_DEBUG("Preparing local-memory to remote-memory transfer, localRankId={}, remoteRankId={}",
@@ -546,8 +546,8 @@ HcclResult TransformTransLocMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
     DataSlice srcSlice;
     DataSlice dstSlice;
     // todo: 后续插件通过读取vm的输出文件，重建memlayout的地址类型信息
-    CHK_RET(StorageManager::GetInstance().GetSlice(srcAddr, len, srcSlice));
-    CHK_RET(StorageManager::GetInstance().GetSlice(dstAddr, len, dstSlice));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(srcAddr, len, srcSlice));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(dstAddr, len, dstSlice));
 
     HCCL_VM_DEBUG("Built local-memory to local-memory copy, rankId={}, srcSlice={}, dstSlice={}, "
         "transferSize={}", rankId, srcSlice.Describe(), dstSlice.Describe(), len);
@@ -764,7 +764,7 @@ HcclResult TransformTransLocMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
     DataSlice srcSlice;
     DataSlice dstSlice;
     // todo: 后续插件通过读取vm的输出文件，重建memlayout的地址类型信息
-    CHK_RET(StorageManager::GetInstance().GetSlice(locMemAddr, len, srcSlice));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(locMemAddr, len, srcSlice));
     CHK_RET(GenSliceFromMs(locMSId, len, dstSlice));
 
     AddLocalCopy(rankId, queId, curCcuTask, srcSlice, dstSlice);
@@ -828,7 +828,7 @@ HcclResult TransformTransLocMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
     CHK_GET_GSA_V3(curCcuTask, queId, locGSAId, locMemAddr);
     locMemAddr = UpdateGSAValue(locMemAddr, loopGroupParam);
     DataSlice dstSlice;
-    CHK_RET(StorageManager::GetInstance().GetSlice(locMemAddr, len, dstSlice));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(locMemAddr, len, dstSlice));
 
     AddLocalCopy(rankId, queId, curCcuTask, srcSlice, dstSlice);
 
@@ -950,7 +950,7 @@ HcclResult TransformTransLocMSToRmtMemInstr(const CcuRep::CcuInstr *instr, CcuGr
     rmtMemAddr = UpdateGSAValue(rmtMemAddr, loopGroupParam);
     DataSlice dstSlice;
     // todo: 后续插件通过读取vm的输出文件，重建memlayout的地址类型信息
-    CHK_RET(StorageManager::GetInstance().GetSlice(rmtMemAddr, len, dstSlice));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(rmtMemAddr, len, dstSlice));
 
     RankId rmtRankId = g_allRankChannelInfo[rankId][dieId][channelId].dstRank;
     AddWrite(rankId, rmtRankId, queId, curCcuTask, srcSlice, dstSlice);
@@ -1087,7 +1087,7 @@ HcclResult TransformTransRmtMemToLocMSInstr(const CcuRep::CcuInstr *instr, CcuGr
     DataSlice srcSlice;
     DataSlice dstSlice;
     // todo: 后续插件通过读取vm的输出文件，重建memlayout的地址类型信息
-    CHK_RET(StorageManager::GetInstance().GetSlice(rmtAddr, len, srcSlice));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(rmtAddr, len, srcSlice));
     CHK_RET(GenSliceFromMs(locMSId, len, dstSlice));
 
     // 获取远端rankId与dieId
@@ -1161,7 +1161,7 @@ HcclResult TransformTransRmtMSToLocMemInstr(const CcuRep::CcuInstr *instr, CcuGr
     CHK_GET_GSA_V3(curCcuTask, queId, locGSAId, localAddr);
     localAddr = UpdateGSAValue(localAddr, loopGroupParam);
     DataSlice dstSlice;
-    CHK_RET(StorageManager::GetInstance().GetSlice(localAddr, len, dstSlice));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(localAddr, len, dstSlice));
 
     RankId rmtRankId = g_allRankChannelInfo[rankId][dieId][channelId].dstRank;
     AddRead(rankId, rmtRankId, queId, curCcuTask, srcSlice, dstSlice);
@@ -1298,9 +1298,9 @@ HcclResult TransformTransRmtMemToLocMemInstr(const CcuRep::CcuInstr *instr, CcuG
 
     DataSlice srcSlice;
     RankId rId;
-    CHK_RET(StorageManager::GetInstance().GetSlice(rmtAddr, len, srcSlice, &rId));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(rmtAddr, len, srcSlice, &rId));
     DataSlice dstSlice;
-    CHK_RET(StorageManager::GetInstance().GetSlice(localAddr, len, dstSlice));
+    CHK_RET(curCcuTask->GetStorageManager().GetSlice(localAddr, len, dstSlice));
 
     RankId rmtRankId = g_allRankChannelInfo[rankId][dieId][channelId].dstRank;
     HCCL_VM_DEBUG("Preparing remote-memory to local-memory transfer, localRankId={}, remoteRankId={}",
@@ -1538,7 +1538,7 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
                 CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 locMemAddr = UpdateGSAValue(locMemAddr, &iterParam);
-                CHK_RET(StorageManager::GetInstance().GetSlice(locMemAddr, len, srcSlice));
+                CHK_RET(curCcuTask->GetStorageManager().GetSlice(locMemAddr, len, srcSlice));
                 const uint16_t locMSId = UpdateMSId(op.locMSId, &iterParam);
                 CHK_RET(GenSliceFromMs(locMSId, len, dstSlice));
                 transInstr->srcs.push_back(MakeCcuMemSlice(rankId, srcSlice));
@@ -1554,7 +1554,7 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
                 CHK_GET_XN_V3(curCcuTask, queId, op.lengthXnId, len);
                 CHK_RET(ValidateLoopLen(len));
                 rmtAddr = UpdateGSAValue(rmtAddr, &iterParam);
-                CHK_RET(StorageManager::GetInstance().GetSlice(rmtAddr, len, srcSlice));
+                CHK_RET(curCcuTask->GetStorageManager().GetSlice(rmtAddr, len, srcSlice));
                 const uint16_t locMSId = UpdateMSId(op.locMSId, &iterParam);
                 CHK_RET(GenSliceFromMs(locMSId, len, dstSlice));
                 transInstr->srcs.push_back(MakeCcuMemSlice(rmtRankId, srcSlice));
@@ -1571,7 +1571,7 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
                 uint64_t locMemAddr = 0;
                 CHK_GET_GSA_V3(curCcuTask, queId, op.locGSAId, locMemAddr);
                 locMemAddr = UpdateGSAValue(locMemAddr, &iterParam);
-                CHK_RET(StorageManager::GetInstance().GetSlice(locMemAddr, len, dstSlice));
+                CHK_RET(curCcuTask->GetStorageManager().GetSlice(locMemAddr, len, dstSlice));
                 transInstr->srcs.push_back(MakeCcuMemSlice(rankId, srcSlice));
                 transInstr->dsts.push_back(MakeCcuMemSlice(rankId, dstSlice));
                 transInstr->msIds.insert(locMSId);
@@ -1587,7 +1587,7 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
                 uint64_t rmtMemAddr = 0;
                 CHK_GET_GSA_V3(curCcuTask, queId, op.rmtGSAId, rmtMemAddr);
                 rmtMemAddr = UpdateGSAValue(rmtMemAddr, &iterParam);
-                CHK_RET(StorageManager::GetInstance().GetSlice(rmtMemAddr, len, dstSlice));
+                CHK_RET(curCcuTask->GetStorageManager().GetSlice(rmtMemAddr, len, dstSlice));
                 transInstr->srcs.push_back(MakeCcuMemSlice(rankId, srcSlice));
                 transInstr->dsts.push_back(MakeCcuMemSlice(rmtRankId, dstSlice));
                 transInstr->msIds.insert(locMSId);
@@ -1603,7 +1603,7 @@ static HcclResult CollectTransLoopInstrA5(const CcuRep::CcuInstr *instr, CcuGrap
                 uint64_t localAddr = 0;
                 CHK_GET_GSA_V3(curCcuTask, queId, op.locGSAId, localAddr);
                 localAddr = UpdateGSAValue(localAddr, &iterParam);
-                CHK_RET(StorageManager::GetInstance().GetSlice(localAddr, len, dstSlice));
+                CHK_RET(curCcuTask->GetStorageManager().GetSlice(localAddr, len, dstSlice));
                 transInstr->srcs.push_back(MakeCcuMemSlice(rmtRankId, srcSlice));
                 transInstr->dsts.push_back(MakeCcuMemSlice(rankId, dstSlice));
                 transInstr->msIds.insert(rmtMSId);

@@ -324,8 +324,8 @@ TEST_F(CheckUtilsTest, CalcInputOutputSize_BatchSendRecv) {
     u64 outputSize = 0;
     CalcInputOutputSize(HcclCMDType::HCCL_CMD_BATCH_SEND_RECV, 4, 100, HcclDataType::HCCL_DATA_TYPE_INT32,
         inputSize, outputSize, 0, 0, 0, {}, {});
-    EXPECT_EQ(inputSize, 1600);
-    EXPECT_EQ(outputSize, 1600);
+    EXPECT_EQ(inputSize, 400);
+    EXPECT_EQ(outputSize, 400);
 }
 
 TEST_F(CheckUtilsTest, CalcInputOutputSize_UnsupportedOp) {

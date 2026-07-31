@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstring>
 #include <gtest/gtest.h>
+#include <unistd.h>
 #include <vector>
 
 #include "hccl_device_pub.h"
@@ -344,23 +345,16 @@ TEST_F(HcclDevicePubTest, GetRankIdByIpAddr_RankNotFound) {
     EXPECT_EQ(rankId, 0);
 }
 
-// ==================== GetHcclAicpuDataShmPtr Tests ====================
+// ==================== GetDevMapperAddrByDevAddr Tests ====================
 
-TEST_F(HcclDevicePubTest, GetHcclAicpuDataShmPtr_Fail) {
-    HcclAicpuData* ptr = GetHcclAicpuDataShmPtr();
-    EXPECT_EQ(ptr, nullptr);
+TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_NotFound) {
+    uint64_t devAddr = 0xDEADBEEF;
+    uint64_t realAddr = GetDevMapperAddrByDevAddr(devAddr);
+
+    EXPECT_EQ(realAddr, 0ULL);
 }
 
-// ==================== GetRealPtrByDevPtr Tests ====================
-
-TEST_F(HcclDevicePubTest, GetRealPtrByDevPtr_NotFound) {
-    void* devPtr = reinterpret_cast<void*>(0xDEADBEEF);
-    void* realPtr = GetRealPtrByDevPtr(devPtr);
-
-    EXPECT_EQ(realPtr, nullptr);
-}
-
-TEST_F(HcclDevicePubTest, GetRealPtrByDevPtr_Found) {
+TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_FoundButShmNotExist) {
     auto devRet = RunnerDB::GetOneByPred<sim::Device>([](const sim::Device& d) {
         return d.physical_id == 0;
     });
@@ -377,21 +371,24 @@ TEST_F(HcclDevicePubTest, GetRealPtrByDevPtr_Found) {
 
     sim::VirtualMemBlock virMem{};
     virMem.start_ptr = 0x40000000;
+    virMem.dev_mapped_ptr = 0x40000000;
     virMem.size = 4096;
     virMem.ctx_id = 1;
     virMem.phy_mem_id = phyMemId;
-    virMem.owner_pid = 0;
+    virMem.owner_pid = (uint64_t)getppid();
     virMem.src_type = (uint8_t)sim::VIR_MEM_TYPE_DEV;
+    virMem.is_dev_access = 0;
     virMem.policy = 0;
     RunnerDB::Add<sim::VirtualMemBlock>(virMem);
 
-    void* devPtr = reinterpret_cast<void*>(virMem.start_ptr + 0x100);
-    void* realPtr = GetRealPtrByDevPtr(devPtr);
+    uint64_t devAddr = virMem.dev_mapped_ptr + 0x100;
+    uint64_t realAddr = GetDevMapperAddrByDevAddr(devAddr);
 
-    EXPECT_EQ(realPtr, nullptr);
+    // PhyMem name "test_real_ptr_mem" has no actual shm, AcquireMemByName returns nullptr
+    EXPECT_EQ(realAddr, 0ULL);
 }
 
-TEST_F(HcclDevicePubTest, GetRealPtrByDevPtr_PhyMemNotFound) {
+TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_PhyMemNotFound) {
     auto devRet = RunnerDB::GetOneByPred<sim::Device>([](const sim::Device& d) {
         return d.physical_id == 0;
     });
@@ -408,19 +405,21 @@ TEST_F(HcclDevicePubTest, GetRealPtrByDevPtr_PhyMemNotFound) {
 
     sim::VirtualMemBlock virMem{};
     virMem.start_ptr = 0x50000000;
+    virMem.dev_mapped_ptr = 0x50000000;
     virMem.size = 4096;
     virMem.ctx_id = 1;
     virMem.phy_mem_id = phyMemId;
-    virMem.owner_pid = 0;
+    virMem.owner_pid = (uint64_t)getppid();
     virMem.src_type = (uint8_t)sim::VIR_MEM_TYPE_DEV;
+    virMem.is_dev_access = 0;
     virMem.policy = 0;
     RunnerDB::Add<sim::VirtualMemBlock>(virMem);
 
     // Delete the phyMem so GetById returns empty
     RunnerDB::DeleteAll<sim::PhyMemBlock>();
 
-    void* devPtr = reinterpret_cast<void*>(virMem.start_ptr + 0x100);
-    void* realPtr = GetRealPtrByDevPtr(devPtr);
+    uint64_t devAddr = virMem.dev_mapped_ptr + 0x100;
+    uint64_t realAddr = GetDevMapperAddrByDevAddr(devAddr);
 
-    EXPECT_EQ(realPtr, nullptr);
+    EXPECT_EQ(realAddr, 0ULL);
 }

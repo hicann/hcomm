@@ -677,7 +677,7 @@ Runner插件支持通过 `hccl-vm plugin install/uninstall` 命令进行安装�
 Checker插件，即算法分析器插件：功能是将hccl生成的所有task形成一个DAG图，并且通过分析DAG图，判断是否存在内存冲突；通过模拟执行DAG图，判断是否存在语义错误等问题。
 算法分析器插件，是由用户自行通过命令启动执行。
 
-Checker插件正处于新旧交替阶段，Checker V3为原Checker的重构版，主要提高了校验性能，在默认情况下将会运行新Checker（Checker V3），可以通过修改Checker的`manifest.json`文件中的配置参数进行调整。
+Checker插件正处于新旧交替阶段，Checker V3为原Checker的重构版，主要提高了校验性能，在默认情况下将会运行新Checker（Checker V3）。Checker V3大图校验默认开启：每个sync window内的多个算子会合并成一张大图，执行跨算子同步资源冲突校验。大图校验与老Checker、新Checker的开关相互独立，可以通过修改Checker的`manifest.json`文件中的配置参数进行调整。
 
 ```bash
 
@@ -693,6 +693,7 @@ Checker插件正处于新旧交替阶段，Checker V3为原Checker的重构版�
   "setting": {              // Checker插件配置项
       "enable_new_checker": true,           // 是否启用新Checker（Checker V3，默认开启）
       "enable_old_checker": false,          // 是否启用老Checker（默认关闭）
+      "enable_big_graph_checker": true,     // 是否启用Checker V3大图校验（默认开启，与old/new checker独立）
       "enable_insight_dump": false,         // 是否启用可视化数据输出（默认关闭，仅支持老Checker）
       "enable_memory_snapshot_dump": false  // 是否启用可视化内存快照数据输出（默认关闭，仅支持老Checker，需要先开启可视化数据输出"enable_insight_dump"）
   }
@@ -766,6 +767,8 @@ data_size(Bytes): | aveg_time(us): | alg_bandwidth(GB/s): | check_result:
 #### 4.9.2 Checker插件结果
 
 在hccl-vm终端内执行hccl-vm plugin run @checker后，Checker校验流程及结果会打印在终端内，用于需关注是否存在[error]级别日志和最终校验结果：
+
+大图校验按每个sync window执行一次。大图校验失败不会阻断其他校验流程，需通过日志中的`BigGraphCheckerV3 failed`或`Big graph sync-conflict check failed`等`error`级别日志识别。
 
 ```bash
 [info][PID:144373][TID:144880][main.cc][RunChecker] [RunChecker] op[0] Checker Success.

@@ -173,7 +173,7 @@ std::unique_ptr<TaskGraphGeneratorV3::TaskGraphGeneratorV3> GenGraphV3FromTaskMe
     // 1. 先把 task meta 翻译成中间节点；
     // 2. 做一次从流合法性检查；
     // 3. 再生成 V3 图并在日志里记录成图/CCU 展开耗时。
-    HcclResult ret = taskMetaTranslatorV3.Translate(storage);
+    HcclResult ret = taskMetaTranslatorV3.Translate(storage, TaskGraphGeneratorV3::INVALID_OPERATOR_ID);
     if (ret != HCCL_SUCCESS) {
         HCCL_VM_WARN("Failed to translate one task into the V3 internal format, V3 graph generation is "
             "stopped, ret={}", static_cast<uint32_t>(ret));

@@ -37,7 +37,11 @@ void AllRankParamRecorder::Reset()
 
 void AllRankParamRecorder::InitParam()
 {
-    return;
+    curXn.clear();
+    curGSA.clear();
+    curHBM.clear();
+    seenPost.clear();
+    postNodeMeta.clear();
 }
 
 void AllRankParamRecorder::RegisterPostNode(TaskNode *node, const CcuPostNodeMetaV3 &meta)

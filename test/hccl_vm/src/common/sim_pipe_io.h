@@ -8,15 +8,34 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef HCCL_KERNEL_EXECUTOR_H
-#define HCCL_KERNEL_EXECUTOR_H
+#ifndef SIM_PIPE_IO_H
+#define SIM_PIPE_IO_H
+
+#include <cstddef>
 #include <cstdint>
-#include <iostream>
-#include <string>
+#include "sim_aicpu_pipe_msg.h"
 
-void ExecuteAicpuKernel(uint32_t rankId, const std::string &kernelName, uint64_t args);
+namespace sim {
 
-void* LoadLibrary(const std::string &libDir, const std::string &libName);
+struct PipePair {
+    int readFd;
+    int writeFd;
+};
 
-bool InitKernelFuncHandle();
-#endif
+int PipeBlockRead(int fd, void *buf, size_t len);
+
+int PipeBlockWrite(int fd, const void *buf, size_t len);
+
+int PipeSendMsg(int fd, uint8_t cmd, const void *data, uint32_t len);
+
+int PipeRecvMsg(int fd, uint8_t &outCmd, void *outData, uint32_t maxLen, uint32_t &outLen);
+
+int PipeCreate(PipePair &pair);
+
+void PipeClose(int &fd);
+
+int PipeChildSetup(PipePair &h2d, PipePair &d2h, int targetReadFd, int targetWriteFd);
+
+} // namespace sim
+
+#endif // SIM_PIPE_IO_H

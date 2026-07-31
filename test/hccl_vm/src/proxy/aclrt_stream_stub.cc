@@ -28,6 +28,7 @@
 #include "db_sim_op_db_ops.h"
 #include "sim_process_syncer.h"
 #include "db_sim_runner_ops.h"
+#include "db_sim_runner_common.h"
 
 static const uint32_t WAIT_FALG_TIMEOUT = 600;
 
@@ -40,8 +41,13 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 {
     (void) flag;
     (void) priority;
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     if (runner.current_ctx_id == 0) {
@@ -207,8 +213,13 @@ aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamStatus *status)
 aclError aclrtGetStreamAvailableNum(uint32_t *streamCount)
 {
     (void) streamCount;
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     if (runner.current_ctx_id == 0) {

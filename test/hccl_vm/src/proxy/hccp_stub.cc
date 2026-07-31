@@ -707,8 +707,13 @@ int RaGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned
 
 int RaRdevInitV2(struct RdevInitInfo initInfo, struct rdev rdevInfo, void **rdmaHandle)
 {
+    auto serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return -1;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return -1;
     }
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);
@@ -975,23 +980,12 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
         return -1;
     }
 
-    uint64_t wqeAddr = 0;
+    uint64_t sqBuffer = 0;
     uint32_t jettyId = 0;
     bool aicpuMode = (attr->ub.mode == JettyMode::JETTY_MODE_USER_CTL_NORMAL);
     if (aicpuMode) {
-        void *shmptr = sim::MemoryManager::GetInstance().AcquireMemByName("HcclAicpuData");
-        if (shmptr == nullptr) {
-            HCCL_VM_ERROR("acquire shm failed.");
-            return -1;
-        }
-
-        sim::MemoryManager::GetInstance().LockMemByName("HcclAicpuData");
-        HcclAicpuData *aicpuData = static_cast<HcclAicpuData *>(shmptr);
-        jettyId = aicpuData->common.jettyIdGen++;
-        sim::MemoryManager::GetInstance().UnlockMemByName("HcclAicpuData");
-
-        wqeAddr = attr->ub.extMode.sq.buffVa;
-        if (wqeAddr == 0) {  // 判断是否需要由桩函数分配sqBuffer
+        sqBuffer = attr->ub.extMode.sq.buffVa;
+        if (sqBuffer == 0) {  // 判断是否需要由桩函数分配sqBuffer
             void *wqeBuf = nullptr;
             aclrtMalloc(&wqeBuf, attr->ub.extMode.sq.buffSize, aclrtMemMallocPolicy::ACL_MEM_MALLOC_NORMAL_ONLY);
             if (wqeBuf == nullptr) {
@@ -999,16 +993,8 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
                 return -1;
             }
 
-            wqeAddr = reinterpret_cast<uint64_t>(wqeBuf);
+            sqBuffer = reinterpret_cast<uint64_t>(wqeBuf);
         }
-
-        if (jettyId >= HcclSim::AICPU_JETTY_NUM_MAX) {
-            HCCL_VM_ERROR("jettyId[{}] >= AICPU_JETTY_NUM_MAX[{}]", jettyId, HcclSim::AICPU_JETTY_NUM_MAX);
-        } else {
-            aicpuData->common.jettyId2WqeBufMap[jettyId] = wqeAddr;
-        }
-
-        HCCL_VM_INFO("jettyId[{}], wqeAddr[{}].", jettyId, wqeAddr);
     }
 
     uint64_t ctxId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle));
@@ -1028,8 +1014,7 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
 
     sim::RaJetty jty{};
     jty.ctx_handle = ctxId;
-    auto jetty_id = aicpuMode ? jettyId : attr->ub.jettyId;
-    jty.jetty_id = aicpuMode ? jettyId : attr->ub.jettyId;
+    jty.jetty_id = attr->ub.jettyId;
     jty.dieId = endPoint->die_id;
     jty.type = (uint8_t)attr->transportMode;
     jty.send_cq_handle = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(attr->scqHandle));
@@ -1040,12 +1025,21 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
     auto id = RunnerDB::Add<sim::RaJetty>(jty);
     *qpHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
 
+    // aicpu模式更新jetty_id和sqBuffer
+    if (aicpuMode) {
+        RunnerDB::Update<sim::RaJetty>(id, [id, sqBuffer](sim::RaJetty &jty) {
+            jty.jetty_id = id;
+            jty.sqBuffer = sqBuffer;
+        });
+        HCCL_VM_INFO("jettyId[{}], sqBuffer[{}].", id, sqBuffer);
+    }
+
     if (info != nullptr) {
         // info->rdma.qpn = qp.qp_num;
         *(uint64_t*)(info->key.value) = id;
         info->key.size = sizeof(uint64_t);
-        info->ub.sqBuffVa = wqeAddr;
-        info->ub.id = aicpuMode ? jettyId : attr->ub.jettyId;
+        info->ub.sqBuffVa = sqBuffer;
+        info->ub.id = aicpuMode ? id : attr->ub.jettyId;
     }
 
     HCCL_VM_INFO("Ctx:{:d} create QP id:{:d}, scqHandle:{:d}, rcqHandle:{:d}, JettyId:{:d}, mode:{:d}",

@@ -23,6 +23,7 @@ struct CheckerSettings {
     bool enableMemorySnapshotDump{false};
     bool enableNewChecker{true};
     bool enableOldChecker{true};
+    bool enableBigGraphChecker{false};
 };
 
 class SettingManager {
@@ -44,6 +45,7 @@ public:
     bool IsMemorySnapshotEnabled() const;
     bool IsNewCheckerEnabled() const;
     bool IsOldCheckerEnabled() const;
+    bool IsBigGraphCheckerEnabled() const;
 
 private:
     SettingManager() = default;

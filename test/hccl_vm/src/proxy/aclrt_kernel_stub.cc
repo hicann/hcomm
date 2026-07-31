@@ -45,6 +45,8 @@
 #include "db_sim_op_db_ops.h"
 #include "db_sim_runner_ops.h"
 #include "sim_common_api.h"
+#include "hccl_proxy_common.h"
+#include "sim_sub_process_manager.h"
 
 
 
@@ -59,7 +61,7 @@ struct ArgsBuffer {
     uint64_t size;
 };
 
-pid_t g_devicePid = 0;
+thread_local pid_t g_devicePid = 0;
 
 static bool CheckDeviceProcStatus()
 {
@@ -134,6 +136,7 @@ struct FuncHandle
 {
     std::string funcName{""};
     std::string kernelName{""};
+    std::string soName{""};
     std::vector<FuncArgs*> funArgs;
     ~FuncHandle() {
         for (auto& funcArg : funArgs) {
@@ -158,6 +161,7 @@ struct Program
 struct DevBinary
 {
     std::string binPath{""};
+    std::map<std::string, std::string> funcSoMap;
     void* data{nullptr};
     size_t dataLen{0};
     Program prog;
@@ -222,10 +226,19 @@ aclError aclrtBinaryUnLoad(aclrtBinHandle binHandle)
 
 aclError aclrtBinaryLoadFromFile(const char* binPath, aclrtBinaryLoadOptions *options, aclrtBinHandle *binHandle)
 {
-    (void) options;
+    // 复用已有的
+    for (auto* devBin : sim::g_kernelBinary) {
+        if (devBin != nullptr && devBin->binPath == binPath) {
+            *binHandle = (aclrtBinHandle)&(devBin->prog);
+            HCCL_VM_INFO("binPath:{} reused binHandle:{:p}", binPath, *binHandle);
+            return ACL_SUCCESS;
+        }
+    }
+
     sim::DevBinary* binPtr = new sim::DevBinary();
     binPtr->binPath = binPath;
     binPtr->prog.bin = binPtr;
+    sim::ParseKernelJson(binPath, binPtr->funcSoMap);
 
     auto res = sim::g_kernelBinary.insert(binPtr);
     if (!res.second) {
@@ -252,7 +265,15 @@ aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kern
 {
     sim::Program* prog = (sim::Program*)(uintptr_t)binHandle;
 
+    std::string kernelSoName{""};
     std::string funcName(kernelName);
+    if (prog->bin != nullptr) {
+        auto soIt = prog->bin->funcSoMap.find(funcName);
+        if (soIt != prog->bin->funcSoMap.end()) {
+            kernelSoName = soIt->second;
+        }
+    }
+
     auto funcIter = prog->funcs.find(funcName);
     if (funcIter == prog->funcs.end()) {
         HCCL_VM_WARN("kernelName:{} not register insert it", kernelName);
@@ -260,6 +281,7 @@ aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kern
         sim::FuncHandle* func = new sim::FuncHandle;
         func->funcName = funcName;
         func->kernelName = kernelName;
+        func->soName = kernelSoName;
         auto res = prog->funcs.insert(std::pair<std::string, sim::FuncHandle*>(func->funcName, func));
         if (!res.second) {
             HCCL_VM_ERROR("func:{} kernelName:{} insert failed", funcName, kernelName);
@@ -437,45 +459,54 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t blockDim, const 
     return ACL_SUCCESS;
 }
 
-void ForkAndStartAicpuProcess(int32_t rankId, uint8_t* devState)
+// 检查展开模式退化至AICPU模式
+void CheckExpansionModeDegradeToAICPU()
 {
-    pid_t pid = fork();
-    if (pid == -1) {
-        HCCL_VM_ERROR("fork aicpu process failed.");
-        exit(EXIT_FAILURE);
+    // 避免同一轮次多次kernel下发重复更新展开模式
+    int curMode = sim::QueryLatestOpExpansionMode();
+    if (curMode == static_cast<int>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AICPU)) {
+        return;
     }
 
-    std::string args = std::to_string(rankId);
-    std::string devicePath = InstallPath::ResolveToInstallRoot("bin/device");
-    std::string libPath = InstallPath::ResolveToInstallRoot("lib/aarch64");
-    const char* ascendHomePath = std::getenv("ASCEND_HOME_PATH");
-    if (ascendHomePath != nullptr) {
-        libPath += ":";
-        libPath += ascendHomePath;
-        libPath += "/x86_64-linux/devlib/device";
-    }
-    std::string preloadPath = InstallPath::ResolveToInstallRoot("lib/aarch64/libhccl_device_proxy.so");
-    if (pid == 0) {
-        g_logger = nullptr;
-        setenv("QEMU_LD_PREFIX", "/usr/aarch64-linux-gnu", 1);
-        setenv("LD_PRELOAD", preloadPath.c_str(), 1);
-        setenv("LD_LIBRARY_PATH", libPath.c_str(), 1);
-        execlp("qemu-aarch64-static", "qemu-aarch64-static", devicePath.c_str(), args.c_str(), nullptr);
-        HCCL_VM_ERROR("execlp aicpu process failed.");
-        exit(EXIT_FAILURE);
-    } else {
-        g_devicePid = pid;  // 记录device进程id用于host结束时杀掉device进程
-        while (*devState == DEVICE_RUN) {
-            CheckDeviceProcStatus();
-            sleep(1);
-        }
+    // CCU/AIV退化为AICPU模式时，更新模型中展开模式为AICPU
+    const char *expanEnv = std::getenv("HCCL_OP_EXPANSION_MODE");
+    std::string expanMode = expanEnv == nullptr ? "" : std::string(expanEnv);
+    bool ccuEnabled = expanMode == "CCU_SCHED" || expanMode == "CCU_MS";
+    bool aivEnabled = expanMode == "AIV";
+    if (ccuEnabled || aivEnabled) {
+        HCCL_VM_INFO("Switch the expansion mode[{} -> AICPU].", aivEnabled ? "AIV" : "CCU");
+        constexpr uint8_t aicpuMode = static_cast<uint8_t>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AICPU);
+        sim::UpdateOpExpansionMode(aicpuMode);
     }
 }
 
-void LaunchAICPUKernelFunc(std::string kernelName, aclrtArgsHandle argsHandle)
+void TryLaunchAicpuDevProcForRank(int32_t rankId, uint32_t deviceKey)
+{
+    auto& procMgr = sim::GetAicpuProcMgr();
+    if (procMgr.IsAlive()) {
+        return;
+    }
+
+    auto config = sim::CreateAicpuDeviceConfig(rankId, deviceKey);
+    if (procMgr.CreateProcess(config) != 0) {
+        HCCL_VM_ERROR("failed to create device process.");
+        exit(EXIT_FAILURE);
+    }
+
+    g_devicePid = procMgr.GetPid();
+    HCCL_VM_INFO("device process for rankId[{}] launched, pid={}", rankId, g_devicePid);
+}
+
+void LaunchAICPUKernelFunc(const std::string &kernelName, const std::string &soName, aclrtArgsHandle argsHandle)
 {
     uint32_t rankId = (uint32_t)sim::GetCurrRankId();
-    HCCL_VM_INFO("rankId:{}, kernelName:{}.", rankId, kernelName);
+    uint32_t devKey = (uint32_t)sim::GetCurrDeviceKey();
+    HCCL_VM_INFO("rankId:{}, devKey:{}, kernelName:{}.", rankId, devKey, kernelName);
+
+    // 检查退化逻辑并在退化场景启动device进程
+    CheckExpansionModeDegradeToAICPU();
+    TryLaunchAicpuDevProcForRank(rankId, devKey);
+
     sim::FuncArgs* args = (sim::FuncArgs*)argsHandle;
     uint64_t size = args->useOffset;
     void *ptr = nullptr;
@@ -486,39 +517,30 @@ void LaunchAICPUKernelFunc(std::string kernelName, aclrtArgsHandle argsHandle)
     }
 
     aclrtMemcpy(ptr, size, args->argsBuff, size, aclrtMemcpyKind::ACL_MEMCPY_HOST_TO_DEVICE);
-    void *shmptr = sim::MemoryManager::GetInstance().AcquireMemByName("HcclAicpuData");
-    if (shmptr == nullptr) {
-        HCCL_VM_ERROR("acquire shm failed.");
+
+    // 填充Kernel执行所需参数通知Device侧执行，Proxy进入等待状态
+    ExecKernelPayload payload{};
+    memset(&payload, 0, sizeof(payload));
+    strncpy(payload.kernelName, kernelName.c_str(), sizeof(payload.kernelName) - 1);
+    strncpy(payload.soName, soName.c_str(), sizeof(payload.soName) - 1);
+    payload.args = reinterpret_cast<uint64_t>(ptr);
+
+    uint8_t rspCmd;
+    RspExecKernelPayload rspPayload{};
+    uint32_t rspLen = 0;
+    if (sim::GetAicpuProcMgr().Request(PIPE_CMD_EXEC_KERNEL, &payload, sizeof(payload),
+                                       rspCmd, &rspPayload, sizeof(rspPayload), rspLen) != 0) {
+        HCCL_VM_ERROR("Request EXEC_KERNEL failed.");
         return;
     }
 
-    HcclAicpuData *aicpuData = static_cast<HcclAicpuData *>(shmptr);
-    if (kernelName == "RunAicpuIndOpCommInit") {
-        // 第一次调用KernelLaunch需要启动aicpu进程
-        aicpuData->task[rankId].devState = DEVICE_RUN;
-        ForkAndStartAicpuProcess(rankId, &aicpuData->task[rankId].devState);
-
-        // CCU/AIV退化为AICPU模式时，更新模型中展开模式为AICPU
-        const char *expanEnv = std::getenv("HCCL_OP_EXPANSION_MODE");
-        std::string expanMode = expanEnv == nullptr ? "" : std::string(expanEnv);
-        bool ccuEnabled = expanMode == "CCU_SCHED" || expanMode == "CCU_MS";
-        bool aivEnabled = expanMode == "AIV";
-        if (ccuEnabled || aivEnabled) {
-            HCCL_VM_INFO("Switch the expansion mode[{} -> AICPU].", aivEnabled ? "AIV" : "CCU");
-            constexpr uint8_t kAicpuMode = static_cast<uint8_t>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AICPU);
-            sim::UpdateOpExpansionMode(kAicpuMode);
-        }
+    if (rspCmd != PIPE_RSP_EXEC_KERNEL) {
+        HCCL_VM_ERROR("unexpected response cmd: 0x{:02x}", rspCmd);
+        return;
     }
 
-    // 填充Kernel执行所需参数通知Device侧执行，Proxy进入等待状态
-    memcpy(aicpuData->task[rankId].kernelName, kernelName.c_str(), kernelName.length());
-    aicpuData->task[rankId].kernelName[kernelName.length()] = '\0';
-    aicpuData->task[rankId].args = reinterpret_cast<uint64_t>(ptr);
-    std::atomic_thread_fence(std::memory_order_release);  // 内存屏障强制内存操作的顺序性
-    aicpuData->task[rankId].devState = DEVICE_RUN;
-    while (aicpuData->task[rankId].devState == DEVICE_RUN) {
-        CheckDeviceProcStatus();
-        sleep(1);
+    if (rspPayload.status != 0) {
+        HCCL_VM_ERROR("kernel returned error status: {}", rspPayload.status);
     }
 }
 
@@ -535,8 +557,8 @@ aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t blockD
     }
 
     // AICPU或CCU退化为AICPU模式时调用
-    LaunchAICPUKernelFunc(func->kernelName, argsHandle);
-    HCCL_VM_INFO("kernel:{} execute finished.", func->kernelName);
+    LaunchAICPUKernelFunc(func->kernelName, func->soName, argsHandle);
+    HCCL_VM_INFO("kernel:{}[{}] execute finished.", func->kernelName, func->soName);
 
     return ACL_SUCCESS;
 }
@@ -548,7 +570,7 @@ aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t blockD
 // ===== AIV virtual-kernel support scope begin =====
 // AIV作用范围：这里保留HCCL AIV ExecuteKernelLaunch的C++ hook链路，并在真实
 // aclrtLaunchKernelWithHostArgs launch点记录AIV_GRAPH任务、分配launchIndex、执行x86 AIV stub。
-extern "C" bool GetPtrNameByVirPtr(void *virPtr, uint32_t &offset, sim::PhyMemBlock &phyMem);
+extern "C" bool GetPhyMemBlockByVirPtr(void *virPtr, uint32_t &offset, sim::PhyMemBlock &phyMem);
 
 namespace {
 constexpr uint32_t INVALID_AIV_LAUNCH_INDEX = std::numeric_limits<uint32_t>::max();
@@ -851,7 +873,7 @@ static ResolvedHostPtrHandle ResolveHostPtr(const void *devPtr)
 
     sim::PhyMemBlock phyMem {};
     uint32_t offset = 0;
-    if (!::GetPtrNameByVirPtr(const_cast<void *>(devPtr), offset, phyMem)) {
+    if (!::GetPhyMemBlockByVirPtr(const_cast<void *>(devPtr), offset, phyMem)) {
         return handle;
     }
 
@@ -1450,7 +1472,7 @@ static std::string GetAivLibraryPath(const std::string &soName, const std::strin
     }
 
     std::error_code ec;
-    const fs::path soPath = fs::path(installDir) / "lib" / "x86_64" / soName;
+    const fs::path soPath = fs::path(installDir) / "lib" / GetArchStr() / soName;
     if (!fs::exists(soPath, ec)) {
         if (ec) {
             HCCL_VM_ERROR("failed to stat aiv library path, kernel={}, installDir={}, so={}, err={}",

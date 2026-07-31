@@ -291,7 +291,7 @@ run_one_binary() {
     echo -e "${BLUE}--- 执行: $bin_name${filter_info} ---${NC}"
     log_run "执行: $bin_name${filter_info}"
 
-    rm -f /dev/shm/HcclAicpuData /dev/shm/Hccl* 2>/dev/null
+    rm -f /dev/shm/Hccl* 2>/dev/null
 
     local start=$(date +%s)
     local output

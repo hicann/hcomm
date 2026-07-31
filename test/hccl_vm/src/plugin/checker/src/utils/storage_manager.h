@@ -22,6 +22,7 @@
 #include "sim_common.h"
 #include "sim_op_db_types.h"
 #include "task_meta_defs.h"
+#include "framework/task_graph_generator_v3/task_def_v3.h"
 
 namespace HcclSim {
 struct MemBlock {
@@ -48,6 +49,9 @@ struct SendRecvPairParam {
 struct BatchSendRecvRankParam {
     uint32_t itemNum = 0;
     uint64_t peerCount = 0;
+    HcclDataType dataType = static_cast<HcclDataType>(0);
+    uint32_t sendPeer = 0;
+    uint32_t recvPeer = 0;
 };
 
 struct CheckerParam {
@@ -78,6 +82,7 @@ using ChannelsPerDie = std::map<uint32_t, RemoteDieInfo>;
 
 class StorageManager {
 public:
+    StorageManager() = default;
     static StorageManager& GetInstance() {
         static StorageManager instance;
         return instance;
@@ -101,10 +106,22 @@ public:
         return m_checker_param;
     }
 
+    CheckerParam GetCheckerParam(TaskGraphGeneratorV3::OperatorId operatorId) const {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        const auto it = m_checker_params.find(operatorId);
+        return it == m_checker_params.end() ? m_checker_param : it->second;
+    }
+
+    void SaveCheckerParam(TaskGraphGeneratorV3::OperatorId operatorId) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_checker_params[operatorId] = m_checker_param;
+    }
+
     HcclResult LoadHcclVmSynthesisData(uint32_t rankId, sim::OpMemInfoTab memInfo, std::vector<sim::CcuChannelTab>& channels);
     HcclResult LoadHcclVmInstrData(std::vector<sim::CcuInstrResTab>& instrRes);
     HcclResult LoadHcclVmTaskMetaData(std::vector<std::vector<sim::OpTaskTab>>& allTasks);
-    void Reset();
+    HcclResult LoadDecodedHcclVmTaskMetaData(const std::vector<std::vector<HcclTaskMetaData>>& allTaskMetas);
+    void Reset(bool clearMemLayout = true);
     uint64_t GetBlockSize(uint32_t rankId, BufferType bufferType);
     HcclResult GetSlice(uint64_t addr, uint64_t len, DataSlice& dataSlice, uint32_t* rank = nullptr);
     uint32_t GetRankSize() const;
@@ -122,8 +139,6 @@ public:
     void MergeAll2AllVSendCountMatrix();
 
 private:
-    StorageManager() = default;
-
     std::string FindRootPath();
     bool IsDirExists(const std::string& path);
 
@@ -134,6 +149,7 @@ private:
     std::map<uint32_t, std::map<BufferType, std::map<uint64_t, MemBlock>>> m_mem_layout;
     std::map<RankId, std::map<uint32_t, ChannelsPerDie>> m_allRankChannelInfo;
     CheckerParam m_checker_param;
+    std::map<TaskGraphGeneratorV3::OperatorId, CheckerParam> m_checker_params;
     // 用于收集每一轮算子中所有rank的发送矩阵数据
     std::map<uint32_t, std::vector<uint64_t>> m_all2AllvSendMatrices;
 

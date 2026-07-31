@@ -31,14 +31,14 @@ target_include_directories(hccl_device_proxy PRIVATE
     ${THRID_PARTY_DIR}/spdlog
     ${HCCL_VM_SRC}/device_arm
 
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/driver
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/runtime
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/toolchain
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/profiling
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/driver
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/runtime
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/toolchain
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/profiling
 )
 
 install(TARGETS hccl_device_proxy

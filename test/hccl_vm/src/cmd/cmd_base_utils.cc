@@ -374,11 +374,6 @@ HcclVmResult InitHvmEnv(const std::string& configClusterDir, uint32_t level, boo
             return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD;
         }
     }
-    void *shmptr =sim::MemoryManager::GetInstance().AllocMemByName("HcclAicpuData", sizeof(HcclAicpuData));
-    if (shmptr == nullptr) {  
-        HCCL_VM_ERROR("Alloc Shared Memory fail ");  
-        return HcclVmResult::HCCL_SIM_HOST_ERROR_CMD;  
-    } 
 
     // 解析集群拓扑，并初始化静态数据模型数据 
     HCCL_VM_INFO("Initializing: Cluster Topo"); 
@@ -572,7 +567,7 @@ HcclVmResult StartHvmCmd() {
     // Child Process(Bash) 
     // 劫持库存在性判断 
     std::string hcclVmbin = InstallPath::ResolveToInstallRoot("bin/hccl-vm");
-    std::string proxyPath = InstallPath::ResolveToInstallRoot("lib/x86_64/libhccl_proxy_level" + std::to_string(g_hcclVmLevel) + ".so");
+    std::string proxyPath = InstallPath::ResolveToInstallRoot("lib/" + GetArchStr() + "/libhccl_proxy_level" + std::to_string(g_hcclVmLevel) + ".so");
     if (!fs::exists(proxyPath)) { 
         HCCL_VM_ERROR("proxy hacking .so not found {}, please check your proxy hacking .so:" 
             "1. Whether the hook library has been successfully built and installed. 2. Whether the simulation level matches the proxy hook library version. Current simulation level: {}, Default simulation level: 2" 

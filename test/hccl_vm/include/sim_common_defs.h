@@ -327,22 +327,6 @@ typedef struct {
     uint16_t    status;
 } HcclTaskRsp;
 
-typedef struct {
-    char kernelName[64];
-    uint64_t args;
-    uint8_t devState;
-} HcclAicpuTask;
-
-typedef struct {
-    uint32_t jettyIdGen;
-    uint64_t jettyId2WqeBufMap[HcclSim::AICPU_JETTY_NUM_MAX];
-} HcclAicpuCommon;
-
-typedef struct {
-    HcclAicpuCommon common;
-    HcclAicpuTask task[512];  // 最大512卡
-} HcclAicpuData;
-
 #pragma pack(pop)
 
 enum BufferType {

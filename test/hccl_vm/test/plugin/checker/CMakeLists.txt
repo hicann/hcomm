@@ -26,9 +26,9 @@ include_directories(BEFORE
     ${CHECKER_HDR}/external/nlohmann
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/runner_utils
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
     
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
@@ -114,9 +114,9 @@ target_include_directories(test_checker BEFORE PRIVATE
     ${THRID_PARTY_DIR}
     ${THRID_PARTY_DIR}/yaml-cpp/include
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
     
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
@@ -125,7 +125,7 @@ list(FILTER _checker_includes EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}/include$")
 set_target_properties(test_checker PROPERTIES INCLUDE_DIRECTORIES "${_checker_includes}")
 target_link_libraries(test_checker PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
 )
 set_target_properties(test_checker PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -138,7 +138,7 @@ target_sources(test_check_utils PRIVATE
 )
 target_link_libraries(test_check_utils PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
 )
 set_target_properties(test_check_utils PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -151,7 +151,7 @@ target_sources(test_sim_task PRIVATE
 )
 target_link_libraries(test_sim_task PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
 )
 set_target_properties(test_sim_task PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -164,7 +164,7 @@ target_sources(test_binary_data_operator_checker PRIVATE
 )
 target_link_libraries(test_binary_data_operator_checker PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
 )
 set_target_properties(test_binary_data_operator_checker PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -187,9 +187,9 @@ target_include_directories(test_storage_manager_checker BEFORE PRIVATE
     ${THRID_PARTY_DIR}
     ${THRID_PARTY_DIR}/yaml-cpp/include
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
     
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
@@ -198,7 +198,7 @@ list(FILTER _storage_mgr_includes EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}/include$")
 set_target_properties(test_storage_manager_checker PROPERTIES INCLUDE_DIRECTORIES "${_storage_mgr_includes}")
 target_link_libraries(test_storage_manager_checker PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
 )
 set_target_properties(test_storage_manager_checker PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -213,7 +213,7 @@ target_sources(test_task_ccu PRIVATE
 )
 target_link_libraries(test_task_ccu PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
 )
 set_target_properties(test_task_ccu PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -242,8 +242,8 @@ target_include_directories(test_task_utils BEFORE PRIVATE
     ${THRID_PARTY_DIR}
     ${THRID_PARTY_DIR}/yaml-cpp/include
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
+ 	${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
    
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
@@ -252,7 +252,7 @@ list(FILTER _task_utils_includes EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}/include$")
 set_target_properties(test_task_utils PROPERTIES INCLUDE_DIRECTORIES "${_task_utils_includes}")
 target_link_libraries(test_task_utils PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
 )
 set_target_properties(test_task_utils PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"

@@ -11,6 +11,7 @@ cmake_minimum_required(VERSION 3.14)
 set(COMMON_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/src/device_arm
     ${CMAKE_SOURCE_DIR}/src/device_arm/proxy
+    ${CMAKE_SOURCE_DIR}/src/common
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/store
     ${CMAKE_SOURCE_DIR}/include/runnerdb
@@ -23,17 +24,16 @@ set(COMMON_INCLUDE_DIRS
     $ENV{HCCL_CODE_HOME}/src/ops/op_common/inc
     $ENV{HCCL_CODE_HOME}/src/common
     $ENV{HCCL_CODE_HOME}/src/common/hcomm_dlsym
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/include/driver
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/driver
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/runtime
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/toolchain
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/profiling
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/hccl
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/pkg_inc/base
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/include
-    $ENV{ASCEND_TOOLKIT_HOME}/x86_64-linux/include/hccl
-
+    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/include/driver
+    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/driver
+    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/runtime
+    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/toolchain
+    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/profiling
+    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc
+    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/hccl
+    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/base
+    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/include
+ 	$ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/include/hccl
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
 
@@ -60,6 +60,7 @@ target_sources(test_device_sqe_parse_stub PRIVATE
     ${CMAKE_SOURCE_DIR}/src/device_arm/proxy/device_sqe_parse_stub.cc
     ${CMAKE_SOURCE_DIR}/src/device_arm/hccl_device_pub.cc
     ${CMAKE_SOURCE_DIR}/src/device_arm/hccl_task_collection.cc
+    ${CMAKE_SOURCE_DIR}/src/common/sim_pipe_io.cc
     ${CMAKE_SOURCE_DIR}/src/store/store_sim_memory_manager.cc
     ${CMAKE_SOURCE_DIR}/src/runnerdb/tracedb/db_sim_sqlite_db.cc
     ${COMMON_SOURCES}
@@ -85,6 +86,7 @@ target_sources(test_ascend_hal_stub PRIVATE
     ${CMAKE_SOURCE_DIR}/src/device_arm/proxy/device_sqe_parse_stub.cc
     ${CMAKE_SOURCE_DIR}/src/device_arm/hccl_device_pub.cc
     ${CMAKE_SOURCE_DIR}/src/device_arm/hccl_task_collection.cc
+    ${CMAKE_SOURCE_DIR}/src/common/sim_pipe_io.cc
     ${CMAKE_SOURCE_DIR}/src/store/store_sim_memory_manager.cc
     ${CMAKE_SOURCE_DIR}/src/runnerdb/tracedb/db_sim_sqlite_db.cc
     ${CMAKE_SOURCE_DIR}/src/runnerdb/tracedb/db_sim_runner_common.cc

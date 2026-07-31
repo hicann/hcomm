@@ -125,9 +125,12 @@ drvError_t drvGetPlatformInfo(uint32_t *info)
 
 drvError_t drvGetDevNum(uint32_t *num_dev)
 {
-    (void) num_dev;
+    auto serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        return DRV_ERROR_NO_DEVICE;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         HCCL_VM_ERROR("GetCurrRunnerTls failed");
         return DRV_ERROR_NO_DEVICE;
     }

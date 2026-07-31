@@ -63,7 +63,7 @@ add_library(hccl_aiv_kernel SHARED
 target_link_libraries(hccl_aiv_kernel PRIVATE log)
 
 install(TARGETS hccl_aiv_kernel
-        DESTINATION "lib/x86_64"
+        DESTINATION "lib/${CMAKE_SYSTEM_PROCESSOR}"
         PERMISSIONS
         OWNER_READ OWNER_WRITE OWNER_EXECUTE
         GROUP_READ GROUP_EXECUTE

@@ -60,15 +60,17 @@ MemSlice MakeMemSlice(RankId rankId, const DataSlice &slice)
     memSlice.memType = ConvertMemType(slice.GetType());
     memSlice.offset = slice.GetOffset();
     memSlice.len = slice.GetSize();
+    memSlice.rawAddr = slice.GetRawAddr();
     return memSlice;
 }
 
-HcclResult MakeTaskPosition(const HcclTaskMetaData &taskMeta, TaskPosition &position)
+HcclResult MakeTaskPosition(const HcclTaskMetaData &taskMeta, OperatorId operatorId, TaskPosition &position)
 {
     if (taskMeta.streamId > std::numeric_limits<StreamId>::max()) {
         return HCCL_E_PARA;
     }
 
+    position.operatorId = operatorId;
     position.rankId = taskMeta.rankId;
     position.streamId = static_cast<StreamId>(taskMeta.streamId);
     return HCCL_SUCCESS;
@@ -226,7 +228,7 @@ AllRankNodeQueues TaskMetaTranslatorV3::TakeTaskQueues()
     return result;
 }
 
-HcclResult TaskMetaTranslatorV3::Translate(StorageManager &storage)
+HcclResult TaskMetaTranslatorV3::Translate(StorageManager &storage, OperatorId operatorId)
 {
     Reset();
 
@@ -236,7 +238,7 @@ HcclResult TaskMetaTranslatorV3::Translate(StorageManager &storage)
         taskMetaVec.size());
     for (uint32_t i = 0; i < taskMetaVec.size(); ++i) {
         NodeId nodeId = INVALID_NODE_ID;
-        const HcclResult ret = TranslateOneTaskMeta(taskMetaVec[i], storage, i, nodeId);
+        const HcclResult ret = TranslateOneTaskMeta(taskMetaVec[i], storage, i, operatorId, nodeId);
         if (ret != HCCL_SUCCESS) {
             HCCL_VM_ERROR("{} Failed to convert one task into a graph node, taskIndex={}, "
                 "ret={}, taskMeta={}",
@@ -283,10 +285,10 @@ HcclResult TaskMetaTranslatorV3::AddTaskNode(const TaskPosition &position, std::
 }
 
 HcclResult TaskMetaTranslatorV3::TranslateOneTaskMeta(const HcclTaskMetaData &taskMeta, StorageManager &storage,
-    uint32_t taskIndex, NodeId &nodeId)
+    uint32_t taskIndex, OperatorId operatorId, NodeId &nodeId)
 {
     TaskPosition position;
-    HcclResult ret = MakeTaskPosition(taskMeta, position);
+    HcclResult ret = MakeTaskPosition(taskMeta, operatorId, position);
     if (ret != HCCL_SUCCESS) {
         return ret;
     }

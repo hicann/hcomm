@@ -42,7 +42,7 @@ target_include_directories(hccl-vm PUBLIC
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/include
     ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include/toolchain
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/toolchain
 
     # cann包头文件
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver

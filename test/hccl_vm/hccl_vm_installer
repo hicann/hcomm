@@ -8,6 +8,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 
 # HCCL-VM 一键安装：装依赖 -> 检测 CANN -> 拉取公开源码(hcomm/hccl) -> 编译。
+# 支持架构：x86_64 / aarch64
 #
 # ============================ 依赖关系说明 ============================
 # 组件角色：
@@ -67,6 +68,7 @@ CANN_RUN_FILE=""            # 实际下载到的 .run 文件全路径（收尾�
 CANN_CHANNEL="master"       # CANN 镜像下载通道，apply_defaults 按 profile 落定（campus=legacy / main=master）
 HCCL_TEST_RESULT=""         # build_hccl_test 写入：built | skipped | failed:<原因>
 HCCL_TEST_BIN_DIR=""        # build_hccl_test 写入：hccl_test 可执行文件所在目录（原地编译）
+PKG_MGR=""                  # detect_pkg_mgr 写入：apt（Ubuntu/Debian）或 dnf（HCE/openEuler/EulerOS）
 SUDO_PREFIX=""              # setup_sudo 解析：root 为空；非 root 有 sudo 为 "sudo"
 SUDO_KEEPALIVE_PID=""       # sudo 授权保活后台进程 PID（cleanup_sudo 负责回收）
 STEP_TOTAL=9                # 编译 HCCL-VM(7) → 编译安装子包(8) → 编译 hccl_test(9)
@@ -129,13 +131,17 @@ success_summary() {
     [ -n "${CANN_RUN_FILE}" ] && info "CANN 安装包（已保留）: ${CANN_RUN_FILE}"
     local inst="${CHECKER_PATH}/hccl_vm_install"
     local setenv="${ASCEND_HOME_PATH:-<CANN>/ascend-toolkit}/set_env.sh"
+    local mpirun_extra=""
+    if [ "$(normalize_arch "$(uname -m)" 2>/dev/null)" = "x86_64" ]; then
+        mpirun_extra="--allow-run-as-root --oversubscribe"
+    fi
     if [ "${HCCL_TEST_RESULT}" = built ]; then
         info "后续步骤（可直接复制，运行一个 hccl_test 用例并由 checker 校验）:"
         echo "  source ${setenv}" >&2
         echo "  source ${inst}/script/hccl_config.sh   # 设 RANK_TABLE_FILE 等运行变量" >&2
         echo "  cd ${inst}/bin && ./hccl-vm start ascend950_cluster_32_server_normal.yaml" >&2
         echo "    (hvm)\$> hccl-vm mock-comm 112" >&2
-        echo "    (hvm)\$> mpirun --allow-run-as-root --oversubscribe -np 2 ${HCCL_TEST_BIN_DIR:-${WORKSPACE}/hccl_test/bin}/alltoall_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1" >&2
+        echo "    (hvm)\$> mpirun ${mpirun_extra} -np 2 ${HCCL_TEST_BIN_DIR:-${WORKSPACE}/hccl_test/bin}/alltoall_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1" >&2
         echo "    (hvm)\$> hccl-vm plugin run @checker" >&2
         echo "    (hvm)\$> exit" >&2
     else
@@ -149,11 +155,29 @@ success_summary() {
     fi
 }
 
-# 检查 apt 包是否已安装（dpkg-query 精确查询，无管道，避免 dpkg -l|grep 在 pipefail 下被 SIGPIPE 误判）
+# 检查系统包是否已安装：apt 系（Ubuntu/Debian）用 dpkg-query 精确查询；
+# dnf 系（HCE/openEuler/EulerOS/CentOS）用 rpm -q 查询。需在 check_env 中调用 detect_pkg_mgr 后使用。
 check_package() {
-    local status
-    status="$(dpkg-query -W -f='${Status}' "$1" 2>/dev/null)" || return 1
-    [ "$status" = "install ok installed" ]
+    if [ "${PKG_MGR:-}" = "apt" ]; then
+        local status
+        status="$(dpkg-query -W -f='${Status}' "$1" 2>/dev/null)" || return 1
+        [ "$status" = "install ok installed" ]
+    elif [ "${PKG_MGR:-}" = "dnf" ]; then
+        rpm -q "$1" &>/dev/null
+    else
+        return 1
+    fi
+}
+
+# 检测包管理器：apt（Ubuntu/Debian）或 dnf（HCE/openEuler/EulerOS/CentOS/RHEL）；均未找到留空
+detect_pkg_mgr() {
+    if command -v apt-get &>/dev/null; then
+        PKG_MGR="apt"
+    elif command -v dnf &>/dev/null; then
+        PKG_MGR="dnf"
+    else
+        PKG_MGR=""
+    fi
 }
 
 # 判断操作系统是否受支持（仅 Linux）
@@ -427,30 +451,31 @@ cann_phase1_decide() {
     return 0
 }
 
-# 运行环境自检：必须 Linux + 具备 apt + 受支持架构
+# 运行环境自检：必须 Linux + 具备 apt 或 dnf + 受支持架构（x86_64 / aarch64）
 check_env() {
     if ! is_supported_os "$(uname -s)"; then
         error "本工具仅支持 Linux。Windows 请在 WSL2 或远端 Linux 中运行。"
     fi
-    if ! command -v apt-get &> /dev/null; then
-        error "未检测到 apt-get。本工具按 checker 官方要求支持 x86_64 Ubuntu 22.04 及以上（apt）。
-  非 apt 系统请在 Ubuntu 22.04+ 上运行，或手动安装等价依赖后用 --hcomm-path/--hccl-path 复用已备源码：
+    # 检测包管理器：apt（Ubuntu/Debian）或 dnf（HCE/openEuler/EulerOS）；均未找到则报错
+    detect_pkg_mgr
+    if [ -z "${PKG_MGR}" ]; then
+        error "未检测到 apt-get 或 dnf。本工具支持 Ubuntu 22.04+（apt）或 Huawei Cloud EulerOS（dnf）。
+  其他发行版请手动安装等价依赖后用 --hcomm-path/--hccl-path 复用已备源码：
   $(dependency_list | tr '\n' ' ')"
     fi
     if ! normalize_arch "$(uname -m)" &> /dev/null; then
-        error "不支持的架构: $(uname -m)（仅 x86_64 / aarch64）。请换用 x86_64 环境。"
+        error "不支持的架构: $(uname -m)（仅 x86_64 / aarch64）。请换用 x86_64 或 aarch64 环境。"
     fi
-    # 非官方验证环境软警告（不阻断）：官方仅验证 x86_64 Ubuntu 22.04+
-    if [ "$(uname -m)" != "x86_64" ]; then
-        warn "当前架构 $(uname -m) 非官方验证环境（官方仅验证 x86_64）；可继续，但编译失败概率较高，出问题请优先换 x86_64。"
-    fi
-    if ! ubuntu_version_ok; then
-        warn "当前系统非 Ubuntu 22.04+（官方仅验证该版本）；可继续，但遇到编译问题请优先换官方环境。"
+    # 非受支持架构软警告（不阻断）：仅 x86_64 / aarch64 为受支持架构，其他架构报错已在上面处理
+    # Ubuntu 版本检查仅对 apt 系有意义；dnf 系（HCE/openEuler）无 Ubuntu 版本号，跳过
+    if [ "${PKG_MGR}" = "apt" ] && ! ubuntu_version_ok; then
+        warn "当前系统非 Ubuntu 22.04+（官方验证 x86_64 / aarch64 Ubuntu 22.04+）；可继续，但遇到编译问题请优先换官方环境。"
     fi
     # gcc 版本软警告（不阻断，与架构/OS 警告同档）：hcomm build.md 前置依赖要求 gcc 7.3.0–13.3.x。
-    # 该约束同时管宿主与 aarch64 交叉编译器（device_arm 用系统交叉 gcc 编）。超范围（如 Ubuntu 25.04
-    # gcc14 / 26.04 gcc15）可能因新 gcc 移除头文件间接包含、第三方(yaml-cpp 0.8.0 等)未适配而编译失败——
-    # 属超出官方工具链范围，非本脚本缺陷。此处仅告警并继续尝试（编译器会在真不兼容时报真错）。
+    # x86_64 宿主该约束同时管宿主 gcc 与 aarch64 交叉编译器（device_arm 用系统交叉 gcc 编）；
+    # aarch64 本机构筑仅管系统 gcc。超范围（如 Ubuntu 25.04 gcc14 / 26.04 gcc15）可能因新 gcc 移除
+    # 头文件间接包含、第三方(yaml-cpp 0.8.0 等)未适配而编译失败——属超出官方工具链范围，非本脚本缺陷。
+    # 此处仅告警并继续尝试（编译器会在真不兼容时报真错）。
     local _gcc_major
     _gcc_major="$(gcc -dumpversion 2>/dev/null | cut -d. -f1 || true)"
     if [ -n "${_gcc_major}" ] && [ "${_gcc_major}" -ge 15 ] 2>/dev/null; then
@@ -488,12 +513,12 @@ check_env() {
     fi
     # 管道模式（curl|bash）下 stdin 非终端：明确非交互
     if [ ! -t 0 ]; then
-        info "检测到管道模式（curl|bash）：apt 依赖自动安装；需确认的操作会在检测到终端时提示（超时按默认值继续），无终端时按默认值自动执行。"
+        info "检测到管道模式（curl|bash）：系统依赖自动安装（${PKG_MGR}）；需确认的操作会在检测到终端时提示（超时按默认值继续），无终端时按默认值自动执行。"
     fi
     cann_phase1_decide
 }
 
-# 判断是否 Ubuntu 22.04 及以上（读 /etc/os-release，非 Ubuntu 或版本低返回非零）
+# 判断是否 Ubuntu 22.04 及以上（读 /etc/os-release，非 Ubuntu 或版本低返回非零）；仅 apt 系（x86_64 / aarch64）调用
 ubuntu_version_ok() {
     local id ver_major
     [ -r /etc/os-release ] || return 1
@@ -556,23 +581,38 @@ pick_qemu_pkg() {
     fi
 }
 
-# 依赖清单：编译基础包 + 运行时 python-yaml(hccl-vm start 生成组网拓扑需) + 仅 x86_64 宿主需要的 device(arm) 交叉编译工具链
-# sudo：build_pkg.sh 内部用 sudo 关 pip 保护锁并 chmod CANN 目录；标准 Ubuntu 自带，极简 root 环境需补装
+# 依赖清单：编译基础包 + 运行时 python-yaml(hccl-vm start 生成组网拓扑需)；按 PKG_MGR 输出对应包名。
+# apt 系（Ubuntu）：build-essential / -dev 后缀；dnf 系（HCE/openEuler）：gcc gcc-c++ make / -devel 后缀。
+# x86_64 宿主额外装 device(arm) 交叉编译工具链（仅 apt 有此包）；aarch64 本机直接编译用系统 gcc 无需交叉链。
+# sudo：build_pkg.sh 内部用 sudo 关 pip 保护锁并 chmod CANN 目录；标准 Ubuntu/HCE 自带，极简 root 环境需补装。
 dependency_list() {
-    local deps=("git" "sudo" "build-essential" "cmake" "libsqlite3-dev" "libboost-all-dev" "rdma-core" "libibverbs-dev" "pkg-config" "python3" "python3-yaml")
-    [ "${SKIP_HCCL_TEST}" = false ] && deps+=("openmpi-bin" "libopenmpi-dev")
-    # curl 列举镜像/取头、wget 下载 .run；仅下载 CANN 时需要（keep 从不下载）。极简 Ubuntu 可能不自带
-    [ "${CANN_MODE}" != keep ]      && deps+=("curl" "wget" "python3-pip")
-    if [ "$(uname -m)" = "x86_64" ]; then
-        deps+=("gcc-aarch64-linux-gnu" "g++-aarch64-linux-gnu" "$(pick_qemu_pkg)" "binfmt-support")
+    local deps=()
+    if [ "${PKG_MGR}" = "apt" ]; then
+        deps=("git" "sudo" "build-essential" "cmake" "libsqlite3-dev" "libboost-all-dev" "rdma-core" "libibverbs-dev" "pkg-config" "python3" "python3-yaml")
+        [ "${SKIP_HCCL_TEST}" = false ] && deps+=("openmpi-bin" "libopenmpi-dev")
+        # curl 列举镜像/取头、wget 下载 .run；仅下载 CANN 时需要（keep 从不下载）
+        [ "${CANN_MODE}" != keep ]      && deps+=("curl" "wget" "python3-pip")
+        # x86_64 宿主编译 device 侧(ARM)代码需交叉编译工具链 + qemu 模拟执行 binfmt；
+        # aarch64 本机直接编译，用系统 gcc 即可，无需交叉链和 qemu。
+        if [ "$(uname -m)" = "x86_64" ]; then
+            deps+=("gcc-aarch64-linux-gnu" "g++-aarch64-linux-gnu" "$(pick_qemu_pkg)" "binfmt-support")
+        fi
+    elif [ "${PKG_MGR}" = "dnf" ]; then
+        # HCE/openEuler/EulerOS：gcc gcc-c++ make 替代 build-essential；-devel 替代 -dev
+        deps=("git" "sudo" "gcc" "gcc-c++" "make" "cmake" "sqlite-devel" "boost-devel" "rdma-core" "libibverbs-devel" "pkgconf-pkg-config" "python3" "python3-pyyaml")
+        [ "${SKIP_HCCL_TEST}" = false ] && deps+=("mpich" "mpich-devel")
+        [ "${CANN_MODE}" != keep ]      && deps+=("curl" "wget" "python3-pip")
+        # aarch64 在 HCE 上本机编译，无需交叉链；x86_64 在 HCE 上的交叉链包名暂不内置
     fi
     printf '%s\n' "${deps[@]}"
 }
 
-# 确保 universe 源已启用：精简/被裁过的 Ubuntu 只留 main 时，libboost-all-dev、openmpi-bin、
+# 确保 universe 源已启用（仅 apt 系）：精简/被裁过的 Ubuntu 只留 main 时，libboost-all-dev、openmpi-bin、
 # libopenmpi-dev、qemu-user-static 等（均在 universe 组件）会报 "Unable to locate package"。
+# dnf 系（HCE/openEuler）所有包均在官方源，无需额外启用；调用时自动跳过。
 # 装依赖前调用；启用后不在此 apt-get update，交由 install_deps 紧接着的 update 统一刷新。
 ensure_universe_enabled() {
+    [ "${PKG_MGR:-}" = "apt" ] || return 0    # dnf 系无需处理，直接返回
     local apt_prefix="$1" apt_log="$2" cand base_line
     # 命令替换取值 + || true + 判空；不在 pipefail 管道里用 grep -q（-q 早退致上游 SIGPIPE 会误判失败）
     cand="$(apt-cache policy libboost-all-dev 2>/dev/null | grep -E 'Candidate: [0-9]' || true)"
@@ -595,7 +635,7 @@ ensure_universe_enabled() {
     fi
 }
 
-# 安装第三方依赖
+# 安装第三方依赖：按 PKG_MGR 走 apt 或 dnf 分支
 install_deps() {
     info "检查第三方依赖..."
     local dependencies=() dep_line
@@ -615,41 +655,61 @@ install_deps() {
 
     info "安装缺失的依赖: ${missing_deps[*]}"
     # 提权前缀由 setup_sudo 已提前解析并认证（root 为空、非 root 为 sudo）；curl|bash 的密码经 /dev/tty 输入，不再误判
-    local apt_prefix="${SUDO_PREFIX}"
-    if [ "$(id -u)" -ne 0 ] && [ -z "${apt_prefix}" ]; then
+    local pkg_prefix="${SUDO_PREFIX}"
+    if [ "$(id -u)" -ne 0 ] && [ -z "${pkg_prefix}" ]; then
         warn "缺少系统依赖，但当前非 root 且无 sudo，无法自动安装："
         echo "  ${missing_deps[*]}" >&2
         echo "  请让管理员安装后重试，或改用 root 运行，或手动执行：" >&2
-        echo "  sudo apt-get update && sudo apt-get install -y ${missing_deps[*]}" >&2
+        if [ "${PKG_MGR}" = "apt" ]; then
+            echo "  sudo apt-get update && sudo apt-get install -y ${missing_deps[*]}" >&2
+        else
+            echo "  sudo dnf install -y ${missing_deps[*]}" >&2
+        fi
         exit 1
     fi
     # 输出留存到日志文件（不再 >/dev/null 吞掉）；--verbose 时同时回显到终端，失败时回显便于定位
     mkdir -p "${LOG_DIR}"
-    local apt_log="${LOG_DIR}/apt-install-${RUN_TS}.log"
-    info "apt 安装日志: ${apt_log}"
-    # 精简/被裁过的 Ubuntu 可能未启用 universe 源（libboost-all-dev、openmpi 等在该组件中）；
-    # 装依赖前先确保 universe 可用，避免 "Unable to locate package"。
-    ensure_universe_enabled "${apt_prefix}" "${apt_log}"
+    local pkg_log="${LOG_DIR}/${PKG_MGR}-install-${RUN_TS}.log"
+    info "包安装日志: ${pkg_log}"
+    # apt 系：精简/被裁过的 Ubuntu 可能未启用 universe 源（libboost-all-dev、openmpi 等在该组件中）；
+    # 装依赖前先确保 universe 可用，避免 "Unable to locate package"。dnf 系所有包均在官方源，跳过。
+    ensure_universe_enabled "${pkg_prefix}" "${pkg_log}"
     local rc=0
-    if [ "${VERBOSE}" = true ]; then
-        if { ${apt_prefix} apt-get update -y \
-            && ${apt_prefix} env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing_deps[@]}"; } 2>&1 | tee "${apt_log}"; then
-            rc=0
+    if [ "${PKG_MGR}" = "apt" ]; then
+        if [ "${VERBOSE}" = true ]; then
+            if { ${pkg_prefix} apt-get update -y \
+                && ${pkg_prefix} env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing_deps[@]}"; } 2>&1 | tee "${pkg_log}"; then
+                rc=0
+            else
+                rc=${PIPESTATUS[0]}
+            fi
         else
-            rc=${PIPESTATUS[0]}
+            { ${pkg_prefix} apt-get update -y \
+                && ${pkg_prefix} env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing_deps[@]}"; } > "${pkg_log}" 2>&1 &
+            local install_pid=$!
+            spin_on_pid "${install_pid}" "安装依赖中"
+            wait "${install_pid}" || rc=$?
         fi
     else
-        { ${apt_prefix} apt-get update -y \
-            && ${apt_prefix} env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing_deps[@]}"; } > "${apt_log}" 2>&1 &
-        local apt_pid=$!
-        spin_on_pid "${apt_pid}" "安装依赖中"
-        wait "${apt_pid}" || rc=$?
+        # dnf 系（HCE/openEuler/EulerOS）：直接 dnf install -y，无需 update
+        if [ "${VERBOSE}" = true ]; then
+            if ${pkg_prefix} dnf install -y "${missing_deps[@]}" 2>&1 | tee "${pkg_log}"; then
+                rc=0
+            else
+                rc=${PIPESTATUS[0]}
+            fi
+        else
+            ${pkg_prefix} dnf install -y "${missing_deps[@]}" > "${pkg_log}" 2>&1 &
+            local install_pid=$!
+            spin_on_pid "${install_pid}" "安装依赖中"
+            wait "${install_pid}" || rc=$?
+        fi
     fi
     if [ "${rc}" -ne 0 ]; then
         warn "依赖安装失败，末尾日志："
-        tail -n 20 "${apt_log}" >&2
+        tail -n 20 "${pkg_log}" >&2
         echo "  仍无法解决可带完整日志到 https://gitcode.com/cann/hcomm/issues 反馈。" >&2
-        error "apt 安装依赖失败，请检查网络 / apt 源 / 磁盘 / apt 锁后重试（完整日志: ${apt_log}）。"
+        error "${PKG_MGR} 安装依赖失败，请检查网络 / 源 / 磁盘 / 锁后重试（完整日志: ${pkg_log}）。"
     fi
 }
 
@@ -761,16 +821,17 @@ pick_cann_snapshot() {
 
 # $1=快照号 $2=是否允许 weekly（true=主线 profile；否则只取正式发布版）
 pick_toolkit_file() {
-    local snap="$1" allow_weekly="${2:-false}" base all file
+    local snap="$1" allow_weekly="${2:-false}" base all file arch
+    arch="$(normalize_arch "$(uname -m)" 2>/dev/null || echo x86_64)"
     base="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/${CANN_CHANNEL}/${snap}"
-    all="$(curl -fsSL "${base}/" 2>/dev/null | grep -oE 'Ascend-cann-toolkit_[^"< ]*linux-x86_64\.run' | sort -u)" || true
+    all="$(curl -fsSL "${base}/" 2>/dev/null | grep -oE "Ascend-cann-toolkit_[^\"< ]*linux-${arch}\\.run" | sort -u)" || true
     if [ "${allow_weekly}" = true ]; then
         # 主线 profile（随官方更新）：允许 weekly，优先 weekly（最新），无则退回正式版。
         file="$(printf '%s\n' "${all}" | grep -i weekly | sort -V | tail -1)"
         [ -n "${file}" ] || file="$(printf '%s\n' "${all}" | sort -V | tail -1)"
     else
         # 固定配套 profile（如竞赛）：只取正式发布版（版本号纯数字点分，如 9.1.0），排除 weekly 等未测构建；取最高版本。
-        file="$(printf '%s\n' "${all}" | grep -E '^Ascend-cann-toolkit_[0-9]+(\.[0-9]+)*_linux-x86_64\.run$' | sort -V | tail -1)"
+        file="$(printf '%s\n' "${all}" | grep -E "^Ascend-cann-toolkit_[0-9]+(\\.[0-9]+)*_linux-${arch}\\.run$" | sort -V | tail -1)"
     fi
     [ -n "${file}" ] || return 1
     echo "${file}"
@@ -1000,7 +1061,9 @@ download_and_install_cann() {
     # 3. 文件（是否允许 weekly 由 profile 决定：主线可用 weekly，竞赛等固定配套只取正式发布版）
     local aw; aw="$(profile_allow_weekly "${PROFILE}")"
     local file; file="$(pick_toolkit_file "${snap}" "${aw}")" || true
-    [ -n "${file}" ] || { warn "快照目录 ${snap} 未找到可用的 x86_64 Toolkit 包（当前 profile=${PROFILE}$([ "${aw}" = true ] || echo '，仅取正式发布版、不取 weekly')）。"; print_cann_guidance; exit 1; }
+    local _arch_for_msg
+    _arch_for_msg="$(normalize_arch "$(uname -m)" 2>/dev/null || echo x86_64)"
+    [ -n "${file}" ] || { warn "快照目录 ${snap} 未找到可用的 ${_arch_for_msg} Toolkit 包（当前 profile=${PROFILE}$([ "${aw}" = true ] || echo '，仅取正式发布版、不取 weekly')）。"; print_cann_guidance; exit 1; }
     # 4. 下载
     local base="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/${CANN_CHANNEL}/${snap}"
     local url="${base}/${file}" total
@@ -1134,6 +1197,7 @@ build_hccl_vm() {
         echo "  ① 第三方库下载失败(网络/SSL)：已清理下载缓存，重跑本脚本即可重新下载；" >&2
         echo "  ② gcc 超出 build.md 前置依赖范围(7.3.0–13.3.x，管宿主+交叉)：Ubuntu 25.04/26.04 的 gcc14/15 会使 yaml-cpp 等第三方编译失败，请在满足该范围的环境(如 22.04/24.04)运行；" >&2
         echo "  ③ CANN 与 hccl 不配套(device 侧报 ThreadType 未声明等)：换配套 CANN，见 https://gitcode.com/cann/release-management/ ；" >&2
+        echo "  ④ 架构适配问题(aarch64)：确认 CANN 安装包与当前架构一致（linux-aarch64），交叉编译工具链已正确安装（x86_64 宿主需 gcc-aarch64-linux-gnu）；" >&2
         echo "  仍无法解决可带完整日志到 https://gitcode.com/cann/hcomm/issues 反馈。" >&2
         clean_thirdparty_dl_cache
         error "编译未通过（完整日志: ${build_log}）。"
@@ -1230,17 +1294,81 @@ build_hccl_test() {
     fi
     chmod -R u+w "${work}" 2>/dev/null || true
     [ -n "${CANN_SETENV}" ] && source_cann_env "${CANN_SETENV}"
-    # 临时修改 Makefile，补 -lmpi_cxx（照 README §4.2.1 官方步骤，逐字一致）
-    if ! grep -q '\-lmpi_cxx' "${work}/Makefile" 2>/dev/null; then
-        sed -i 's/-lmpi/-lmpi -lmpi_cxx/g' "${work}/Makefile" 2>/dev/null || true
+    # ── Makefile 幂等保护 ──────────────────────────────────────────────
+    # 首次运行：把已污染的 Makefile 清理为干净状态（-lmpi_cxxcxx / -lmpicxxcxx 等所有历史残留均消除），
+    # 保存为 Makefile.orig；重跑：从干净 Makefile.orig 恢复（任何旧污染都被覆盖）。
+    # 清理链（6 步，覆盖所有已知污染模式）：
+    #   1) -lmpi_cxxcxx → -lmpi（消除级联替换产生的畸形标志）
+    #   2) -lmpi_cxx    → -lmpi（消除历史 -lmpi_cxx 残留）
+    #   3) -lmpicxxcxx  → -lmpi（消除级联替换产生的畸形标志）
+    #   4) -lmpicxx     → -lmpi（消除历史 -lmpicxx 残留）
+    #   5) -lmpi -lmpi  → -lmpi（消除重复追加，跑两次以覆盖 2+、3+ 连续重复）
+    if [ ! -f "${work}/Makefile.orig" ]; then
+        { sed -e 's/-lmpi_cxxcxx/-lmpi/g' \
+              -e 's/-lmpi_cxx/-lmpi/g'    \
+              -e 's/-lmpicxxcxx/-lmpi/g'  \
+              -e 's/-lmpicxx/-lmpi/g'     \
+              -e 's/ -lmpi -lmpi/ -lmpi/g' \
+              -e 's/ -lmpi -lmpi/ -lmpi/g' "${work}/Makefile" > "${work}/Makefile.cl" \
+          && mv -- "${work}/Makefile.cl" "${work}/Makefile"; } 2>/dev/null || true
+        cp -- "${work}/Makefile" "${work}/Makefile.orig"
+    else
+        cp -- "${work}/Makefile.orig" "${work}/Makefile"
     fi
     mkdir -p "${LOG_DIR}"
     local ht_log="${LOG_DIR}/hccl_test-build-${RUN_TS}.log" rc=0
-    # OpenMPI 按架构安装在 /usr/lib/<triplet>/openmpi（x86_64-linux-gnu / aarch64-linux-gnu）；
-    # 取当前架构 triplet，避免在 aarch64 上写死 x86_64 路径导致必编译失败。目录不存在则回退传统 x86_64 路径。
-    local mpi_home="/usr/lib/$(gcc -dumpmachine 2>/dev/null)/openmpi"
-    [ -d "${mpi_home}" ] || mpi_home="/usr/lib/x86_64-linux-gnu/openmpi"
-    ( cd "${work}" && MPI_HOME="${mpi_home}" make ASCEND_DIR="${ASCEND_HOME_PATH}" ) > "${ht_log}" 2>&1 &
+    local arch
+    arch="$(normalize_arch "$(uname -m)" 2>/dev/null || echo x86_64)"
+
+    if [ "${arch}" = "x86_64" ]; then
+        # ── x86_64：OpenMPI ──────────────────────────────────────────────
+        # Ubuntu：/usr/lib/<triplet>/openmpi/{lib,include}
+        # HCE/openEuler：/usr/lib64/openmpi-<arch>/{lib,include} 或 /usr/lib/<triplet>/openmpi/
+        # 优先用 ompi_info 探测真实路径（所有发行版通用），不可用时回退到已知候选路径列表。
+        local mpi_home="" _mpi_lib _mpi_inc
+        if command -v ompi_info &>/dev/null; then
+            _mpi_lib="$(ompi_info --path libs 2>/dev/null | grep -v '^libs:' | head -1 | tr -d ' ')" || true
+            _mpi_inc="$(ompi_info --path headers 2>/dev/null | grep -v '^headers:' | head -1 | tr -d ' ')" || true
+            if [ -n "${_mpi_lib}" ] && [ -n "${_mpi_inc}" ]; then
+                mpi_home="${_mpi_lib%/lib}"
+                [ -d "${mpi_home}/lib" ] && [ -d "${mpi_home}/include" ] || mpi_home=""
+            fi
+        fi
+        if [ -z "${mpi_home}" ]; then
+            local _probe_path
+            for _probe_path in \
+                "/usr/lib/x86_64-linux-gnu/openmpi" \
+                "/usr/lib64/openmpi" \
+                "/usr/lib/openmpi"; do
+                if [ -d "${_probe_path}/lib" ] && [ -d "${_probe_path}/include" ]; then
+                    mpi_home="${_probe_path}"
+                    break
+                fi
+            done
+        fi
+        if [ -z "${mpi_home}" ]; then
+            HCCL_TEST_RESULT="failed:找不到 OpenMPI 安装路径"
+            warn "找不到 OpenMPI 安装路径（ompi_info 不可用，且已知候选路径均不存在）。"
+            echo "  请手动安装 openmpi 或确认安装路径后用 MPI_HOME 环境变量指定。" >&2
+            return 0
+        fi
+        # 补 -lmpi_cxx
+        perl -pi -e 's/(?<!\w)(-lmpi)(?!_cxx)/${1} -lmpi_cxx/g' "${work}/Makefile" 2>/dev/null || true
+        ( cd "${work}" && MPI_HOME="${mpi_home}" make ASCEND_DIR="${ASCEND_HOME_PATH}" ) > "${ht_log}" 2>&1 &
+    else
+        # ── aarch64： mpich ──────────────────────────────────────────────
+        local mpi_home="/usr/local/mpich"
+        if [ ! -d "${mpi_home}" ]; then
+            HCCL_TEST_RESULT="failed:找不到 mpich 安装路径"
+            warn "找不到 mpich 安装路径：${mpi_home} 不存在。"
+            echo "  请手动安装 mpich 或确认安装路径后用 MPI_HOME 环境变量指定。" >&2
+            return 0
+        fi
+        # 补 -lmpicxx
+        perl -pi -e 's/(?<!\w)(-lmpi)(?!cxx)/${1} -lmpicxx/g' "${work}/Makefile" 2>/dev/null || true
+        local ld_path="/usr/lib/mpich/lib/:${ASCEND_HOME_PATH}/lib64/:${ASCEND_HOME_PATH}/aarch64-linux/devlib"
+        ( cd "${work}" && export LD_LIBRARY_PATH="${ld_path}:${LD_LIBRARY_PATH:-}" && MPI_HOME="${mpi_home}" make ASCEND_DIR="${ASCEND_HOME_PATH}" ) > "${ht_log}" 2>&1 &
+    fi
     local bpid=$!
     spin_on_pid "${bpid}" "编译 hccl_test 中"
     wait "${bpid}" || rc=$?

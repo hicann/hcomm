@@ -102,6 +102,16 @@ fi
 # 5.获得CANN安装目录: ASCEND_INSTALL_PATH
 ASCEND_INSTALL_PATH=$(dirname "$ASCEND_HOME_PATH")
 
+MACHINE_ARCH=$(uname -m)
+if [ "$MACHINE_ARCH" = "aarch64" ] || [ "$MACHINE_ARCH" = "arm64" ]; then
+    CANN_ARCH_DIR="aarch64-linux"
+else
+    CANN_ARCH_DIR="x86_64-linux"
+fi
+
+echo "CANN_ARCH_DIR: $CANN_ARCH_DIR (processor: $MACHINE_ARCH)"
+
+
 echo "--- 环境变量解析成功 ---"
 echo "HCCL_VM_PATH: $HCCL_VM_PATH"
 echo "ASCEND_INSTALL_PATH: $ASCEND_INSTALL_PATH"
@@ -132,7 +142,7 @@ if [ "$BUILD_HCOMM" = true ]; then
     if [ $? -eq 0 ]; then
         echo "HCOMM 构建成功，准备安装..."
         # 自动匹配版本号run包
-        CANN_HCOMM_PACKAGE=$(ls -t "$HCOMM_CODE_HOME"/build_out/cann-hcomm_*_linux-x86_64.run | head -n 1)
+        CANN_HCOMM_PACKAGE=$(ls -t "$HCOMM_CODE_HOME"/build_out/cann-hcomm_*_linux-${MACHINE_ARCH}.run | head -n 1)
         
         # 检查是否找到安装包
         if [ ! -f "$CANN_HCOMM_PACKAGE" ]; then
@@ -161,7 +171,7 @@ if [ "$BUILD_HCCL" = true ]; then
     if [ $? -eq 0 ]; then
         echo "HCCL 构建成功，准备安装..."
         # 自动匹配版本号run包
-        CANN_HCCL_PACKAGE=$(ls -t "$HCCL_CODE_HOME"/build_out/cann-hccl_*_linux-x86_64.run | head -n 1)
+        CANN_HCCL_PACKAGE=$(ls -t "$HCCL_CODE_HOME"/build_out/cann-hccl_*_linux-${MACHINE_ARCH}.run | head -n 1)
         
         # 检查是否找到安装包
         if [ ! -f "$CANN_HCCL_PACKAGE" ]; then

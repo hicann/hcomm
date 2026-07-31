@@ -170,19 +170,25 @@ namespace hccl
 {
 void *__HcclDlopenSub(const char *libName, int mode)
 {
-    (void) libName;
-    (void) mode;
-    static int dlAclRtHandle;
-    return &dlAclRtHandle;
+    void *handle = dlopen(libName, mode);
+    if (handle == nullptr) {
+        HCCL_VM_ERROR("dlopen {} failed: {}", libName, dlerror());
+        return nullptr;
+    }
+    return handle;
 }
 
 void *__HcclDlsymSub(void *handle, const char *funcName)
 {
-    (void) handle;
     void *addr = dlsym(RTLD_DEFAULT, funcName);
-    if (addr == nullptr) {
-        HCCL_VM_ERROR("not find {} Error: [{}]\n", funcName, dlerror());
-        return nullptr;
+    if (addr ==nullptr) {
+        HCCL_VM_WARN("rtld default not find {}: [{}]", funcName, dlerror());
+        addr = dlsym(handle, funcName);
+        if (addr == nullptr) {
+            HCCL_VM_WARN("not find {}: [{}]", funcName, dlerror());
+            return nullptr;
+        }
+        return addr;
     }
     return addr;
 }
@@ -200,8 +206,10 @@ HcclResult __hrtCloseNetServiceSub()
 
 int __HcclDlcloseSub(void *handle)
 {
-    handle = nullptr;
-    return 0;
+    if (handle == nullptr) {
+        return 0;
+    }
+    return dlclose(handle);
 }
 
 strong_alias(__HcclDlopenSub, HcclDlopen);

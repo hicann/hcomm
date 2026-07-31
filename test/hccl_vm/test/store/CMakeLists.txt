@@ -52,8 +52,8 @@ if(DEFINED ASCEND_TOOLKIT_ROOT)
     include_directories(
         ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 
-        ${ASCEND_TOOLKIT_ROOT}/x86_64-linux/include
-        ${ASCEND_TOOLKIT_ROOT}/x86_64-linux/include/hccl
+        ${ASCEND_TOOLKIT_ROOT}/${CANN_ARCH_DIR}/include
+ 	    ${ASCEND_TOOLKIT_ROOT}/${CANN_ARCH_DIR}/include/hccl
     )
 endif()
 

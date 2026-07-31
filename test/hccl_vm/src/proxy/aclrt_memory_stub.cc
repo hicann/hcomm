@@ -29,6 +29,8 @@
 #include "store_sim_run_mode.h"
 #include "sim_models.h"
 #include "db_sim_runner_ops.h"
+#include "db_sim_runner_common.h"
+#include "sim_sub_process_manager.h"
 
 
 // rank 进程加载本库时先于 main 预热仅校验模式缓存，使后续引流判定拿到确定值。
@@ -63,26 +65,31 @@ std::string GenDevMemName(int deviceId)
     return oss.str();
 }
 
-bool GetPtrNameByVirPtr(const void* virPtr, uint32_t& offset, sim::PhyMemBlock &phyMem)
+bool GetPhyMemBlockByVirPtr(const void* virPtr, uint32_t& offset, sim::PhyMemBlock &phyMem)
 {
+    // host侧根据虚拟地址查询时需要根据device_id匹配
     uint64_t devPtr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(virPtr));
+    uint64_t deviceKey = sim::GetCurrDeviceKey();
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [devPtr](const sim::VirtualMemBlock &virMem)
-        { return ((virMem.start_ptr <= devPtr) &&
-                    (devPtr < (virMem.start_ptr + virMem.size)) &&
-                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)); });
+        [devPtr, deviceKey](const sim::VirtualMemBlock &virMem) {
+            return ((virMem.dev_mapped_ptr <= devPtr) &&
+                    (devPtr < (virMem.dev_mapped_ptr + virMem.size)) &&
+                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV) &&
+                    (virMem.device_id == deviceKey));
+        }
+    );
     if (!virMemRes.second) {
-        HCCL_VM_ERROR("can not find this buff offset ptr:{:p}", virPtr);
+        HCCL_VM_ERROR("can not find VirtualMemBlock by virPtr:{:p}", virPtr);
         return false;
     }
 
     auto phyMemId = virMemRes.first.phy_mem_id;
     auto phyMemRes = RunnerDB::GetById<sim::PhyMemBlock>(phyMemId);
     if (!phyMemRes.has_value()) {
-        HCCL_VM_ERROR("can not find phy Mem id:{:d}", phyMemId);
+        HCCL_VM_ERROR("can not find PhyMemBlock by phyMemId:{:d}", phyMemId);
         return false;
     };
-    offset = (uint32_t)(devPtr - virMemRes.first.start_ptr);
+    offset = (uint32_t)(devPtr - virMemRes.first.dev_mapped_ptr);
     phyMem = *phyMemRes;
     return true;
 }
@@ -91,7 +98,7 @@ uint32_t GetRankIdByVirAddr(const void* virAddr)
 {
     sim::PhyMemBlock phyMem{};
     uint32_t offset = 0;
-    if (!GetPtrNameByVirPtr(virAddr, offset, phyMem)) {
+    if (!GetPhyMemBlockByVirPtr(virAddr, offset, phyMem)) {
         return 0;
     }
 
@@ -108,20 +115,25 @@ uint32_t GetRankIdByVirAddr(const void* virAddr)
 void* GetRealPtrByAddr(const void* virPtr)
 {
     uint64_t devPtr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(virPtr));
+    uint64_t deviceKey = sim::GetCurrDeviceKey();
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [devPtr](const sim::VirtualMemBlock &virMem)
-        { return ((virMem.start_ptr <= devPtr) &&
-                    (devPtr < (virMem.start_ptr + virMem.size)) &&
-                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)); });
+        [devPtr, deviceKey](const sim::VirtualMemBlock &virMem) {
+            return ((virMem.dev_mapped_ptr <= devPtr) &&
+                    (devPtr < (virMem.dev_mapped_ptr + virMem.size)) &&
+                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)) &&
+                    (virMem.device_id == deviceKey);
+        }
+    );
     if (!virMemRes.second) {
         HCCL_VM_ERROR("can not find this buff offset ptr:{:p}", virPtr);
         return nullptr;
     }
 
-    void* devStartPtr = (void*)(uintptr_t)virMemRes.first.start_ptr;
-    auto hostPtr = sim::DeviceMemoryManager::GetInstance().GetHostPtrByDevPtr(devStartPtr);
+    void *virStartPtr = (void*)(uintptr_t)virMemRes.first.start_ptr;
+    void *devStartPtr = (void*)(uintptr_t)virMemRes.first.dev_mapped_ptr;
+    auto hostPtr = sim::DeviceMemoryManager::GetInstance().GetHostPtrByDevPtr(virStartPtr);
     if (hostPtr == nullptr) {
-        HCCL_VM_ERROR("can not find host ptr by dev ptr:{:p}", devStartPtr);
+        HCCL_VM_ERROR("can not find host ptr by dev ptr:{:p}", virStartPtr);
         return nullptr;
     }
 
@@ -186,10 +198,54 @@ aclError aclrtFreeHost(void *hostPtr)
     return ACL_SUCCESS;
 }
 
+bool GetDevMappedMemPtr(uint64_t rankId, size_t size, std::string& memName, bool& isDevMapped, void** virPtr, void** devPtr)
+{
+    isDevMapped = false;
+    *virPtr = sim::DeviceMemoryManager::GetInstance().AllocVirMem(rankId, size);
+    if (*virPtr == nullptr) {
+        HCCL_VM_ERROR("alloc vir mem rankId:{:d}, size:{:d} fail", rankId, size);
+        return false;
+    }
+
+    // --check-only 模式下大块引流到复用区，设备侧无需真实地址映射
+    if (sim::CommPoolPolicy::ShouldRedirect(size, sim::IsCheckOnlyMode())) {
+        *devPtr = *virPtr;
+        HCCL_VM_INFO("check-only pool-redirect: use virAddr {:p} as devPtr", *virPtr);
+        return true;
+    }
+
+    if (sim::GetAicpuProcMgr().IsAlive()) {
+        DevMemOpPayload payload{};
+        strncpy(payload.memName, memName.c_str(), sizeof(payload.memName) - 1);
+
+        uint8_t rspCmd;
+        uint32_t rspLen = 0;
+        RspGetDevPtrPayload rspPayload{};
+        if (sim::GetAicpuProcMgr().Request(PIPE_CMD_GET_DEV_PTR, &payload, sizeof(payload),
+                                        rspCmd, &rspPayload, sizeof(rspPayload), rspLen) != 0) {
+            HCCL_VM_ERROR("Request PIPE_CMD_GET_DEV_PTR failed.");
+            return false;
+        }
+
+        isDevMapped = true;
+        *devPtr = (void*)rspPayload.ptr;
+        HCCL_VM_INFO("PIPE_CMD_GET_DEV_PTR vir mem by device {:p}", (void*)rspPayload.ptr);
+    } else {
+        *devPtr = *virPtr;
+    }
+
+    return true;
+}
+
 aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 {
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);
@@ -208,22 +264,23 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 
     auto rankId = (uint32_t)sim::GetCurrRankId();
 
-    auto virPtr = sim::DeviceMemoryManager::GetInstance().AllocVirMem(rankId, size);
-    if (virPtr == nullptr) {
-        HCCL_VM_ERROR("can not alloc vir mem deviceId:{:d}, phyMemId:{:d}, size:{:d}", deviceId, rankId, size);
-        return ACL_ERROR_INTERNAL_ERROR;
-    }
-
     std::string memName = GenDevMemName(deviceId);
     auto hostPtr = sim::DeviceMemoryManager::GetInstance().AllocPhyMem(memName.c_str(), deviceId, size);
     if (hostPtr == nullptr) {
-        sim::DeviceMemoryManager::GetInstance().FreeVirMem(rankId, devPtr);
         HCCL_VM_ERROR("can not alloc phy mem deviceId:{:d}, size:{:d}", deviceId, size);
         return ACL_ERROR_INTERNAL_ERROR;
     }
     // 大块引流到复用区时缓存池基址，供 IsInCommPool 判定（与主机侧共用同一基址）。
     if (sim::CommPoolPolicy::ShouldRedirect(size, sim::IsCheckOnlyMode())) {
         CacheCommPoolBase(hostPtr);
+    }
+
+    bool isDevMapped = false;
+    void *virPtr = nullptr;
+    void *devMappedPtr = nullptr;
+    if (!GetDevMappedMemPtr(rankId, size, memName, isDevMapped, &virPtr, &devMappedPtr)) {
+        HCCL_VM_ERROR("can not alloc vir mem deviceId:{:d}, rankId:{:d}, size:{:d}", deviceId, rankId, size);
+        return ACL_ERROR_INTERNAL_ERROR;
     }
 
     // 记录物理内存信息到数据库
@@ -236,16 +293,20 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 
     // 记录虚拟内存信息到数据库
     sim::VirtualMemBlock virMem{};
-    virMem.start_ptr = (uint64_t)(uintptr_t)virPtr;
+    virMem.start_ptr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(virPtr));
+    virMem.dev_mapped_ptr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(devMappedPtr));
+    virMem.is_dev_access = static_cast<uint8_t>(isDevMapped);
     virMem.size = size;
     virMem.ctx_id = runner.current_ctx_id;
+    virMem.rank_id = rankId;
+    virMem.device_id = deviceId;
     virMem.phy_mem_id = phyMemId;
     virMem.owner_pid = runner.pid;
     virMem.src_type = (uint8_t)sim::VIR_MEM_TYPE_DEV;
     virMem.policy = (uint8_t)policy;
     RunnerDB::Add<sim::VirtualMemBlock>(virMem);
 
-    *devPtr = virPtr;
+    *devPtr = isDevMapped ? devMappedPtr : virPtr;
     // 缓存设备地址到host地址
     sim::DeviceMemoryManager::GetInstance().MapDevPtrHostPtr(virPtr, hostPtr);
     HCCL_VM_INFO("malloc dev addr:{:p}, memName:{}, size:{:d}", virPtr, memName, size);
@@ -298,9 +359,14 @@ aclError aclrtMallocForTaskScheduler(void **devPtr, size_t size, aclrtMemMallocP
 aclError aclrtFree(void* devPtr)
 {
     uint64_t startPtr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(devPtr));
+    uint64_t deviceKey = sim::GetCurrDeviceKey();
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [startPtr](const sim::VirtualMemBlock &virMem)
-        { return virMem.start_ptr == startPtr && virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV; });
+        [startPtr, deviceKey](const sim::VirtualMemBlock &virMem) {
+            return (virMem.dev_mapped_ptr == startPtr) &&
+                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV) &&
+                    (virMem.device_id == deviceKey);
+        }
+    );
     if (!virMemRes.second) {
         HCCL_VM_ERROR("can not find this buff offset ptr:0x{:x}", startPtr);
         return ACL_ERROR_INTERNAL_ERROR;
@@ -321,6 +387,19 @@ aclError aclrtFree(void* devPtr)
     }
 
     auto devPhyId = dev->physical_id;
+
+    if (sim::GetAicpuProcMgr().IsAlive()) {
+        DevMemOpPayload freePayload{};
+        strncpy(freePayload.memName, phyMemRes->name, sizeof(freePayload.memName) - 1);
+
+        uint8_t rspCmd;
+        uint32_t rspLen = 0;
+        RspFreeDevPtrPayload rspPayload{};
+        if (sim::GetAicpuProcMgr().Request(PIPE_CMD_FREE_DEV_PTR, &freePayload, sizeof(freePayload),
+                                        rspCmd, &rspPayload, sizeof(rspPayload), rspLen) != 0) {
+            HCCL_VM_ERROR("Request PIPE_CMD_FREE_DEV_PTR failed for {}", phyMemRes->name);
+        }
+    }
 
     // 先取这块内存的真实地址，判断它是否在复用区（必须在 Unmap 之前取）。
     // 第二次释放时映射已删、取不到地址，就按非复用区处理，天然幂等。
@@ -349,7 +428,7 @@ aclError aclrtMemset(void *devPtr, size_t maxCount, int32_t value, size_t count)
 {
     sim::PhyMemBlock phyMem{};
     uint32_t offset = 0;
-    if (!GetPtrNameByVirPtr(devPtr, offset, phyMem)) {
+    if (!GetPhyMemBlockByVirPtr(devPtr, offset, phyMem)) {
         memset(devPtr, value, count);
         HCCL_VM_INFO("sys mem memset ptr:{:p}, maxCount: {:d}, value: {:d}, count: {:d}", devPtr, maxCount, value, count);
         return ACL_SUCCESS;
@@ -424,7 +503,7 @@ aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, a
 
     sim::PhyMemBlock phyMem{};
     uint32_t offset = 0;
-    if (!GetPtrNameByVirPtr(devPtr, offset, phyMem)) {  
+    if (!GetPhyMemBlockByVirPtr(devPtr, offset, phyMem)) {  
         HCCL_VM_INFO("dev mem memcpy ptr:{:p}, count: {:d}", devPtr, count);
         return ACL_ERROR_INTERNAL_ERROR;
     }
@@ -512,7 +591,7 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
 
     sim::PhyMemBlock phyMem{};
     uint32_t offset = 0;
-    if (!GetPtrNameByVirPtr(devPtr, offset, phyMem)) {
+    if (!GetPhyMemBlockByVirPtr(devPtr, offset, phyMem)) {
         HCCL_VM_INFO("dev mem memcpy ptr:{:p}, count: {:d}", devPtr, count);
         return ACL_ERROR_INTERNAL_ERROR;
     }
@@ -640,8 +719,13 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 {
     (void) prop;
     (void) flags;
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);
@@ -703,8 +787,13 @@ aclError aclrtReserveMemAddress(void **virPtr, size_t size, size_t alignment, vo
     (void) alignment;
     (void) expectPtr;
     (void) flags;
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);
@@ -748,9 +837,14 @@ aclError aclrtReserveMemAddress(void **virPtr, size_t size, size_t alignment, vo
 aclError aclrtReleaseMemAddress(void *virPtr)
 {
     uint64_t devPtr  = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(virPtr));
+    uint64_t deviceKey = sim::GetCurrDeviceKey();
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [devPtr](const sim::VirtualMemBlock &virMem)
-        { return virMem.start_ptr == devPtr && virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV; });
+        [devPtr, deviceKey](const sim::VirtualMemBlock &virMem) {
+            return (virMem.start_ptr == devPtr) &&
+                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV) &&
+                    (virMem.device_id == deviceKey);
+        }
+    );
     if (!virMemRes.second) {
         HCCL_VM_ERROR("can not find this buff offset ptr:{:p}", devPtr);
         return ACL_ERROR_INTERNAL_ERROR;
@@ -786,9 +880,14 @@ aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle
     (void) flags;
     uint64_t phyMemId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(handle));
     uint64_t devPtr  = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(virPtr));
+    uint64_t deviceKey = sim::GetCurrDeviceKey();
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [devPtr](const sim::VirtualMemBlock &virMem)
-        { return virMem.start_ptr == devPtr && virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV; });
+        [devPtr, deviceKey](const sim::VirtualMemBlock &virMem) {
+            return (virMem.start_ptr == devPtr) &&
+                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV) &&
+                    (virMem.device_id == deviceKey);
+        }
+    );
     if (!virMemRes.second) {
         HCCL_VM_ERROR("can not find this buff offset ptr:{:p}", devPtr);
         return ACL_ERROR_INTERNAL_ERROR;
@@ -811,9 +910,14 @@ aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle
 aclError aclrtUnmapMem(void *virPtr)
 {
     uint64_t devPtr  = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(virPtr));
+    uint64_t deviceKey = sim::GetCurrDeviceKey();
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [devPtr](const sim::VirtualMemBlock &virMem)
-        { return virMem.start_ptr == devPtr && virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV; });
+        [devPtr, deviceKey](const sim::VirtualMemBlock &virMem) {
+            return (virMem.start_ptr == devPtr) &&
+                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV) &&
+                    (virMem.device_id == deviceKey);
+        }
+    );
     if (!virMemRes.second) {
         HCCL_VM_ERROR("can not find this buff offset ptr:{:p}", devPtr);
         return ACL_ERROR_INTERNAL_ERROR;
@@ -851,8 +955,13 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 
 aclError aclrtDeviceGetBareTgid(int32_t *pid)
 {
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     *pid = runner.pid;
@@ -861,8 +970,13 @@ aclError aclrtDeviceGetBareTgid(int32_t *pid)
 
 aclError aclrtMemSetPidToShareableHandle(uint64_t shareableHandle, int32_t *pid, size_t pidNum)
 {
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     for (size_t i = 0; i < pidNum; i++) {
@@ -930,8 +1044,14 @@ aclError aclrtCmoWaitBarrier(aclrtBarrierTaskInfo *taskInfo, aclrtStream stream,
 aclError aclrtPointerGetAttributes(const void *ptr, aclrtPtrAttributes *attributes)
 {
     uint64_t startPtr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ptr));
+    uint64_t deviceKey = sim::GetCurrDeviceKey();
     auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [startPtr](const sim::VirtualMemBlock &virMem) { return virMem.start_ptr ==  startPtr && virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV;});
+        [startPtr, deviceKey](const sim::VirtualMemBlock &virMem) {
+            return (virMem.start_ptr == startPtr) &&
+                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV) &&
+                    (virMem.device_id == deviceKey);
+        }
+    );
     if (!virMemRes.second) {
         HCCL_VM_ERROR("can not find this buff offset ptr: 0x{:x}", startPtr);
         return ACL_ERROR_INVALID_PARAM;
@@ -1022,9 +1142,14 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
         HCCL_VM_ERROR("cannot find phy Mem offset: {:d}", phyMemId);
         return ACL_ERROR_INVALID_PARAM;
     }
-
+    
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::IpcMemRecord memRecord{};
@@ -1040,8 +1165,13 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
 
 aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)
 {
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     for (int32_t i = 0; i < num; i++) {
@@ -1087,9 +1217,14 @@ aclError aclrtIpcMemClose(const char *key)
         HCCL_VM_ERROR("cannot find ipc record: {:d}", ipcRecordIdx);
         return ACL_ERROR_INVALID_PARAM;
     }
-
+    
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     if (runner.pid == recordRes->create_pid) {

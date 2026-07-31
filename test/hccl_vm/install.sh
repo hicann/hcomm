@@ -263,7 +263,7 @@ build_hccl_test() {
     if ! grep -q '\-lmpi_cxx' Makefile; then
         sed -i 's/-lmpi/-lmpi -lmpi_cxx/g' Makefile
     fi
-    MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi make ASCEND_DIR=${ASCEND_HOME_PATH}
+    MPI_HOME=/usr/lib/$(uname -m)-linux-gnu/openmpi make ASCEND_DIR=${ASCEND_HOME_PATH}
 }
 
 # 编译HCCL-VM工具

@@ -149,9 +149,10 @@ bool IsValidPipe(uint32_t pipe)
 }
 
 TaskPosition MakeAivPosition(RankId rankId, uint64_t launchIdx, uint32_t blockId, uint32_t pipe,
-    uint32_t taskId = std::numeric_limits<uint32_t>::max())
+    uint32_t taskId, OperatorId operatorId)
 {
     TaskPosition position;
+    position.operatorId = operatorId;
     position.rankId = rankId;
     position.streamId = INVALID_STREAM_ID;
     position.launchIdx = launchIdx;
@@ -193,9 +194,9 @@ MemSlice ConvertAivSlice(RankId rankId, const AivDataSliceV3 &slice)
     return result;
 }
 
-TaskPosition MakeAivLocation(const AivRuntimeTaskV3 &task, uint64_t launchIdx)
+TaskPosition MakeAivLocation(const AivRuntimeTaskV3 &task, uint64_t launchIdx, OperatorId operatorId)
 {
-    return MakeAivPosition(task.rankId, launchIdx, task.blockId, task.curPipe, task.taskId);
+    return MakeAivPosition(task.rankId, launchIdx, task.blockId, task.curPipe, task.taskId, operatorId);
 }
 
 SetWaitKey MakeSetWaitKey(const AivPipeEvent &event)
@@ -208,7 +209,8 @@ FlagCellKey MakeFlagCellKey(const AivFlagSync &flag)
     return FlagCellKey{flag.flagOwnerRank, flag.launchIdx, flag.commInfoOffset};
 }
 
-std::unique_ptr<TaskNode> TranslateAivRuntimeTask(const AivRuntimeTaskV3 &task, uint64_t launchIdx)
+std::unique_ptr<TaskNode> TranslateAivRuntimeTask(const AivRuntimeTaskV3 &task, uint64_t launchIdx,
+    OperatorId operatorId)
 {
     switch (task.taskType) {
         case AivRuntimeTaskTypeV3::MEM_COPY: {
@@ -249,14 +251,14 @@ std::unique_ptr<TaskNode> TranslateAivRuntimeTask(const AivRuntimeTaskV3 &task, 
         }
         case AivRuntimeTaskTypeV3::PIPE_BARRIER: {
             AivBarrierInfo info;
-            info.taskLoc = MakeAivLocation(task, launchIdx);
+            info.taskLoc = MakeAivLocation(task, launchIdx, operatorId);
             info.pipeType = task.pipeType;
             info.memberTaskIds = task.barrierGroupTaskIds;
             return std::make_unique<TaskAivPipeBarrier>(std::move(info));
         }
         case AivRuntimeTaskTypeV3::SYNC_ALL: {
             AivSyncAllInfo info;
-            info.taskLoc = MakeAivLocation(task, launchIdx);
+            info.taskLoc = MakeAivLocation(task, launchIdx, operatorId);
             info.syncRound = task.syncRound;
             return std::make_unique<TaskAivSyncAll>(std::move(info));
         }
@@ -352,7 +354,7 @@ HcclResult ValidateSnapshot(const AivLaunchContext &ctx)
     if (ctx.storage == nullptr || ctx.placeholder == nullptr) {
         return HCCL_E_PTR;
     }
-    const CheckerParam param = ctx.storage->GetCheckerParam();
+    const CheckerParam param = ctx.storage->GetCheckerParam(ctx.placeholder->GetOperatorId());
     if (ctx.snapshot.rankSize != 0 && param.rankSize != 0 && ctx.snapshot.rankSize != param.rankSize) {
         HCCL_VM_ERROR("{} The AIV snapshot was captured for a different rank count than the current "
             "checker input, rankId={}, launchId={}, snapshotRankCount={}, currentRankCount={}, snapshotFile={}",
@@ -386,7 +388,8 @@ HcclResult UpdateAivBufferSize(uint64_t snapshotSize, const char *fieldName, con
 
 HcclResult AppendRuntimeTask(AivLaunchContext &ctx, const AivRuntimeTaskV3 &task, uint64_t order, NodeId &nodeId)
 {
-    std::unique_ptr<TaskNode> node = TranslateAivRuntimeTask(task, ctx.placeholder->GetLaunchIdx());
+    std::unique_ptr<TaskNode> node = TranslateAivRuntimeTask(task, ctx.placeholder->GetLaunchIdx(),
+        ctx.placeholder->GetOperatorId());
     if (node == nullptr) {
         HCCL_VM_ERROR("{} One AIV runtime task type is not supported, "
             "rankId={}, launchId={}, taskId={}, taskType={}, snapshotFile={}",
@@ -397,7 +400,7 @@ HcclResult AppendRuntimeTask(AivLaunchContext &ctx, const AivRuntimeTaskV3 &task
     }
 
     const TaskPosition position = MakeAivPosition(task.rankId, ctx.placeholder->GetLaunchIdx(), task.blockId,
-        task.curPipe, task.taskId);
+        task.curPipe, task.taskId, ctx.placeholder->GetOperatorId());
     HcclResult ret = ctx.graph->AppendGeneratedNode(std::move(node), position, nodeId);
     if (ret != HCCL_SUCCESS) {
         return ret;
@@ -1793,7 +1796,7 @@ HcclResult MergePipeBarrierGroups(AivLaunchContext &ctx)
         const uint32_t mergedTaskId = group.memberTaskIds.empty() ? std::numeric_limits<uint32_t>::max() :
             group.memberTaskIds.front();
         info.taskLoc = MakeAivPosition(ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(), group.blockId,
-            std::numeric_limits<uint32_t>::max(), mergedTaskId);
+            std::numeric_limits<uint32_t>::max(), mergedTaskId, ctx.placeholder->GetOperatorId());
         info.pipeType = group.pipeType;
         info.merged = true;
         info.memberNodeIds = group.memberNodeIds;
@@ -1802,7 +1805,7 @@ HcclResult MergePipeBarrierGroups(AivLaunchContext &ctx)
 
         NodeId mergeNodeId = INVALID_NODE_ID;
         const TaskPosition position = MakeAivPosition(ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-            group.blockId, std::numeric_limits<uint32_t>::max(), mergedTaskId);
+            group.blockId, std::numeric_limits<uint32_t>::max(), mergedTaskId, ctx.placeholder->GetOperatorId());
         HcclResult ret = ctx.graph->AppendGeneratedNode(std::make_unique<TaskAivPipeBarrier>(std::move(info)),
             position, mergeNodeId);
         if (ret != HCCL_SUCCESS) {
@@ -1876,7 +1879,8 @@ HcclResult MergeSyncAllGroups(AivLaunchContext &ctx)
         const uint32_t mergedTaskId = group.memberTaskIds.empty() ? std::numeric_limits<uint32_t>::max() :
             group.memberTaskIds.front();
         info.taskLoc = MakeAivPosition(ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-            std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), mergedTaskId);
+            std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), mergedTaskId,
+            ctx.placeholder->GetOperatorId());
         info.syncRound = group.syncRound;
         info.merged = true;
         info.memberNodeIds = group.memberNodeIds;
@@ -1885,7 +1889,8 @@ HcclResult MergeSyncAllGroups(AivLaunchContext &ctx)
 
         NodeId mergeNodeId = INVALID_NODE_ID;
         const TaskPosition position = MakeAivPosition(ctx.placeholder->GetRankId(), ctx.placeholder->GetLaunchIdx(),
-            std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), mergedTaskId);
+            std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), mergedTaskId,
+            ctx.placeholder->GetOperatorId());
         HcclResult ret = ctx.graph->AppendGeneratedNode(std::make_unique<TaskAivSyncAll>(std::move(info)), position,
             mergeNodeId);
         if (ret != HCCL_SUCCESS) {

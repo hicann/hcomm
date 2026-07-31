@@ -32,14 +32,14 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/third_party/spdlog
     ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/base
 
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
 
 set(CHECKER_LOG_SRC ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/log/log_stub.cc)
-set(CHECKER_LIBC_SEC ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.so)
+set(CHECKER_LIBC_SEC ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so)
 
 link_libraries(
     gtest
@@ -242,7 +242,7 @@ target_include_directories(test_mem_conflict_check_utils PRIVATE
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor
 )
 target_link_libraries(test_mem_conflict_check_utils PRIVATE
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
 )
 set_target_properties(test_mem_conflict_check_utils PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -383,5 +383,31 @@ target_link_libraries(test_task_graph_sync_conflict_v3 PRIVATE
     ${CHECKER_LIBC_SEC}
 )
 set_target_properties(test_task_graph_sync_conflict_v3 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
+)
+
+add_executable(test_big_graph_checker_v3
+    big_graph_check/big_graph_checker_v3_test.cc
+    big_graph_check/real_task_orchestration_sync_test.cc
+    big_graph_check/real_ccu_graph_sync_test.cc
+    big_graph_check/real_aiv_graph_sync_test.cc
+    main.cc
+)
+target_sources(test_big_graph_checker_v3 PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/task_graph_generator_v3/task_graph_sync_conflict_v3.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/task_graph_generator_v3/task_def_v3.cc
+    ${CHECKER_LOG_SRC}
+)
+target_include_directories(test_big_graph_checker_v3 BEFORE PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/framework/task_graph_generator_v3
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/utils
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/src/log
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/header/internal
+    ${CMAKE_SOURCE_DIR}/src/plugin/checker/header/external
+)
+target_link_libraries(test_big_graph_checker_v3 PRIVATE
+    ${CHECKER_LIBC_SEC}
+)
+set_target_properties(test_big_graph_checker_v3 PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
 )

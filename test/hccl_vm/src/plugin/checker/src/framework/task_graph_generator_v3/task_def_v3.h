@@ -23,6 +23,7 @@
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
 using NodeId = int32_t;
+using OperatorId = uint32_t;
 using RankId = uint32_t;
 using StreamId = uint32_t;
 using QueueId = uint32_t;
@@ -30,6 +31,7 @@ using ChannelId = uint16_t; // for CCU mode
 
 constexpr NodeId MAIN_START_NODE_ID = -1;
 constexpr NodeId INVALID_NODE_ID = std::numeric_limits<NodeId>::min();
+constexpr OperatorId INVALID_OPERATOR_ID = std::numeric_limits<OperatorId>::max();
 constexpr size_t MAX_NODE_COUNT = static_cast<size_t>(std::numeric_limits<NodeId>::max());
 constexpr RankId INVALID_RANK_ID = std::numeric_limits<RankId>::max();
 constexpr StreamId INVALID_STREAM_ID = std::numeric_limits<StreamId>::max();
@@ -111,6 +113,7 @@ enum class ProtocolType : uint8_t {
 };
 
 struct TaskPosition {
+    OperatorId operatorId{INVALID_OPERATOR_ID};
     RankId rankId{INVALID_RANK_ID};
     StreamId streamId{INVALID_STREAM_ID};
     QueueId queueId{INVALID_QUEUE_ID};
@@ -127,6 +130,7 @@ struct MemSlice {
     MemType memType{MemType::INVALID};
     uint64_t offset{0};
     uint64_t len{0};
+    uint64_t rawAddr{0};
 };
 
 struct AivPipeEvent {
@@ -242,6 +246,12 @@ public:
     virtual std::string DescribeShort() const { return Describe(); }
 
     TaskType GetType() const { return type_; }
+    OperatorId GetOperatorId() const { return operatorId_; }
+    void SetOperatorId(OperatorId operatorId)
+    {
+        operatorId_ = operatorId;
+        loc_.operatorId = operatorId;
+    }
     NodeId GetNodeId() const { return nodeId_; }
     void SetNodeId(NodeId id) { nodeId_ = id; }
 
@@ -249,6 +259,7 @@ public:
     void SetPosition(const TaskPosition &position)
     {
         loc_ = position;
+        operatorId_ = position.operatorId;
         if (ccuTraceValid_) {
             ccuTrace_.position = position;
             ccuTrace_.taskLoc = position;
@@ -300,6 +311,7 @@ public:
 
 protected:
     TaskType type_{TaskType::INVALID};
+    OperatorId operatorId_{INVALID_OPERATOR_ID};
     NodeId nodeId_{INVALID_NODE_ID};
     TaskPosition loc_;
     CcuTraceInfo ccuTrace_;

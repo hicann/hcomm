@@ -14,6 +14,7 @@
 #include <runnerdb/db_sim_runner_common.h>
 
 #include "sim_log.h"
+#include "db_sim_runner_common.h"
 
 uint64_t g_cur_server_key = 0;
 
@@ -62,7 +63,7 @@ aclError GetDeviceByPhysicalId(uint32_t deviceId, sim::Device &device)
         return d.server_id == g_cur_server_key && d.physical_id == deviceId;
     });
     if (!ret.second) {
-        HCCL_VM_ERROR("cannot find device by physical id {:d}", deviceId);
+        HCCL_VM_ERROR("[{}] cannot find device by physical id {:d}, server_key {:d}", __func__, deviceId, g_cur_server_key);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -109,6 +110,7 @@ aclError UpdateDeviceLogicId(uint64_t serverKey, uint32_t phyDevId, uint32_t log
     auto deviceKey = device.id;
     RunnerDB::Update<sim::Device>(deviceKey, [deviceKey, logicDevId](sim::Device &dev) { 
         dev.logic_id = logicDevId;
+        dev.status = 1;// 设备状态设置为可用
     });
 
     return ACL_SUCCESS;
@@ -399,5 +401,32 @@ bool GetRankIdByMPI(uint32_t &rankId, uint64_t &serverId)
         rankId = static_cast<uint32_t>(atoi(mpichRankStr));
     }
     return true;
+}
+
+uint64_t GetCurServerId()
+{
+    if (g_cur_server_key != 0) {
+        return g_cur_server_key;
+    }
+
+    uint32_t rankId;
+    uint64_t serverId = 0;
+    if (!sim::GetRankIdByMPI(rankId, serverId)) {
+        HCCL_VM_ERROR("get rankId by MPI fail serverId:{:d}", serverId);
+        return 0;
+    }
+
+    if (serverId == 0) {
+        sim::Device device{};
+        auto devRet = sim::GetDeviceByRankId(rankId, device);
+        if (devRet != ACL_SUCCESS) {
+            HCCL_VM_ERROR("device not found by rankId:{:d}", rankId);
+            return 0;
+        }
+        serverId = device.server_id;
+        HCCL_VM_DEBUG("logicId:{:d} rankId:{:d} key:{:d}", device.logic_id, rankId, device.id);
+    }
+    g_cur_server_key = serverId;
+    return serverId;
 }
 }

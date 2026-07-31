@@ -18,19 +18,19 @@
 #include "store_sim_memory_manager.h"
 #include "sqe_v82_stub.h"
 #include "udma_data_struct_stub.h"
+#include "db_sim_runner_db.h"
+#include "sim_models.h"
 
 class DeviceSqeParseTest : public testing::Test {
 protected:
     void SetUp() override {
         SetCurRankId(0);
-        sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
-        shm_unlink("/HcclAicpuData_SqeParse");
+        RunnerDB::DeleteAll<sim::RaJetty>();
     }
     
     void TearDown() override {
         SetCurRankId(0);
-        sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
-        shm_unlink("/HcclAicpuData_SqeParse");
+        RunnerDB::DeleteAll<sim::RaJetty>();
     }
 };
 
@@ -521,11 +521,11 @@ TEST_F(DeviceSqeParseTest, ParseDavidUBWriteWithNotify_Reduce) {
 }
 
 // ==================== ParseDavidUDMASqe Tests ====================
-// With null-checks added to device_sqe_parse_stub.cc, ParseDavidUDMASqe returns early
-// when shared memory is not set up. We test both null-path and valid-path.
+// With DB-based RaJetty lookup in device_sqe_parse_stub.cc, ParseDavidUDMASqe returns early
+// when no corresponding RaJetty exists. We test both missing-jetty and valid-jetty paths.
 
-TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_NullAicpuData) {
-    // Without shared memory setup, GetHcclAicpuDataShmPtr returns nullptr
+TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_NoJettyInDb) {
+    // Without RaJetty in DB, GetWqebufferByJettyId fails
     // ParseDavidUDMASqe should return early with error log
     Rt91095StarsUbdmaDBmodeSqe ubSqe;
     memset(&ubSqe, 0, sizeof(ubSqe));
@@ -536,15 +536,11 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_NullAicpuData) {
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteOpcodeWithShm) {
-    // Setup shared memory for HcclAicpuData
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
-    // Setup WQE buffer
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 4] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     // Setup WQE with WRITE opcode at ciVal=0
     UdmaSqeWrite *ubWqeWrite = reinterpret_cast<UdmaSqeWrite *>(wqeBuffer);
@@ -562,17 +558,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteOpcodeWithShm) {
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteWithNotifyOpcodeWithShm) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 4] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     // piValue1=2, ciVal = piValue1-2=0, first WQE has WRITE_WITH_NOTIFY
     UdmaSqeCommon *ubCommon = reinterpret_cast<UdmaSqeCommon *>(wqeBuffer);
@@ -594,17 +587,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteWithNotifyOpcodeWithShm) {
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_ReadOpcodeWithShm) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 4] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     UdmaSqeWrite *ubWqeRead = reinterpret_cast<UdmaSqeWrite *>(wqeBuffer);
     memset(ubWqeRead, 0, sizeof(UdmaSqeWrite));
@@ -621,17 +611,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_ReadOpcodeWithShm) {
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_UnsupportedOpcodeWithShm) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 4] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     // Put unsupported opcode at ciVal position (adjusted: piValue1-1)
     UdmaSqeCommon *ubCommon = reinterpret_cast<UdmaSqeCommon *>(wqeBuffer + 1 * HCCL_WQE_SIZE);
@@ -644,17 +631,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_UnsupportedOpcodeWithShm) {
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_AdjustCiValWithShm) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 8] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     // piValue1=3, first ciVal = 3-2=1, opcode at [1] is not WRITE_WITH_NOTIFY,
     // so adjusted ciVal = 3-1=2, reads WQE at [2]
@@ -677,16 +661,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_AdjustCiValWithShm) {
     ubSqe.piValue1 = 3;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_NullWqeBuffer) {
-    // Setup HcclAicpuData but with wqeAddrDev=0 so GetRealPtrByDevPtr returns nullptr
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-    // jettyId2WqeBufMap[1] = 0 by default, so wqeAddrDev=0, wqeBuffer=0
+    // RaJetty exists but sqBuffer=0, so wqeBuffer=0
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = 0;
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     Rt91095StarsUbdmaDBmodeSqe ubSqe;
     memset(&ubSqe, 0, sizeof(ubSqe));
@@ -694,17 +676,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_NullWqeBuffer) {
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteWithNotifyWithShm_Reduce) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 4] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     UdmaSqeWriteWithNotify *ubWqe = reinterpret_cast<UdmaSqeWriteWithNotify *>(wqeBuffer);
     memset(ubWqe, 0, sizeof(UdmaSqeWriteWithNotify));
@@ -724,7 +703,6 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteWithNotifyWithShm_Reduce) {
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 // ==================== Additional Coverage Tests ====================
@@ -1061,11 +1039,10 @@ TEST_F(DeviceSqeParseTest, ParseA5SqeFromSqBuffer_UBDMATypeWithSqeCnt) {
     info.value[0] = 1;
     UpdateSqTail(0, 0);
 
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    if (aicpuData != nullptr) {
-        memset(aicpuData, 0, sizeof(HcclAicpuData));
-    }
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = 0;
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     uint8_t *sqBuf = nullptr;
     GetSqBufferAddr(&sqBuf);
@@ -1079,9 +1056,6 @@ TEST_F(DeviceSqeParseTest, ParseA5SqeFromSqBuffer_UBDMATypeWithSqeCnt) {
     }
 
     EXPECT_NO_THROW(ParseA5SqeFromSqBuffer(0, &info));
-    if (aicpuData != nullptr) {
-        sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
-    }
 }
 
 TEST_F(DeviceSqeParseTest, ParseA5SqeFromSqBuffer_DefaultTypeWithSqeCnt) {
@@ -1230,18 +1204,15 @@ TEST_F(DeviceSqeParseTest, ParseDataTypeDavid_ZeroInvalid) {
 }
 
 // ==================== ParseDavidUDMASqe Tests ====================
-// Note: ParseDavidUDMASqe requires shared memory setup (GetHcclAicpuDataShmPtr).
-// Without proper shared memory, these tests will crash. We skip the actual execution
-// and document the expected behavior for coverage purposes.
+// ParseDavidUDMASqe uses GetWqebufferByJettyId to lookup RaJetty.sqBuffer from DB.
+// These tests cover various opcode paths with valid RaJetty setup.
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteOpcodeWithValidWqe) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 4] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     UdmaSqeWrite *ubWqeWrite = reinterpret_cast<UdmaSqeWrite *>(wqeBuffer);
     memset(ubWqeWrite, 0, sizeof(UdmaSqeWrite));
@@ -1256,17 +1227,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteOpcodeWithValidWqe) {
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteWithNotifyOpcodeWithValidWqe) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 4] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     UdmaSqeWriteWithNotify *ubWqe = reinterpret_cast<UdmaSqeWriteWithNotify *>(wqeBuffer);
     memset(ubWqe, 0, sizeof(UdmaSqeWriteWithNotify));
@@ -1284,17 +1252,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_WriteWithNotifyOpcodeWithValidWqe) 
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_ReadOpcodeWithValidWqe) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 4] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     UdmaSqeWrite *ubWqeRead = reinterpret_cast<UdmaSqeWrite *>(wqeBuffer);
     memset(ubWqeRead, 0, sizeof(UdmaSqeWrite));
@@ -1313,17 +1278,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_ReadOpcodeWithValidWqe) {
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_UnsupportedOpcodeWithValidWqe) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 4] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     UdmaSqeCommon *ubCommon = reinterpret_cast<UdmaSqeCommon *>(wqeBuffer);
     memset(ubCommon, 0, sizeof(UdmaSqeCommon));
@@ -1335,17 +1297,14 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_UnsupportedOpcodeWithValidWqe) {
     ubSqe.piValue1 = 2;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_AdjustCiValWithValidWqe) {
-    HcclAicpuData *aicpuData = reinterpret_cast<HcclAicpuData *>(
-        sim::MemoryManager::GetInstance().AllocMemByName("/HcclAicpuData_SqeParse", sizeof(HcclAicpuData)));
-    ASSERT_NE(aicpuData, nullptr);
-    memset(aicpuData, 0, sizeof(HcclAicpuData));
-
     alignas(64) uint8_t wqeBuffer[HCCL_WQE_SIZE * 8] = {};
-    aicpuData->common.jettyId2WqeBufMap[1] = reinterpret_cast<uint64_t>(wqeBuffer);
+    sim::RaJetty jetty{};
+    jetty.id = 1;
+    jetty.sqBuffer = reinterpret_cast<uint64_t>(wqeBuffer);
+    RunnerDB::Add<sim::RaJetty>(jetty);
 
     UdmaSqeCommon *ubCommon1 = reinterpret_cast<UdmaSqeCommon *>(wqeBuffer + 1 * HCCL_WQE_SIZE);
     memset(ubCommon1, 0, sizeof(UdmaSqeCommon));
@@ -1366,7 +1325,6 @@ TEST_F(DeviceSqeParseTest, ParseDavidUDMASqe_AdjustCiValWithValidWqe) {
     ubSqe.piValue1 = 3;
 
     EXPECT_NO_THROW(ParseDavidUDMASqe(0, &ubSqe));
-    sim::MemoryManager::GetInstance().FreeMemByName("/HcclAicpuData_SqeParse");
 }
 
 // ==================== ParseA5SqeFromSqBuffer with multiple SQEs Tests ====================

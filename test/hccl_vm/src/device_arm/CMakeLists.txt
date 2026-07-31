@@ -52,7 +52,8 @@ add_executable(device
     main.cc
     hccl_device_pub.cc
     hccl_task_collection.cc
-    hccl_kernel_executor.cc
+    sim_aicpu_pipe_handler.cc
+    sim_kernel_lib_mgr.cc
     ${HCCL_VM_SRC}/store/store_sim_memory_manager.cc
     ${HCCL_VM_SRC}/store/store_sim_shm_ops.cc
     ${HCCL_VM_SRC}/runnerdb/tracedb/db_sim_sqlite_db.cc
@@ -64,6 +65,7 @@ add_executable(device
     ${HCCL_VM_SRC}/runnerdb/modeldb/db_hccl_op_db_ops.cc
     ${HCCL_VM_SRC}/runnerdb/modeldb/db_hccl_db_factory.cc
     ${HCCL_VM_SRC}/runnerdb/modeldb/db_hccl_db_sqlite.cc
+    ${HCCL_VM_SRC}/common/sim_pipe_io.cc
 )
 
 target_link_libraries(device PRIVATE
@@ -79,22 +81,24 @@ target_include_directories(device PRIVATE
     ${HCCL_CODE_ROOT}/src/common
     ${HCCL_CODE_ROOT}/src/common/hcomm_dlsym
     ${HCCL_CODE_ROOT}/src/common/hcomm_dlsym/ccu
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/base
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include/hcomm/ccu
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/base
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/hcomm/ccu
 
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 
     ${HCCL_VM_INCLUDE}
+    ${HCCL_VM_INCLUDE}/include
     ${HCCL_VM_INCLUDE}/store
     ${HCCL_VM_INCLUDE}/runnerdb
 
     ${HCCL_VM_SRC}/utils
     ${HCCL_VM_SRC}/device_arm
     ${HCCL_VM_SRC}/runnerdb/modeldb
+    ${HCCL_VM_SRC}/common
     ${THRID_PARTY_DIR}
     ${THRID_PARTY_DIR}/spdlog
 )
@@ -122,7 +126,6 @@ endif()
 target_compile_options(device PRIVATE
     -O0
     -g
-    -rdynamic
     -D_GLIBCXX_USE_CXX11_ABI=0
     -DCANN_VERSION_NUM=${HCCL_CANN_VERSION_NUM}
     -DNO_YAML_CONFIG

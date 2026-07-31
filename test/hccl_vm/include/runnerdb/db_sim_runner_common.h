@@ -36,5 +36,6 @@ uint32_t GetVectorCoreCount(uint64_t deviceId);
 int GetRankIdByDeviceId(uint32_t deviceId);
 bool ResetAllDeviceLogicId();
 bool GetRankIdByMPI(uint32_t &rankId, uint64_t &serverId);
+uint64_t GetCurServerId();
 }
 #endif // _SIM_RUNNER_COMMOM_H_

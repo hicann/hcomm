@@ -34,8 +34,8 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include/runnerdb
     ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
     ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
+ 	${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/hccl
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
 )
 
@@ -56,9 +56,9 @@ set_target_properties(test_sim_plugin PROPERTIES
 # test_sim_ip_address
 add_executable(test_sim_ip_address sim_ip_address_test.cc)
 target_include_directories(test_sim_ip_address PRIVATE
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
 )
 target_link_libraries(test_sim_ip_address PRIVATE
     gtest_main

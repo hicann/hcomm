@@ -168,6 +168,7 @@ MemSlice MakeMemSlice(RankId rankId, const DataSlice &slice)
     memSlice.memType = ConvertMemType(slice.GetType());
     memSlice.offset = slice.GetOffset();
     memSlice.len = slice.GetSize();
+    memSlice.rawAddr = slice.GetRawAddr();
     return memSlice;
 }
 
@@ -254,7 +255,7 @@ HcclResult FindInstrForQueue(StorageManager &storage, RankId rankId, uint32_t di
 } // namespace
 
 CcuGraphStateV3::CcuGraphStateV3(TaskGraphGeneratorV3 &graphIn, TaskCcuGraph &ccuGraphIn)
-    : graph(graphIn), ccuGraph(ccuGraphIn), rankId(ccuGraphIn.GetPosition().rankId)
+    : graph(graphIn), ccuGraph(ccuGraphIn), rankId(ccuGraphIn.GetPosition().rankId), storage_(graphIn.GetStorageManager())
 {
 }
 
@@ -307,6 +308,7 @@ HcclResult CcuGraphStateV3::AppendGeneratedNode(std::unique_ptr<TaskNode> node, 
 {
     TaskPosition position = MakeCcuPosition(nodeRankId, queId);
     position.streamId = ccuGraph.GetPosition().streamId;
+    position.operatorId = ccuGraph.GetPosition().operatorId;
     return AppendGeneratedNode(std::move(node), position, role, outNode, peerRank, remainingCkeMask,
         dieId, ckeId, invalidPost);
 }

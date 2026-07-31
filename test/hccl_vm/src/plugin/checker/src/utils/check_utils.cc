@@ -107,8 +107,8 @@ void CalcInputOutputSize(HcclCMDType opType, uint32_t rankSize, uint64_t count, 
         inputSize = curSendOffset;
         outputSize = curRecvOffset;
     } else if (opType == HcclCMDType::HCCL_CMD_BATCH_SEND_RECV) {
-        inputSize = count * unitSize * rankSize;
-        outputSize = count * unitSize * rankSize;
+        inputSize = count * unitSize;
+        outputSize = count * unitSize;
     } else if (opType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V) {
         inputSize = 0;
         for (u32 i = 0; i < rankSize; i++) {

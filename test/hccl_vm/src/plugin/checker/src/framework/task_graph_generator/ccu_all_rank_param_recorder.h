@@ -44,7 +44,7 @@ public:
 
     // rankId -> dieId -> 寄存器Id -> 寄存器value
     std::map<uint32_t, std::map<uint32_t, std::map<uint16_t, uint64_t>>> curXn;
-    std::map<uint32_t, std::map<uint32_t, std::map<uint16_t, uint64_t>>> curGSA;// A6没有GSA，A5使用
+    std::map<uint32_t, std::map<uint32_t, std::map<uint16_t, uint64_t>>> curGSA;
     std::map<uint32_t, std::map<uint32_t, std::map<uint16_t, uint16_t>>> curCKE;
 
     std::map<uint32_t, std::map<uint32_t, std::map<uint64_t, std::vector<uint64_t>>>> curHBM;// 模拟HBM，记录每个rank的每个die的每个HBM的使用情况

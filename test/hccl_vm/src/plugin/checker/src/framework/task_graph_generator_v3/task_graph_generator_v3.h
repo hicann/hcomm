@@ -21,6 +21,7 @@
 #include "task_def_v3.h"
 
 namespace HcclSim {
+class StorageManager;
 namespace TaskGraphGeneratorV3 {
 using RankNodeQueues = std::vector<std::vector<NodeId>>;
 using AllRankNodeQueues = std::map<RankId, RankNodeQueues>;
@@ -63,6 +64,8 @@ public:
     HcclResult GenGraph(std::vector<std::unique_ptr<TaskNode>> translatedNodes,
         AllRankNodeQueues translatedTaskQueues);
     void Reset();
+    void SetStorageManager(StorageManager *storage) { storage_ = storage; }
+    StorageManager &GetStorageManager() const;
 
     NodeId GetMainStartNodeId() const { return mainStartNodeId_; }
     TaskNode *GetMainStartNode() { return mainStart_.get(); }
@@ -110,6 +113,7 @@ private:
     bool hasCcu_{false};
     AivExpandStats aivExpandStats_;
     CcuExpandStats ccuExpandStats_;
+    StorageManager *storage_{nullptr};
 };
 } // namespace TaskGraphGeneratorV3
 } // namespace HcclSim

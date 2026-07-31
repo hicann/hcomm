@@ -10,10 +10,12 @@
 
 #include "hccl_device_pub.h"
 
+#include <cerrno>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <dlfcn.h>
 #include <execinfo.h>
 #include <fcntl.h>
@@ -26,17 +28,20 @@
 #include "sim_log.h"
 #include "store_sim_memory_manager.h"
 #include "db_sim_runner_db.h"
+#include "sim_pipe_io.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
 
 uint32_t g_rankId = 0;
+uint32_t g_deviceKey = 0;
 
 char g_crash_file_name[64] = "crash_default.log";
 
 HcclVmResult SetCurRankId(uint32_t rankId)
 {
+    HCCL_VM_INFO("SetCurRankId, old rankId: {}, new rankId: {}", g_rankId, rankId);
     g_rankId = rankId;
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
@@ -45,6 +50,17 @@ HcclVmResult GetCurRankId(uint32_t *rankId)
 {
     *rankId = g_rankId;
     return HcclVmResult::HCCL_SIM_SUCCESS;
+}
+
+void SetCurDeviceKey(uint32_t deviceKey)
+{
+    HCCL_VM_INFO("SetCurDeviceKey, old deviceKey: {}, new deviceKey: {}", g_deviceKey, deviceKey);
+    g_deviceKey = deviceKey;
+}
+
+uint32_t GetCurDeviceKey()
+{
+    return g_deviceKey;
 }
 
 uint8_t sqBuffer[HCCL_SQE_SIZE * HCCL_SQE_MAX_CNT];
@@ -78,31 +94,87 @@ void UpdateSqTail(uint32_t sqId, uint32_t newTail)
     sqTailMap[sqId] = newTail;
 }
 
-void *GetRealPtrByDevPtrImpl(void *devPtr, const char *file, int line)
+// AICPU构造Task时任务转换，将本端设备地址(本rank对应host进程申请的)转换为虚拟地址
+uint64_t TransLocalAddrToVirtual(uint64_t devAddr)
 {
-    uint64_t devAddr = reinterpret_cast<uint64_t>(devPtr);
-    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [devAddr](const sim::VirtualMemBlock &virMem)
-        { return ((virMem.start_ptr <= devAddr) &&
-                    (devAddr < (virMem.start_ptr + virMem.size)) &&
-                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)); });
+    uint64_t deviceKey = GetCurDeviceKey();
+    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock> (
+        [devAddr, deviceKey](const sim::VirtualMemBlock &virMem) {
+            return ((virMem.dev_mapped_ptr <= devAddr) &&
+                    (devAddr < (virMem.dev_mapped_ptr + virMem.size)) &&
+                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)) &&
+                    (virMem.device_id == deviceKey);
+        }
+    );
     if (!virMemRes.second) {
-        HCCL_VM_ERROR("cannot find virMemRes by devAddr[{}], called from {}:{}]", devAddr, file, line);
-        return nullptr;
+        HCCL_VM_ERROR("cannot find virMemRes by devAddr[{}]", devAddr);
+        return 0;
+    }
+
+    uint64_t diff = devAddr - virMemRes.first.dev_mapped_ptr;
+    return virMemRes.first.start_ptr + diff;
+}
+
+// AICPU构造Task时任务转换，将对端设备地址(rankId对应host进程申请的)转换为虚拟地址
+uint64_t TransRemoteAddrToVirtualByRank(uint64_t devAddr, uint32_t rankId)
+{
+    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock> (
+        [devAddr, rankId](const sim::VirtualMemBlock &virMem) {
+            return ((virMem.dev_mapped_ptr <= devAddr) &&
+                    (devAddr < (virMem.dev_mapped_ptr + virMem.size)) &&
+                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)) &&
+                    (virMem.rank_id == rankId);
+        }
+    );
+    if (!virMemRes.second) {
+        HCCL_VM_ERROR("cannot find virMemRes by devAddr[{}]", devAddr);
+        return 0;
+    }
+
+    uint64_t diff = devAddr - virMemRes.first.dev_mapped_ptr;
+    return virMemRes.first.start_ptr + diff;
+}
+
+uint64_t GetDevMapperAddrByDevAddrImpl(uint64_t devAddr, const char *file, int line)
+{
+    uint64_t deviceKey = GetCurDeviceKey();
+    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
+        [devAddr, deviceKey](const sim::VirtualMemBlock &virMem) {
+            return (virMem.dev_mapped_ptr <= devAddr) &&
+                   (devAddr < virMem.dev_mapped_ptr + virMem.size) &&
+                   (virMem.src_type == static_cast<uint8_t>(sim::VIR_MEM_TYPE_DEV)) &&
+                   (virMem.device_id == deviceKey);
+        });
+    if (!virMemRes.second) {
+        HCCL_VM_ERROR("cannot find virMemRes by devAddr[0x{:x}], called from {}:{}", devAddr, file, line);
+        return 0;
+    }
+
+    // 已经映射过的这里直接取值
+    if (virMemRes.first.is_dev_access == 1) {
+        HCCL_VM_INFO("device cann access this devAddr[0x{:x}], called from {}:{}", devAddr, file, line);
+        return devAddr;
     }
 
     auto phyMemId = virMemRes.first.phy_mem_id;
     auto phyMemRes = RunnerDB::GetById<sim::PhyMemBlock>(phyMemId);
     if (!phyMemRes.has_value()) {
-        HCCL_VM_ERROR("cannot find phyMemRes by phyMemId[{}], called from {}:{}]", phyMemId, file, line);
-        return nullptr;
-    };
+        HCCL_VM_ERROR("cannot find phyMemRes by phyMemId[{}], called from {}:{}", phyMemId, file, line);
+        return 0;
+    }
 
     std::string memName(phyMemRes->name);
-    void *realPtr = sim::MemoryManager::GetInstance().AcquireMemByName(memName.c_str());
-    HCCL_VM_INFO("devAddr[{}] realPtr[{}] memName[{}]", devAddr, reinterpret_cast<uint64_t>(realPtr), memName);
+    void *devMappedPtr = sim::MemoryManager::GetInstance().AcquireMemByName(memName.c_str());
+    if (devMappedPtr == nullptr) {
+        HCCL_VM_ERROR("acquire device shm for memName[{}] failed, called from {}:{}", memName, file, line);
+        return 0;
+    }
 
-    return realPtr;
+    uint64_t offset = devAddr - virMemRes.first.dev_mapped_ptr;
+    uint64_t result = reinterpret_cast<uint64_t>(devMappedPtr) + offset;
+    HCCL_VM_INFO("devAddr[0x{:x}] offset[{}] devMappedPtr[0x{:x}] memName[{}]",
+                 devAddr, offset, reinterpret_cast<uint64_t>(devMappedPtr), memName);
+    return result;
 }
 
 uint32_t GetRankIdByDevAddr(uint64_t devAddr)
@@ -132,17 +204,6 @@ uint32_t GetRankIdByDevAddr(uint64_t devAddr)
     }
 
     return rank.first.rank_id;
-}
-
-HcclAicpuData *GetHcclAicpuDataShmPtr()
-{
-    void *shmptr = sim::MemoryManager::GetInstance().AcquireMemByName("HcclAicpuData");
-    if (shmptr == nullptr) {
-        HCCL_VM_ERROR("acquire HcclAicpuData shm failed.");
-        return nullptr;
-    }
-
-    return reinterpret_cast<HcclAicpuData *>(shmptr);
 }
 
 uint32_t GetRankIdByIpAddr(std::string ipAddr)
@@ -287,6 +348,47 @@ void RegisterSignalHandler()
     signal(SIGFPE,  SignalHandler); // 算术溢出/除零
     signal(SIGBUS,  SignalHandler); // 总线错误
     signal(SIGILL,  SignalHandler); // 非法指令
+}
+
+bool GetWqebufferByJettyId(uint64_t jettyId, uint64_t &wqeBuffer)
+{
+    auto raJetty = RunnerDB::GetById<sim::RaJetty>(jettyId);
+    if (!raJetty.has_value()) {
+        HCCL_VM_ERROR("RaJetty id:{:d} not found", jettyId);
+        return false;
+    }
+
+    wqeBuffer = raJetty->sqBuffer;
+    return true;
+}
+
+static int g_h2dReadFd = -1;
+static int g_d2hWriteFd = -1;
+
+void InitPipeFds(int h2dReadFd, int d2hWriteFd)
+{
+    g_h2dReadFd = h2dReadFd;
+    g_d2hWriteFd = d2hWriteFd;
+}
+
+int DeviceSendMsg(uint8_t cmd, const void *data, uint32_t dataLen)
+{
+    if (g_d2hWriteFd < 0) {
+        HCCL_VM_ERROR("pipe d2h write fd not initialized.");
+        return -1;
+    }
+
+    return sim::PipeSendMsg(g_d2hWriteFd, cmd, data, dataLen);
+}
+
+int DeviceRecvMsg(uint8_t &outCmd, void *outData, uint32_t maxLen, uint32_t &outLen)
+{
+    if (g_h2dReadFd < 0) {
+        HCCL_VM_ERROR("pipe h2d read fd not initialized.");
+        return -1;
+    }
+
+    return sim::PipeRecvMsg(g_h2dReadFd, outCmd, outData, maxLen, outLen);
 }
 
 #ifdef __cplusplus

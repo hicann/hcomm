@@ -157,37 +157,80 @@ HcclResult FinalizeVDataDes(CheckerParam &checkerParam, bool isAllGatherV)
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult FinalizeBatchSendRecv(CheckerParam &checkerParam)
+HcclResult FinalizeBatchSendRecvRing(CheckerParam &checkerParam)
 {
     const uint32_t rankSize = checkerParam.rankSize;
-    if (rankSize == 0 || checkerParam.batchSendRecvRankParams.size() != rankSize) {
-        HCCL_VM_ERROR("Invalid BatchSendRecv report set, rankSize={}, reportedRanks={}",
+    if (rankSize < 2 || checkerParam.batchSendRecvRankParams.size() != rankSize) {
+        HCCL_VM_ERROR("Invalid BatchSendRecv ring report set, rankSize={}, reportedRanks={}",
             rankSize, checkerParam.batchSendRecvRankParams.size());
         return HcclResult::HCCL_E_PARA;
     }
 
-    const uint64_t expectedItemNum = static_cast<uint64_t>(rankSize) * 2U;
     const uint64_t peerCount = checkerParam.batchSendRecvRankParams[0].peerCount;
+    const HcclDataType dataType = checkerParam.batchSendRecvRankParams[0].dataType;
     for (uint32_t rankId = 0; rankId < rankSize; ++rankId) {
         const BatchSendRecvRankParam &current = checkerParam.batchSendRecvRankParams[rankId];
-        if (static_cast<uint64_t>(current.itemNum) != expectedItemNum || current.peerCount != peerCount) {
-            HCCL_VM_ERROR("Invalid BatchSendRecv all-to-all parameters at rank {}: itemNum={} vs {}, "
-                "peerCount={} vs {}", rankId, current.itemNum, expectedItemNum, current.peerCount, peerCount);
+        const uint32_t expectedSendPeer = (rankId + 1U) % rankSize;
+        const uint32_t expectedRecvPeer = (rankId + rankSize - 1U) % rankSize;
+        if (current.itemNum != 2 || current.peerCount != peerCount || current.dataType != dataType ||
+            current.sendPeer != expectedSendPeer || current.recvPeer != expectedRecvPeer) {
+            HCCL_VM_ERROR("Invalid BatchSendRecv ring parameters at rank {}: itemNum={}, peerCount={}, "
+                "dataType={}, sendPeer={}, recvPeer={}; expected itemNum=2, peerCount={}, dataType={}, "
+                "sendPeer={}, recvPeer={}", rankId, current.itemNum, current.peerCount,
+                static_cast<uint32_t>(current.dataType), current.sendPeer, current.recvPeer, peerCount,
+                static_cast<uint32_t>(dataType), expectedSendPeer, expectedRecvPeer);
             return HcclResult::HCCL_E_PARA;
         }
     }
 
     checkerParam.dataCount = peerCount;
+    checkerParam.dataType = dataType;
     return HcclResult::HCCL_SUCCESS;
+}
+
+void UpdateNotifyPeerRanks(HcclVmTaskMetaData &taskMetaData)
+{
+    std::unordered_map<uint32_t, std::set<uint32_t>> notifyId2Ranks;
+    for (const auto &taskMeta : taskMetaData.task_meta) {
+        if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_RECORD ||
+            taskMeta.taskType == HccLTaskMetaType::NOTIFY_WAIT) {
+            const uint64_t notifyId = taskMeta.taskData.notify.notifyId;
+            notifyId2Ranks[notifyId].insert(taskMeta.rankId);
+        }
+    }
+
+    // AICPU生成的Task需要更新Notify节点的对端信息
+    for (auto &taskMeta : taskMetaData.task_meta) {
+        if (taskMeta.taskType != HccLTaskMetaType::NOTIFY_RECORD &&
+            taskMeta.taskType != HccLTaskMetaType::NOTIFY_WAIT) {
+            continue;
+        }
+        uint32_t rankId = taskMeta.rankId;
+        for (auto id : notifyId2Ranks[taskMeta.taskData.notify.notifyId]) {
+            if (id != rankId) {
+                rankId = id;
+                break;
+            }
+        }
+
+        if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_RECORD) {
+            taskMeta.taskData.notify.dstRankId = rankId;
+        } else if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_WAIT) {
+            taskMeta.taskData.notify.srcRankId = rankId;
+        }
+    }
 }
 } // namespace
 
-void StorageManager::Reset()
+void StorageManager::Reset(bool clearMemLayout)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_mem_layout.clear();
+    if (clearMemLayout) {
+        m_mem_layout.clear();
+    }
     m_allRankChannelInfo.clear();
     m_checker_param = CheckerParam{};
+    m_checker_params.clear();
     m_all2AllvSendMatrices.clear();
     m_synData = HcclVmSynData{};
     m_instrData = HcclVmInstrData{};
@@ -275,12 +318,20 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
                 detailTab.rankId, detailTab.opExtInfo.size());
             return HcclResult::HCCL_E_PARA;
         }
-        if (static_cast<uint64_t>(rankParam.itemNum) != static_cast<uint64_t>(detailTab.rankSize) * 2U) {
-            HCCL_VM_ERROR("BatchSendRecv is not a complete all-to-all at rank {}: itemNum={}, rankSize={}",
-                detailTab.rankId, rankParam.itemNum, detailTab.rankSize);
+        const uint32_t expectedSendPeer = (detailTab.rankId + 1U) % detailTab.rankSize;
+        const uint32_t expectedRecvPeer =
+            (detailTab.rankId + detailTab.rankSize - 1U) % detailTab.rankSize;
+        if (detailTab.rankSize < 2 || rankParam.itemNum != 2 || detailTab.dstRank != expectedSendPeer ||
+            detailTab.srcRank != expectedRecvPeer) {
+            HCCL_VM_ERROR("BatchSendRecv is not a valid ring at rank {}: itemNum={}, rankSize={}, "
+                "sendPeer={}, recvPeer={}", detailTab.rankId, rankParam.itemNum, detailTab.rankSize,
+                detailTab.dstRank, detailTab.srcRank);
             return HcclResult::HCCL_E_PARA;
         }
         rankParam.peerCount = detail.opV1.count;
+        rankParam.dataType = static_cast<HcclDataType>(detail.dataType);
+        rankParam.sendPeer = detailTab.dstRank;
+        rankParam.recvPeer = detailTab.srcRank;
         m_checker_param.batchSendRecvRankParams[detailTab.rankId] = rankParam;
     }
 
@@ -351,7 +402,7 @@ HcclResult StorageManager::FinalizeOpGroup()
         case HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V:
             return FinalizeVDataDes(m_checker_param, false);
         case HcclCMDType::HCCL_CMD_BATCH_SEND_RECV:
-            return FinalizeBatchSendRecv(m_checker_param);
+            return FinalizeBatchSendRecvRing(m_checker_param);
         case HcclCMDType::HCCL_CMD_SEND:
         case HcclCMDType::HCCL_CMD_RECEIVE:
             for (const auto &pair : m_checker_param.sendRecvPairs) {
@@ -506,34 +557,27 @@ HcclResult StorageManager::LoadHcclVmTaskMetaData(std::vector<std::vector<sim::O
         }
     }
     m_taskMeataData = taskMeataData;
-    std::unordered_map<uint32_t, std::set<uint32_t>> notifyId2Ranks;
-    for (auto &taskMeta : m_taskMeataData.task_meta) {
-        if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_RECORD || taskMeta.taskType == HccLTaskMetaType::NOTIFY_WAIT) {
-            uint64_t notifyId = taskMeta.taskData.notify.notifyId;
-            notifyId2Ranks[notifyId].insert(taskMeta.rankId);
-        }
+    UpdateNotifyPeerRanks(m_taskMeataData);
+    return HcclResult::HCCL_SUCCESS;
+}
+
+HcclResult StorageManager::LoadDecodedHcclVmTaskMetaData(
+    const std::vector<std::vector<HcclTaskMetaData>>& allTaskMetas)
+{
+    size_t totalTasks = 0;
+    for (const auto &rankTaskMetas : allTaskMetas) {
+        totalTasks += rankTaskMetas.size();
+    }
+    HCCL_VM_INFO("total decoded tasks: {}, ranks: {}", totalTasks, allTaskMetas.size());
+
+    HcclVmTaskMetaData taskMeataData;
+    taskMeataData.task_meta.reserve(totalTasks);
+    for (const auto &rankTaskMetas : allTaskMetas) {
+        taskMeataData.task_meta.insert(taskMeataData.task_meta.end(), rankTaskMetas.begin(), rankTaskMetas.end());
     }
 
-    // AICPU生成的Task需要更新Notify节点的对端信息
-    for (auto &taskMeta : m_taskMeataData.task_meta) {
-        if (taskMeta.taskType != HccLTaskMetaType::NOTIFY_RECORD && taskMeta.taskType != HccLTaskMetaType::NOTIFY_WAIT) {
-            continue;
-        }
-        uint32_t rankId = taskMeta.rankId;
-        for (auto id : notifyId2Ranks[taskMeta.taskData.notify.notifyId]) {
-            if (id != rankId) {
-                rankId = id;
-                break;
-            }
-        }
-
-        if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_RECORD) {
-            taskMeta.taskData.notify.dstRankId = rankId;
-        } else if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_WAIT) {
-            taskMeta.taskData.notify.srcRankId = rankId;
-        }
-    }
-
+    m_taskMeataData = std::move(taskMeataData);
+    UpdateNotifyPeerRanks(m_taskMeataData);
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -589,6 +633,7 @@ HcclResult StorageManager::GetSlice(uint64_t addr, uint64_t len, DataSlice& data
                     // 如果允许跨块，逻辑会更复杂，这里按单块逻辑处理
                     
                     dataSlice.SetBufferType(block.bufferType);
+                    dataSlice.SetRawAddr(addr);
                     // 核心转换公式：逻辑基址 + (物理地址 - 物理块基址)
                     dataSlice.SetOffset(block.globalOffset + (addr - block.startAddr));
                     if (rank != nullptr) {

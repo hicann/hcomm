@@ -23,15 +23,19 @@
 #include "sim_common_macro.h"
 #include "sim_log.h"
 #include "db_sim_runner_ops.h"
-
+#include "db_sim_runner_common.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
 aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)
 {
+    auto serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device& d) {
@@ -83,8 +87,12 @@ aclError aclrtSetCurrentContext(aclrtContext context)
 
 aclError aclrtGetCurrentContext(aclrtContext *context)
 {
+    auto serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     *context = (aclrtContext)runner.current_ctx_id;
@@ -93,8 +101,12 @@ aclError aclrtGetCurrentContext(aclrtContext *context)
 
 aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)
 {
+    auto serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     auto curCtxId = runner.current_ctx_id;
@@ -114,8 +126,12 @@ aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *act
 {
     (void) deviceId;
     (void) flags;
+    auto serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);

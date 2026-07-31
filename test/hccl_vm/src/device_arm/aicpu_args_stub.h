@@ -12,13 +12,7 @@
 #define AICPU_ARGS_STUB_H
 
 #include <cstdint>
-constexpr uint32_t UNIQUEID_HEADER_OFFSET = 152;
-constexpr uint32_t UNIQUEID_HEADER_SIZE = 20;
-constexpr uint32_t COMMON_DATA_SIZE = 8;
-constexpr uint32_t NOTIFY_ID_SIZE = 8;
-constexpr uint32_t NOTIFY_BUFFER_SIZE = 28;
-constexpr uint32_t LOCAL_BUFFER_SIZE = 28;
-constexpr uint32_t REMOTE_BUFFER_SIZE = 28;
+
 constexpr uint32_t HCOMID_MAX_SIZE = 128;
 
 constexpr uint32_t P2P_MAX_ARG_SIZE_STUB = 8192;
@@ -51,6 +45,7 @@ struct HDCommunicateParams {
 
 struct DevAicpuCommConfig {
     bool taskExceptionEnable{true};
+    uint32_t notifyWaitTimeout{1836};
     // 如要新增配置类字段，在此处添加
 };
 struct CommAicpuParam {
@@ -64,81 +59,5 @@ struct CommAicpuParam {
     HDCommunicateParams kfcStatusTransferD2HParams;
     DevAicpuCommConfig commConfig; // 收编通信域配置类变量
 };
-
-struct DevAicpuThreadConfig {
-    // 如要新增配置类字段，在此处添加
-};
-
-struct ThreadMgrAicpuParam {
-    uint32_t threadNum;
-    char hcomId[128];
-    char threadParam[200][6000]; // 含序列化后thread信息，约40KB
-    void* deviceHandle;
-    uint32_t rsv1;
-    int32_t deviceLogicId{-1}; // 基础通信使用
-    uint32_t deviceType{0}; // 基础通信使用
-    DevAicpuThreadConfig threadConfig; // 收编thread配置类变量
-};
-
-struct InitTask {
-    uint64_t context;
-    bool isCustom;
-};
-
-struct DevAicpuChannelConfig {
-    // 如要新增配置类字段，在此处添加
-};
-
-struct HcclChannelUrmaRes {
-    char  hcomId[256];                    // 通信域ID 最大长度待修改
-    void* channelList;                    // 反序列后返回给host侧的device侧handle地址
-    uint32_t   listNum = 0;               // 建链channel的总数量
-    void* uniqueIdAddr;                   // 序列化后device侧地址
-    uint32_t   uniqueIdSize{0};           // 序列化后总地址长度
-    void*   channelSizeAddr{nullptr};           // 存放序列化后device channel size的指针
-    uint32_t*  remoteRankList;            // 序列化后返回给host侧的device侧rankList地址
-    uint32_t*  remoteRankId;              // 记录每个channel的对端rank
-    int32_t    deviceLogicId{0};          // 基础通信使用
-    uint32_t   deviceType{0};             // 基础通信使用
-    DevAicpuChannelConfig channelConfig;  // 收编channel配置类变量
-};
-
-#pragma pack(push, 1)
-
-struct UniqueIdV2Header {
-    uint32_t type;
-    uint32_t notifyNum;
-    uint32_t bufferNum;
-    uint32_t rmtBufferNum;
-    uint32_t connNum;
-};
-
-struct ConnUniqueIds {
-    uint32_t dieId;
-    uint32_t funcId;
-    uint32_t jettyId;
-    uint32_t jfcPollMode;
-    uint8_t dwqeCacheLocked;
-    uint64_t dbAddr;
-    uint64_t sqCiAddr;
-    uint64_t sqBuffVa;
-    uint32_t sqDepth;
-    uint32_t tpn;
-    uint8_t rmtEidRaw[16U];
-    uint8_t locEidRaw[16U];
-};
-
-struct ConnUniqueBlock {
-    uint64_t size;
-    ConnUniqueIds conn[0];
-};
-
-struct AicpuTsThread {
-    uint32_t streamType;
-    uint32_t notifyLoadType;
-    uint32_t devId;
-};
-
-#pragma pack(pop)
 
 #endif

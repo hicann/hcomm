@@ -23,6 +23,7 @@
 #include "acl/acl_rt.h"
 #include "sim_log.h"
 #include "db_sim_runner_ops.h"
+#include "db_sim_runner_common.h"
 
 
 #ifdef __cplusplus
@@ -32,7 +33,12 @@ extern "C" {
 aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
 {
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);
@@ -186,7 +192,12 @@ aclError aclrtGetEventId(aclrtEvent event, uint32_t *eventId)
 aclError aclrtGetEventAvailNum(uint32_t *eventCount)
 {
     sim::Runner runner;
-    if (!sim::GetCurrRunnerTls(0, runner)) {
+    uint64_t serverId = sim::GetCurServerId();
+    if (serverId == 0) {
+        HCCL_VM_ERROR("GetCurServerId failed");
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
     if (runner.current_ctx_id == 0) {

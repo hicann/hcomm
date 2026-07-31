@@ -30,7 +30,8 @@ uint32_t curRankId = 0;
 
 void ParseA5SqeFromSqBuffer(uint32_t devId, struct halSqCqConfigInfo *info)
 {
-    curRankId = devId;
+    // devId会在不同Server内重复，此处使用Device进程维护的rankId
+    GetCurRankId(&curRankId);
     uint32_t streamId = info->sqId;
     int tail = info->value[0];
     int head = GetSqTail(streamId);
@@ -92,8 +93,8 @@ void ParseDavidSDMASqe(uint32_t streamId, void *sqeBuf)
     taskMeta.jettyId  = UINT32_MAX;
 
     uint64_t length = sqe->u.strideMode0.lengthMove;
-    uint64_t srcOffset = GetFull64BitAddr(sqe->u.strideMode0.srcAddrLow, sqe->u.strideMode0.srcAddrHigh);
-    uint64_t dstOffset = GetFull64BitAddr(sqe->u.strideMode0.dstAddrLow, sqe->u.strideMode0.dstAddrHigh);
+    uint64_t srcOffset = TransLocalAddrToVirtual(GetFull64BitAddr(sqe->u.strideMode0.srcAddrLow, sqe->u.strideMode0.srcAddrHigh));
+    uint64_t dstOffset = TransLocalAddrToVirtual(GetFull64BitAddr(sqe->u.strideMode0.dstAddrLow, sqe->u.strideMode0.dstAddrHigh));
     uint64_t srcRankId = GetRankIdByDevAddr(srcOffset);
     uint64_t dstRankId = GetRankIdByDevAddr(dstOffset);
 
@@ -182,22 +183,9 @@ void ParseDavidUDMASqe(uint32_t streamId, void *sqeBuf)
 {
     Rt91095StarsUbdmaDBmodeSqe *ubSqe = reinterpret_cast<Rt91095StarsUbdmaDBmodeSqe *>(sqeBuf);
     uint32_t jettyId = ubSqe->jettyId1;
-
-    HcclAicpuData *aicpuData = GetHcclAicpuDataShmPtr();
-    if (aicpuData == nullptr) {
-        HCCL_VM_ERROR("aicpuData is nullptr.");
-        return;
-    }
-
-    if (jettyId >= HcclSim::AICPU_JETTY_NUM_MAX) {
-        HCCL_VM_ERROR("jettyId[{}] >= AICPU_JETTY_NUM_MAX[{}]", jettyId, HcclSim::AICPU_JETTY_NUM_MAX);
-        return;
-    }
-
-    uint64_t wqeAddrDev = aicpuData->common.jettyId2WqeBufMap[jettyId];
-    uint64_t wqeBuffer = reinterpret_cast<uint64_t>(GetRealPtrByDevPtr(reinterpret_cast<void *>(wqeAddrDev)));
-    if (wqeBuffer == 0) {
-        HCCL_VM_ERROR("wqeBuffer is nullptr, wqeAddrDev[{}].", wqeAddrDev);
+    uint64_t wqeBuffer = 0;
+    if (!GetWqebufferByJettyId(jettyId, wqeBuffer)) {
+        HCCL_VM_ERROR("GetWqebufferByJettyId failed, jettyId[{}].", jettyId);
         return;
     }
 
@@ -243,13 +231,14 @@ void ParseDavidUBReadWriteSqe(uint64_t wqeAddr, uint16_t streamId, uint32_t jett
     taskMeta.jettyId  = jettyId;
     memcpy(taskMeta.rmEid, ubWqe->comm.rmtEid, 16);
 
+    uint32_t rmtRankId = GetRmtRankIdByEid(ubWqe->comm.rmtEid[0]);
     // case1:UbConnLite::InlineWrite 写Notify
     if (ubWqe->comm.inlineEn == 1) {
         uint64_t notifyAddr = GetFull64BitAddr(ubWqe->comm.rmtAddrLow, ubWqe->comm.rmtAddrHigh);
         taskMeta.taskType = HccLTaskMetaType::NOTIFY_RECORD;
         taskMeta.taskData.notify.notifyId = notifyAddr;
         taskMeta.taskData.notify.srcRankId = curRankId;
-        taskMeta.taskData.notify.dstRankId = GetRmtRankIdByEid(ubWqe->comm.rmtEid[0]);
+        taskMeta.taskData.notify.dstRankId = rmtRankId;
         PrintTaskMetaData(taskMeta);
         InsertTaskToCollectionDev(&taskMeta);
         return;
@@ -259,10 +248,12 @@ void ParseDavidUBReadWriteSqe(uint64_t wqeAddr, uint16_t streamId, uint32_t jett
     uint64_t length = static_cast<uint64_t>(ubWqe->u.sge.length);
     uint64_t locAddr = GetFull64BitAddr(ubWqe->u.sge.dataAddrLow, ubWqe->u.sge.dataAddrHigh);
     uint64_t rmtAddr = GetFull64BitAddr(ubWqe->comm.rmtAddrLow, ubWqe->comm.rmtAddrHigh);
+    locAddr = TransLocalAddrToVirtual(locAddr);
+    rmtAddr = TransRemoteAddrToVirtualByRank(rmtAddr, rmtRankId);
     uint64_t srcOffset = isRead ? rmtAddr : locAddr;
     uint64_t dstOffset = isRead ? locAddr : rmtAddr;
-    uint32_t srcRankId = GetRankIdByDevAddr(srcOffset);
-    uint32_t dstRankId = GetRankIdByDevAddr(dstOffset);
+    uint32_t srcRankId = isRead ? rmtRankId : curRankId;
+    uint32_t dstRankId = isRead ? curRankId : rmtRankId;
     taskMeta.taskType = HccLTaskMetaType::MEM_CPY;
     taskMeta.taskData.transMem.srcOffset = srcOffset;
     taskMeta.taskData.transMem.dstOffset = dstOffset;
@@ -294,10 +285,11 @@ void ParseDavidUBWriteWithNotifySqe(uint64_t wqeAddr, uint16_t streamId, uint32_
     taskMeta1.rankId = curRankId;
     taskMeta1.jettyId = jettyId;
     memcpy(taskMeta1.rmEid, ubWqe->comm.rmtEid, 16);
+    uint32_t rmtRankId = GetRmtRankIdByEid(ubWqe->comm.rmtEid[0]);
 
     // 1.先构造MEM_CPY(或SDMA_REDUCE)所需参数
-    uint64_t dstOffset = GetFull64BitAddr(ubWqe->comm.rmtAddrLow, ubWqe->comm.rmtAddrHigh);
-    uint64_t srcOffset = GetFull64BitAddr(ubWqe->localU.sge.dataAddrLow, ubWqe->localU.sge.dataAddrHigh);
+    uint64_t dstOffset = TransRemoteAddrToVirtualByRank(GetFull64BitAddr(ubWqe->comm.rmtAddrLow, ubWqe->comm.rmtAddrHigh), rmtRankId);
+    uint64_t srcOffset = TransLocalAddrToVirtual(GetFull64BitAddr(ubWqe->localU.sge.dataAddrLow, ubWqe->localU.sge.dataAddrHigh));
     uint64_t length = static_cast<uint64_t>(ubWqe->localU.sge.length);
     uint32_t srcRankId = GetRankIdByDevAddr(srcOffset);
     uint32_t dstRankId = GetRankIdByDevAddr(dstOffset);
@@ -331,7 +323,7 @@ void ParseDavidUBWriteWithNotifySqe(uint64_t wqeAddr, uint16_t streamId, uint32_
     taskMeta2.taskType = HccLTaskMetaType::NOTIFY_RECORD;
     taskMeta2.taskData.notify.notifyId = notifyAddr;
     taskMeta2.taskData.notify.srcRankId = curRankId;
-    taskMeta2.taskData.notify.dstRankId = GetRmtRankIdByEid(ubWqe->comm.rmtEid[0]);
+    taskMeta2.taskData.notify.dstRankId = rmtRankId;
     PrintTaskMetaData(taskMeta2);
     InsertTaskToCollectionDev(&taskMeta2);
 }

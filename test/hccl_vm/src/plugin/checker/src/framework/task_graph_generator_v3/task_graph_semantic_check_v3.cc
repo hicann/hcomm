@@ -951,7 +951,7 @@ HcclResult CheckFinalOutput(const SemanticState &state)
         case HCCL_CMD_SCATTER:
             return TaskCheckScatterSemantics(allRankMemSemantics, state.dataSize, state.param.root);
         case HCCL_CMD_BATCH_SEND_RECV:
-            return TaskCheckBatchSendRecvSemantics(allRankMemSemantics, state.param.rankSize, state.dataSize);
+            return TaskCheckBatchSendRecvRingSemantics(allRankMemSemantics, state.param.rankSize, state.dataSize);
         default:
             HCCL_VM_WARN("{} Final output validation does not support this collective type yet, "
                 "collectiveType={}, rankCount={}, dataType={}, elementCount={}, reduceType={}",

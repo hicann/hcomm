@@ -167,10 +167,6 @@ CcuInstrVersion GetCcuInstrVersion()
     DevType devType = AllRankParamRecorder::Global()->GetDevType();
     if (devType == DevType::DEV_TYPE_950) {
         return CcuInstrVersion::VERSION_A5;
-#ifdef BUILD_A6_CCU_INSTR
-    } else if (devType == DevType::DEV_TYPE_960) {
-        return CcuInstrVersion::VERSION_A6;
-#endif
     }
     return CcuInstrVersion::VERSION_A5;
 }
@@ -225,7 +221,7 @@ HcclResult TransformInstrQue(TaskNode *node, CcuGraphStateV3 *curCcuTask, uint32
 HcclResult ProcessCcuNode(TaskNode *node, CcuGraphStateV3 *curCcuTask)
 {
     curCcuTask->queueNum_ = static_cast<uint32_t>(curCcuTask->instrInfo.size());
-    uint32_t rankSize = HcclSim::StorageManager::GetInstance().GetRankSize();
+    uint32_t rankSize = curCcuTask->GetStorageManager().GetRankSize();
     curCcuTask->bilateralPart1_.resize(curCcuTask->queueNum_);
     curCcuTask->bilateralPart2_.resize(curCcuTask->queueNum_);
     curCcuTask->bilateralNodes_.resize(curCcuTask->queueNum_);

@@ -116,6 +116,7 @@ public:
 
     void GetSqe(uint32_t queId, uint16_t sqeArgsId, uint64_t &argVal);
     void GetDieId(uint32_t queId, uint32_t &dieId) const;
+    StorageManager &GetStorageManager() const { return storage_; }
     uint32_t GetMissionEndInstrId(uint32_t queId) const;
     RankId GetRankId() const { return rankId; }
 
@@ -145,6 +146,7 @@ public:
     std::vector<std::map<TaskNode *, TaskNode *>> bilateralPart2_;
     std::vector<std::vector<BilateralNodeV3>> bilateralNodes_;
     size_t internalNodeCount{0};
+    StorageManager &storage_;
 
 private:
     std::map<const TaskNode *, CcuNodeMetaV3> nodeMetas_;

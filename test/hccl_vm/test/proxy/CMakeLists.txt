@@ -20,6 +20,7 @@ endif()
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/proxy
+    ${CMAKE_SOURCE_DIR}/src/common
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/store
     ${CMAKE_SOURCE_DIR}/include/runnerdb
@@ -33,16 +34,15 @@ include_directories(
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/runtime
     ${ASCEND_CANN_PACKAGE_PATH}/include
     ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/include
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/asc/include/adv_api
-    ${ASCEND_TOOLKIT_HOME}/x86_64-linux/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/asc/include/adv_api
+    ${ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/include
     ${HCOMM_CODE_ROOT}/test/ut/depends/include
     ${HCOMM_CODE_ROOT}/include
     ${HCOMM_CODE_ROOT}/include/hccl
     ${HCOMM_CODE_ROOT}/pkg_inc
     ${HCOMM_CODE_ROOT}/pkg_inc/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
     ${HCOMM_CODE_ROOT}/src/pub_inc
     ${HCOMM_CODE_ROOT}/src/framework/communicator/impl/independent_op/rank_graph
     ${HCOMM_CODE_ROOT}/src/framework/inc
@@ -56,7 +56,7 @@ include_directories(
     ${HCOMM_CODE_ROOT}/test/ut/depends/pkg_inc/profiling
     ${HCOMM_CODE_ROOT}/test/ut/depends/pkg_inc/aicpu/tsd
     ${HCOMM_CODE_ROOT}/test/ut/depends/pkg_inc/aicpu
-    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/pkg_inc/profiling
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/profiling
     ${HCOMM_CODE_ROOT}/src/platform/hccp/inc/network
     ${HCOMM_CODE_ROOT}/src/legacy/common
     ${ASCEND_CANN_PACKAGE_PATH}/include
@@ -154,6 +154,8 @@ add_executable(test_aclrt_memory_stub aclrt_memory_stub_test.cc)
 target_sources(test_aclrt_memory_stub PRIVATE
     ${CMAKE_SOURCE_DIR}/src/proxy/aclrt_memory_stub.cc
     ${CMAKE_SOURCE_DIR}/src/proxy/hccl_proxy_common.cc
+    ${CMAKE_SOURCE_DIR}/src/common/sim_sub_process_manager.cc
+    ${CMAKE_SOURCE_DIR}/src/common/sim_pipe_io.cc
 )
 set_target_properties(test_aclrt_memory_stub PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"

@@ -44,6 +44,27 @@ protected:
             allRankMemSemantics[rankId] = rankMemSemantics;
         }
     }
+
+    void CreateValidBatchSendRecvRingSemantics(
+        std::map<RankId, RankMemorySemantics> &allRankMemSemantics,
+        u32 rankSize, u64 dataSize, bool splitOutput = false) {
+        for (RankId rankId = 0; rankId < rankSize; ++rankId) {
+            RankMemorySemantics rankMemSemantics;
+            const RankId srcRank = (rankId + rankSize - 1U) % rankSize;
+            if (dataSize != 0) {
+                const u64 firstSize = splitOutput ? dataSize / 2 : dataSize;
+                BufferSemantic first(0, firstSize);
+                first.srcBufs.insert(SrcBufDes(srcRank, BufferType::INPUT, 0));
+                rankMemSemantics[BufferType::OUTPUT].insert(first);
+                if (firstSize != dataSize) {
+                    BufferSemantic second(firstSize, dataSize - firstSize);
+                    second.srcBufs.insert(SrcBufDes(srcRank, BufferType::INPUT, firstSize));
+                    rankMemSemantics[BufferType::OUTPUT].insert(second);
+                }
+            }
+            allRankMemSemantics[rankId] = rankMemSemantics;
+        }
+    }
 };
 
 // Test normal case: valid BatchSendRecv semantics with 2 ranks
@@ -208,5 +229,86 @@ TEST_F(BatchSendRecvSemanticsCheckerTest, ValidSemantics_LargeRankSize) {
     
     HcclResult result = TaskCheckBatchSendRecvSemantics(allRankMemSemantics, rankSize, dataSize);
     EXPECT_EQ(result, HcclResult::HCCL_SUCCESS);
+}
+
+TEST_F(BatchSendRecvSemanticsCheckerTest, RingValidSemantics_FourRanksWithSplitOutput) {
+    std::map<RankId, RankMemorySemantics> allRankMemSemantics;
+    CreateValidBatchSendRecvRingSemantics(allRankMemSemantics, 4, 1024, true);
+
+    EXPECT_EQ(TaskCheckBatchSendRecvRingSemantics(allRankMemSemantics, 4, 1024),
+        HcclResult::HCCL_SUCCESS);
+}
+
+TEST_F(BatchSendRecvSemanticsCheckerTest, RingValidSemantics_ZeroDataSize) {
+    std::map<RankId, RankMemorySemantics> allRankMemSemantics;
+    CreateValidBatchSendRecvRingSemantics(allRankMemSemantics, 2, 0);
+
+    EXPECT_EQ(TaskCheckBatchSendRecvRingSemantics(allRankMemSemantics, 2, 0),
+        HcclResult::HCCL_SUCCESS);
+}
+
+TEST_F(BatchSendRecvSemanticsCheckerTest, RingAbnormal_SingleRank) {
+    std::map<RankId, RankMemorySemantics> allRankMemSemantics;
+    CreateValidBatchSendRecvRingSemantics(allRankMemSemantics, 1, 1024);
+
+    EXPECT_EQ(TaskCheckBatchSendRecvRingSemantics(allRankMemSemantics, 1, 1024),
+        HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(BatchSendRecvSemanticsCheckerTest, RingAbnormal_MissingRank) {
+    std::map<RankId, RankMemorySemantics> allRankMemSemantics;
+    CreateValidBatchSendRecvRingSemantics(allRankMemSemantics, 4, 1024);
+    allRankMemSemantics.erase(3);
+
+    EXPECT_EQ(TaskCheckBatchSendRecvRingSemantics(allRankMemSemantics, 4, 1024),
+        HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(BatchSendRecvSemanticsCheckerTest, RingAbnormal_WrongSourceRank) {
+    std::map<RankId, RankMemorySemantics> allRankMemSemantics;
+    CreateValidBatchSendRecvRingSemantics(allRankMemSemantics, 4, 1024);
+    allRankMemSemantics[2][BufferType::OUTPUT].clear();
+    BufferSemantic output(0, 1024);
+    output.srcBufs.insert(SrcBufDes(0, BufferType::INPUT, 0));
+    allRankMemSemantics[2][BufferType::OUTPUT].insert(output);
+
+    EXPECT_EQ(TaskCheckBatchSendRecvRingSemantics(allRankMemSemantics, 4, 1024),
+        HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(BatchSendRecvSemanticsCheckerTest, RingAbnormal_WrongSourceOffset) {
+    std::map<RankId, RankMemorySemantics> allRankMemSemantics;
+    CreateValidBatchSendRecvRingSemantics(allRankMemSemantics, 2, 1024);
+    allRankMemSemantics[0][BufferType::OUTPUT].clear();
+    BufferSemantic output(0, 1024);
+    output.srcBufs.insert(SrcBufDes(1, BufferType::INPUT, 128));
+    allRankMemSemantics[0][BufferType::OUTPUT].insert(output);
+
+    EXPECT_EQ(TaskCheckBatchSendRecvRingSemantics(allRankMemSemantics, 2, 1024),
+        HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(BatchSendRecvSemanticsCheckerTest, RingAbnormal_WrongBufferType) {
+    std::map<RankId, RankMemorySemantics> allRankMemSemantics;
+    CreateValidBatchSendRecvRingSemantics(allRankMemSemantics, 2, 1024);
+    allRankMemSemantics[0][BufferType::OUTPUT].clear();
+    BufferSemantic output(0, 1024);
+    output.srcBufs.insert(SrcBufDes(1, BufferType::OUTPUT, 0));
+    allRankMemSemantics[0][BufferType::OUTPUT].insert(output);
+
+    EXPECT_EQ(TaskCheckBatchSendRecvRingSemantics(allRankMemSemantics, 2, 1024),
+        HcclResult::HCCL_E_PARA);
+}
+
+TEST_F(BatchSendRecvSemanticsCheckerTest, RingAbnormal_OutputGap) {
+    std::map<RankId, RankMemorySemantics> allRankMemSemantics;
+    CreateValidBatchSendRecvRingSemantics(allRankMemSemantics, 2, 1024);
+    allRankMemSemantics[0][BufferType::OUTPUT].clear();
+    BufferSemantic output(128, 896);
+    output.srcBufs.insert(SrcBufDes(1, BufferType::INPUT, 128));
+    allRankMemSemantics[0][BufferType::OUTPUT].insert(output);
+
+    EXPECT_EQ(TaskCheckBatchSendRecvRingSemantics(allRankMemSemantics, 2, 1024),
+        HcclResult::HCCL_E_PARA);
 }
 }

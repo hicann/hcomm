@@ -12,10 +12,15 @@
 #define _SIM_HCCL_PROXY_COMMON_H_
 
 #include "hccl/hccl_types.h"
+#include <string>
+#include <map>
 
 namespace sim {
 int GetDataTypeSize(HcclDataType dataType, uint32_t &size);
 
 bool IsDeviceAddress(void *addr);
+
+bool ParseKernelJson(const std::string& jsonPath, std::map<std::string, std::string>& out);
+
 }
 #endif

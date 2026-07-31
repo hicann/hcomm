@@ -33,7 +33,7 @@ public:
     TaskMetaTranslatorV3(const TaskMetaTranslatorV3 &) = delete;
     TaskMetaTranslatorV3 &operator=(const TaskMetaTranslatorV3 &) = delete;
 
-    HcclResult Translate(StorageManager &storage);
+    HcclResult Translate(StorageManager &storage, OperatorId operatorId);
     void Reset();
 
     const std::vector<std::unique_ptr<TaskNode>> &GetNodes() const { return nodes_; }
@@ -60,7 +60,7 @@ private:
     };
 
     HcclResult TranslateOneTaskMeta(const HcclTaskMetaData &taskMeta, StorageManager &storage, uint32_t taskIndex,
-        NodeId &nodeId);
+        OperatorId operatorId, NodeId &nodeId);
     HcclResult AddTaskNode(const TaskPosition &position, std::unique_ptr<TaskNode> node, NodeId &nodeId);
 
     std::vector<std::unique_ptr<TaskNode>> nodes_;

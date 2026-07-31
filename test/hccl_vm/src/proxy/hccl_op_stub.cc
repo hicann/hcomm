@@ -37,7 +37,7 @@
 extern "C" uint8_t GetOpExpansionMode();
 
 namespace {
-    static std::vector<uint8_t> BuildBatchSendRecvA2AExtInfo(uint32_t itemNum)
+    static std::vector<uint8_t> BuildBatchSendRecvRingExtInfo(uint32_t itemNum)
     {
         std::vector<uint8_t> extInfo(sizeof(itemNum));
         std::memcpy(extInfo.data(), &itemNum, sizeof(itemNum));
@@ -115,6 +115,27 @@ namespace {
        return static_cast<uint32_t>(devType);
     }
 
+    // 本文件内INPUT/OUTPUT/CCL的转换，地址为当前进程申请根据device_id匹配
+    uint64_t GetVirPtrByDevPtr(uint64_t devAddr)
+    {
+        uint64_t deviceKey = sim::GetCurrDeviceKey();
+        auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock> (
+            [devAddr, deviceKey](const sim::VirtualMemBlock &virMem) {
+                return ((virMem.dev_mapped_ptr <= devAddr) &&
+                        (devAddr < (virMem.dev_mapped_ptr + virMem.size)) &&
+                        (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)) &&
+                        (virMem.device_id == deviceKey);
+            }
+        );
+        if (!virMemRes.second) {
+            HCCL_VM_ERROR("cannot find virMemRes by devAddr[{}]", devAddr);
+            return 0;
+        }
+
+        uint64_t diff = devAddr - virMemRes.first.dev_mapped_ptr;
+        return virMemRes.first.start_ptr + diff;
+    }
+
     int RecordOpDbInfo(HcclCMDType cmdType,
         uint32_t rankId, uint64_t streamId,
         const void* inputBuf, uint64_t inputSize,
@@ -145,9 +166,9 @@ namespace {
 
         sim::OpMemInfoTab opMemInfoTab{};
         opMemInfoTab.id = 0;
-        opMemInfoTab.inputAddr = reinterpret_cast<uint64_t>(inputBuf);
+        opMemInfoTab.inputAddr = GetVirPtrByDevPtr(reinterpret_cast<uint64_t>(inputBuf));
         opMemInfoTab.inputSize = inputSize;
-        opMemInfoTab.outputAddr = reinterpret_cast<uint64_t>(outputBuf);
+        opMemInfoTab.outputAddr = GetVirPtrByDevPtr(reinterpret_cast<uint64_t>(outputBuf));
         opMemInfoTab.outputSize = outputSize;
         opMemInfoTab.cclAddr = 0;
         opMemInfoTab.cclSize = 0;
@@ -157,6 +178,67 @@ namespace {
             return -1;
         }
         return 0;
+    }
+
+    HcclResult RecordBatchSendRecvRing(HcclSendRecvItem *sendRecvInfo, uint32_t itemNum,
+        HcclComm comm, aclrtStream stream)
+    {
+        const uint32_t curRank = static_cast<uint32_t>(sim::GetCurrRankId());
+        const uint32_t rankSize = sim::GetRankSize();
+        if (sendRecvInfo == nullptr || comm == nullptr || stream == nullptr || rankSize < 2 ||
+            curRank >= rankSize || itemNum != 2) {
+            HCCL_VM_ERROR("invalid HcclBatchSendRecv ring parameters: rank={}, rankSize={}, itemNum={}",
+                curRank, rankSize, itemNum);
+            return HcclResult::HCCL_E_PARA;
+        }
+
+        const HcclSendRecvItem *sendItem = nullptr;
+        const HcclSendRecvItem *recvItem = nullptr;
+        for (uint32_t i = 0; i < itemNum; ++i) {
+            const auto &item = sendRecvInfo[i];
+            if (item.sendRecvType == HCCL_SEND && sendItem == nullptr) {
+                sendItem = &item;
+            } else if (item.sendRecvType == HCCL_RECV && recvItem == nullptr) {
+                recvItem = &item;
+            } else {
+                HCCL_VM_ERROR("HcclBatchSendRecv ring requires exactly one SEND and one RECV item");
+                return HcclResult::HCCL_E_PARA;
+            }
+        }
+
+        const uint32_t sendPeer = (curRank + 1U) % rankSize;
+        const uint32_t recvPeer = (curRank + rankSize - 1U) % rankSize;
+        if (sendItem == nullptr || recvItem == nullptr || sendItem->remoteRank != sendPeer ||
+            recvItem->remoteRank != recvPeer) {
+            HCCL_VM_ERROR("HcclBatchSendRecv ring peer mismatch at rank {}: expected sendPeer={}, recvPeer={}",
+                curRank, sendPeer, recvPeer);
+            return HcclResult::HCCL_E_PARA;
+        }
+        if (sendItem->count != recvItem->count || sendItem->dataType != recvItem->dataType ||
+            (sendItem->count != 0 && (sendItem->buf == nullptr || recvItem->buf == nullptr))) {
+            HCCL_VM_ERROR("HcclBatchSendRecv ring requires matching SEND/RECV count, data type and valid buffers");
+            return HcclResult::HCCL_E_PARA;
+        }
+
+        uint32_t typeSize = 0;
+        if (sim::GetDataTypeSize(sendItem->dataType, typeSize) != HcclResult::HCCL_SUCCESS) {
+            return HcclResult::HCCL_E_NOT_SUPPORT;
+        }
+        if (typeSize != 0 && sendItem->count > UINT64_MAX / typeSize) {
+            HCCL_VM_ERROR("HcclBatchSendRecv ring buffer size overflows uint64, count={}, typeSize={}",
+                sendItem->count, typeSize);
+            return HcclResult::HCCL_E_PARA;
+        }
+        const uint64_t dataBytes = sendItem->count * typeSize;
+        const auto details = BuildOpDetailsV1(sendItem->count, sendItem->dataType, 0, 0,
+            HcclCMDType::HCCL_CMD_BATCH_SEND_RECV);
+        const auto extInfo = BuildBatchSendRecvRingExtInfo(itemNum);
+        if (RecordOpDbInfo(HcclCMDType::HCCL_CMD_BATCH_SEND_RECV, curRank, reinterpret_cast<uint64_t>(stream),
+                sendItem->buf, dataBytes, recvItem->buf, dataBytes, details, 0, rankSize,
+                recvPeer, sendPeer, extInfo) != 0) {
+            return HcclResult::HCCL_E_PARA;
+        }
+        return HcclResult::HCCL_SUCCESS;
     }
 }
 
@@ -257,63 +339,9 @@ HcclResult HcclRecv(void *recvBuf, uint64_t count, HcclDataType dataType, uint32
 HcclResult HcclBatchSendRecv(HcclSendRecvItem *sendRecvInfo, uint32_t itemNum,
     HcclComm comm, aclrtStream stream)
 {
-    const uint32_t curRank = static_cast<uint32_t>(sim::GetCurrRankId());
-    const uint32_t rankSize = sim::GetRankSize();
-    if (sendRecvInfo == nullptr || comm == nullptr || stream == nullptr || rankSize == 0 ||
-        curRank >= rankSize || static_cast<uint64_t>(itemNum) != static_cast<uint64_t>(rankSize) * 2) {
-        HCCL_VM_ERROR("invalid HcclBatchSendRecv parameters: rank={}, rankSize={}, itemNum={}",
-            curRank, rankSize, itemNum);
-        return HcclResult::HCCL_E_PARA;
-    }
-
-    const uint64_t peerCount = sendRecvInfo[0].count;
-    const HcclDataType dataType = sendRecvInfo[0].dataType;
-    uint32_t typeSize = 0;
-    if (sim::GetDataTypeSize(dataType, typeSize) != HcclResult::HCCL_SUCCESS) {
-        return HcclResult::HCCL_E_NOT_SUPPORT;
-    }
-    const uint64_t peerBytes = peerCount * typeSize;
-    const uint64_t totalBytes = peerBytes * rankSize;
-
-    std::vector<const HcclSendRecvItem *> sends(rankSize, nullptr);
-    std::vector<const HcclSendRecvItem *> recvs(rankSize, nullptr);
-    for (uint32_t i = 0; i < itemNum; ++i) {
-        const auto &item = sendRecvInfo[i];
-        if (item.remoteRank >= rankSize || item.count != peerCount || item.dataType != dataType ||
-            (peerCount != 0 && item.buf == nullptr)) {
-            HCCL_VM_ERROR("HcclBatchSendRecv only supports uniform all-to-all items");
-            return HcclResult::HCCL_E_NOT_SUPPORT;
-        }
-        auto *slots = item.sendRecvType == HCCL_SEND ? &sends :
-            (item.sendRecvType == HCCL_RECV ? &recvs : nullptr);
-        if (slots == nullptr || (*slots)[item.remoteRank] != nullptr) {
-            HCCL_VM_ERROR("HcclBatchSendRecv has an invalid or duplicate item for peer {}", item.remoteRank);
-            return HcclResult::HCCL_E_NOT_SUPPORT;
-        }
-        (*slots)[item.remoteRank] = &item;
-    }
-    if (sends[0] == nullptr || recvs[0] == nullptr) {
-        return HcclResult::HCCL_E_NOT_SUPPORT;
-    }
-    const uintptr_t sendBase = reinterpret_cast<uintptr_t>(sends[0]->buf);
-    const uintptr_t recvBase = reinterpret_cast<uintptr_t>(recvs[0]->buf);
-    for (uint32_t peer = 0; peer < rankSize; ++peer) {
-        const uint64_t offset = peer * peerBytes;
-        if (sends[peer] == nullptr || recvs[peer] == nullptr ||
-            reinterpret_cast<uintptr_t>(sends[peer]->buf) != sendBase + offset ||
-            reinterpret_cast<uintptr_t>(recvs[peer]->buf) != recvBase + offset) {
-            HCCL_VM_ERROR("HcclBatchSendRecv only supports contiguous all-to-all buffers, peer={}", peer);
-            return HcclResult::HCCL_E_NOT_SUPPORT;
-        }
-    }
-
-    const auto details = BuildOpDetailsV1(peerCount, dataType, 0, 0,
-        HcclCMDType::HCCL_CMD_BATCH_SEND_RECV);
-    const auto extInfo = BuildBatchSendRecvA2AExtInfo(itemNum);
-    if (RecordOpDbInfo(HcclCMDType::HCCL_CMD_BATCH_SEND_RECV, curRank, reinterpret_cast<uint64_t>(stream),
-            reinterpret_cast<void *>(sendBase), totalBytes, reinterpret_cast<void *>(recvBase), totalBytes,
-            details, 0, rankSize, curRank, curRank, extInfo) != 0) {
-        return HcclResult::HCCL_E_PARA;
+    const HcclResult ret = RecordBatchSendRecvRing(sendRecvInfo, itemNum, comm, stream);
+    if (ret != HcclResult::HCCL_SUCCESS) {
+        return ret;
     }
     using Func = HcclResult (*)(HcclSendRecvItem *, uint32_t, HcclComm, aclrtStream);
     const auto func = reinterpret_cast<Func>(dlsym(RTLD_NEXT, __func__));
@@ -757,13 +785,12 @@ HcclResult HcclScatter(void *sendBuf, void *recvBuf, uint64_t recvCount, HcclDat
         inputValueSize = static_cast<uint64_t>(dataSize) * recvCount * rankSize;
     }
     uint64_t outputValueSize = static_cast<uint64_t>(dataSize) * recvCount;
- 
-    const void* inputPtr = (curRank == root) ? sendBuf : nullptr;
+
     // Use BuildOpDetailsV1 for Scatter
     auto scatterDetails = BuildOpDetailsV1(
         recvCount, dataType, 0, 0, HcclCMDType::HCCL_CMD_SCATTER);
     if (RecordOpDbInfo(HcclCMDType::HCCL_CMD_SCATTER, curRank, reinterpret_cast<uint64_t>(stream),
-                   inputPtr, inputValueSize, recvBuf, outputValueSize, scatterDetails,
+                   sendBuf, inputValueSize, recvBuf, outputValueSize, scatterDetails,
                    root, rankSize, curRank, curRank) != 0) {
         HCCL_VM_ERROR("record op db info failed");
         return HcclResult::HCCL_E_PARA;
@@ -790,7 +817,8 @@ HcclResult HcclGetHcclBuffer(HcclComm comm, void **buffer, uint64_t *size)
     auto hcclGetHcclBufferFunc = reinterpret_cast<HcclGetHcclBufferFunc>(dlsym(RTLD_NEXT, __func__));
     if (hcclGetHcclBufferFunc != nullptr) {
         auto ret = hcclGetHcclBufferFunc(comm, buffer, size);
-        sim::UpdateOpMemCclBuffer(reinterpret_cast<uint64_t>(*buffer), *size);
+        uint64_t cclBuff = GetVirPtrByDevPtr(reinterpret_cast<uint64_t>(*buffer));
+        sim::UpdateOpMemCclBuffer(cclBuff, *size);
         HCCL_VM_INFO("get rank{} ccl buffer= {:p}, {}", curRank, *buffer, *size);
         return ret;
     } else {
