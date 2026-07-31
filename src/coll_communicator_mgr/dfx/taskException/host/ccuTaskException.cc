@@ -244,7 +244,7 @@ HcclResult CcuTaskException::InitChannelMap(s32 deviceId, u64 ccuKernelHandle)
 
     auto &kernelMgr = hcomm::CcuKernelMgr::GetInstance(deviceId);
     auto *kernel = kernelMgr.GetKernel(ccuKernelHandle);
-    CHK_PRT_RET(kernel == nullptr, HCCL_ERROR("[%s]GetKernel nullptr, deviceId[%u], ccuKernelHandle[0x%llx]",
+    CHK_PRT_RET(kernel == nullptr, HCCL_ERROR("[%s]GetKernel nullptr, deviceId[%d], ccuKernelHandle[0x%llx]",
         __func__, deviceId, ccuKernelHandle), HCCL_E_PARA);
 
     const auto& ccuChannels = kernel->GetChannels();
@@ -268,7 +268,7 @@ std::string CcuTaskException::GetGroupRankInfo(const Hccl::TaskInfo& taskInfo)
     }
 
     hccl::CollComm *communicator = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
-    return Hccl::StringFormat("group:[%s], rankSize[%u], rankId[%d]",
+    return Hccl::StringFormat("group:[%s], rankSize[%u], rankId[%u]",
         communicator->GetCommId().c_str(), communicator->GetRankSize(), communicator->GetMyRankId());
 }
 
@@ -418,7 +418,7 @@ static HcclResult ResolveRepContextAndCurrentRep(int32_t deviceId, const Hccl::P
     auto &kernelMgr = hcomm::CcuKernelMgr::GetInstance(deviceId);
     auto *kernel = kernelMgr.GetKernel(ccuTaskParam.ccuKernelHandle);
     CHK_PRT_RET(kernel == nullptr,
-        HCCL_ERROR("[%s]GetKernel nullptr, deviceId[%u], ccuKernelHandle[0x%llx]", __func__, deviceId,
+        HCCL_ERROR("[%s]GetKernel nullptr, deviceId[%d], ccuKernelHandle[0x%llx]", __func__, deviceId,
             ccuTaskParam.ccuKernelHandle),
         HCCL_E_PARA);
 
@@ -1417,7 +1417,7 @@ HcclResult RaGetAuxInfo(const RdmaHandle rdmaHandle, AuxInfoIn auxInfoIn, AuxInf
     HccpAuxInfoOut out;
     auto ret = RaCtxGetAuxInfo(rdmaHandle, &in, &out);
     if (ret != 0) {
-        HCCL_ERROR("RaGetAuxInfo failed.ret=[%d]", ret);
+        HCCL_ERROR("RaGetAuxInfo failed, ret=[%d]", ret);
         return HCCL_E_NETWORK;
     }
 

@@ -183,6 +183,14 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetGroupInfo_When_AicpuCommNullptr_Expe
     EXPECT_EQ(result, "");
 }
 
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetGroupInfo_When_AicpuCommValid_Expect_ReturnGroupName)
+{
+    CollCommAicpu aicpuComm;
+    aicpuComm.identifier_ = "test_group_name";
+    std::string result = HcclCommTaskExceptionLite::GetInstance().GetGroupInfo(&aicpuComm);
+    EXPECT_EQ(result, "group:[test_group_name], rankSize:[0], localRank:[0]");
+}
+
 TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_CommIdNotInMap_Expect_ReturnSuccess)
 {
     std::string testCommId = "dpuExpTest";

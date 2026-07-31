@@ -128,7 +128,7 @@ HcclResult HcclTaskAbortHandler::Register(CollComm *communicator)
 {
     std::lock_guard<std::mutex> lock(vecMutex);
     commVector_.push_back(communicator);
-    HCCL_INFO("HcclTaskAbortHandler::Register success, commVector_ size is [%lu]", commVector_.size());
+    HCCL_INFO("HcclTaskAbortHandler::Register success, commVector_ size is [%zu]", commVector_.size());
 
     return HCCL_SUCCESS;
 }
@@ -136,14 +136,14 @@ HcclResult HcclTaskAbortHandler::Register(CollComm *communicator)
 HcclResult HcclTaskAbortHandler::UnRegister(CollComm *communicator)
 {
     std::lock_guard<std::mutex> lock(vecMutex);
-    HCCL_INFO("HcclTaskAbortHandler::UnRegister Begin, commVector_ size is [%lu]", commVector_.size());
+    HCCL_INFO("HcclTaskAbortHandler::UnRegister Begin, commVector_ size is [%zu]", commVector_.size());
     auto it = std::find(commVector_.begin(), commVector_.end(), communicator);
     if (it != commVector_.end()) {
         commVector_.erase(it);
     } else {
         HCCL_WARNING("HcclTaskAbortHandler::UnRegister, comm not found.");
     }
-    HCCL_INFO("HcclTaskAbortHandler::UnRegister finish, commVector_ size is [%lu]", commVector_.size());
+    HCCL_INFO("HcclTaskAbortHandler::UnRegister finish, commVector_ size is [%zu]", commVector_.size());
     return HCCL_SUCCESS;
 }
 }

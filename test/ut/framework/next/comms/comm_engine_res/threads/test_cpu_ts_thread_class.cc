@@ -721,3 +721,136 @@ TEST_F(TestCpuTsThread, Ut_CpuTsThread_SupplementNotify_When_DeviceNotifyLoadTyp
     ret = cpuThread.SupplementNotify(3);
     EXPECT_EQ(HCCL_E_NOT_SUPPORT, ret);
 }
+
+TEST_F(TestCpuTsThread, Ut_CpuTsThread_GetNotify_When_OutOfRange_Expect_ReturnNullptr)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice)
+        .stubs()
+        .with(outBound(isDeviceSide))
+        .will(returnValue(HCCL_SUCCESS));
+
+    CpuTsThread cpuThread(StreamType::STREAM_TYPE_ONLINE, 2, NotifyLoadType::HOST_NOTIFY);
+    HcclResult ret = cpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    LocalNotify *notify = cpuThread.GetNotify(2);
+    EXPECT_EQ(notify, nullptr);
+
+    notify = cpuThread.GetNotify(100);
+    EXPECT_EQ(notify, nullptr);
+}
+
+TEST_F(TestCpuTsThread, Ut_CpuTsThread_DeInit_When_Normal_Expect_ReturnSuccess)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice)
+        .stubs()
+        .with(outBound(isDeviceSide))
+        .will(returnValue(HCCL_SUCCESS));
+
+    CpuTsThread cpuThread(StreamType::STREAM_TYPE_ONLINE, 2, NotifyLoadType::HOST_NOTIFY);
+    HcclResult ret = cpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    ret = cpuThread.DeInit();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(cpuThread.GetNotifyNum(), 0u);
+}
+
+TEST_F(TestCpuTsThread, Ut_CpuTsThread_TryLaunchTask_When_Normal_Expect_NoThrow)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice)
+        .stubs()
+        .with(outBound(isDeviceSide))
+        .will(returnValue(HCCL_SUCCESS));
+
+    CpuTsThread cpuThread(StreamType::STREAM_TYPE_ONLINE, 2, NotifyLoadType::HOST_NOTIFY);
+    HcclResult ret = cpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    EXPECT_NO_THROW(cpuThread.TryLaunchTask());
+}
+
+TEST_F(TestCpuTsThread, Ut_CpuTsThread_IsDeviceA5_When_A5Device_Expect_ReturnTrue)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice)
+        .stubs()
+        .with(outBound(isDeviceSide))
+        .will(returnValue(HCCL_SUCCESS));
+
+    MOCKER(hrtGetDeviceType)
+        .stubs()
+        .with(outBound(DevType::DEV_TYPE_950))
+        .will(returnValue(HCCL_SUCCESS));
+
+    CpuTsThread cpuThread(StreamType::STREAM_TYPE_ONLINE, 2, NotifyLoadType::HOST_NOTIFY);
+    HcclResult ret = cpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    EXPECT_TRUE(cpuThread.IsDeviceA5());
+}
+
+TEST_F(TestCpuTsThread, Ut_CpuTsThread_IsDeviceA5_When_A3Device_Expect_ReturnFalse)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice)
+        .stubs()
+        .with(outBound(isDeviceSide))
+        .will(returnValue(HCCL_SUCCESS));
+
+    MOCKER(hrtGetDeviceType)
+        .stubs()
+        .with(outBound(DevType::DEV_TYPE_910))
+        .will(returnValue(HCCL_SUCCESS));
+
+    CpuTsThread cpuThread(StreamType::STREAM_TYPE_ONLINE, 2, NotifyLoadType::HOST_NOTIFY);
+    HcclResult ret = cpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    EXPECT_FALSE(cpuThread.IsDeviceA5());
+}
+
+TEST_F(TestCpuTsThread, Ut_CpuTsThread_LocalNotifyRecord_SingleParam_When_A5_Expect_ReturnNotSupport)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice)
+        .stubs()
+        .with(outBound(isDeviceSide))
+        .will(returnValue(HCCL_SUCCESS));
+
+    MOCKER(hrtGetDeviceType)
+        .stubs()
+        .with(outBound(DevType::DEV_TYPE_950))
+        .will(returnValue(HCCL_SUCCESS));
+
+    CpuTsThread cpuThread(StreamType::STREAM_TYPE_ONLINE, 2, NotifyLoadType::HOST_NOTIFY);
+    HcclResult ret = cpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    ret = cpuThread.LocalNotifyRecord(0);
+    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+}
+
+TEST_F(TestCpuTsThread, Ut_CpuTsThread_LocalNotifyWait_SingleParam_When_A5_Expect_ReturnNotSupport)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice)
+        .stubs()
+        .with(outBound(isDeviceSide))
+        .will(returnValue(HCCL_SUCCESS));
+
+    MOCKER(hrtGetDeviceType)
+        .stubs()
+        .with(outBound(DevType::DEV_TYPE_950))
+        .will(returnValue(HCCL_SUCCESS));
+
+    CpuTsThread cpuThread(StreamType::STREAM_TYPE_ONLINE, 2, NotifyLoadType::HOST_NOTIFY);
+    HcclResult ret = cpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    ret = cpuThread.LocalNotifyWait(0);
+    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+}

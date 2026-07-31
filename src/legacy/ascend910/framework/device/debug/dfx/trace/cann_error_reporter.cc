@@ -79,26 +79,26 @@ HcclResult CannErrorReporter::UpdateSensorNode(uint32_t deviceId, ReportStatus r
     auto iter = status2Event_.find(reportStatus);
     if (iter == status2Event_.end()) {
         HCCL_RUN_WARNING("[CannErrorReporter][UpdateSensorNode] "
-            "unknown reportStatus[%u], fail to find corresponding event type, update node sensor fail.",
-            reportStatus);
+            "unknown reportStatus[%d], fail to find corresponding event type, update node sensor fail.",
+            static_cast<int>(reportStatus));
         return HCCL_E_NOT_SUPPORT;
     }
     int32_t eventType = static_cast<int32_t>(iter->second.first);
     HcclGeneralEventType eventAssert = iter->second.second;
 
     HCCL_INFO("[CannErrorReporter][UpdateSensorNode]updating sensor, "
-        "deviceId[%u], reportStatus[%u], event val[%u], event assert[%u].",
-        deviceId, reportStatus, eventType, eventAssert);
+        "deviceId[%u], reportStatus[%d], event val[%d], event assert[%d].",
+        deviceId, static_cast<int>(reportStatus), eventType, static_cast<int>(eventAssert));
 
     CHK_PRT_RET(hrtHalSensorNodeUpdateState(deviceId, handle, eventType, eventAssert) != HCCL_SUCCESS,
         HCCL_RUN_WARNING("[CannErrorReporter][UpdateSensorNode] "
-            "update sensor node fail, deviceId[%u], reportStatus[%u], val[%d], handle[%llu].",
-            deviceId, reportStatus, eventType, handle),
+            "update sensor node fail, deviceId[%u], reportStatus[%d], val[%d], handle[%llu].",
+            deviceId, static_cast<int>(reportStatus), eventType, handle),
         HCCL_E_INTERNAL);
 
     HCCL_RUN_INFO("[CannErrorReporter][UpdateSensorNode] send report success, "
-        "deviceId[%u], reportStatus[%u], val[%d], handle[%llu].",
-        deviceId, reportStatus, eventType, handle);
+        "deviceId[%u], reportStatus[%d], val[%d], handle[%llu].",
+        deviceId, static_cast<int>(reportStatus), eventType, handle);
     return HCCL_SUCCESS;
 }
 
@@ -120,7 +120,7 @@ HcclResult CannErrorReporter::UnRegisterSensorNode(uint32_t deviceId, uint64_t h
     CHK_PRT_RET(ret != HCCL_SUCCESS,
         HCCL_RUN_WARNING("[CannErrorReporter][UnRegisterSensorNode] "
         "unregister sensor node fail, device id[%u], handle[%llu].", deviceId, handle), HCCL_E_INTERNAL);
-    HCCL_INFO("[CannErrorReporter][UpdateSensorNode]unregister sensor success, device id[%u], handle[%llu].",
+    HCCL_INFO("[CannErrorReporter][UnRegisterSensorNode] unregister sensor success, device id[%u], handle[%llu].",
         deviceId, handle);
 
     return HCCL_SUCCESS;

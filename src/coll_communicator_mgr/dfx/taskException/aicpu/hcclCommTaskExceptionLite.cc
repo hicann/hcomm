@@ -157,7 +157,7 @@ HcclResult HcclCommTaskExceptionLite::HandleExceptionCqe()
 
             ret = ProcessCqe(aicpuComm, cqeException, cqeStatus, aicpuCommInfo);
             CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s]ProcessCqe fail, aicpuComm[%s], streamId[%u], "
-                "cqeStatus[%d]", __func__, aicpuComm->GetIdentifier().c_str(), streamLite->GetId(), cqeStatus), ret);
+                "cqeStatus[%lld]", __func__, aicpuComm->GetIdentifier().c_str(), streamLite->GetId(), static_cast<long long>(cqeStatus)), ret);
         }
     }
     return HCCL_SUCCESS;
@@ -319,7 +319,7 @@ HcclResult HcclCommTaskExceptionLite::PrintTaskExceptionBySqeId(CollCommAicpu *a
     // 已经打印过的不再重复打印
     auto it = threadsPrinted_.find(sqId);
     if (it != threadsPrinted_.end() && it->second == sqeId) {
-        HCCL_RUN_INFO("TaskException][AICPU]sqId:%u, sqeId:%u has been printed, skip", sqId, sqeId);
+        HCCL_RUN_INFO("[TaskException][AICPU]sqId:%u, sqeId:%u has been printed, skip", sqId, sqeId);
         return HCCL_SUCCESS;
     }
     threadsPrinted_[sqId] = sqeId;
@@ -369,9 +369,9 @@ HcclResult HcclCommTaskExceptionLite::GenerateErrorMessageReport(CollCommAicpu *
     errMsgInfo.rtCqErrorCode = exceptionInfo.errorCode;
 
     CHK_SAFETY_FUNC_RET(memcpy_s(errMsgInfo.tag, sizeof(errMsgInfo.tag),
-        taskInfo.dfxOpInfo_->algTag_.c_str(), taskInfo.dfxOpInfo_->algTag_.size()));
+        taskInfo.dfxOpInfo_->algTag_.c_str(), taskInfo.dfxOpInfo_->algTag_.size() + 1));
     CHK_SAFETY_FUNC_RET(memcpy_s(errMsgInfo.group, sizeof(errMsgInfo.group),
-        aicpuComm->GetIdentifier().c_str(), aicpuComm->GetIdentifier().size()));
+        aicpuComm->GetIdentifier().c_str(), aicpuComm->GetIdentifier().size() + 1));
 
     GenerateTaskErrMsg(taskInfo, errMsgInfo, exceptionInfo);
     return HCCL_SUCCESS;
@@ -623,7 +623,7 @@ std::string HcclCommTaskExceptionLite::GetGroupInfo(CollCommAicpu *aicpuComm)
         HCCL_ERROR("[%s]aicpuComm is nullptr, return empty string.", __func__);
         return "";
     }
-    return Hccl::StringFormat("group:[%s], rankSize:[%u], localRank:[%d]",
+    return Hccl::StringFormat("group:[%s], rankSize:[%u], localRank:[%u]",
 	    aicpuComm->GetIdentifier().c_str(), aicpuComm->GetTopoInfo().userRankSize, aicpuComm->GetTopoInfo().userRank);
 }
 

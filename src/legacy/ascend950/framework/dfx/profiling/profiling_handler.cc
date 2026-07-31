@@ -425,8 +425,8 @@ void ProfilingHandler::FillDpuProfInfo(const TaskInfo &taskInfo, MsprofAdditiona
     dpuProfInfo->taskId     = taskInfo.taskId_;
     dpuProfInfo->streamId   = taskInfo.streamId_;
     dpuProfInfo->timeStamp  = taskInfo.taskParam_.beginTime;
-    HCCL_INFO("[FillDpuProfInfo]taskId[%llu], streamId[%lu], npuDevId[%lu], dpuDevId[%lu], "
-              "starttime[%llu], endtime[%llu], aicputaskId[%llu].",
+    HCCL_INFO("[FillDpuProfInfo]taskId[%u], streamId[%u], npuDevId[%u], dpuDevId[%u], "
+              "starttime[%llu], endtime[%llu], aicputaskId[%u].",
         dpuProfInfo->taskId, dpuProfInfo->streamId,
         dpuProfInfo->npuDevId, dpuProfInfo->dpuDevId,
         dpuProfInfo->timeStamp, reporterData.timeStamp, dpuProfInfo->aicpu_task_id);
@@ -567,7 +567,7 @@ void ProfilingHandler::DumpHCCLReportData(const TaskInfo &taskInfo, const Msprof
             profInfo->groupName, profInfo->localRank, profInfo->remoteRank,
             profInfo->rankSize, profInfo->workFlowMode, profInfo->planeID,
             profInfo->ctxId, profInfo->stage, profInfo->role,
-            profInfo->durationEstimated, taskInfo.taskParam_.taskType);
+            profInfo->durationEstimated, static_cast<int>(taskInfo.taskParam_.taskType));
         HCCL_INFO(
             "MsprofAdditionalInfo profInfo detail: srcAddr[%llu], dstAddr[%llu], dataSize[%llu], notifyID[%llu], "
             "linkType[%u], opType[%s], transportType[%u], dataType[%s], rdmaType[%u]",
@@ -585,7 +585,7 @@ void ProfilingHandler::DumpHCCLReportData(const TaskInfo &taskInfo, const Msprof
             dpuProfInfo->groupName, dpuProfInfo->localRank, dpuProfInfo->remoteRank,
             dpuProfInfo->rankSize, dpuProfInfo->workFlowMode, dpuProfInfo->planeID,
             dpuProfInfo->stage, dpuProfInfo->role, dpuProfInfo->durationEstimated,
-            taskInfo.taskParam_.taskType);
+            static_cast<int>(taskInfo.taskParam_.taskType));
         HCCL_INFO(
             "MsprofAdditionalInfo dpuProfInfo detail: srcAddr[%llu], dstAddr[%llu], dataSize[%llu], notifyID[%llu], "
             "linkType[%u], opType[%s], transportType[%u], dataType[%s], rdmaType[%u], "
@@ -615,7 +615,7 @@ void ProfilingHandler::LogCcuWaitSignalInfo(const CcuProfilingInfo &info, const 
 {
     HCCL_INFO(
         "[ProfilingHandler]GetCcuWaitSignalInfo, waitSignalInfo data is: version[%u], itemId[%llu], groupName[%llu], "
-        "rankId[%u], ranksize[%u], workFlowMode[%u], streamId[%llu], taskId[%u], dieId[%u],instrId[%u],missionId[%u], "
+        "rankId[%u], ranksize[%u], workFlowMode[%u], streamId[%u], taskId[%u], dieId[%u],instrId[%u],missionId[%u], "
         "ckeId[%u],mask[%u]",
         0, itemId, groupName, rankId, ranksize,
         static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE), taskInfo.streamId_, taskInfo.taskId_, info.dieId, info.instrId,
@@ -626,7 +626,7 @@ void ProfilingHandler::LogCcuGroupInfo(const CcuProfilingInfo &info, const TaskI
     uint64_t itemId, uint64_t groupName, u32 rankId, u32 ranksize) const
 {
     HCCL_INFO("[ProfilingHandler]GetCcuGroupInfo, ccuGroupInfo data is: version[%u], itemId[%llu], "
-              "groupName[%llu], rankId[%u], ranksize[%u], workFlowMode[%u], streamId[%llu], taskId[%u], "
+              "groupName[%llu], rankId[%u], ranksize[%u], workFlowMode[%u], streamId[%u], taskId[%u], "
               "dieId[%u],instrId[%u],missionId[%u], dataSize[%llu]",
               0, itemId, groupName,
               rankId, ranksize, static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE),
@@ -941,7 +941,7 @@ void ProfilingHandler::ReportHcclOpInfo(uint64_t timeStamp, const DfxOpInfo &opI
         return;
     }
     HCCL_INFO("[ProfilingHandler][ReportHcclOpInfo], data is: level[%u], type[%u], threadId[%u], dataLen[%u], "
-              "timeStamp[%llu], relay [%u], retry[%u], dataType[%s], algType[%u], groupName[%llu], count[%llu]",
+              "timeStamp[%llu], relay [%u], retry[%u], dataType[%s], algType[%llu], groupName[%llu], count[%llu]",
               reporterData.level, reporterData.type, reporterData.threadId, reporterData.dataLen,
               reporterData.timeStamp, reporterData.data.hcclopInfo.relay, reporterData.data.hcclopInfo.retry,
               DataTypeToSerialString(reporterData.data.hcclopInfo.dataType).c_str(), reporterData.data.hcclopInfo.algType,
@@ -976,7 +976,7 @@ int32_t ProfilingHandler::CommandHandle(uint32_t rtType, void *data, uint32_t le
     auto type = profConfigParam->type;
     auto profconfig = profConfigParam->profSwitch;
     HCCL_RUN_INFO("[Profiling][CommandHandle] CommandHandle's rtType is %u. CommandHandle_switch type[%u], " \
-            "profconfig[%u], deviceLogicId[%u]", rtType, type, profconfig, profConfigParam->devIdList[0]);
+            "profconfig[%llu], deviceLogicId[%u]", rtType, type, profconfig, profConfigParam->devIdList[0]);
     switch (type) {
         case PROF_COMMANDHANDLE_TYPE_START:
             instance_.StartSubscribe(profconfig);
@@ -1051,7 +1051,7 @@ void ProfilingHandler::CallProfRegHostApi() const
 void ProfilingHandler::ReportStoragedCompactInfo()
 {
     std::lock_guard<std::mutex> lock(cacheHcclOpInfoMutex_);
-    HCCL_INFO("[ReportStoragedCompactInfo] The size of the storageCompactInfo_ is [%u]", cacheHcclOpInfo_.size());
+    HCCL_INFO("[ReportStoragedCompactInfo] The size of the storageCompactInfo_ is [%zu]", cacheHcclOpInfo_.size());
     std::queue<MsprofCompactInfo> tempCompactInfo = cacheHcclOpInfo_;
     while (!tempCompactInfo.empty()) {
         MsprofCompactInfo reportData = tempCompactInfo.front();
@@ -1066,7 +1066,7 @@ void ProfilingHandler::ReportStoragedCompactInfo()
 void ProfilingHandler::ReportMc2AdditionInfo()
 {
     std::lock_guard<std::mutex> lock(cacheHcclAdditionInfoMutex_);
-    HCCL_INFO("[ReportMc2AdditionInfo] The size of the storageCompactInfo_ is [%u]", cacheHcclAdditionInfo_.size());
+    HCCL_INFO("[ReportMc2AdditionInfo] The size of the storageCompactInfo_ is [%zu]", cacheHcclAdditionInfo_.size());
     std::queue<MsprofAdditionalInfo> tempCompactInfo = cacheHcclAdditionInfo_;
     while (!tempCompactInfo.empty()) {
         MsprofAdditionalInfo reportData = tempCompactInfo.front();
@@ -1131,7 +1131,7 @@ void ProfilingHandler::CallProfRegTaskTypeApi() const
 void ProfilingHandler::ReportStoragedTaskApi()
 {
     std::lock_guard<std::mutex> lock(cachedTaskApiInfoMutex_);
-    HCCL_INFO("[ReportStoragedTaskApi] taskApiQueueSize is [%u]", cachedTaskApiInfo_.size());
+    HCCL_INFO("[ReportStoragedTaskApi] taskApiQueueSize is [%zu]", cachedTaskApiInfo_.size());
     if (!cachedTaskApiInfo_.empty()) {
         std::queue<MsprofApi> tempTaskApi = cachedTaskApiInfo_;
         while (!tempTaskApi.empty()) {
@@ -1339,7 +1339,7 @@ void ProfilingHandler::ReportHcclMC2CommInfoLog([[maybe_unused]] const u32 kfcSt
     uint64_t groupName = GetProfHashId(id.c_str(), id.length());
     uint32_t reportId = 0;
     for (uint32_t streamIndex = 0; streamIndex < aicpuStreamsId.size(); streamIndex++) {
-        HCCL_INFO("streamIndex:[%u], reportId:[%u], streamId:[%u] id [%s] hcclMC2Info.groupName:[%lu]", streamIndex,
+        HCCL_INFO("streamIndex:[%u], reportId:[%u], streamId:[%u] id [%s] hcclMC2Info.groupName:[%llu]", streamIndex,
             reportId, aicpuStreamsId[streamIndex], id.c_str(), groupName);
         reportId++;
     }

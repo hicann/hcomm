@@ -132,8 +132,8 @@ void ProfilingHandlerLite::ReportHcclOpInfo(const DfxOpInfo &opInfo) const
     hcclOpInfo->dataType   = opInfo.op_.dataType;
     hcclOpInfo->groupName  = cachedGroupName_;
     hcclOpInfo->ranksize   = cachedRankSize_;
-    HCCL_INFO("[ProfilingHandlerLite][ReportHcclOpInfo] relay:%u, retry:%u, dataType:%s, algType:%u, count:%llu, "
-              "groupName:%lu, ranksize:%u, taskId:%u, streamId:%u",
+    HCCL_INFO("[ProfilingHandlerLite][ReportHcclOpInfo] relay:%d, retry:%d, dataType:%s, algType:%llu, count:%llu, "
+              "groupName:%llu, ranksize:%u, taskId:%u, streamId:%u",
               hcclOpInfo->relay, hcclOpInfo->retry, DataTypeToSerialString(hcclOpInfo->dataType).c_str(), hcclOpInfo->algType, hcclOpInfo->count,
               hcclOpInfo->groupName, hcclOpInfo->ranksize, hcclOpInfo->taskId, hcclOpInfo->streamId);
     ReportAdditionInfo(reporterData);
@@ -392,7 +392,7 @@ void ProfilingHandlerLite::SetProL0On(bool val)
 uint64_t ProfilingHandlerLite::GetProfHashId(const char *name, uint32_t len) const
 {
     if (name == nullptr || len == 0) {
-        HCCL_WARNING("HashData is empty.  name:%s, len:%u", name, len);
+        HCCL_WARNING("HashData is empty. name:%s, len:%u", name, len);
         return INVALID_U64;
     }
     return getProfHashId_(name, len);

@@ -165,7 +165,7 @@ public:
         if (((profconfig & PROF_TASK_TIME_L1_MASK) != 0) || ((profconfig & PROF_HCCL_TRACE_MASK) != 0)) {
             StartAdditionInfoSubscribe();
         } else {
-            HCCL_RUN_INFO("[Profiling][CommandHandle] profSwitch is[%u]", profconfig);
+            HCCL_RUN_INFO("[Profiling][CommandHandle] profSwitch is[%llu]", profconfig);
         }
     }
 
@@ -184,7 +184,7 @@ public:
 
     void EsStartSubscribe(uint64_t profconfig)
     {
-        HCCL_INFO("[Profiling][CommandHandle] EsStartSubscribe profSwitch is[%u]", profconfig);
+        HCCL_INFO("[Profiling][CommandHandle] EsStartSubscribe profSwitch is[%llu]", profconfig);
         // profconfig同步到platform
         SetProfConfig(profconfig);
         if (((profconfig & PROF_TASK_TIME_MASK) != 0) || ((profconfig & PROF_HCCL_TRACE_MASK) != 0)) {

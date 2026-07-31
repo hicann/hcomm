@@ -56,7 +56,7 @@ void ProfilingReporter::SetCurrDfxOpInfo(std::shared_ptr<DfxOpInfo> dfxOpInfo) c
             dfxOpInfo->tag_ = it->second.second;      // A5转字符串    延后
         }
 
-        HCCL_INFO("[ProfilingReporter][SetCurrDfxOpInfo] dfxOpInfo->op_.oldOpType[%u] dfxOpInfo.opType[%u] tag_[%s]", dfxOpInfo->op_.oldOpType, dfxOpInfo->op_.opType, dfxOpInfo->tag_.c_str());
+        HCCL_INFO("[ProfilingReporter][SetCurrDfxOpInfo] dfxOpInfo->op_.oldOpType[%u] dfxOpInfo.opType[%u] tag_[%s]", static_cast<unsigned>(dfxOpInfo->op_.oldOpType), static_cast<unsigned>(dfxOpInfo->op_.opType), dfxOpInfo->tag_.c_str());
         dfxOpInfo->op_.reduceOp = Hccl::HcclReduceOpToReduceOp(static_cast<HcclReduceOp>(dfxOpInfo->op_.oldReduceOp));
         dfxOpInfo->op_.dataType = Hccl::HcclDataTypeToDataType(static_cast<HcclDataType>(dfxOpInfo->op_.oldDataType));
     }

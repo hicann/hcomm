@@ -78,7 +78,7 @@ HcclResult HcclCommDfxLite::UpdateProfStat() {
 }
 
 void HcclCommDfxLite::AddChannelRemoteRankId(u64 handle, u32 remoteRankId) {
-    HCCL_INFO("[%s] commTag[%s], handle[%lu], remoteRankId[%u]", __func__, commTag_.c_str(), handle, remoteRankId);
+    HCCL_INFO("[%s] commTag[%s], handle[%llu], remoteRankId[%u]", __func__, commTag_.c_str(), handle, remoteRankId);
     channelRemoteRankIdLite_[handle] = remoteRankId;
 }
 
@@ -88,7 +88,7 @@ u32 HcclCommDfxLite::GetChannelRemoteRankId(u64 handle) {
     }
     auto it = channelRemoteRankIdLite_.find(handle);
     if (UNLIKELY(it == channelRemoteRankIdLite_.end())) {
-        HCCL_ERROR("[%s]handle[%lu] not found, commTag[%s]", __func__, handle, commTag_.c_str());
+        HCCL_ERROR("[%s]handle[%llu] not found, commTag[%s]", __func__, handle, commTag_.c_str());
         return INVALID_UINT;
     }
     return it->second;

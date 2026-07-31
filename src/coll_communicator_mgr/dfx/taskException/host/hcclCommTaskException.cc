@@ -122,7 +122,7 @@ HcclResult TaskExceptionHost::Register(u64 commHandle)
     if (CommRegisterMap_.empty()) {
         aclError ret = aclrtSetExceptionInfoCallback(ProcessCallback);
         CHK_PRT_RET(ret != ACL_SUCCESS,
-            HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%u]", __func__, ret), HCCL_E_RUNTIME);
+            HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
         HCCL_RUN_INFO("[%s]aclrtSetExceptionInfoCallback set ProcessCallback success", __func__);
     }
 
@@ -143,7 +143,7 @@ HcclResult TaskExceptionHost::UnRegister(u64 commHandle)
     if (CommRegisterMap_.empty()) {
         aclError ret = aclrtSetExceptionInfoCallback(nullptr); // 把注册给rts的TaskException回调函数指针置空
         CHK_PRT_RET(ret != ACL_SUCCESS,
-            HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%u]", __func__, ret), HCCL_E_RUNTIME);
+            HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
         HCCL_RUN_INFO("[%s]aclrtSetExceptionInfoCallback set nullptr success", __func__);
     }
 
@@ -278,7 +278,7 @@ std::string TaskExceptionHost::GetGroupRankInfo(const Hccl::TaskInfo& taskInfo) 
     }
 
     hccl::CollComm *communicator = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
-    return Hccl::StringFormat("group:[%s], rankSize[%u], rankId[%d]",
+    return Hccl::StringFormat("group:[%s], rankSize[%u], rankId[%u]",
         communicator->GetCommId().c_str(), communicator->GetRankSize(), communicator->GetMyRankId());
 }
 
@@ -399,7 +399,7 @@ void TaskExceptionHost::PrintTaskContextInfo(uint32_t deviceId, uint32_t streamI
     try {
         queue = Hccl::GlobalMirrorTasks::Instance().GetQueue(deviceId, streamId);
     } catch (Hccl::HcclException &e) {
-        HCCL_ERROR("Exception task queue  not found. deviceId[%u], streamId[%u].", deviceId, streamId);
+        HCCL_ERROR("Exception task queue not found. deviceId[%u], streamId[%u].", deviceId, streamId);
         return ;
     }
 

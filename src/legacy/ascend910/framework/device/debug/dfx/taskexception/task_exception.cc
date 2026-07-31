@@ -84,7 +84,7 @@ HcclResult TaskException::PrintTaskException(hccl::Stream& stream)
     HCCL_RUN_INFO("%s start, group:%s, streamId:%d, opIndex:%u, sqHead:%u, sqTail:%u",
         __func__, identifier_.c_str(), stream.id(), opIndex, sqHead, sqTail);
 
-    HCCL_ERROR("%s base information is streamId:%d, sqid:%d, head:%u, tail:%u, %s",
+    HCCL_ERROR("%s base information is streamId:%d, sqid:%u, head:%u, tail:%u, %s",
         __func__, stream.id(), stream.sqId(), sqHead, sqTail, GetTaskExceptionTaskInfo(sqHead, sqeContextBuffer).c_str());
     PrintTaskExceptionTaskQue(sqHead, sqeContextBuffer);
     return HCCL_SUCCESS;
@@ -106,7 +106,7 @@ HcclResult TaskException::PrintTaskExceptionByTaskId(u8 sqeType, u16 taskId, hcc
     s32 sqeIdx = tail - taskNum - 1;
     u32 sqHead = (sqeIdx + HCCL_SQE_MAX_CNT) % HCCL_SQE_MAX_CNT;
 
-    HCCL_ERROR("[TaskException]base information is streamId:%d, sqid:%d, head:%u, tail:%u, %s",
+    HCCL_ERROR("[TaskException]base information is streamId:%d, sqid:%u, head:%u, tail:%u, %s",
         stream.id(), stream.sqId(), sqHead, tail, GetTaskExceptionTaskInfo(sqHead, sqeContextBuffer).c_str());
     PrintTaskExceptionTaskQue(sqHead, sqeContextBuffer);
     return HCCL_SUCCESS;
@@ -176,8 +176,8 @@ void TaskException::PrintTaskExceptionTaskQue(u32 sqIdx, SqeRingBuffer *sqeConte
 void TaskException::PrintTaskExceptionOpInfo(IndOpInfo& indOp)
 {
     if (indOp.callback == nullptr) {
-        HCCL_ERROR("[TaskException]%s fail, indOp callback is nullptr, group:%s, opIndex:%u",
-            identifier_.c_str(), indOp.opIndex);
+        HCCL_ERROR("[TaskException][%s] fail, indOp callback is nullptr, group:%s, opIndex:%u",
+            __func__, identifier_.c_str(), indOp.opIndex);
         return;
     }
     char opInfoTmp[OPINFO_RING_BUFFER_MAX];

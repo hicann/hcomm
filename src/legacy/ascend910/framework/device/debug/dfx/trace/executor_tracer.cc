@@ -32,7 +32,7 @@ void ExecutorTracer::BackGroundDfx(void *info)
     while (true) {
         // 停止背景线程
         if (ctx->dfxExtendInfo.commandToBackGroud == CommandToBackGroud::kStop) {
-            HCCL_INFO("Back ground thread returned..");
+            HCCL_INFO("Back ground thread returned.");
             break;
         }
         HandleDestroyComm(ctx);
@@ -135,7 +135,7 @@ void ExecutorTracer::StopBackGroundDfx(void *info)
     // 外部保证info有效
     auto ctx = static_cast<AicpuComContext *>(info);
     ctx->dfxExtendInfo.commandToBackGroud = CommandToBackGroud::kStop;
-    HCCL_INFO("Stop back ground thread..");
+    HCCL_INFO("Stop back ground thread.");
 }
 
 // handle StopLaunch Command
@@ -208,7 +208,7 @@ void ExecutorTracer::HandleSwitchNic(AicpuComContext *const ctx)
                     switchResp.execStatus.kfcStatus = KfcStatus::kSwitchFail;
                     (void) hcclAicpu->ResponseBackGroundStatus(switchResp);
                 }
-                HCCL_INFO("[ExecutorTracer][%s]group name[%s], aicpu finish switch nic, ret[%u]",
+                HCCL_INFO("[ExecutorTracer][%s]group name[%s], aicpu finish switch nic, ret[%d]",
                     __func__, groupName.c_str(), ret);
             }
         }
@@ -242,7 +242,7 @@ void ExecutorTracer::HandleResumeChangeLink(AicpuComContext *const ctx)
                     HCCL_INFO("[ExecutorTracer][resume][%s]group name[%s], resume aicpu, change link, kResumeError",__func__, groupName.c_str());
                 }
                 (void) hcclAicpu->ResponseBackGroundStatus(resumeResp);
-                HCCL_INFO("[ExecutorTracer][%s]group name[%s], resume process, finish change link, ret[%u]",
+                HCCL_INFO("[ExecutorTracer][%s]group name[%s], resume process, finish change link, ret[%d]",
                     __func__, groupName.c_str(), ret);
             }
         }
@@ -299,12 +299,12 @@ void ExecutorTracer::HandleReportStatusInComm()
 
         while (!reportStatusQueue.empty()) {
             dfx::ReportStatus reportStatus = reportStatusQueue.front();
-            HCCL_INFO("Reporting opRetry status[%u] to dp frame, deviceId[%u], report queue size[%u].",
-                reportStatus, deviceId, reportStatusQueue.size());
+            HCCL_INFO("Reporting opRetry status[%d] to dp frame, deviceId[%u], report queue size[%zu].",
+                static_cast<int>(reportStatus), deviceId, reportStatusQueue.size());
             HcclResult ret = dfx::CannErrorReporter::GetInstance().UpdateSensorNode(deviceId, reportStatus);
             if (ret != HCCL_SUCCESS) {
-                HCCL_WARNING("Fail to report reportStatus[%u] to dp frame, status dropped, deviceId[%u].",
-                    reportStatus, deviceId);
+                HCCL_WARNING("Fail to report reportStatus[%d] to dp frame, status dropped, deviceId[%u].",
+                    static_cast<int>(reportStatus), deviceId);
             }
             reportStatusQueue.pop();
         }
@@ -338,7 +338,7 @@ void ExecutorTracer::HandleAICPUCommand(hccl::HcclCommAicpu *const commInfo){
     if (iter == commandAicpuHandles.cend()) {
         return;
     }
-    HCCL_RUN_INFO("Group[%s] start to run aicpu command %ld", commInfo->GetGroupName().c_str(), cmd);
+    HCCL_RUN_INFO("Group[%s] start to run aicpu command %d", commInfo->GetGroupName().c_str(), static_cast<int>(cmd));
     iter->second(commInfo);
 }
 

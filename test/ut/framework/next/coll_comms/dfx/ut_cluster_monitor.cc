@@ -945,3 +945,48 @@ TEST_F(ClusterMonitorTest, Ut_InsertClusterMonitorCtx_When_GetLinksSuccess_ZeroL
 
     GlobalMockObject::verify();
 }
+
+TEST_F(ClusterMonitorTest, Ut_FormatConnTag_When_ClientRole_Expect_CorrectFormat)
+{
+    ClusterUIDType uid1;
+    int ret = memcpy_s(uid1.id, sizeof(uid1.id), "instA/0", sizeof("instA/0"));
+    EXPECT_EQ(ret, EOK);
+    ClusterUIDType uid2;
+    ret = memcpy_s(uid2.id, sizeof(uid2.id), "instB/1", sizeof("instB/1"));
+    EXPECT_EQ(ret, EOK);
+
+    std::string tag = g_monitor.FormatConnTag(HCOMM_SOCKET_ROLE_CLIENT, std::make_pair(uid1, uid2));
+    EXPECT_TRUE(tag.find("HeartBeat_") != std::string::npos);
+}
+
+TEST_F(ClusterMonitorTest, Ut_FormatConnTag_When_ServerRole_Expect_CorrectFormat)
+{
+    ClusterUIDType uid1;
+    int ret = memcpy_s(uid1.id, sizeof(uid1.id), "instA/0", sizeof("instA/0"));
+    EXPECT_EQ(ret, EOK);
+    ClusterUIDType uid2;
+    ret = memcpy_s(uid2.id, sizeof(uid2.id), "instB/1", sizeof("instB/1"));
+    EXPECT_EQ(ret, EOK);
+
+    std::string tag = g_monitor.FormatConnTag(HCOMM_SOCKET_ROLE_SERVER, std::make_pair(uid1, uid2));
+    EXPECT_TRUE(tag.find("HeartBeat_") != std::string::npos);
+}
+
+TEST_F(ClusterMonitorTest, Ut_FormatUID_When_NormalInput_Expect_ReturnUid)
+{
+    std::string netInstId = "testInstance";
+    u32 localId = 42;
+    ClusterUIDCxt cxt(netInstId, localId);
+    ClusterUIDType uid = g_monitor.FormatUID(cxt);
+    EXPECT_TRUE(uid.id[0] != '\0');
+}
+
+TEST_F(ClusterMonitorTest, Ut_GetUID_When_NormalInput_Expect_ReturnString)
+{
+    std::string netInstId = "testInstance";
+    u32 localId = 42;
+    ClusterUIDCxt cxt(netInstId, localId);
+    ClusterUIDType uid = g_monitor.FormatUID(cxt);
+    std::string uidStr = g_monitor.GetUID(uid);
+    EXPECT_FALSE(uidStr.empty());
+}

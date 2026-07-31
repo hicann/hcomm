@@ -187,7 +187,7 @@ int32_t HcommThreadNotifyRecordOnThread(ThreadHandle thread, ThreadHandle dstThr
 
 int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notifyIdx, uint32_t timeOut)
 {
-    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], notifyIdx[%u], timeOut[%u].", __func__, thread, notifyIdx, timeOut);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], notifyIdx[%u], timeOut[%u s].", __func__, thread, notifyIdx, timeOut);
 
     AddThread(thread);
 
@@ -207,7 +207,7 @@ int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notifyIdx, u
         CHK_PTR_NULL(notify);
         ret = HcclLocalNotifyWait(stream, notify, timeOut);
     }
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] FAIL. thread[0x%llx], notifyIdx[%u], timeOut[%u].", __func__, thread, notifyIdx, timeOut), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] FAIL. thread[0x%llx], notifyIdx[%u], timeOut[%u s].", __func__, thread, notifyIdx, timeOut), ret);
     HCCL_INFO("[%s] SUCCESS.", __func__);
     return HCCL_SUCCESS;
 }
@@ -236,7 +236,7 @@ int32_t HcommAclrtNotifyRecordOnThread(ThreadHandle thread, uint64_t dstNotifyId
 
 int32_t HcommAclrtNotifyWaitOnThread(ThreadHandle thread, uint64_t notifyId, uint32_t timeOut)
 {
-    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], notifyId[%llu], timeOut[%u].", __func__, thread, notifyId, timeOut);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], notifyId[%llu], timeOut[%u s].", __func__, thread, notifyId, timeOut);
 
     AddThread(thread);
 
@@ -251,7 +251,7 @@ int32_t HcommAclrtNotifyWaitOnThread(ThreadHandle thread, uint64_t notifyId, uin
         CHK_PTR_NULL(stream);
         ret = HcclLocalBareNotifyWait(stream, notifyId, timeOut);
     }
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] FAIL. thread[0x%llx], notifyId[%llu], timeOut[%u].", __func__, thread, notifyId, timeOut), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] FAIL. thread[0x%llx], notifyId[%llu], timeOut[%u s].", __func__, thread, notifyId, timeOut), ret);
     HCCL_INFO("[%s] SUCCESS.", __func__);
     return HCCL_SUCCESS;
 }
@@ -375,7 +375,7 @@ int32_t HcommSetNotifyWaitTimeOut(float timeOut)
         return HCCL_E_PARA;
     }
     uint32_t timeOutInt = static_cast<uint32_t>(timeOut);
-    HCCL_INFO("[%s] START in aicpu_ts. timeOut[%u].", __func__, timeOutInt);
+    HCCL_INFO("[%s] START in aicpu_ts. timeOut[%u s].", __func__, timeOutInt);
     return g_threadLaunchCtx.SetNotifyWaitTimeOut(timeOutInt);
 }
 
@@ -386,7 +386,7 @@ int32_t HcommThreadResAcquireTimeOut(float timeOut)
         return HCCL_E_PARA;
     }
     uint32_t timeOutInt = static_cast<uint32_t>(timeOut);
-    HCCL_INFO("[%s] START in aicpu_ts. timeOut[%u].", __func__, timeOutInt);
+    HCCL_INFO("[%s] START in aicpu_ts. timeOut[%u s].", __func__, timeOutInt);
     return g_threadLaunchCtx.SetSqFullTimeOut(timeOutInt);
 }
 
@@ -885,7 +885,7 @@ int32_t HcommChannelNotifyWaitOnThread(ThreadHandle thread, ChannelHandle channe
 {
     CHK_RET(UnwrapChannelHandle(channel));
 
-    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], localNotifyIdx[%u], timeOut[%u].", __func__, thread, channel, localNotifyIdx, timeOut);
+    PLF_CONFIG_INFO(PLF_DATA_OP, "[%s] thread[0x%llx], channel[0x%llx], localNotifyIdx[%u], timeOut[%u s].", __func__, thread, channel, localNotifyIdx, timeOut);
 
     AddThread(thread);
 
@@ -907,14 +907,14 @@ int32_t HcommChannelNotifyWaitOnThread(ThreadHandle thread, ChannelHandle channe
 
         ret = HcclRemoteNotifyWait(stream, reinterpret_cast<void *>(channel), localNotifyIdx, timeOut);
     }
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] FAIL. thread[0x%llx], channel[0x%llx], localNotifyIdx[%u], timeOut[%u].", __func__, thread, channel, localNotifyIdx, timeOut), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] FAIL. thread[0x%llx], channel[0x%llx], localNotifyIdx[%u], timeOut[%u s].", __func__, thread, channel, localNotifyIdx, timeOut), ret);
     HCCL_INFO("[%s] SUCCESS.", __func__);
     return HCCL_SUCCESS;
 }
 
 int32_t HcommChannelNotifyWait(ChannelHandle channel, uint32_t localNotifyIdx, uint32_t timeOut)
 {
-    HCCL_DEBUG("[%s] channel[0x%llx], localNotifyIdx[%u], timeOut[%u].", __func__, channel, localNotifyIdx, timeOut);
+    HCCL_DEBUG("[%s] channel[0x%llx], localNotifyIdx[%u], timeOut[%u s].", __func__, channel, localNotifyIdx, timeOut);
     return HCCL_E_NOT_SUPPORT;
 }
 

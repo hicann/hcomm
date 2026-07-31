@@ -48,15 +48,15 @@ HcclResult NsRecoveryProcessor::PollStopStatus()
     while (true) {
         CHK_RET(kfcStatusTransferD2H_->Get(0, sizeof(Hccl::KfcExecStatus), reinterpret_cast<uint8_t *>(&opInfo)));
         if (opInfo.kfcStatus == Hccl::KfcStatus::STOP_LAUNCH_DONE) {
-            HCCL_INFO("[NsRecovery][Suspend] received KfcStatus[%d], which is STOP_LAUNCH_DONE", opInfo.kfcStatus);
+            HCCL_INFO("[NsRecovery][Suspend] received KfcStatus[%d], which is STOP_LAUNCH_DONE", static_cast<int>(opInfo.kfcStatus));
             return HcclResult::HCCL_E_SUSPENDING;
         } else if (opInfo.kfcStatus == Hccl::KfcStatus::ERROR){
-            HCCL_ERROR("[NsRecovery][Suspend] received KfcStatus[%d], which is ERROR", opInfo.kfcStatus);
+            HCCL_ERROR("[NsRecovery][Suspend] received KfcStatus[%d], which is ERROR", static_cast<int>(opInfo.kfcStatus));
             return HcclResult::HCCL_E_INTERNAL;
         } else {
             if((std::chrono::steady_clock::now() - startTime) >= timeout){
-                HCCL_ERROR("[NsRecovery][Suspend] Wait suspend response status timeout[%u ms] and get the opExecStatus is [%u].", WAIT_CMD_TIMEOUT,
-                        opInfo.kfcStatus);
+                HCCL_ERROR("[NsRecovery][Suspend] Wait suspend response status timeout[%u ms] and get the kfcStatus is [%d].", WAIT_CMD_TIMEOUT,
+                        static_cast<int>(opInfo.kfcStatus));
                 return HcclResult::HCCL_E_TIMEOUT;
             }
             continue;
@@ -72,15 +72,15 @@ HcclResult NsRecoveryProcessor::ListenBackGround(Hccl::KfcExecStatus& opInfo)
     while (true) {
         CHK_RET(kfcStatusTransferD2H_->Get(0, sizeof(Hccl::KfcExecStatus), reinterpret_cast<uint8_t *>(&opInfo)));
         if (opInfo.kfcStatus == Hccl::KfcStatus::CLEAN_DONE) {
-            HCCL_INFO("[NsRecovery][Clean] received KfcStatus[%d], which is CLEAN_DONE", opInfo.kfcStatus);
+            HCCL_INFO("[NsRecovery][Clean] received KfcStatus[%d], which is CLEAN_DONE", static_cast<int>(opInfo.kfcStatus));
             return HcclResult::HCCL_E_SUSPENDING;
         } else if (opInfo.kfcStatus == Hccl::KfcStatus::ERROR){
-            HCCL_ERROR("[NsRecovery][Clean] received KfcStatus[%d], which is ERROR", opInfo.kfcStatus);
+            HCCL_ERROR("[NsRecovery][Clean] received KfcStatus[%d], which is ERROR", static_cast<int>(opInfo.kfcStatus));
             return HcclResult::HCCL_E_INTERNAL;
         } else {
             if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
-                HCCL_ERROR("[NsRecovery][Clean] Wait clean response status timeout[%u ms] and get the opExecStatus is [%u].", WAIT_CMD_TIMEOUT,
-                        opInfo.kfcStatus);
+                HCCL_ERROR("[NsRecovery][Clean] Wait clean response status timeout[%u ms] and get the kfcStatus is [%d].", WAIT_CMD_TIMEOUT,
+                        static_cast<int>(opInfo.kfcStatus));
                 return HcclResult::HCCL_E_TIMEOUT;
             }
             continue;
@@ -96,7 +96,7 @@ HcclResult NsRecoveryProcessor::StopLaunch()
             // Aicpu场景
             Hccl::KfcCommand opCmd = Hccl::KfcCommand::NS_STOP_LAUNCH;
             CHK_RET(kfcControlTransferH2D_->Put(0, sizeof(Hccl::KfcCommand), reinterpret_cast<uint8_t *>(&opCmd)));
-            HCCL_INFO("[NsRecovery][Suspend] send KfcCommand[%d] success, which is NS_STOP_LAUNCH.", opCmd);
+            HCCL_INFO("[NsRecovery][Suspend] send KfcCommand[%d] success, which is NS_STOP_LAUNCH.", static_cast<int>(opCmd));
 
             auto ret = PollStopStatus();  // todo：多CommEngine的管理存在问题
             if (ret != HcclResult::HCCL_E_SUSPENDING) {
@@ -121,11 +121,11 @@ HcclResult NsRecoveryProcessor::Clean()
             Hccl::KfcExecStatus opInfo;
             CHK_RET(kfcStatusTransferD2H_->Get(0, sizeof(Hccl::KfcExecStatus), reinterpret_cast<uint8_t *>(&opInfo)));
             if (opInfo.kfcStatus == Hccl::KfcStatus::STOP_LAUNCH_DONE) {
-                HCCL_INFO("[NsRecovery][Clean] received KfcStatus[%d], which is STOP_LAUNCH_DONE", opInfo.kfcStatus);
+                HCCL_INFO("[NsRecovery][Clean] received KfcStatus[%d], which is STOP_LAUNCH_DONE", static_cast<int>(opInfo.kfcStatus));
                 // 通知背景线程清理device侧资源
                 Hccl::KfcCommand opCmd = Hccl::KfcCommand::NS_CLEAN;
                 CHK_RET(kfcControlTransferH2D_->Put(0, sizeof(Hccl::KfcCommand), reinterpret_cast<uint8_t *>(&opCmd)));
-                HCCL_INFO("[NsRecovery][Clean] send KfcCommand [%d] success, which is NS_CLEAN", opCmd);
+                HCCL_INFO("[NsRecovery][Clean] send KfcCommand [%d] success, which is NS_CLEAN", static_cast<int>(opCmd));
                 
                 // 监听背景线程状态
                 auto ret = ListenBackGround(opInfo);

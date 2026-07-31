@@ -29,7 +29,7 @@ rtError_t CommandHandle(uint32_t rtType, void *data, uint32_t len)
         auto type = profConfigParam->type;
         auto profconfig = profConfigParam->profSwitch;
         HCCL_RUN_INFO("[Profiling][CommandHandle] CommandHandle's rtType is %u. CommandHandle_switch type[%u], " \
-            "profconfig[%u], deviceLogicId[%u]", rtType, type, profconfig, profConfigParam->devIdList[0]);
+            "profconfig[%llu], deviceLogicId[%u]", rtType, type, profconfig, profConfigParam->devIdList[0]);
         switch (type) {
             case PROF_COMMANDHANDLE_TYPE_INIT:
                 profilingManager.PluginInit();
@@ -79,7 +79,7 @@ rtError_t EsCommandHandle(uint32_t rtType, void *data, uint32_t len)
     auto type = profConfigParam->type;
     auto profconfig = profConfigParam->profSwitch;
 
-    HCCL_INFO("[Profiling][EsCommandHandle] EsCommandHandle_switch type[%u], profconfig[%u]", type, profconfig);
+    HCCL_INFO("[Profiling][EsCommandHandle] EsCommandHandle_switch type[%u], profconfig[%llu]", type, profconfig);
     switch (type) {
         case PROF_COMMANDHANDLE_TYPE_START:
         case PROF_COMMANDHANDLE_TYPE_MODEL_SUBSCRIBE:

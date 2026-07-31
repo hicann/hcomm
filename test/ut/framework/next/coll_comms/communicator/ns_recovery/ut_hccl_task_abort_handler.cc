@@ -76,7 +76,112 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_succ
 
     // 清理
     HcclTaskAbortHandler::GetInstance().UnRegister(comm);
-    std::cout << "test_task_abort_handle_call_back_stage_pre_success completed" << std::endl;
+}
+
+TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_with_null_args)
+{
+    int32_t deviceLogicId = 0;
+    aclrtDeviceTaskAbortStage stage = aclrtDeviceTaskAbortStage::ACL_RT_DEVICE_TASK_ABORT_PRE;
+    uint32_t timeout = 30U;
+
+    auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, nullptr);
+    EXPECT_NE(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
+}
+
+TEST_F(HcclTaskAbortHandlerTest, test_unregister_not_found_comm)
+{
+    CollComm *comm1 = reinterpret_cast<CollComm*>(0x1000);
+    CollComm *comm2 = reinterpret_cast<CollComm*>(0x2000);
+
+    HcclTaskAbortHandler::GetInstance().Register(comm1);
+    HcclResult ret = HcclTaskAbortHandler::GetInstance().UnRegister(comm2);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    HcclTaskAbortHandler::GetInstance().UnRegister(comm1);
+}
+
+TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_suspending)
+{
+    int32_t deviceLogicId = 0;
+    aclrtDeviceTaskAbortStage stage = aclrtDeviceTaskAbortStage::ACL_RT_DEVICE_TASK_ABORT_PRE;
+    uint32_t timeout = 0U;
+
+    CollComm *comm = nullptr;
+    HcclTaskAbortHandler::GetInstance().Register(comm);
+    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+
+    MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm:: *)())
+    .stubs()
+    .will(returnValue(HCCL_E_SUSPENDING));
+
+    auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
+    EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
+
+    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+}
+
+TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_suspending)
+{
+    int32_t deviceLogicId = 0;
+    aclrtDeviceTaskAbortStage stage = aclrtDeviceTaskAbortStage::ACL_RT_DEVICE_TASK_ABORT_POST;
+    uint32_t timeout = 0U;
+
+    CollComm *comm = nullptr;
+    HcclTaskAbortHandler::GetInstance().Register(comm);
+    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+
+    MOCKER(CcuIsInited).stubs().will(returnValue(true));
+    MOCKER(CcuSetTaskKill).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(CcuSetTaskKillDone).stubs().will(returnValue(HCCL_SUCCESS));
+
+    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm:: *)())
+    .stubs()
+    .will(returnValue(HCCL_E_SUSPENDING));
+
+    auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
+    EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
+
+    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+}
+
+TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_ccu_set_task_kill_fail)
+{
+    int32_t deviceLogicId = 0;
+    aclrtDeviceTaskAbortStage stage = aclrtDeviceTaskAbortStage::ACL_RT_DEVICE_TASK_ABORT_POST;
+    uint32_t timeout = 0U;
+
+    CollComm *comm = nullptr;
+    HcclTaskAbortHandler::GetInstance().Register(comm);
+    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+
+    MOCKER(CcuIsInited).stubs().will(returnValue(true));
+    MOCKER(CcuSetTaskKill).stubs().will(returnValue(HCCL_E_INTERNAL));
+
+    auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
+    EXPECT_NE(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
+
+    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+}
+
+TEST_F(HcclTaskAbortHandlerTest, test_register_and_unregister_multiple)
+{
+    CollComm *comm1 = reinterpret_cast<CollComm*>(0x1000);
+    CollComm *comm2 = reinterpret_cast<CollComm*>(0x2000);
+
+    HcclResult ret = HcclTaskAbortHandler::GetInstance().Register(comm1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    ret = HcclTaskAbortHandler::GetInstance().Register(comm2);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    EXPECT_EQ(HcclTaskAbortHandler::GetInstance().commVector_.size(), 2u);
+
+    ret = HcclTaskAbortHandler::GetInstance().UnRegister(comm1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(HcclTaskAbortHandler::GetInstance().commVector_.size(), 1u);
+
+    ret = HcclTaskAbortHandler::GetInstance().UnRegister(comm2);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(HcclTaskAbortHandler::GetInstance().commVector_.size(), 0u);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_fail)

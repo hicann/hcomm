@@ -323,7 +323,7 @@ HcclResult CollComm::DestroyAicpuComm()
 
         Hccl::KfcCommand opCmd = Hccl::KfcCommand::DESTROY_AICPU_COMM;
         CHK_RET(kfcControlTransferH2D_->Put(0, sizeof(Hccl::KfcCommand), reinterpret_cast<uint8_t *>(&opCmd)));
-        HCCL_RUN_INFO("[%s]group[%s] send Hccl::KfcCommand[%d] success", __func__, commId_.c_str(), opCmd);
+        HCCL_RUN_INFO("[%s]group[%s] send Hccl::KfcCommand[%d] success", __func__, commId_.c_str(), static_cast<int>(opCmd));
 
         Hccl::KfcExecStatus opInfo;
         constexpr u32 WAIT_CMD_TIMEOUT = 10 * 1000; // 最大等待10秒
@@ -333,7 +333,7 @@ HcclResult CollComm::DestroyAicpuComm()
         while (true) {
             CHK_RET(kfcStatusTransferD2H_->Get(0, sizeof(Hccl::KfcExecStatus), reinterpret_cast<uint8_t *>(&opInfo)));
             if (opInfo.kfcStatus == Hccl::KfcStatus::DESTROY_AICPU_COMM_DONE) {
-                HCCL_RUN_INFO("[%s]get Hccl::KfcStatus[%d] success", __func__, opInfo.kfcStatus);
+                HCCL_RUN_INFO("[%s]get Hccl::KfcStatus[%d] success", __func__, static_cast<int>(opInfo.kfcStatus));
                 return HCCL_SUCCESS;
             } else if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
                 HCCL_ERROR("[%s]timeout, maxTime[%u ms] and get the opExecStatus is [%s].",

@@ -77,7 +77,7 @@ void HcclCommDfx::AddTaskInfoCallbackLog(const Hccl::TaskParam &taskParam, const
             if (handleIt == handleMap.end()) {
                 continue;
             }
-            HCCL_INFO("[%s]idx[%u]: channelId[%u], remoteRankId[%u], channelHandle[0x%llx]",
+            HCCL_INFO("[%s]idx[%d]: channelId[%u], remoteRankId[%u], channelHandle[0x%llx]",
                 __func__, idx, profInfo.channelId[idx], handleIt->second, profInfo.channelHandle[idx]);
         }
     }
@@ -128,7 +128,7 @@ HcclResult HcclCommDfx::AddDpuTaskInfoCallback(const Hccl::TaskParam &taskParam,
     Hccl::TaskParam localTaskParam = taskParam;
     localTaskParam.aicpuTaskId = aicpuTaskId_;
     localTaskParam.npuDevId = deviceId_;
-    HCCL_INFO("[%s] streamId[%u], taskId[%u], aicpuTaskId[%u], npuDevId[%u].", __func__, streamId, taskId, localTaskParam.aicpuTaskId, localTaskParam.npuDevId);
+    HCCL_INFO("[%s] streamId[%u], taskId[%u], aicpuTaskId[%llu], npuDevId[%u].", __func__, streamId, taskId, localTaskParam.aicpuTaskId, static_cast<u32>(localTaskParam.npuDevId));
     return AddTaskInfoCallback(streamId, taskId, localTaskParam, handle);
 }
 
@@ -166,7 +166,7 @@ Hccl::MirrorTaskManager* HcclCommDfx::GetMirrorTaskManager() const {
 // 将remoteRankId添加到channelRemoteRankId_表中
 void HcclCommDfx::AddChannelRemoteRankId(const std::string& commTag, u64 handle, u32 remoteRankId) {
     std::unique_lock<std::shared_mutex> rwLock(baseLock_);
-    HCCL_INFO("[HcclCommDfx][AddChannelRemoteRankId] commTag:[%s], handle:[%lu], remoteRankId:[%u]", commTag.c_str(), handle, remoteRankId);
+    HCCL_INFO("[HcclCommDfx][AddChannelRemoteRankId] commTag:[%s], handle:[%llu], remoteRankId:[%u]", commTag.c_str(), handle, remoteRankId);
     channelRemoteRankId_[commTag][handle] = remoteRankId;
 }
 
@@ -180,7 +180,7 @@ HcclResult HcclCommDfx::GetChannelRemoteRankId(const std::string& commTag, u64 h
     }
     auto handleIt = commIt->second.find(handle);
     if (handleIt == commIt->second.end()) {
-        HCCL_ERROR("[HcclCommDfx]handle not found,commTag:[%s],handle:[%lu]", commTag.c_str(), handle);
+        HCCL_ERROR("[HcclCommDfx]handle not found,commTag:[%s],handle:[%llu]", commTag.c_str(), handle);
         return HCCL_E_PARA;
     }
     remoteRankId = handleIt->second;

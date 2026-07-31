@@ -54,7 +54,7 @@ bool ProfilingManager::IsProfOn(uint64_t feature)
 bool ProfilingManager::IsL1fromOffToOn()
 {
     if (((!GetProfL1State()) && ProfilingManager::IsProfL1On())) {
-        HCCL_INFO("Profiling L1 switch form off to on.");
+        HCCL_INFO("Profiling L1 switch from off to on.");
         return true;
     }
     return false;
@@ -165,7 +165,7 @@ HcclResult ProfilingManager::ReportTaskInfo(s32 streamId, void* ctxPtr)
     hccl::SqeRingBuffer *sqeContextBuffer = &(sqeContext->buffer);
     CHK_PTR_NULL(sqeContextBuffer);
     u32 startSqeIdx = GetStartReportSqeIdx(streamId);
-    HCCL_INFO("[ReportTaskInfo] Rank:%u, stream:%u, sqeNum:%u, startSqeIdx:%u, curSqeTailIdx: %u", profInfo.rankId, streamId,
+    HCCL_INFO("[ReportTaskInfo] Rank:%u, stream:%d, sqeNum:%u, startSqeIdx:%u, curSqeTailIdx: %u", profInfo.rankId, streamId,
         sqeContextBuffer->tailSqeIdx - startSqeIdx, startSqeIdx, sqeContextBuffer->tailSqeIdx);
     MsprofAicpuHcclTaskInfo taskInfos[HCCLINFO_REPORT_BATCH_NUM] = {};
     auto endIdx = static_cast<uint32_t>(sqeContextBuffer->tailSqeIdx);
@@ -217,7 +217,7 @@ HcclResult ProfilingManager::ReportTaskInfo(s32 streamId, void* ctxPtr)
 void ProfilingManager::DumpHcclInfo(const MsprofAicpuHcclTaskInfo& taskInfo, u32 batchId, u32 idx)
 {
     HCCL_DEBUG("[ReportTaskInfo] batchId:%u, idx:%u, itemId:%llu, groupName:%llu, localRank:%u, remoteRank:%u, " \
-            "rankSize:%u, timeStamp:%llu, srcAddr:%x, dstAddr:%x, dataSize:%lld, taskId:%u, streamId:%u, planeID:%u," \
+            "rankSize:%u, timeStamp:%llu, srcAddr:0x%llx, dstAddr:0x%llx, dataSize:%llu, taskId:%u, streamId:%u, planeID:%u," \
             "opType:%u, dataType:%u, linkType:%u, transportType:%u, rdmaType:%u, role:%u",
             batchId, idx, taskInfo.itemId, taskInfo.groupName, taskInfo.localRank, taskInfo.remoteRank,taskInfo.rankSize,
             taskInfo.timeStamp, taskInfo.srcAddr, taskInfo.dstAddr, taskInfo.dataSize,taskInfo.taskId, taskInfo.streamId,
@@ -249,12 +249,12 @@ HcclResult ProfilingManager::ReportHcclOpInfo(MsprofAicpuHCCLOPInfo& hcclOpInfo,
         taskId = AicpuGetTaskId();
     }
 
-    HCCL_INFO("[ProfilingManager] ReportHcclOpInfo streamId = %u, taskId = %u", streamId, taskId);
+    HCCL_INFO("[ProfilingManager] ReportHcclOpInfo streamId = %u, taskId = %llu", streamId, taskId);
 
     hcclOpInfo.algType = GetProfHashId(algTypeStr.c_str(), algTypeStr.length());
     hcclOpInfo.taskId = taskId;
     hcclOpInfo.streamId = streamId;
-    HCCL_INFO("[ReportHcclOpInfo] relay:%u, retry:%u, dataType:%u, algType:%u, count:%llu, groupHashId:%llu",
+    HCCL_INFO("[ReportHcclOpInfo] relay:%u, retry:%u, dataType:%u, algType:%llu, count:%llu, groupHashId:%llu",
         hcclOpInfo.relay, hcclOpInfo.retry, hcclOpInfo.dataType, hcclOpInfo.algType, hcclOpInfo.count,
         hcclOpInfo.groupName);
     CHK_PRT(dfx::ProfilingManager::CallMsprofReportAdditionInfo(MSPROF_REPORT_AICPU_HCCL_OP_INFO,
@@ -278,7 +278,7 @@ HcclResult ProfilingManager::ReportMainStreamTask(hccl::Stream& stream, uint16_t
         aicpuKernelTaskId = AicpuGetTaskId();
         aicpuKernelStreamId = AicpuGetStreamId();
     }
-    HCCL_INFO("[ReportMainStreamTask] aicpuKernelStreamId = %u, aicpuKernelTaskId = %u", aicpuKernelStreamId, aicpuKernelTaskId);
+    HCCL_INFO("[ReportMainStreamTask] aicpuKernelStreamId = %u, aicpuKernelTaskId = %llu", aicpuKernelStreamId, aicpuKernelTaskId);
     MsprofAicpuHcclMainStreamTask flagtask{};
     flagtask.streamId = stream.id();
     flagtask.taskId = taskId;
@@ -302,7 +302,7 @@ HcclResult ProfilingManager::ReportFilpTask(s32 streamId, uint16_t taskId, uint3
     flipTaskInfo.streamId = streamId;
     flipTaskInfo.taskId = taskId;
     flipTaskInfo.flipNum = flipNum;
-    HCCL_INFO("[ReportFilpTask] streamId:%u, taskId:%u, filpNum:%u", flipTaskInfo.streamId, flipTaskInfo.taskId,
+    HCCL_INFO("[ReportFlipTask] streamId:%u, taskId:%u, flipNum:%u", flipTaskInfo.streamId, flipTaskInfo.taskId,
         flipTaskInfo.flipNum);
     CHK_PRT(dfx::ProfilingManager::CallMsprofReportAdditionInfo(MSPROF_REPORT_AICPU_FILP_TASK,
         ProfGetCurCpuTimestamp(), &flipTaskInfo, sizeof(MsporfAicpuFlipTask)));
@@ -331,7 +331,7 @@ uint32_t ProfilingManager::GetStartReportSqeIdx(s32 streamId)
     u32 lastSqeTailIdx = 0;
     auto iter = streamToSqeIdxMap_.find(streamId);
     if (iter == streamToSqeIdxMap_.end()) {
-        HCCL_INFO("[GetProfInfoByStreamId]streamId:%d is not find", streamId);
+        HCCL_INFO("[GetProfInfoByStreamId]streamId:%d is not found", streamId);
         streamToSqeIdxMap_.insert({streamId, 0});
     } else {
         lastSqeTailIdx = iter->second;
@@ -345,7 +345,7 @@ HcclResult ProfilingManager::UpdateStartReportSqeIdx(s32 streamId, u32 newSqeTai
     auto iter = streamToSqeIdxMap_.find(streamId);
     if (iter == streamToSqeIdxMap_.end()) {
         streamToSqeIdxMap_.insert({ streamId, newSqeTailIdx });
-        HCCL_INFO("[UpdateStartReportSqeIdx]streamId:%d is not find, newSqeTailIdx:%u", streamId, newSqeTailIdx);
+        HCCL_INFO("[UpdateStartReportSqeIdx]streamId:%d is not found, newSqeTailIdx:%u", streamId, newSqeTailIdx);
     } else {
         // 到2048时，更新成0;
         newSqeTailIdx = (newSqeTailIdx == hccl::HCCL_SQE_MAX_CNT) ? 0 : newSqeTailIdx;
@@ -362,12 +362,12 @@ HcclResult ProfilingManager::GetProfInfoByStreamId(s32 streamId, ProfCommInfo& p
     std::unique_lock<std::mutex> lock(streamMutex_);
     auto iter = streamToTagMap_.find(streamId);
     if (iter == streamToTagMap_.end()) {
-        HCCL_INFO("[GetProfInfoByStreamId]streamId:%d is not find", streamId);
+        HCCL_INFO("[GetProfInfoByStreamId]streamId:%d is not found", streamId);
     } else {
         tag = iter->second;
         auto opInfoIter = tagOpInfoMap_.find(tag);
         if (opInfoIter == tagOpInfoMap_.end()) {
-            HCCL_INFO("[GetProfInfoByStreamId]streamId:%s is not find", tag.c_str());
+            HCCL_INFO("[GetProfInfoByStreamId]tag:%s is not found", tag.c_str());
         } else {
             profInfo = opInfoIter->second;
         }
@@ -409,7 +409,7 @@ void TaskProfilingCallBack(void *userPtr, void *param, u32 length)
         return;
     }
     HCCL_INFO("[ProfilingManager][%s]Start handle task profiler, taskType[%d], profilerType[%d]", __func__,
-        taskPara->type, taskPara->profilerType);
+        static_cast<int>(taskPara->type), static_cast<int>(taskPara->profilerType));
     switch (taskPara->type) {
         case hccl::TaskType::TASK_BATCH_REPORT:
             dfx::ProfilingManager::ReportTaskInfo(taskPara->streamTasks.streamID, taskPara->streamTasks.ctxPtr);

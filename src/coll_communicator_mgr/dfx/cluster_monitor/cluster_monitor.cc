@@ -172,9 +172,9 @@ HcclResult ClusterMonitor::GetSocketDescFromRankInfo(HcclComm comm, uint32_t rem
     }
     // socket建链需要心跳专用的tag，用来区分业务的socket以及心跳的sockt
     std::string tag = FormatConnTag(socketDesc.role, std::make_pair(myRankUID_, remoteUID));
-    errno_t ret = memcpy_s(socketDesc.tag, sizeof(socketDesc.tag), tag.c_str(), tag.size());
+    errno_t ret = memcpy_s(socketDesc.tag, sizeof(socketDesc.tag), tag.c_str(), tag.size() + 1);
     CHK_PRT_RET((ret != EOK),
-        HCCL_ERROR("[%s] memcpy_s failed, errno:%d, error:%s", __func__, errno, strerror(errno)), HCCL_E_SYSCALL);
+        HCCL_ERROR("[%s] memcpy_s failed, ret:%d, errno:%d, error:%s", __func__, ret, errno, strerror(errno)), HCCL_E_SYSCALL);
     socketDesc.localEndpoint = links[0].srcEndpointDesc;
     socketDesc.remoteEndpoint = links[0].dstEndpointDesc;
     return HCCL_SUCCESS;
@@ -204,8 +204,8 @@ HcclResult ClusterMonitor::InsertClusterMonitorCtx(HcclComm comm, UIDContext rem
     }
     ClusterMonitorSocketCtx ctx(socketDesc, newConn);
     needConnectRank.insert(std::make_pair(remoteUID, ctx));
-    HCCL_INFO("[%s] InsertClusterMonitorCtx for myRankUID_[%s], remoteUID[%s], role[%s], localEndpoint[commAddr:0x%llx], "
-        "remoteEndpoint[commAddr:0x%llx], tag[%s], listenPort [%u], newConn[%d]", __func__, GetUID(myRankUID_).c_str(), GetUID(remoteUID).c_str(),
+    HCCL_INFO("[%s] InsertClusterMonitorCtx for myRankUID_[%s], remoteUID[%s], role[%s], localEndpoint[commAddr:%s], "
+        "remoteEndpoint[commAddr:%s], tag[%s], listenPort [%u], newConn[%d]", __func__, GetUID(myRankUID_).c_str(), GetUID(remoteUID).c_str(),
         (socketDesc.role == HcommSocketRole::HCOMM_SOCKET_ROLE_SERVER) ? "SERVER" : "CLIENT",
         hcomm::logger::CommAddrLogger::ToString(socketDesc.localEndpoint.commAddr).c_str(),
         hcomm::logger::CommAddrLogger::ToString(socketDesc.remoteEndpoint.commAddr).c_str(),
@@ -477,7 +477,7 @@ HcclResult ClusterMonitor::SendFrame(
                 GetUID(myRankUID_).c_str(), GetUID(dst).c_str(), GetUID(crimer).c_str(), GetUID(informer).c_str(), status);
         } else {
             HCCL_DEBUG("[Heartbeat][SendFrame] Send Not Complete, from [%s] to [%s] about [%s] by [%s] status[%d], \
-                expectSize[%u], compSize[%u]",
+                expectSize[%llu], compSize[%llu]",
                 GetUID(myRankUID_).c_str(), GetUID(dst).c_str(), GetUID(crimer).c_str(), GetUID(informer).c_str(), status,
                 expectSize, compSize);
             uid2SocketRefMap_[dst].restSize = expectSize - compSize;
@@ -906,7 +906,7 @@ void ClusterMonitor::GetCqeErrInfoFromTaskException(u32 remoteLocalId, uint16_t 
     if (now == nullptr) {
         HCCL_ERROR("[%s][%s][%s]localtime fail, cqe error status[%u], %s", LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(), cqeErrInfo_.cqeStatus, errorLinkLogBuffer);
     } else {
-        HCCL_ERROR("[%s][%s][%s]cqe error status[%u], time:[%04u-%02d-%02d %02d:%0d:%02d.%06u], %s", LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(), 
+        HCCL_ERROR("[%s][%s][%s]cqe error status[%u], time:[%04d-%02d-%02d %02d:%02d:%02d.%06lld], %s", LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_HEARTBEAT_EVETN.c_str(), LOG_KEYWORDS_CQE_ERROR.c_str(), 
         cqeErrInfo_.cqeStatus, now->tm_year + BASE_YEAR, now->tm_mon + 1, now->tm_mday, now->tm_hour,
         now->tm_min, now->tm_sec, microseconds, errorLinkLogBuffer);
     }   
