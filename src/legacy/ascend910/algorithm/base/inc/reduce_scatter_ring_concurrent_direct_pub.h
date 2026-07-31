@@ -38,6 +38,11 @@ private:
     HcclResult SetSlices(const u32 rank, const u32 rankSize);
     HcclResult RunInitStep(const u32 rank, const u32 rankSize);
     HcclResult PreSync();
+    HcclResult ReducerSpInlineSlice(const HcclDispatcher dispatcher, const LINK &link, void *remoteMem,
+        ReducerMemoryInfo reduceMem, Stream &stream);
+    HcclResult ReducerSdmaRemoteReadSlice(const LINK &link, const ReducerMemoryInfo &reduceMem, Stream &stream);
+    HcclResult ReducerLocalReduceSuffix(const HcclDispatcher dispatcher, const LINK &link,
+        const std::vector<ReducerMemoryInfo> &reducerMems, Stream &stream);
     HcclResult ReducerRunSpInlineReduce(
         const HcclDispatcher dispatcher, const LINK &link,
         const std::vector<ReducerMemoryInfo> &reducerMems, Stream &stream);
@@ -46,10 +51,19 @@ private:
         const std::vector<ReducerMemoryInfo> &reducerMems, Stream &stream);
     HcclResult ReducerRun(const HcclDispatcher dispatcher, const LINK &link,
         const std::vector<ReducerMemoryInfo> &reducerMems, Stream &stream);
+    HcclResult RunMainStreamTx(const u32 step, const std::vector<Slice> &txSliceVector,
+        const std::vector<Slice> &rxSliceVector, const u32 rank, const u32 rankSize,
+        std::vector<ReducerMemoryInfo> &rxReduceMems);
     HcclResult RunMainStream(const u32 step, std::vector<Slice> txSliceVector, std::vector<Slice> rxSliceVector,
                              const u32 rank, const u32 rankSize);
+    HcclResult RunSubStreamPrePost();
     HcclResult RunSubStream(const u32 step, std::vector<Slice> subSliceVector, std::vector<Slice> cclSliceVector,
                             const u32 rank, const u32 rankSize);
+    HcclResult RunSubStreamSlice(const u32 step, const u32 sliceIdx, const std::vector<Slice> &subSliceVector,
+                                 const std::vector<Slice> &cclSliceVector, const u32 rankSize);
+    HcclResult RunSdmaStepConcurrent(const u32 step, const std::vector<ReducerMemoryInfo> &rxReduceMems,
+        const std::vector<Slice> &subSliceVector, const std::vector<Slice> &cclSliceVector,
+        const u32 rank, const u32 rankSize);
     HcclResult RunReduceScatter(const u32 rank, const u32 rankSize);
     HcclResult MainRecordSub();
     HcclResult SubWaitMain();
