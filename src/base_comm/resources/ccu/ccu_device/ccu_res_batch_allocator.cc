@@ -311,7 +311,7 @@ static void DumpBlockResInfo(ResType resType, const std::vector<BlockInfo> &bloc
     uint32_t blockNum = blocks.size();
     for (size_t k = 0; k < blockNum; k++) {
         HCCL_INFO("Block[id[%u], startId[%u], num[%u], handle(uintptr_t)[%llu], allocated[%d]]",
-            blocks[k].id, blocks[k].startId, blocks[k].num, blocks[k].handle,
+            blocks[k].id, blocks[k].startId, blocks[k].num, static_cast<unsigned long long>(blocks[k].handle),
             static_cast<int>(blocks[k].allocated));
     }
 }
@@ -513,7 +513,7 @@ HcclResult CcuResBatchAllocator::ReleaseResHandle(const CcuResHandle &handle)
     if (handleMap_.find(handleKey) == handleMap_.end()) {
         HCCL_ERROR("[CcuResBatchAllocator][%s] failed, devLogicId[%d], "
             "failed to find resource repository, invalid resource handle(uintptr_t)[%llu]",
-            __func__, devLogicId_, handleKey);
+            __func__, devLogicId_, static_cast<unsigned long long>(handleKey));
         return HcclResult::HCCL_E_PARA;
     }
 

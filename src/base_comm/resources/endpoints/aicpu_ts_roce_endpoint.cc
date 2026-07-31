@@ -191,7 +191,7 @@ HcclResult AicpuTsRoceEndpoint::AcquireRdmaContext(uint32_t devPhyId, const Endp
         ReleaseSharedNetDev();
         return HCCL_E_PTR;
     }
-    HCCL_INFO("AicpuTsRoceEndpoint::%s success, devId[%u], ipAddr[%s], ctxHandle[%p]",
+    HCCL_INFO("AicpuTsRoceEndpoint::%s success, devPhyId[%u], ipAddr[%s], ctxHandle[%p]",
         __func__, devPhyId, ipAddr.GetReadableAddress(), ctxHandle_);
     return HCCL_SUCCESS;
 }

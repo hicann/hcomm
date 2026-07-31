@@ -115,7 +115,7 @@ using GetTpAttrParam = struct GetTpAttrParamDef {
 
     std::string Describe() const {
         return Hccl::StringFormat("GetTpAttrParam[tpHandle=0x%llx, attrBitmap=0x%x]",
-            tpHandle, attrBitmap);
+            static_cast<unsigned long long>(tpHandle), attrBitmap);
     }
 };
 

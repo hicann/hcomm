@@ -73,7 +73,7 @@ CcuResult CcuInitFeature(const int32_t devLogicId, std::shared_ptr<CcuDrvHandle>
     auto iter = ccuDrvHandleMap.find(devLogicId);
     if (iter != ccuDrvHandleMap.end()) {
         ccuDrvHandle = iter->second;
-        HCCL_RUN_INFO("[%s] devLogicId[%d] init ccu feature, handle[0x%llx].",
+        HCCL_RUN_INFO("[%s] devLogicId[%d] init ccu feature, handle[%p].",
             __func__, devLogicId, ccuDrvHandle.get());
         return CcuResult::CCU_SUCCESS;
     }
@@ -95,7 +95,7 @@ CcuResult CcuInitFeature(const int32_t devLogicId, std::shared_ptr<CcuDrvHandle>
 
     ccuDrvHandleMap[devLogicId] = drvHandle;
     ccuDrvHandle = ccuDrvHandleMap[devLogicId];
-    HCCL_RUN_INFO("[%s] devLogicId[%d] init ccu feature, handle[0x%llx].",
+    HCCL_RUN_INFO("[%s] devLogicId[%d] init ccu feature, handle[%p].",
         __func__, devLogicId, ccuDrvHandle.get());
     return CcuResult::CCU_SUCCESS;
 }
@@ -113,7 +113,7 @@ CcuResult CcuDeinitFeature(const int32_t devLogicId)
     auto &ccuDrvHandle = ccuDrvHandleMap[devLogicId];
     if (ccuDrvHandle.use_count() == 1) {
         HCCL_RUN_INFO("[%s] entry, start to deinit ccu feature, "
-            "handle[0x%llx] devLogicId[%d].",
+            "handle[%p] devLogicId[%d].",
             __func__, ccuDrvHandle.get(), devLogicId);
         ccuDrvHandle = nullptr;
         ccuDrvHandleMap.erase(devLogicId);
@@ -125,7 +125,7 @@ CcuResult CcuDeinitFeature(const int32_t devLogicId)
 CcuResult CcuGetDieEnableInfo(int32_t deviceLogicId, uint8_t dieId, bool &enableFlag)
 {
     CHK_PRT_RET(dieId >= CCU_MAX_IODIE_NUM,
-        HCCL_ERROR("[%s] failed, dieId[%u] is invalid, shoudle be in [0-%u), devLogicId[%d].",
+        HCCL_ERROR("[%s] failed, dieId[%u] is invalid, should be in [0-%u), devLogicId[%d].",
             __func__, dieId, CCU_MAX_IODIE_NUM, deviceLogicId),
         CcuResult::CCU_E_PARA);
 
@@ -247,7 +247,7 @@ CcuResult CcuAllocResHandleByInsType(int32_t deviceLogicId,
 
     CCU_CHK_RET(CcuDevMgrImp::AllocResHandle(deviceLogicId, resReq, resHandle));
 
-    HCCL_INFO("[%s] succeed, get res handle[%llx], devLogicId[%d]",
+    HCCL_INFO("[%s] succeed, get res handle[%p], devLogicId[%d]",
         __func__, resHandle, deviceLogicId);
     return CcuResult::CCU_SUCCESS;
 }
@@ -626,7 +626,7 @@ HcclResult CheckDieValid(const char *funcName, const int32_t devLogicId, const u
     const std::array<bool, CCU_MAX_IODIE_NUM> &dieEnableFlags)
 {
     CHK_PRT_RET(dieId >= CCU_MAX_IODIE_NUM,
-        HCCL_ERROR("[%s] failed, dieId[%u] is invalid, shoudle be in [0-%u), devLogicId[%d].",
+        HCCL_ERROR("[%s] failed, dieId[%u] is invalid, should be in [0-%u), devLogicId[%d].",
             funcName, dieId, CCU_MAX_IODIE_NUM, devLogicId),
         HcclResult::HCCL_E_PARA);
 
@@ -697,7 +697,7 @@ HcclResult CcuSetTaskKillDone(const int32_t deviceLogicId)
 
 HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId)
 {
-    HCCL_INFO("[CcuCleanTaskKillState] Input params: deviceLogicId[%u]", deviceLogicId);
+    HCCL_INFO("[CcuCleanTaskKillState] Input params: deviceLogicId[%d]", deviceLogicId);
     // 入参校验拦截
     CHK_PRT_RET((deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR("[CcuCleanTaskKillState]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId, MAX_MODULE_DEVICE_NUM),
@@ -713,7 +713,7 @@ HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId)
 
 HcclResult CcuCleanDieCkes(const int32_t deviceLogicId, const uint8_t dieId)
 {
-    HCCL_INFO("[CcuCleanDieCkes] Input params: deviceLogicId[%u], dieId[%u]", deviceLogicId, dieId);
+    HCCL_INFO("[CcuCleanDieCkes] Input params: deviceLogicId[%d], dieId[%u]", deviceLogicId, dieId);
     // 入参校验拦截
     CHK_PRT_RET((deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR("[CcuCleanDieCkes]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId, MAX_MODULE_DEVICE_NUM),

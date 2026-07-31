@@ -136,7 +136,7 @@ inline LocalNotify *GetNotify(uint64_t thread, uint32_t index)
 {
     Thread *threadPtr = reinterpret_cast<Thread *>(thread);
     if (UNLIKELY(threadPtr == nullptr)) {
-        HCCL_ERROR("[Thread][GetStream]thread is nullptr");
+        HCCL_ERROR("[Thread][GetNotify]thread is nullptr");
         return nullptr;
     }
     return threadPtr->GetNotify(index);

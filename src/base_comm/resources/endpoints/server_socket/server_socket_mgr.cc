@@ -21,7 +21,7 @@ HcclResult ServerSocketMgr::ListenStart(const uint32_t devPhyId, const CommAddr 
 {
     if (nicType != Hccl::NicType::DEVICE_NIC_TYPE && 
         nicType != Hccl::NicType::HOST_NIC_TYPE) {
-        HCCL_ERROR("[%s] nicType[%d] is not supported", __func__, nicType); // 枚举用转换吗？
+        HCCL_ERROR("[%s] nicType[%d] is not supported", __func__, static_cast<int>(nicType)); // 枚举用转换吗？
         return HCCL_E_PARA;        
     }
 

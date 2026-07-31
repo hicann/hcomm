@@ -41,7 +41,7 @@ static CcuVersion CheckCcuVersion(int32_t devLogicId)
         static_cast<void *>(&inBuff), static_cast<void *>(&outBuff));
     if (ret != 0) {
         HCCL_ERROR("[%s] failed to call ccu driver, "
-            "devLogicId[%u]]  op[%s].", __func__, devLogicId, "GET_CCU_VERSION");
+            "devLogicId[%d], op[%s].", __func__, devLogicId, "GET_CCU_VERSION");
         return CcuVersion::CCU_INVALID;
     }
     const CcuVersionEnum ccuVersionEnum = outBuff.data.dataInfo.dataArray[0].ccuVersion;
@@ -234,15 +234,15 @@ HcclResult CcuGetMainboardId(uint32_t deviceLogicId,
         return HcclResult::HCCL_E_RUNTIME;
     }
 
-    HCCL_INFO("[%s] deviceLogicId[%d] val[%ld].", __func__, deviceLogicId, val);
+    HCCL_INFO("[%s] deviceLogicId[%u] val[%lld].", __func__, deviceLogicId, static_cast<long long>(val));
     uint64_t mainboardId = (static_cast<uint64_t>(val) >> BITS_5) & MASK_7; // 提取val的5-7位，判断整机形态
     hcclMainboardId = Hccl::HcclMainboardId::MAINBOARD_OTHERS;
     auto it = rtMainboardIdToHcclMainboardId.find(mainboardId);
     if (it != rtMainboardIdToHcclMainboardId.end()) {
         hcclMainboardId = it->second;
     }
-    HCCL_INFO("[%s] deviceLogicId[%d] mainboardId[%llu] hcclMainboardId[%s].",
-              __func__, deviceLogicId, mainboardId, hcclMainboardId.Describe().c_str());
+    HCCL_INFO("[%s] deviceLogicId[%u] mainboardId[%llu] hcclMainboardId[%s].",
+              __func__, deviceLogicId, static_cast<unsigned long long>(mainboardId), hcclMainboardId.Describe().c_str());
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -370,9 +370,9 @@ HcclResult CcuResSpecifications::GetXnBaseAddr(const uint8_t dieId, uint64_t &xn
     }
 
     if (ccuResAddr > UINT64_MAX - ccuXnOffset) {
-        HCCL_ERROR("[CcuResSpecifications][%s] failed, CCU resource base address[%llx] is "
-            "greater than expected, ccu xn offset[%llx], their sum will exceed the range "
-            "of uint64_t.", __func__, ccuResAddr, ccuXnOffset);
+        HCCL_ERROR("[CcuResSpecifications][%s] failed, CCU resource base address[0x%llx] is "
+            "greater than expected, ccu xn offset[%u], their sum will exceed the range "
+            "of uint64_t.", __func__, static_cast<unsigned long long>(ccuResAddr), ccuXnOffset);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -409,9 +409,9 @@ HcclResult CcuResSpecifications::GetCkeBaseAddr(const uint8_t dieId, uint64_t &c
     }
 
     if (ccuResAddr > UINT64_MAX - ccuCkeOffset) {
-        HCCL_ERROR("[CcuResSpecifications][%s] failed, CCU resource base address[%llx] is "
-            "greater than expected, ccu cke offset[%llx], their sum will exceed the range "
-            "of uint64_t.", __func__, ccuResAddr, ccuCkeOffset);
+        HCCL_ERROR("[CcuResSpecifications][%s] failed, CCU resource base address[0x%llx] is "
+            "greater than expected, ccu cke offset[%u], their sum will exceed the range "
+            "of uint64_t.", __func__, static_cast<unsigned long long>(ccuResAddr), ccuCkeOffset);
         return HcclResult::HCCL_E_INTERNAL;
     }
     ckeBaseAddr = ccuResAddr + ccuCkeOffset;

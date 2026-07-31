@@ -309,7 +309,7 @@ HcommResult CreatePluginEndpoint(const EndpointDesc *endpoint, EndpointHandle *e
     void *pluginCtx = nullptr;
     HcommNicEndpointOps *ops = nullptr;
     CHK_RET(static_cast<HcclResult>(entry->createEndpoint(endpoint, &pluginCtx, &ops)));
-    CHK_PRT_RET(!ValidateEndpointOps(ops), HCCL_ERROR("[NicPlugin] invalid endpoint ops."), HCCL_E_PARA);
+    CHK_PRT_RET(!ValidateEndpointOps(ops), HCCL_ERROR("[%s] invalid endpoint ops.", __func__), HCCL_E_PARA);
     HcommResult ret = InitPluginCtxOrDestroy(ops, pluginCtx);
     if (ret != HCCL_SUCCESS) {
         return ret;
@@ -344,7 +344,7 @@ HcommResult CreatePluginChannel(EndpointHandle endpointHandle, const HcommChanne
     HcommNicChannelOps *ops = nullptr;
     CHK_RET(static_cast<HcclResult>(
         endpointCtx->entry->createChannel(endpointCtx->ctx, channelDesc, &pluginCtx, &ops)));
-    CHK_PRT_RET(!ValidateChannelOps(ops), HCCL_ERROR("[NicPlugin] invalid channel ops."), HCCL_E_PARA);
+    CHK_PRT_RET(!ValidateChannelOps(ops), HCCL_ERROR("[%s] invalid channel ops.", __func__), HCCL_E_PARA);
     HcommResult ret = InitPluginCtxOrDestroy(ops, pluginCtx);
     if (ret != HCCL_SUCCESS) {
         return ret;

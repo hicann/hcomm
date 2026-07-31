@@ -157,11 +157,12 @@ static HcclResult SetTpAttrAsync(const Hccl::RdmaHandle rdmaHandle, uint64_t tpH
             Hccl::HrtRaSetTpAttrAsync(rdmaHandle, tpHandle, attrBitmap, attr, reqHandle);
         if (hret != HcclResult::HCCL_SUCCESS) {
             HCCL_ERROR("[TpMgr][%s] HrtRaSetTpAttrAsync failed hcclRet[%d] tpHandle[%llu].", logTag,
-                static_cast<int>(hret), tpHandle);
+                static_cast<int>(hret), static_cast<unsigned long long>(tpHandle));
         }
         return hret;
     } catch (const Hccl::NetworkApiException &ex) {
-        HCCL_ERROR("[TpMgr][%s] HrtRaSetTpAttrAsync exception: %s tpHandle[%llu].", logTag, ex.what(), tpHandle);
+        HCCL_ERROR("[TpMgr][%s] HrtRaSetTpAttrAsync exception: %s tpHandle[%llu].", logTag, ex.what(),
+            static_cast<unsigned long long>(tpHandle));
         return HcclResult::HCCL_E_NETWORK;
     }
 }
@@ -183,7 +184,8 @@ static HcclResult CommitMappedSlToTpAttr(const uint32_t devPhyId, const CommAddr
     const HcclResult hret =
         SetTpAttrAsync(rdmaHandle, tpHandle, kTpAttrBitmapSl, tpSlAttr, "CommitMappedSlToTpAttr");
     if (hret == HcclResult::HCCL_SUCCESS) {
-        HCCL_INFO("[TpMgr][CommitMappedSlToTpAttr] ok tpHandle[%llu] sl[%u].", tpHandle,
+        HCCL_INFO("[TpMgr][CommitMappedSlToTpAttr] ok tpHandle[%llu] sl[%u].",
+            static_cast<unsigned long long>(tpHandle),
             static_cast<unsigned>(mappedSl & 0xFU));
     }
     return hret;
@@ -206,7 +208,8 @@ static HcclResult CommitUboeDscpToTpAttr(const uint32_t devPhyId, const CommAddr
     const HcclResult hret =
         SetTpAttrAsync(rdmaHandle, tpHandle, kTpAttrBitmapDscp, tpDscpAttr, "CommitUboeDscpToTpAttr");
     if (hret == HcclResult::HCCL_SUCCESS) {
-        HCCL_INFO("[TpMgr][CommitUboeDscpToTpAttr] ok tpHandle[%llu] dscp[%u].", tpHandle,
+        HCCL_INFO("[TpMgr][CommitUboeDscpToTpAttr] ok tpHandle[%llu] dscp[%u].",
+            static_cast<unsigned long long>(tpHandle),
             static_cast<unsigned>(tpDscpAttr.dscp));
     }
     return hret;
@@ -253,7 +256,7 @@ static HcclResult CheckRequestResult(RequestHandle &reqHandle)
 HcclResult CheckTpProtocol(const TpProtocol tpProtocol)
 {
     if (tpProtocol != TpProtocol::CTP && tpProtocol != TpProtocol::RTP && tpProtocol != TpProtocol::UBOE) {
-        HCCL_ERROR("[TpMgr][%s] failed, tpProtocol[%d] is not supported.", __func__, tpProtocol);
+        HCCL_ERROR("[TpMgr][%s] failed, tpProtocol[%s] is not supported.", __func__, tpProtocol.Describe().c_str());
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
 
@@ -446,10 +449,12 @@ static HcclResult GetTpInfoListAsync(const CtxHandle ctxHandle, const GetTpInfoP
     cfg.transMode = TransportModeT::CONN_RM;
     CHK_RET(IpAddressToHccpEid(locAddr, cfg.localEid));
     HCCL_INFO("RaUbGetTpInfoAsync cfg.local_eid[subnetPrefix[%016llx], interfaceId[%016llx]]",
-        cfg.localEid.in6.subnetPrefix, cfg.localEid.in6.interfaceId);
+        static_cast<unsigned long long>(cfg.localEid.in6.subnetPrefix),
+        static_cast<unsigned long long>(cfg.localEid.in6.interfaceId));
     CHK_RET(IpAddressToHccpEid(rmtAddr, cfg.peerEid));
     HCCL_INFO("RaUbGetTpInfoAsync cfg.peer_eid[subnetPrefix[%016llx], interfaceId[%016llx]]",
-        cfg.peerEid.in6.subnetPrefix, cfg.peerEid.in6.interfaceId);
+        static_cast<unsigned long long>(cfg.peerEid.in6.subnetPrefix),
+        static_cast<unsigned long long>(cfg.peerEid.in6.interfaceId));
 
     // buffer 须至少容纳本次请求的个数，避免 RS 按 num 写多条 HccpTpInfo 时越界破坏堆
     out.resize(static_cast<size_t>(Hccl::TP_HANDLE_REQUEST_NUM) * sizeof(struct HccpTpInfo));
@@ -465,7 +470,7 @@ static HcclResult GetTpInfoListAsync(const CtxHandle ctxHandle, const GetTpInfoP
     }
 
     reqHandle = reinterpret_cast<RequestHandle>(raReqHandle);
-    HCCL_INFO("[%s] get request handle[%llu].", __func__, reqHandle);
+    HCCL_INFO("[%s] get request handle[%llu].", __func__, static_cast<unsigned long long>(reqHandle));
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -510,7 +515,7 @@ HcclResult TpMgr::StartGetTpAttrForFirstTp(const GetTpInfoParam &param, RequestC
         RaGetTpAttrAsync(ctxHandle, firstTpHandle, &reqCtx.tpAttrBitmap, &reqCtx.tpAttr, &raReqHandle);
     if (ret != 0 || !raReqHandle) {
         HCCL_ERROR("[TpMgr][%s] RaGetTpAttrAsync failed ret[%d] raReqHandle[%p] ctx[%p] tpHandle[%llu].", __func__,
-            ret, raReqHandle, ctxHandle, firstTpHandle);
+            ret, raReqHandle, ctxHandle, static_cast<unsigned long long>(firstTpHandle));
         return HcclResult::HCCL_E_NETWORK;
     }
     reqCtx.handle = reinterpret_cast<RequestHandle>(raReqHandle);
@@ -573,13 +578,14 @@ HcclResult TpMgr::StartGetTpAttrRequest(const GetTpAttrParam &param,
     if (ret != 0 || !raReqHandle) {
         HCCL_ERROR("[TpMgr][%s] failed, call RaGetTpAttrAsync error[%d] raReqHandle[%p], "
             "tpHandle[0x%llx] attrBitmap[0x%x].", __func__, ret, raReqHandle,
-            param.tpHandle, param.attrBitmap);
+            static_cast<unsigned long long>(param.tpHandle), param.attrBitmap);
         return HcclResult::HCCL_E_NETWORK;
     }
 
     reqCtx.handle = reinterpret_cast<RequestHandle>(raReqHandle);
     HCCL_INFO("[TpMgr][%s] success, tpHandle[0x%llx] reqHandle[%llu].",
-        __func__, param.tpHandle, reqCtx.handle);
+        __func__, static_cast<unsigned long long>(param.tpHandle),
+        static_cast<unsigned long long>(reqCtx.handle));
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -601,7 +607,7 @@ HcclResult TpMgr::ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo &tpAtt
     auto attrIter = tpAttrCtxMap_.find(tpHandle);
     if (attrIter == tpAttrCtxMap_.end()) {
         HCCL_ERROR("[TpMgr][%s] failed, tp attr is not found, "
-            "tpHandle[0x%llx].", __func__, tpHandle);
+            "tpHandle[0x%llx].", __func__, static_cast<unsigned long long>(tpHandle));
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
@@ -623,7 +629,8 @@ HcclResult TpMgr::GetTpTotalTimeout(const TpAttrInfo &tpAttrInfo, uint32_t &tpTi
     if (rawAtGear > AT_GEAR_MAX) {
         finalAtGear = AT_GEAR_DEFAULT;
         HCCL_WARNING("%s Invalid at gear[%u], expect [%u, %u], use default gear[%u].",
-            __func__, rawAtGear, AT_GEAR_MIN, AT_GEAR_MAX, finalAtGear);
+            __func__, static_cast<unsigned>(rawAtGear), static_cast<unsigned>(AT_GEAR_MIN),
+            static_cast<unsigned>(AT_GEAR_MAX), static_cast<unsigned>(finalAtGear));
     }
 
     uint32_t singleAtTimeoutMs = AT_TIMEOUT_MAP[finalAtGear];
@@ -631,7 +638,8 @@ HcclResult TpMgr::GetTpTotalTimeout(const TpAttrInfo &tpAttrInfo, uint32_t &tpTi
 
     HCCL_INFO("%s TP timeout calc success: raw_at_gear[%u], final_at_gear[%u], "
         "single_timeout[%ums], retry_times[%u], total_timeout[%ums].",
-        __func__, rawAtGear, finalAtGear, singleAtTimeoutMs, rawRetryTimes, tpTimeOutMs);
+        __func__, static_cast<unsigned>(rawAtGear), static_cast<unsigned>(finalAtGear),
+        singleAtTimeoutMs, static_cast<unsigned>(rawRetryTimes), tpTimeOutMs);
 
     return HcclResult::HCCL_SUCCESS;
 }
@@ -675,11 +683,12 @@ uint8_t TpMgr::CalcTaTimeout(const TpAttrInfo &tpAttrInfo)
     if (envTimeoutMs < tpTimeOutMs) {
         errTimeout = FindMinTaHwValue(tpTimeOutMs);
         HCCL_WARNING("[TpMgr][%s] Env timeout [%ums] < TP timeout [%ums]. Auto upgrade TA to hw_val[%u] (%ums).",
-            __func__, envTimeoutMs, tpTimeOutMs, errTimeout, TaHwValueToMs(errTimeout));
+            __func__, envTimeoutMs, tpTimeOutMs, static_cast<unsigned>(errTimeout),
+            TaHwValueToMs(errTimeout));
     } else {
         errTimeout = envValue;
         HCCL_INFO("[TpMgr][%s] Env timeout [%ums] >= TP timeout [%ums]. Use env gear base hw_val[%u] (%ums).",
-            __func__, envTimeoutMs, tpTimeOutMs, envValue, envTimeoutMs);
+            __func__, envTimeoutMs, tpTimeOutMs, static_cast<unsigned>(envValue), envTimeoutMs);
     }
     
     return errTimeout;
@@ -698,7 +707,8 @@ HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(const GetTpInfoParam &param, const
     if (isPcieStd) {
         HCCL_INFO("[TpMgr][%s] pcie std mainboard: skip SetTpAttr, devPhyId[%u] tpProtocol[%s] tpHandle[%llu] "
                   "param[%s].",
-            __func__, devPhyId_, param.tpProtocol.Describe().c_str(), tpInfo.tpHandle, param.Describe().c_str());
+            __func__, devPhyId_, param.tpProtocol.Describe().c_str(),
+            static_cast<unsigned long long>(tpInfo.tpHandle), param.Describe().c_str());
     } else if (param.tpProtocol == TpProtocol::RTP || param.tpProtocol == TpProtocol::UBOE) {
         CHK_RET(CommitMappedSlToTpAttr(devPhyId_, param.locAddr, tpInfo.tpHandle, mappedSl));
     }
@@ -713,11 +723,13 @@ HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(const GetTpInfoParam &param, const
         CHK_RET(CommitUboeDscpToTpAttr(devPhyId_, param.locAddr, tpInfo.tpHandle, dscp));
         HCCL_INFO("[TpMgr][%s] UBOE dscp updated: tpHandle[%llu] requestQos[%u] dscpLookupQos[%u] dscpBefore[%u] "
                   "dscpAfter[%u].",
-            __func__, tpInfo.tpHandle, static_cast<unsigned>(requestQos), static_cast<unsigned>(dscpLookupQos),
+            __func__, static_cast<unsigned long long>(tpInfo.tpHandle), static_cast<unsigned>(requestQos),
+            static_cast<unsigned>(dscpLookupQos),
             static_cast<unsigned>(dscpBefore), static_cast<unsigned>(dscp));
     }
     HCCL_INFO("[TpMgr][%s] tp qos mapping ok: tpHandle[%llu] tpListIndex[%u] mappedSl[%u] jettyPriority[%u] qos[%u] param[%s].",
-        __func__, tpInfo.tpHandle, tpListIndex, static_cast<unsigned>(mappedSl & 0xFU), tpInfo.mappedJettyPriority,
+        __func__, static_cast<unsigned long long>(tpInfo.tpHandle), tpListIndex,
+        static_cast<unsigned>(mappedSl & 0xFU), tpInfo.mappedJettyPriority,
         param.qos & 0xFFU, param.Describe().c_str());
     return HcclResult::HCCL_SUCCESS;
 }
@@ -744,7 +756,8 @@ HcclResult TpMgr::CommitTpInfoToCache(const GetTpInfoParam &param, TpInfo &tpInf
     // 缓存已存在：不再覆盖（避免并发后写覆盖先写的 tpHandle）；tpInfo 保持 GetTpInfo 本地结果。
     if (qIt->second.tpInfo.tpHandle != tpInfo.tpHandle) {
         HCCL_WARNING("[TpMgr][%s] skip cache store, cached tpHandle[%llu] != local tpHandle[%llu] param[%s].",
-            __func__, qIt->second.tpInfo.tpHandle, tpInfo.tpHandle, param.Describe().c_str());
+            __func__, static_cast<unsigned long long>(qIt->second.tpInfo.tpHandle),
+            static_cast<unsigned long long>(tpInfo.tpHandle), param.Describe().c_str());
     }
     return HcclResult::HCCL_SUCCESS;
 }
@@ -769,7 +782,8 @@ HcclResult TpMgr::HandleCompletedRequest(RequestCtx reqCtx, const GetTpInfoParam
         tpInfo.hasMappedJettyPriority = true;
         HCCL_INFO("[TpMgr][%s] pcie std mainboard: skip GetTpAttr/SetTpAttr, devPhyId[%u] tpInfoNum[%u] "
                   "mappedSl[%u] tpHandle[%llu] param[%s].",
-            __func__, devPhyId_, tpInfoNum, kPcieStdMappedSl, tpInfo.tpHandle, param.Describe().c_str());
+            __func__, devPhyId_, tpInfoNum, kPcieStdMappedSl,
+            static_cast<unsigned long long>(tpInfo.tpHandle), param.Describe().c_str());
         return CommitTpInfoToCache(param, tpInfo);
     }
 

@@ -57,7 +57,7 @@ HcclResult CpuRoceEndpoint::Init()
     TRY_CATCH_RETURN(ctxHandle_ = static_cast<void *>(
         rdmaHandleMgr.GetByAddr(devPhyId, Hccl::LinkProtoType::RDMA, ipAddr, Hccl::PortDeploymentType::HOST_NET)));
     CHK_PTR_NULL(ctxHandle_);
-    HCCL_INFO("CpuRoceEndpoint::%s success, devId[%u], ipAddr[%s], ctxHandle[%p]",
+    HCCL_INFO("CpuRoceEndpoint::%s success, devPhyId[%u], ipAddr[%s], ctxHandle[%p]",
         __func__,
         devPhyId,
         ipAddr.Describe().c_str(),
@@ -192,7 +192,7 @@ HcclResult CpuRoceEndpoint::GetCapabilities(Capabilities &caps)
         uint32_t ret = RaGetLbMax(this->regedMemMgr_->rdmaHandle_, &(capabilities_.lbMax));
         CHK_PRT_RET(ret != 0,
             HCCL_ERROR("[CpuRoceEndpoint::GetCapabilities][GetLbMax]errNo[0x%016llx] RaGetLbMax fail. "
-            "return[%d], params: rdmaHandle[%p], lbMax[%d]",
+            "return[%u], params: rdmaHandle[%p], lbMax[%d]",
             HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, this->regedMemMgr_->rdmaHandle_, capabilities_.lbMax),
             HCCL_E_NETWORK);
         isCapabilitiesAvailable_ = true;

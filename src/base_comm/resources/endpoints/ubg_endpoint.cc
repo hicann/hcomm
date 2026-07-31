@@ -50,7 +50,7 @@ HcclResult UbgEndpoint::Init()
     EXCEPTION_CATCH(ctxHandle_ = static_cast<void *>(rdmaHandleMgr.GetByIp(endpointDesc_.loc.device.devPhyId, eidAddr)), 
         return HCCL_E_PARA);
     CHK_PTR_NULL(ctxHandle_);
-    HCCL_INFO("%s success, devId[%u], eidAddr[%s], ctxHandle[%p]",
+    HCCL_INFO("%s success, devPhyId[%u], eidAddr[%s], ctxHandle[%p]",
         __func__, devPhyId, eidAddr.Describe().c_str(), ctxHandle_);
 
     EXCEPTION_CATCH(regedMemMgr_ = std::make_unique<UbRegedMemMgr>(), return HCCL_E_INTERNAL);

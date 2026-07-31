@@ -55,7 +55,7 @@ HcclResult CpuUrmaEndpoint::Init()
     ctxHandle_ = static_cast<void *>(
         rdmaHandleMgr.GetByAddr(devPhyId, Hccl::LinkProtoType::UB, ipAddr, Hccl::PortDeploymentType::HOST_NET));
     CHK_PTR_NULL(ctxHandle_);
-    HCCL_INFO("CpuUrmaEndpoint::%s success, devId[%u], ipAddr[%s], ctxHandle[%p]",
+    HCCL_INFO("CpuUrmaEndpoint::%s success, devPhyId[%u], ipAddr[%s], ctxHandle[%p]",
         __func__,
         devPhyId,
         ipAddr.Describe().c_str(),

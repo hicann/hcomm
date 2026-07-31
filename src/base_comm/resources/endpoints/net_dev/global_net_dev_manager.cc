@@ -83,7 +83,7 @@ HcclResult GlobalNetDevMgr::Init(u32 devicePhyId, u32 deviceLogicId)
 
     // need to check again
     if (netDevMgrInstance[deviceLogicId].isInited_) {
-        HCCL_INFO("[GlobalNetDevMgr][Init]Has been inited. devicePhyId[%u], deviceLogicId[%d]", 
+        HCCL_INFO("[GlobalNetDevMgr][Init]Has been inited. devicePhyId[%u], deviceLogicId[%u]", 
             devicePhyId, deviceLogicId);
         return HCCL_SUCCESS;
     }
@@ -92,7 +92,7 @@ HcclResult GlobalNetDevMgr::Init(u32 devicePhyId, u32 deviceLogicId)
     netDevMgrInstance[deviceLogicId].deviceLogicId_ = deviceLogicId;
     CHK_RET(HcclNetInit(NICDeployment::NIC_DEPLOYMENT_DEVICE, devicePhyId, static_cast<u32>(deviceLogicId), false));
     netDevMgrInstance[deviceLogicId].isInited_ = true;
-    HCCL_INFO("[GlobalNetDevMgr][Init]Init success, devicePhyId[%u], deviceLogicId[%d]",
+    HCCL_INFO("[GlobalNetDevMgr][Init]Init success, devicePhyId[%u], deviceLogicId[%u]",
         devicePhyId, deviceLogicId);
     return HCCL_SUCCESS;
 }
@@ -124,12 +124,12 @@ HcclResult GlobalNetDevMgr::GetDeviceVnicIP(u32 devicePhyId, u32 superDeviceId, 
     bool isHostUseDevNic;
     CHK_RET(IsHostUseDevNic(isHostUseDevNic));
     u32 tempDevicePhyId = hccl::DEFAULT_PHY_ID;
-    HCCL_DEBUG("[GlobalNetDevMgr][%s]GetDeviceVnicIP, deviceLogicId[%u], devicePhyId[%u], "
+    HCCL_DEBUG("[GlobalNetDevMgr][%s]GetDeviceVnicIP, deviceLogicId[%d], devicePhyId[%u], "
             "nicDeploy[%d], hasBackup[%d], tempDevicePhyId[%u]",
         __func__,
         localDeviceLogicId,
         devicePhyId,
-        NICDeployment::NIC_DEPLOYMENT_DEVICE,
+        static_cast<int>(NICDeployment::NIC_DEPLOYMENT_DEVICE),
         false,
         tempDevicePhyId);
     CHK_RET(hccl::NetworkManager::GetInstance(localDeviceLogicId)
@@ -157,7 +157,7 @@ HcclResult GlobalNetDevMgr::GetDeviceVnicIP(u32 devicePhyId, u32 superDeviceId, 
 HcclResult GlobalNetDevMgr::RefNetDevCtx(NicType nicType, const HcclIpAddress &ipAddr, u32 port,
     HcclNetDevCtx &netDevCtx)
 {
-    HCCL_INFO("[GlobalNetDevMgr][RefNetDevCtx] nicType[%d], ip[%s]", nicType, ipAddr.GetReadableAddress());
+    HCCL_INFO("[GlobalNetDevMgr][RefNetDevCtx] nicType[%d], ip[%s]", static_cast<int>(nicType), ipAddr.GetReadableAddress());
     std::lock_guard<std::mutex> lock(netDevCtxMtx_);
 
     // 进程粒度open dev，如果已open，直接复用
@@ -172,7 +172,7 @@ HcclResult GlobalNetDevMgr::RefNetDevCtx(NicType nicType, const HcclIpAddress &i
 
         HCCL_INFO(
             "[GlobalNetDevMgr][RefNetDevCtx] nicType[%d] ip[%s] has been Ref.",
-            nicType, ipAddr.GetReadableAddress());
+            static_cast<int>(nicType), ipAddr.GetReadableAddress());
         return HCCL_SUCCESS;
     }
 
@@ -200,13 +200,13 @@ HcclResult GlobalNetDevMgr::RefNetDevCtx(NicType nicType, const HcclIpAddress &i
     netDevCtx = tempNetDevCtx;
     netDevCtx_ = netDevCtx;
     HCCL_INFO(
-        "[GlobalNetDevMgr][RefNetDevCtx] nicType[%d] ip[%s] has been Init.", nicType, ipAddr.GetReadableAddress());
+        "[GlobalNetDevMgr][RefNetDevCtx] nicType[%d] ip[%s] has been Init.", static_cast<int>(nicType), ipAddr.GetReadableAddress());
     return HCCL_SUCCESS;
 }
 
 HcclResult GlobalNetDevMgr::UnRefNetDevCtx(NicType nicType, const HcclIpAddress &ipAddr, u32 port)
 {
-    HCCL_INFO("[GlobalNetDevMgr][UnRefNetDevCtx] nicType[%d], ip[%s]", nicType, ipAddr.GetReadableAddress());
+    HCCL_INFO("[GlobalNetDevMgr][UnRefNetDevCtx] nicType[%d], ip[%s]", static_cast<int>(nicType), ipAddr.GetReadableAddress());
 
     std::lock_guard<std::mutex> lock(netDevCtxMtx_);
  
@@ -220,7 +220,7 @@ HcclResult GlobalNetDevMgr::UnRefNetDevCtx(NicType nicType, const HcclIpAddress 
         netDevCtxRef.Unref();
         HCCL_INFO(
             "[GlobalNetDevMgr][UnRefNetDevCtx] nicType[%d] ip[%s] has been UnRef.",
-            nicType, ipAddr.GetReadableAddress());
+            static_cast<int>(nicType), ipAddr.GetReadableAddress());
 
         if (netDevCtxRef.Count() == 0) {
             netDevCtxMap_.erase(portInfo);
@@ -228,7 +228,7 @@ HcclResult GlobalNetDevMgr::UnRefNetDevCtx(NicType nicType, const HcclIpAddress 
             HcclNetCloseDev(netDevCtx);
             HCCL_INFO(
                 "[GlobalNetDevMgr][UnRefNetDevCtx] nicType[%d] ip[%s] has been Deinit.",
-                nicType, ipAddr.GetReadableAddress());
+                static_cast<int>(nicType), ipAddr.GetReadableAddress());
         }
     }
 

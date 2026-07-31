@@ -26,6 +26,7 @@
 #define protected public
 #include "comm_config_pub.h"
 #include "hccl_communicator.h"
+#include "coll_comm_config.h"
 #undef protected
 #undef private
 using namespace std;
@@ -487,4 +488,264 @@ TEST_F(CommConfigTest, Check_taskexception_enable)
     bool taskExceptionEnable = true;
     hcomm::SetTaskExceptionEnable(taskExceptionEnable);
     EXPECT_EQ(hcomm::GetTaskExceptionEnable(), taskExceptionEnable);
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_NullConfig_ReturnSuccess)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    uint32_t opExpansionMode = 999;
+    HcclResult ret = ApplyHcclCommConfig(nullptr, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(opExpansionMode, 0u);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidConfig_ReturnSuccess)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    HcclCommConfig config;
+    HcclCommConfigInit(&config);
+    config.hcclOpExpansionMode = 3;
+    config.hcclRdmaTrafficClass = 0xFFFFFFFF;
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF;
+
+    uint32_t opExpansionMode = 0;
+    HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(opExpansionMode, 3u);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidTrafficClass_ReturnParaError)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    HcclCommConfig config;
+    HcclCommConfigInit(&config);
+    config.hcclRdmaTrafficClass = 3;
+
+    uint32_t opExpansionMode = 0;
+    HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidServiceLevel_ReturnParaError)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    HcclCommConfig config;
+    HcclCommConfigInit(&config);
+    config.hcclRdmaTrafficClass = 0;
+    config.hcclRdmaServiceLevel = 8;
+
+    uint32_t opExpansionMode = 0;
+    HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidTrafficClassAndServiceLevel_ReturnSuccess)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    HcclCommConfig config;
+    HcclCommConfigInit(&config);
+    config.hcclRdmaTrafficClass = 4;
+    config.hcclRdmaServiceLevel = 3;
+
+    uint32_t opExpansionMode = 0;
+    HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(commConfig.GetConfigTrafficClass(), 4u);
+    EXPECT_EQ(commConfig.GetConfigServiceLevel(), 3u);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidQos_ReturnParaError)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    HcclCommConfig config;
+    HcclCommConfigInit(&config);
+    config.hcclRdmaTrafficClass = 0xFFFFFFFF;
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF;
+
+    typedef struct {
+        size_t size;
+        uint32_t magicWord;
+        uint32_t version;
+        uint64_t reserved;
+    } configInfo_t;
+    configInfo_t *info = (configInfo_t *)&config;
+    info->version = 10;
+    config.hcclQos = 8;
+
+    uint32_t opExpansionMode = 0;
+    HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidQos_ReturnSuccess)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    HcclCommConfig config;
+    HcclCommConfigInit(&config);
+    config.hcclRdmaTrafficClass = 0xFFFFFFFF;
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF;
+
+    typedef struct {
+        size_t size;
+        uint32_t magicWord;
+        uint32_t version;
+        uint64_t reserved;
+    } configInfo_t;
+    configInfo_t *info = (configInfo_t *)&config;
+    info->version = 10;
+    config.hcclQos = 5;
+
+    uint32_t opExpansionMode = 0;
+    HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(commConfig.GetConfigHcclQos(), 5u);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_QosVersionBelow10_SkipQos)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    HcclCommConfig config;
+    HcclCommConfigInit(&config);
+    config.hcclRdmaTrafficClass = 0xFFFFFFFF;
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF;
+
+    typedef struct {
+        size_t size;
+        uint32_t magicWord;
+        uint32_t version;
+        uint64_t reserved;
+    } configInfo_t;
+    configInfo_t *info = (configInfo_t *)&config;
+    info->version = 9;
+    config.hcclQos = 5;
+
+    uint32_t opExpansionMode = 0;
+    HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_TcNotMultipleOf4_ReturnParaError)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    HcclCommConfig config;
+    HcclCommConfigInit(&config);
+    config.hcclRdmaTrafficClass = 5;
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF;
+
+    uint32_t opExpansionMode = 0;
+    HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, ApplyHcclCommConfig_QosNotSetWithHighVersion_ReturnSuccess)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    HcclCommConfig config;
+    HcclCommConfigInit(&config);
+    config.hcclRdmaTrafficClass = 0xFFFFFFFF;
+    config.hcclRdmaServiceLevel = 0xFFFFFFFF;
+
+    typedef struct {
+        size_t size;
+        uint32_t magicWord;
+        uint32_t version;
+        uint64_t reserved;
+    } configInfo_t;
+    configInfo_t *info = (configInfo_t *)&config;
+    info->version = 10;
+    config.hcclQos = HCCL_COMM_QOS_CONFIG_NOT_SET;
+
+    uint32_t opExpansionMode = 0;
+    HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    GlobalMockObject::verify();
 }

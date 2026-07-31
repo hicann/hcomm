@@ -43,7 +43,7 @@ AicpuTsHccsEndpoint::~AicpuTsHccsEndpoint()
 
 HcclResult AicpuTsHccsEndpoint::Init()
 {
-    HCCL_INFO("[%s]localEndpoint protocol[%d], type[%u], id[%u] locType[%u], devPhyId[%u], serverIdx[%u], "
+    HCCL_INFO("[%s]localEndpoint protocol[%d], type[%d], id[%u] locType[%d], devPhyId[%u], serverIdx[%u], "
         "superDevId[%u], superPodIdx[%u]",
         __func__, endpointDesc_.protocol, endpointDesc_.commAddr.type, endpointDesc_.commAddr.id,
         endpointDesc_.loc.locType, endpointDesc_.loc.device.devPhyId, endpointDesc_.loc.device.serverIdx,

@@ -388,6 +388,21 @@ TEST_F(CcuErrorHandlerTest, test_error_info_when_rep_type_is_post_shared_sem)
     EXPECT_EQ(errorInfo[0].msg.waitSignal.signalMask, mask);
 }
 
+static uint64_t MockGetCcuGSAValueForRead(int32_t, uint32_t, uint32_t gsaId)
+{
+    if (gsaId == 1) { return 0xa; }
+    if (gsaId == 3) { return 0xc; }
+    return 0;
+}
+
+static uint64_t MockGetCcuXnValueForRead(int32_t, uint32_t, uint32_t xnId)
+{
+    if (xnId == 2) { return 0xb; }
+    if (xnId == 4) { return 0xd; }
+    if (xnId == 5) { return 0xe; }
+    return 0;
+}
+
 TEST_F(CcuErrorHandlerTest, test_error_info_when_rep_type_is_read)
 {
     auto utCcuConnection = MockCcuConnection(7);  // channelId
@@ -399,24 +414,24 @@ TEST_F(CcuErrorHandlerTest, test_error_info_when_rep_type_is_read)
     Variable locToken;
     locToken.Reset(2);  // locToken id
     Memory loc{locAddr, locToken};
-    MOCKER(CcuErrorHandler::GetCcuGSAValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(1)).will(returnValue(0xa));
-    MOCKER(CcuErrorHandler::GetCcuXnValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(2)).will(returnValue(0xb));
 
     Address remAddr;
     remAddr.Reset(3);  // remAddr id
     Variable remToken;
     remToken.Reset(4);  // remToken id
     Memory rem{remAddr, remToken};
-    MOCKER(CcuErrorHandler::GetCcuGSAValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(3)).will(returnValue(0xc));
-    MOCKER(CcuErrorHandler::GetCcuXnValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(4)).will(returnValue(0xd));
 
     Variable len;
     len.Reset(5);
-    MOCKER(CcuErrorHandler::GetCcuXnValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(5)).will(returnValue(0xe));
 
     MaskSignal sem;
     sem.Reset(5);  // sem id
     uint16_t mask = 0x0010;
+
+    MOCKER(CcuErrorHandler::GetCcuGSAValue).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MockGetCcuGSAValueForRead));
+    MOCKER(CcuErrorHandler::GetCcuXnValue).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MockGetCcuXnValueForRead));
 
     shared_ptr<CcuRepBase> rep = make_shared<CcuRepRead>(*utCcuTransport, loc, rem, len, sem, mask);
     ErrorInfoBase baseInfo{0, 0, 1, 10, 0};
@@ -436,6 +451,21 @@ TEST_F(CcuErrorHandlerTest, test_error_info_when_rep_type_is_read)
     EXPECT_EQ(errorInfo[0].msg.transMem.channelId, 7);
 }
 
+static uint64_t MockGetCcuGSAValueForWrite(int32_t, uint32_t, uint32_t gsaId)
+{
+    if (gsaId == 1) { return 0xa; }
+    if (gsaId == 3) { return 0xc; }
+    return 0;
+}
+
+static uint64_t MockGetCcuXnValueForWrite(int32_t, uint32_t, uint32_t xnId)
+{
+    if (xnId == 2) { return 0xb; }
+    if (xnId == 4) { return 0xd; }
+    if (xnId == 5) { return 0xe; }
+    return 0;
+}
+
 TEST_F(CcuErrorHandlerTest, test_error_info_when_rep_type_is_write)
 {
     auto utCcuConnection = MockCcuConnection(7);  // channelId
@@ -447,24 +477,24 @@ TEST_F(CcuErrorHandlerTest, test_error_info_when_rep_type_is_write)
     Variable locToken;
     locToken.Reset(2);  // locToken id
     Memory loc{locAddr, locToken};
-    MOCKER(CcuErrorHandler::GetCcuGSAValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(1)).will(returnValue(0xa));
-    MOCKER(CcuErrorHandler::GetCcuXnValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(2)).will(returnValue(0xb));
 
     Address remAddr;
     remAddr.Reset(3);  // remAddr id
     Variable remToken;
     remToken.Reset(4);  // remToken id
     Memory rem{remAddr, remToken};
-    MOCKER(CcuErrorHandler::GetCcuGSAValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(3)).will(returnValue(0xc));
-    MOCKER(CcuErrorHandler::GetCcuXnValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(4)).will(returnValue(0xd));
 
     Variable len;
     len.Reset(5);
-    MOCKER(CcuErrorHandler::GetCcuXnValue).stubs().with(mockcpp::any(), mockcpp::any(), eq(5)).will(returnValue(0xe));
 
     MaskSignal sem;
     sem.Reset(5);  // sem id
     uint16_t mask = 0x0010;
+
+    MOCKER(CcuErrorHandler::GetCcuGSAValue).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MockGetCcuGSAValueForWrite));
+    MOCKER(CcuErrorHandler::GetCcuXnValue).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MockGetCcuXnValueForWrite));
 
     shared_ptr<CcuRepBase> rep = make_shared<CcuRepWrite>(*utCcuTransport, rem, loc, len, sem, mask);
     ErrorInfoBase baseInfo{0, 0, 1, 10, 0};

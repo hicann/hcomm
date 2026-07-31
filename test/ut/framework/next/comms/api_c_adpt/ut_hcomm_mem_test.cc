@@ -82,6 +82,14 @@ TEST_F(TestHcommMem, Ut_TestHcommMemUnimport_When_InvalidParams_Return_HCCL_E_PT
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
+TEST_F(TestHcommMem, Ut_TestHcommMemImport_When_DescLenZero_Return_HCCL_E_PARA)
+{
+    HcommMem outMem;
+    char desc[8] = {0};
+    HcommResult ret = HcommMemImport(nullptr, desc, 0, &outMem);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
 TEST_F(TestHcommMem, Ut_TestHcommMemGetAllMemHandles_When_Nullptr_Return_HCCL_E_PTR)
 {
     HcommResult ret = HcommMemGetAllMemHandles(nullptr, nullptr, nullptr);

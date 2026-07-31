@@ -23,7 +23,7 @@ CcuResPack::~CcuResPack()
 
     auto ret = CcuReleaseResHandle(devLogicId_, resHandle_);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_ERROR("[CcuResPack][%s] failed, resHandle[0x%llx] devLogicId[%d].",
+        HCCL_ERROR("[CcuResPack][%s] failed, resHandle[%p] devLogicId[%d].",
             __func__, resHandle_, devLogicId_);
     }
     resHandle_ = 0;

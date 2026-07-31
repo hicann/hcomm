@@ -61,7 +61,7 @@ HcclResult EidInfoMgr::GetEidInfos(std::vector<DevEidInfo> &eidInfos)
     // 不允许外部修改eidInfo，传递拷贝结果
     eidInfos.assign(eidInfos_.begin(), eidInfos_.end());
 
-    HCCL_INFO("[EidInfoMgr][%s] found %zu eid info, devPhyId[%d].",
+    HCCL_INFO("[EidInfoMgr][%s] found %zu eid info, devPhyId[%u].",
         __func__, eidInfos.size(), devPhyId_);
 
     return HCCL_SUCCESS;

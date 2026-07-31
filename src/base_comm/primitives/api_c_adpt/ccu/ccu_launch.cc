@@ -187,7 +187,7 @@ CcuResult HcommCcuKernelRegister(CcuInsHandle insHandle, uint32_t dieId,
 
     *kernelHandle = newHandle;
     HCCL_INFO("[%s] success, take time [%lld]us.",
-        __func__, DURATION_US(TIME_NOW() - startut));
+        __func__, DURATION_US(TIME_NOW() - startut).count());
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -285,7 +285,7 @@ static void ConstructProfilingInfoLog(
             if (profInfo.channelId[idx] == hcomm::INVALID_VALUE_CHANNELID) {
                 break;
             }
-            HCCL_INFO("[%s]idx[%u]: channelId[%u], channelHandle[0x%llx]",
+            HCCL_INFO("[%s]idx[%d]: channelId[%u], channelHandle[0x%llx]",
                 __func__, idx, profInfo.channelId[idx], profInfo.channelHandle[idx]);
         }
     }
@@ -400,7 +400,7 @@ CcuResult HcommCcuKernelLaunch(ThreadHandle threadHandle,
     }
     CCU_EXCEPTION_HANDLE_END
     HCCL_INFO("[%s] success, take time [%lld]us.",
-        __func__, DURATION_US(TIME_NOW() - startus));
+        __func__, DURATION_US(TIME_NOW() - startus).count());
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -409,8 +409,8 @@ CcuResult HcommCcuGetMemToken(uint64_t srcVa, uint64_t size, uint64_t *tokenInfo
     CCU_CHK_PTR_NULL(tokenInfo);
 
     if (srcVa == 0 || size == 0) {
-        HCCL_ERROR("[%s] failed, srcVa[%llx] size[%llu] should not be 0.",
-            __func__, srcVa, size);
+        HCCL_ERROR("[%s] failed, srcVa[0x%llx] size[%llu] should not be 0.",
+            __func__, static_cast<unsigned long long>(srcVa), static_cast<unsigned long long>(size));
         return CcuResult::CCU_E_PARA;
     }
     // 注意token信息属于安全信息，均不允许打印

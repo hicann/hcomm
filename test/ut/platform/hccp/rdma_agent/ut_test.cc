@@ -17,6 +17,8 @@ extern "C" {
 #include "tc_ra_tlv.h"
 }
 
+#include "ra_rs_comm.h"
+#include "ra_hdc.h"
 #include <stdio.h>
 #include "gtest/gtest.h"
 #include "tc_adp.h"
@@ -374,3 +376,58 @@ TEST_M(RdmaAgent, TcRaNdaGetDirectFlag);
 TEST_M(RdmaAgent, TcRaPeerNdaGetDirectFlag);
 TEST_M(RdmaAgent, TcRaNdaQpCreate);
 TEST_M(RdmaAgent, TcRaPeerNdaQpCreate);
+
+TEST_F(RdmaAgent, RaRsHasCapability_CapabilityInvalid_ReturnFalse)
+{
+    bool ret = RaRsHasCapability(RA_CAP_INVALID, 0, 1);
+    EXPECT_EQ(ret, false);
+}
+
+TEST_F(RdmaAgent, RaRsHasCapability_CapabilityBeyondInvalid_ReturnFalse)
+{
+    bool ret = RaRsHasCapability(RA_CAP_INVALID + 1, 0, 1);
+    EXPECT_EQ(ret, false);
+}
+
+TEST_F(RdmaAgent, RaRsHasCapability_ValidCapabilityRoceAndNetMet_ReturnTrue)
+{
+    bool ret = RaRsHasCapability(RA_CAP_DRV_SHAREPOOL_NON_PIN, 0, 1);
+    EXPECT_EQ(ret, true);
+}
+
+TEST_F(RdmaAgent, RaRsHasCapability_ValidCapabilityRoceMetNetNotMet_ReturnFalse)
+{
+    bool ret = RaRsHasCapability(RA_CAP_DRV_SHAREPOOL_NON_PIN, 0, 0);
+    EXPECT_EQ(ret, false);
+}
+
+TEST_F(RdmaAgent, RaRsHasCapability_ValidCapabilityRoceMetAndNetMet_ReturnTrue)
+{
+    bool ret = RaRsHasCapability(RA_CAP_DRV_SHAREPOOL_NON_PIN, 1, 1);
+    EXPECT_EQ(ret, true);
+}
+
+TEST_F(RdmaAgent, RaHdcIsBroken_WithSocketClose_ReturnTrue)
+{
+    int val = -DRV_ERROR_SOCKET_CLOSE;
+    bool ret = RaHdcIsBroken(-DRV_ERROR_SOCKET_CLOSE);
+    EXPECT_EQ(ret, true);
+}
+
+TEST_F(RdmaAgent, RaHdcIsBroken_WithZero_ReturnFalse)
+{
+    bool ret = RaHdcIsBroken(0);
+    EXPECT_EQ(ret, false);
+}
+
+TEST_F(RdmaAgent, RaHdcIsBroken_WithNonSocketCloseError_ReturnFalse)
+{
+    bool ret = RaHdcIsBroken(DRV_ERROR_WAIT_TIMEOUT);
+    EXPECT_EQ(ret, false);
+}
+
+TEST_F(RdmaAgent, RaHdcIsBroken_WithPositiveOne_ReturnFalse)
+{
+    bool ret = RaHdcIsBroken(1);
+    EXPECT_EQ(ret, false);
+}

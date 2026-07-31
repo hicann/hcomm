@@ -193,7 +193,7 @@ HcclResult CcuTransport::StatusMachine()
     EXCEPTION_HANDLE_BEGIN
     Hccl::SocketStatus socketStatus = socket_->GetAsyncStatus();
     if (socketStatus == Hccl::SocketStatus::INIT || socketStatus == Hccl::SocketStatus::TIMEOUT) {
-        HCCL_ERROR("[CcuTransport][GetStatus]socket timeout or no link, please check");
+        HCCL_ERROR("[CcuTransport][GetStatus] socket timeout or no link, please check");
         return HcclResult::HCCL_E_INTERNAL;
     }
     
@@ -381,7 +381,7 @@ HcclResult CcuTransport::ConnInfoPack(Hccl::BinaryStream &binaryStream) const
     std::vector<char> dtoData{};
     CHK_RET(ccuConnection_->Serialize(dtoData));
     binaryStream << dtoData;
-    HCCL_INFO("[CcuTransport][%s] start pack connInfo, dtoData.size[%u]", __func__, dtoData.size());
+    HCCL_INFO("[CcuTransport][%s] start pack connInfo, dtoData.size[%zu]", __func__, dtoData.size());
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -432,7 +432,7 @@ HcclResult CcuTransport::HandshakeMsgUnpack(Hccl::BinaryStream &binaryStream)
     binaryStream >> rmtHandshakeMsg_;
 
     if (attr_.handshakeMsg.size() != rmtHandshakeMsg_.size()) {
-        HCCL_ERROR("handshakeMsg size=%u is not equal to rmt=%u",
+        HCCL_ERROR("handshakeMsg size=%zu is not equal to rmt=%zu",
             attr_.handshakeMsg.size(), rmtHandshakeMsg_.size());
         return HcclResult::HCCL_E_INTERNAL;
     }
@@ -698,7 +698,7 @@ HcclResult CcuTransport::GetRmtSignalAddrByIndex(uint32_t index, uint64_t &rmtCk
     uint64_t ckeOffsetCcumAddr{0};
     CHK_RET(GetRmtCkeByIndex(index, rmtCkeId));
     CHK_PRT_RET(CcuDevMgrImp::GetCkeOffsetCcumAddrById(devLogicId_, dieId_, rmtCkeId, ckeOffsetCcumAddr),
-        HCCL_ERROR("[CcuTransport][%s]Failed to get cke offset address. devLogicId = %d, dieId = %u.",
+        HCCL_ERROR("[CcuTransport][%s] Failed to get cke offset address. devLogicId = %d, dieId = %u.",
             __func__, devLogicId_, dieId_), HCCL_E_INTERNAL);
     uint64_t rmtResourceAddr = ccuConnection_->GetRmtCcuBufAddr();
     HCCL_DEBUG("[CcuTransport][%s] index[%u] rmtCcuBufAddr[0x%llx], ckeAddr[%u][0x%llx]",
@@ -725,7 +725,7 @@ HcclResult CcuTransport::GetRmtVarAddrByXnId(const uint32_t rmtXnId, uint64_t &r
 {
     uint64_t xnOffsetCcumAddr = 0;
     CHK_PRT_RET(CcuDevMgrImp::GetXnOffsetCcumAddrById(devLogicId_, dieId_, rmtXnId, xnOffsetCcumAddr),
-        HCCL_ERROR("[CcuTransport][%s]Failed to get xn offset address. devLogicId = %d, dieId = %u.",
+        HCCL_ERROR("[CcuTransport][%s] Failed to get xn offset address. devLogicId = %d, dieId = %u.",
             __func__, devLogicId_, dieId_), HCCL_E_INTERNAL);
     const uint64_t  rmtResourceAddr = ccuConnection_->GetRmtCcuBufAddr();
     HCCL_DEBUG("[CcuTransport][%s]rmtCcuBufAddr[0x%llx], xnAddr[%u][0x%llx]",
@@ -810,7 +810,7 @@ HcclResult CcuTransport::CheckSocketStatus()
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - startTime).count();
             HCCL_ERROR("[CcuTransport][%s] channel connect timeout after %lld sec, elapsed[%lld]ms, retryCount[%u]",
-                __func__, timeout, elapsed, retryCount);
+                __func__, timeout.count(), elapsed, retryCount);
             return HCCL_E_TIMEOUT;
         }
         EXCEPTION_HANDLE_END

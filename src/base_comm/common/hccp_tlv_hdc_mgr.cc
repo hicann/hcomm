@@ -50,7 +50,7 @@ static HcclResult HccpTlvInit(const uint32_t devPhyId, TlvHandle &tlvHandle)
     int32_t ret = RaTlvInit(&cfgInfo, &bufferSize, &tlvHandle);
     if (ret != 0 || tlvHandle == nullptr) {
         HCCL_ERROR("[Init][RaTlv]errNo[0x%016llx] ra tlv init fail. params: mode[%u]. return: ret[%d]", 
-                   HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), cfgInfo.nicPosition, ret);
+                   static_cast<unsigned long long>(HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK)), cfgInfo.nicPosition, ret);
         return HcclResult::HCCL_E_NETWORK;
     }
 
@@ -81,7 +81,7 @@ static HcclResult HccpTlvDeinit(const TlvHandle tlvHandle)
     int32_t ret = RaTlvDeinit(tlvHandle);
     if (ret != 0) {
         HCCL_ERROR("[DeInit][RaTlv]errNo[0x%016llx] ra tlv deinit fail. return: ret[%d]", 
-                   HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), ret);
+                   static_cast<unsigned long long>(HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK)), ret);
         return HcclResult::HCCL_E_NETWORK;
     }
 
