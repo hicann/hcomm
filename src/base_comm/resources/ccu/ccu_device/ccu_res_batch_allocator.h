@@ -20,6 +20,8 @@
 
 #include "ccu_res_specs.h"
 #include "ccu_dev_mgr_imp.h"
+#include "ccu_device_res.h"
+#include "ccu_res_desc.h"
 
 namespace hcomm {
 
@@ -31,6 +33,14 @@ struct BlockInfo {
     bool allocated{false};
 };
 
+struct CcuResBlockNums {
+    uint32_t loopNum{0};
+    uint32_t msNum{0};
+    uint32_t ckeNum{0};
+    uint32_t xnNum{0};
+    uint32_t gsaNum{0};
+};
+
 class CcuResBatchAllocator {
 public:
     static CcuResBatchAllocator& GetInstance(const int32_t deviceLogicId);
@@ -40,7 +50,10 @@ public:
     HcclResult AllocResHandle(const CcuResReq& resReq, CcuResHandle &resHandle);
     HcclResult ReleaseResHandle(const CcuResHandle& handle);
     HcclResult GetResource(const CcuResHandle& handle, CcuResRepository &ccuResRepo);
-
+    HcclResult QueryRemainRes(uint8_t dieId, ResType resType, uint32_t &remainNum) const;
+    // 获取指定 die 上可分配的块类型资源数量 = 预分配块数量 × CcuBlockResStrategy 对应块大小
+    // 仅支持 ResType::LOOP / MS / CKE / XN / GSA
+    HcclResult GetAllocatableMaxBlockResNum(ResType resType, uint8_t dieId, uint32_t &num) const;
 private:
     class CcuMissionMgr {
     public:
@@ -53,7 +66,8 @@ private:
         HcclResult Alloc(const uintptr_t handleKey, const MissionReq &missionReq,
             MissionResInfo &missionInfos);
         void Release(MissionResInfo &missionInfos);
-    
+        const std::vector<BlockInfo>& GetBlocks() const { return blocks_; }
+
     private:
         uint32_t stragtegy_{0};
         std::array<bool, CCU_MAX_IODIE_NUM> dieEnableFlags_;
@@ -78,17 +92,19 @@ private:
     HcclResult ReleaseResource(std::unique_ptr<CcuResRepository>& resRepoPtr);
     void ReleaseBlockResource(std::unique_ptr<CcuResRepository> &resRepoPtr);
     HcclResult ReleaseNonBlockTypeRes(std::unique_ptr<CcuResRepository>& resRepoPtr) const;
-
+    // 根据 resType 解析对应的 blocks 指针，用于 QueryRemainRes 降低圈复杂度
+    HcclResult ResolveBlocksPtr(uint8_t dieId, ResType resType, const std::vector<BlockInfo>*& blocksPtr) const;
 private:
-    std::mutex innerMutex_;
+    mutable std::mutex innerMutex_;
     int32_t devLogicId_{0};
     bool initFlag_{false};
     std::array<bool, CCU_MAX_IODIE_NUM> dieEnableFlags_{};
-    std::array<CcuBlockResStrategy, CCU_MAX_IODIE_NUM> resStrategys_{};
-    std::array<std::vector<std::vector<BlockInfo>>, CCU_MAX_IODIE_NUM> resBlocks_{};
+    std::array<CcuBlockResStrategy, CCU_MAX_IODIE_NUM> resStrategies_{};
+    std::array<std::unordered_map<ResType, std::vector<BlockInfo>, std::EnumClassHash>, CCU_MAX_IODIE_NUM> resBlocks_{};
     // 键值为CcuResRepository裸指针转换的uintptr_t
     std::unordered_map<uintptr_t, std::unique_ptr<CcuResRepository>> handleMap_{};
     CcuMissionMgr missionMgr_{};
+    CcuResBlockNums maxResBlockNums_{};
 };
 
 }; // namespace hcomm

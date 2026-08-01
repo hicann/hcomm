@@ -1,7 +1,11 @@
-/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
- * Description: ccu rep translator implement file
- * Create: 2025-02-20
+/**
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
  */
 
 #include "ccu_rep_translator_v1.h"
@@ -146,7 +150,7 @@ uint32_t CcuRepTranslator::GetInstrNum(const int32_t devLogicId)
 
 CcuResReq CcuRepTranslator::GetResReq(const int32_t devLogicId, uint8_t dieId)
 {
-    // xn 资源统一从 continuousXn 池子申请，离散 xn 帐户已废弃
+    // 申请离散 xn 资源
     // 需要申请若干xn、gsa、cke设置为固定值用于通用操作
     CcuVersion tempCcuVersion = CcuVersion::CCU_INVALID;
     HcclResult ret = CcuDevMgrImp::GetCcuVersion(devLogicId, tempCcuVersion);
@@ -157,7 +161,7 @@ CcuResReq CcuRepTranslator::GetResReq(const int32_t devLogicId, uint8_t dieId)
     CcuResReq resReq;
     int varNum = XN_NUM;
     int gsaNum = tempCcuVersion == CcuVersion::CCU_V1 ? GSA_NUM : 0;
-    resReq.continuousXnReq[dieId] = varNum;
+    resReq.xnReq[dieId] = varNum;
     resReq.gsaReq[dieId] = gsaNum;
     resReq.ckeReq[dieId] = CKE_NUM;
     return resReq;
@@ -168,13 +172,13 @@ void CcuRepTranslator::GetRes(CcuRepResource &res)
     int varNum = XN_NUM;
     int gsaNum = ccuVersion == CcuVersion::CCU_V1 ? GSA_NUM : 0;
     for (int i = 0; i < varNum; i++) {
-        res.continuousVariable[transDep.dieId].push_back(var[i]);
+        res.variable[transDep.dieId].push_back(var[i]);
     }
     for (int i = 0; i < gsaNum; i++) {
         res.address[transDep.dieId].push_back(addr[i]);
     }
     for (int i = 0; i < CKE_NUM; i++) {
-        res.localNotify[transDep.dieId].push_back(signal[i]);
+        res.completedEvent[transDep.dieId].push_back(signal[i]);
     }
 }
 

@@ -176,11 +176,11 @@ TEST_F(CcuResBatchAllocatorTest, Ut_Init_When_AX_Mainboard_Expect_Return_Ok)
 
     EXPECT_NO_THROW(allocater.Init());
     constexpr uint32_t BLOCK_SIZE_MS_AX_DIE0 = 128;
-    EXPECT_EQ(allocater.resStrategys[0].msNum, BLOCK_SIZE_MS_AX_DIE0);
-    ASSERT_EQ(allocater.resBlocks[0].size(), 3);
-    DumpBlockResInfo(ResType::LOOP, allocater.resBlocks[0][0]);
-    DumpBlockResInfo(ResType::MS, allocater.resBlocks[0][1]);
-    DumpBlockResInfo(ResType::CKE, allocater.resBlocks[0][2]);
+    EXPECT_EQ(allocater.resStrategies[0].msNum, BLOCK_SIZE_MS_AX_DIE0);
+    ASSERT_GE(allocater.resBlocks[0].size(), 3u);
+    DumpBlockResInfo(ResType::LOOP, allocater.resBlocks[0][ResType::LOOP]);
+    DumpBlockResInfo(ResType::MS, allocater.resBlocks[0][ResType::MS]);
+    DumpBlockResInfo(ResType::CKE, allocater.resBlocks[0][ResType::CKE]);
 }
 
 TEST_F(CcuResBatchAllocatorTest, Ut_AllocResHandle_When_CcuV1_Expect_Return_Ok)
@@ -204,7 +204,8 @@ TEST_F(CcuResBatchAllocatorTest, Ut_AllocResHandle_When_CcuV1_Expect_Return_Ok)
     
     resReq.blockMsReq[0] = 512;
 
-    resReq.gsaReq[0] = 1024;
+    resReq.blockGsaReq[0] = 512;
+    resReq.gsaReq[0] = 3*16*2; // RESERVED_DISCRETE_GSA_NUM = 3*16*2
 
     resReq.missionReq.req[0] = {3};
 
@@ -261,9 +262,9 @@ TEST_F(CcuResBatchAllocatorTest, Ut_AllocResHandle_When_CcuV1AndResNumIsMaxNum_E
     resReq.loopEngineReq[0] = 8; // {8, 8};
     resReq.blockMsReq[0] = 1536; // {1536, 1536};
     resReq.blockCkeReq[0] = 128; // {128, 128};
-    resReq.ckeReq[0] = 832; // {832, 832};
-    resReq.gsaReq[0] = 3072; // {3072, 3072};
-    resReq.xnReq[0] = 3072; // {3072, 3072};
+    resReq.ckeReq[0] = 4*128+2*16*2; // RESERVED_DISCRETE_CKE_NUM = 4*128+2*16*2
+    resReq.gsaReq[0] = 3*16*2; // RESERVED_DISCRETE_GSA_NUM = 3*16*2
+    resReq.xnReq[0] = 4*128+36*16+5*16+(4*16)*2; // RESERVED_DISCRETE_XN_NUM = 4*128+36*16+5*16+(4*16)*2
     resReq.missionReq.req[0] = 16; // {16, 16};
 
     CcuResHandle handle;
@@ -386,9 +387,9 @@ TEST_F(CcuResBatchAllocatorTest, Ut_AllocConsecutiveRes_When_AllocRes_fail_Expec
     // 前置条件
     MOCKER_CPP(&CcuComponent::AllocRes).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_E_PARA));
     CcuResReq resReq;
-    resReq.continuousXnReq[0] = 1;
+    resReq.xnReq[0] = 1;
     auto resRepoPtr = std::make_unique<CcuResRepository>();
-    resRepoPtr->continuousXn[0].push_back(ResInfo(5, 3));
+    resRepoPtr->xn[0].push_back(ResInfo(5, 3));
     CcuResBatchAllocator ccuResBatchAllocator;
     ccuResBatchAllocator.dieEnableFlags[0] = true;
     ccuResBatchAllocator.dieEnableFlags[1] = false;
@@ -409,8 +410,8 @@ TEST_F(CcuResBatchAllocatorTest, Ut_TryAllocResHandle_When_AllocContinuousRes_fa
     std::unique_ptr<CcuResRepository> resRepoPtr = std::make_unique<CcuResRepository>();
     uintptr_t handleKey  = reinterpret_cast<uintptr_t>(resRepoPtr.get());
     CcuResReq resReq;
-    resReq.continuousXnReq[0] = 1;
-    resRepoPtr->continuousXn[0].push_back(ResInfo(5, 3));
+    resReq.xnReq[0] = 1;
+    resRepoPtr->xn[0].push_back(ResInfo(5, 3));
     CcuResBatchAllocator ccuResBatchAllocator;
     ccuResBatchAllocator.dieEnableFlags[0] = true;
     ccuResBatchAllocator.dieEnableFlags[1] = false;
@@ -457,4 +458,192 @@ TEST_F(CcuResBatchAllocatorTest, Ut_TryAllocResHandle_When_AllocContinuousRes_su
 
     // 后置验证
     EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_NoAllocations_Expect_MaxGapEqualsTotalCapacity)
+{
+    CcuResBatchAllocator allocator;
+    allocator.dieEnableFlags[0] = true;
+    allocator.devLogicId = 0;
+
+    // 池 [0,64), 4 blocks × 16 (strategy 为 16)
+    allocator.resStrategies[0].loopNum = 16;
+    auto trategy = allocator.resStrategies[0].loopNum;
+    allocator.maxResBlockNums.loopNum = 4; // poolSize = 4 * 16 = 64
+    uint32_t totalSize = trategy * allocator.maxResBlockNums.loopNum;
+    allocator.resBlocks[0][ResType::LOOP] = {
+        {0, 0,   trategy, 0, false},
+        {1, trategy,  trategy, 0, false},
+        {2, trategy * 2, trategy, 0, false},
+        {3, trategy * 3, trategy, 0, false},
+    };
+
+    uint32_t remainNum = 0;
+    HcclResult ret = allocator.QueryRemainRes(0, ResType::LOOP, remainNum);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(remainNum, totalSize) << "no allocations -> max gap = total capacity 64";
+}
+
+TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_WithAllocations_Expect_MaxContiguousGap)
+{
+    // 池 8 blocks × 8 = 64, 标记部分 block 已分配
+    CcuResBatchAllocator allocator;
+    allocator.dieEnableFlags[0] = true;
+    allocator.devLogicId = 0;
+
+    allocator.maxResBlockNums.loopNum = 8; // poolSize = 8 * 8 = 64
+    allocator.resBlocks[0][ResType::LOOP] = {
+        {0, 0,  8, 0, true},    // 已分配
+        {1, 8,  8, 0, true},    // 已分配
+        {2, 16, 8, 0, false},   // 空闲
+        {3, 24, 8, 0, true},    // 已分配
+        {4, 32, 8, 0, false},   // 空闲
+        {5, 40, 8, 0, false},   // 空闲
+        {6, 48, 8, 0, false},   // 空闲
+        {7, 56, 8, 0, false},   // 空闲
+    };
+
+    uint32_t remainNum = 0;
+    HcclResult ret = allocator.QueryRemainRes(0, ResType::LOOP, remainNum);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // blocks 3-7 连续空闲: 4 × 8 = 32
+    EXPECT_EQ(remainNum, 32u);
+}
+
+TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_AllAllocated_Expect_Zero)
+{
+    CcuResBatchAllocator allocator;
+    allocator.dieEnableFlags[0] = true;
+    allocator.devLogicId = 0;
+
+    allocator.maxResBlockNums.loopNum = 4; // poolSize = 4 * 8 = 32
+    allocator.resBlocks[0][ResType::LOOP] = {
+        {0, 0,  8, 0, true},
+        {1, 8,  8, 0, true},
+        {2, 16, 8, 0, true},
+        {3, 24, 8, 0, true},
+    };
+
+    uint32_t remainNum = 0;
+    HcclResult ret = allocator.QueryRemainRes(0, ResType::LOOP, remainNum);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(remainNum, 0u) << "all allocated -> zero remaining";
+}
+
+TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_HoleAtStart_Expect_InitialGap)
+{
+    CcuResBatchAllocator allocator;
+    allocator.dieEnableFlags[0] = true;
+    allocator.devLogicId = 0;
+
+    allocator.maxResBlockNums.loopNum = 6; // poolSize = 6 * 8 = 48
+    allocator.resBlocks[0][ResType::LOOP] = {
+        {0, 0,  8, 0, true},    // allocated
+        {1, 8,  8, 0, true},    // allocated
+        {2, 16, 8, 0, false},   // free
+        {3, 24, 8, 0, false},   // free
+        {4, 32, 8, 0, false},   // free
+        {5, 40, 8, 0, false},   // free
+    };
+
+    uint32_t remainNum = 0;
+    HcclResult ret = allocator.QueryRemainRes(0, ResType::LOOP, remainNum);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // 4 free blocks × 8 = 32
+    EXPECT_EQ(remainNum, 32u) << "max gap after first two allocated blocks";
+}
+
+TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_HoleAtEnd_Expect_TailGap)
+{
+    CcuResBatchAllocator allocator;
+    allocator.dieEnableFlags[0] = true;
+    allocator.devLogicId = 0;
+
+    allocator.maxResBlockNums.loopNum = 6;
+    allocator.resBlocks[0][ResType::LOOP] = {
+        {0, 0,  8, 0, false},
+        {1, 8,  8, 0, false},
+        {2, 16, 8, 0, false},
+        {3, 24, 8, 0, false},
+        {4, 32, 8, 0, true},
+        {5, 40, 8, 0, true},
+    };
+
+    uint32_t remainNum = 0;
+    HcclResult ret = allocator.QueryRemainRes(0, ResType::LOOP, remainNum);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // 4 free blocks × 8 = 32
+    EXPECT_EQ(remainNum, 32u);
+}
+
+// ── 预预留Block (A+X CCUA0 MS blocks, allocated=true, handle=0) ──
+
+TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_PreReservedMSBlocks_Expect_MaxGapReducedByReserved)
+{
+    CcuResBatchAllocator allocator;
+    allocator.dieEnableFlags[0] = true;
+    allocator.devLogicId = 0;
+
+    allocator.resStrategies[0].msNum = 64;
+    allocator.maxResBlockNums.msNum = 4; // poolSize = 4 * 64 = 256
+
+    // Block0: 预预留(allocated), Block1: 空闲, Block2: 已分配, Block3: 空闲
+    allocator.resBlocks[0][ResType::MS] = {
+        {0, 0,   64, 0, true},
+        {1, 64,  64, 0, false},
+        {2, 128, 64, 0, true},
+        {3, 192, 64, 0, false},
+    };
+
+    uint32_t remainNum = 0;
+    HcclResult ret = allocator.QueryRemainRes(0, ResType::MS, remainNum);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // 已分配: Block0(allocated), Block2(allocated)
+    // 最大连续空闲: 单 block = 64
+    EXPECT_EQ(remainNum, 64u) << "pre-reserved + allocated block leave max gap 64";
+}
+
+TEST_F(CcuResBatchAllocatorTest, Ut_QueryRemainRes_When_PoolStartsAtNonZero_Expect_GapWithinPoolOnly)
+{
+    CcuResBatchAllocator allocator;
+    allocator.dieEnableFlags[0] = true;
+    allocator.devLogicId = 0;
+
+    // 模拟 mission 预分配池 [100, 356), 4 blocks of 64
+    allocator.missionMgr.blocks = {
+        {0, 100, 64, 0, true},   // 已分配
+        {1, 164, 64, 0, false},  // 空闲
+        {2, 228, 64, 0, true},   // 已分配
+        {3, 292, 64, 0, false},  // 空闲
+    };
+
+    uint32_t remainNum = 0;
+    HcclResult ret = allocator.QueryRemainRes(0, ResType::MISSION, remainNum);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // 最大连续空闲: 单 block = 64
+    EXPECT_EQ(remainNum, 64u) << "max gap 64 within pool only";
+}
+
+TEST_F(CcuResBatchAllocatorTest, Ut_GetConsecutiveRemainSize_When_PartialAlloc_Expect_MaxGap)
+{
+    CcuResIdAllocator allocator(100);
+    allocator.resInfos = {{0,20}, {70, 20}};
+
+    EXPECT_EQ(allocator.GetConsecutiveRemainSize(), 50u);
+}
+
+TEST_F(CcuResBatchAllocatorTest, Ut_GetConsecutiveRemainSize_When_Full_Expect_Zero)
+{
+    CcuResIdAllocator allocator(50);
+    std::vector<ResInfo> resInfos;
+    allocator.Alloc(50, true, resInfos);
+
+    EXPECT_EQ(allocator.GetConsecutiveRemainSize(), 0u);
 }

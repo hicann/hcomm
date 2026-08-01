@@ -17,4 +17,5 @@
 - [HcclEngineCtxCopy](HcclEngineCtxCopy.md)
 - [HcclEngineCtxDestroy](HcclEngineCtxDestroy.md)
 - [HcclCommMemReg](HcclCommMemReg.md)
+- [HcclCommAssignCcuIns](HcclCommAssignCcuIns.md)
 - [HcclCommQueryCcuIns](HcclCommQueryCcuIns.md)

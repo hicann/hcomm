@@ -17,6 +17,7 @@
 #undef private
 #include "hccl_comm_pub.h"
 #include "llt_hccl_stub_rank_graph.h"
+#include "ccu_res.h"
 
 using namespace hccl;
 
@@ -67,6 +68,7 @@ protected:
         MOCKER_CPP(&Hccl::SocketManager::GetConnectedSocket).stubs().with(mockcpp::any()).will(returnValue((Hccl::Socket*)0xab));
         MOCKER_CPP(&hccl::CommMems::GetTagMemoryHandles).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
         MOCKER_CPP(&hcomm::EndpointMgr::RegisterMemory).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+        MOCKER(HcommCcuInsCreate).stubs().with(mockcpp::any()).will(returnValue(CcuResult::CCU_SUCCESS));
         MOCKER(HcommCcuInsCreateLegacy).stubs().with(mockcpp::any()).will(returnValue(CcuResult::CCU_SUCCESS));
         MOCKER_CPP(&hccl::MyRank::TryInitCcuInstance).stubs().will(returnValue(HCCL_SUCCESS));
     }
@@ -77,7 +79,7 @@ protected:
     uint32_t CCU_SCHED_MODE = 6;
     Hccl::RankIpPortMapPtr rankIpPortMap;
     aclrtBinHandle binHandle;
-    CommConfig config;
+    CommConfig config{"my_rank_ut"};
     ManagerCallbacks callbacks;
     void* rankGraphPtr = (void*)0x114514;
     std::shared_ptr<RankGraph> rankGraph;

@@ -40,6 +40,8 @@
 #include "exchange_info_mgr.h"
 
 #include "ccu_types.h"
+#include "ccu_drv_handle.h"
+#include "dev_type.h"
 
 namespace hccl {
 
@@ -64,6 +66,9 @@ public:
     }
     CcuInsHandle GetCcuInstance() const {
         return ccuInsHandle_;
+    }
+    void SetCcuInstance(CcuInsHandle ccuInsHandle) {
+        ccuInsHandle_ = ccuInsHandle;
     }
 
     CollCommConfigConsistency &GetCollCommConfigConsistency();
@@ -103,7 +108,12 @@ private:
         const EndpointDesc &remoteEndpointDesc, uint32_t &listenPort, HcommChannelDesc &hcommDesc);
     HcclResult GetLocalTlsStatus(Hccl::TlsStatus &tlsStatus) const;
 
+    HcclResult TryInitCcuInstanceLegacy();
     HcclResult TryInitCcuInstance();
+    HcclResult ReserveCcuMsCommOrFallback();
+    HcclResult TryInitCcuInstanceOnDemand();
+    void ReconcileCcuMsCommReservation(HcclResult initRet);
+    void ReleaseCcuMsCommReservation();
     HcclResult ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc) const;
     HcclResult DestroyNewChannels(CommEngine engine, const HcclChannelDesc* channelDescs);
     // 获取port
@@ -141,6 +151,10 @@ private:
 
     CollCommConfigConsistency collCommConfigConsistency_;
     ExchangeInfoMgr exchangeInfoMgr_;
+    std::shared_ptr<hcomm::CcuDrvHandle> ccuDrvHandle_{};
+    bool useCcuResStaticAlloc_{false}; // HCCL版本不支持CCU资源按需申请
+    bool ccuMsCommReserved_{false};
+    Hccl::HcclMainboardId mainBoardType_{Hccl::HcclMainboardId::MAINBOARD_OTHERS};
 };
 
 } // namespace hccl

@@ -27,7 +27,7 @@
             if (ccuRet == static_cast<int32_t>(HcclResult::HCCL_E_AGAIN) || ccuRet == CCU_E_DRV_BUSY) {                \
                 HCCL_WARNING("[%s]call trace: ccuRet -> %d", __func__, ccuRet); \
             } else if (ccuRet == CCU_E_UNAVAIL) { \
-                HCCL_WARNING("[%s]call trace: ccuRet resources are not unavailable -> %d", \
+                HCCL_WARNING("[%s]call trace: ccuRet resources are unavailable -> %d", \
                     __func__, ccuRet); \
             } else {                                  \
                 HCCL_ERROR("[%s]call trace: ccuRet -> %d", __func__, ccuRet); \

@@ -33,9 +33,13 @@ public:
     HcclResult Init();
     HcclResult Deinit();
 
-    CcuResult Register(CcuResPack &resPack, const char *kernelFuncName,
+    CcuResult Register(CcuResPack &resPack, uint32_t dieId, const char *kernelFuncName,
         const void *kernelFunc, const void **kernelArgs, const uint32_t argNum,
         CcuKernelHandle &kernelHandle);
+
+    CcuResult GetKernelResourceRequest(uint32_t dieId, const char *kernelFuncName,
+        const void *kernelFunc, const void **kernelArgs, uint32_t argNum,
+        CcuResReq &resReq, uint32_t &instrCount);
 
     CcuResult Translate(const std::vector<CcuKernelHandle> &kernelHandles);
 
@@ -57,6 +61,8 @@ private:
     };
 
 private:
+    CcuResult BuildKernel(uint32_t dieId, const char *kernelFuncName,
+        const void *kernelFunc, const void **kernelArgs, uint32_t argNum);
     CcuResult PrepareConstValueResources();
     CcuResult AllocRes(CcuResPack &resPack);
 

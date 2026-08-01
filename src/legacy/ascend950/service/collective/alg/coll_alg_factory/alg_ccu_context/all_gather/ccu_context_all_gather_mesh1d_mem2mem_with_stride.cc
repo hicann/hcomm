@@ -71,6 +71,7 @@ void CcuContextAllGatherMesh1DMem2MemWithStride::InitResource()
     tmpRepeatNum_                 = CreateVariable();
     normalSliceSize_              = CreateVariable();
     lastSliceSize_                = CreateVariable();
+    isInputOutputEqual_           = CreateVariable();
     repeatTimeflag_               = CreateVariable();
     repeatTimeflag_               = 0;
     constVar1_                    = CreateVariable();

@@ -12,6 +12,7 @@
 #define CCU_PRIMITIVES_H
 
 #include "ccu_types.h"
+#include "ccu_res_defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,31 +26,13 @@ typedef enum {
     CCU_RESERVED = 255 /**< reserved */
 } CcuInstanceType;
 
-// 以下接口当前平台层实现预埋，后续对外开放
-// 该数据结构当前内部使用，未对外
-struct CcuResDesc {
-    uint32_t dieId;
-    CcuInstanceType insType;
-};
-
 /**
- * @brief 启用CCU特性，初始化CCU平台层
- *
- * @param resDesc CCU资源描述
- * @param descNum CCU资源描述数量
- * @param insHandle CCU实例句柄
- * @return CcuResult 执行结果状态码，CCU_SUCCESS表示成功，其他值表示失败
+ * @brief 创建ccu实例旧接口，兼容hccl旧版本
+ * @param[in] insType CCU实例类型。
+ * @param[out] ccuInsHandle 创建成功后返回的 CCU 实例句柄，不可为 nullptr。
+ * @return CcuResult。
  */
-extern CcuResult HcommCcuInsCreateLegacy(const void *resDesc, uint32_t descNum, CcuInsHandle *insHandle);
-
-/**
- * @brief 关闭CCU特性，解初始化CCU平台层
- *
- * @param insHandle CCU实例句柄
- * @param curDeviceLogicId 当前设备逻辑ID
- * @return CcuResult 执行结果状态码，CCU_SUCCESS表示成功，其他值表示失败
- */
-extern CcuResult HcommCcuInsDestroyLegacy(CcuInsHandle insHandle, int32_t curDeviceLogicId);
+extern CcuResult HcommCcuInsCreateLegacy(const CcuInstanceType insType, CcuInsHandle *ccuInsHandle);
 
 #ifdef __cplusplus
 }

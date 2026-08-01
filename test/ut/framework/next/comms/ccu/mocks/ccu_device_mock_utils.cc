@@ -32,11 +32,8 @@
 #undef protected
 #undef private
 
-HcclResult MockCcuResourcesDefault(int32_t devLogicId, hcomm::CcuVersion ccuVersion)
+HcclResult InitMockCcuResourcesForDevice(int32_t devLogicId, hcomm::CcuVersion ccuVersion)
 {
-    MockCcuDrvHandle();
-    MockCcuDevMgr();
-
     auto &ccuResSpecs = hcomm::CcuResSpecifications::GetInstance(devLogicId);
     ccuResSpecs.initFlag_ = true;
     ccuResSpecs.ccuVersion_ = ccuVersion;
@@ -71,6 +68,13 @@ HcclResult MockCcuResourcesDefault(int32_t devLogicId, hcomm::CcuVersion ccuVers
     CHK_RET(hcomm::CcuResBatchAllocator::GetInstance(devLogicId).Init());
 
     return HcclResult::HCCL_SUCCESS;
+}
+
+HcclResult MockCcuResourcesDefault(int32_t devLogicId, hcomm::CcuVersion ccuVersion)
+{
+    MockCcuDrvHandle();
+    MockCcuDevMgr();
+    return InitMockCcuResourcesForDevice(devLogicId, ccuVersion);
 }
 
 static int RaGetDevEidInfoListStub(struct RaInfo info, struct HccpDevEidInfo info_list[],

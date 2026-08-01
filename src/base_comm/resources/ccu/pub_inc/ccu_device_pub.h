@@ -26,8 +26,13 @@
 
 // 支持新老通信域混跑，引入legacy数据结构
 #include "unified_platform/pub_inc/ccu/ccu_dev_mgr.h"
+#include "dev_type.h"
 
 namespace hcomm {
+
+// CcuAllocResHandleByResDescs 仅以 const CcuResDesc* 形式使用，前向声明即可，
+// 避免此处包含 ccu_res_desc.h（其会引入 ccu_dev_mgr_imp.h，造成循环包含）。
+class CcuResDesc;
 
 using CcuResHandle = void *;
 
@@ -97,7 +102,7 @@ CcuResult CcuInitFeature(const int32_t devLogicId, std::shared_ptr<CcuDrvHandle>
 CcuResult CcuDeinitFeature(const int32_t devLogicId);
 
 /**
- * @brief 申请批量ccu channel资源
+ * @brief 获取指定die是否启用
  *
  * @param deviceLogicId device逻辑ID
  * @param dieId ccu channel 所属的 IO Die 编号
@@ -106,6 +111,45 @@ CcuResult CcuDeinitFeature(const int32_t devLogicId);
  * @note dieId越界时返回HCCL_E_PARA
  */
 CcuResult CcuGetDieEnableInfo(int32_t deviceLogicId, uint8_t dieId, bool &enableFlag);
+
+/**
+ * @brief 查询指定 ioDie 上各类资源总量，按block分的资源类型（LoopEngine、Ms、Cke）查询的是可以分配的总量（块大小*块总数）
+ *
+ * @param deviceLogicId 设备逻辑ID
+ * @param dieId ioDie ID
+ * @param num 出参，返回该 die 上对应资源类型的总量
+ * @return CcuResult
+ * @note dieId 越界或 die 未启用时返回错误
+ */
+CcuResult CcuGetLoopEngineNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num);
+CcuResult CcuGetMsNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num);
+CcuResult CcuGetCkeNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num);
+CcuResult CcuGetXnNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num);
+CcuResult CcuGetGsaNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num);
+CcuResult CcuGetInstructionNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num);
+CcuResult CcuGetMissionNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num);
+
+/**
+ * @brief 获取指定device的主板类型
+ *
+ * @param deviceLogicId device逻辑ID
+ * @param hcclMainboardId 出参，返回该device的主板类型
+ * @return HcclResult 返回HcclResult类型的结果
+ */
+HcclResult CcuGetMainboardType(uint32_t deviceLogicId, Hccl::HcclMainboardId &hcclMainboardId);
+
+/**
+ * @brief 基于资源描述符数组申请批量资源
+ *
+ * @param deviceLogicId 设备逻辑ID
+ * @param descs 资源描述符指针数组（每个描述符携带 dieId 及各资源数量）
+ * @param descNum 资源描述符数量
+ * @param resHandle 返回的CCU批量资源句柄
+ * @return HcclResult 返回HcclResult类型的结果
+ * @note 资源不足时返回HCCL_E_UNAVIL，其余非HCCL_SUCCESS结果属于错误
+ */
+CcuResult CcuAllocResHandleByResDescs(int32_t deviceLogicId,
+    const CcuResDesc *descs[], uint32_t descNum, CcuResHandle &resHandle);
 
 /**
  * @brief 按加速引擎模式申请批量资源

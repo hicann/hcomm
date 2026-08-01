@@ -317,7 +317,7 @@ namespace hccl
     }
 
     HcclResult hcclComm::InitCollComm(void* commV2, void* rankGraph, uint32_t userRank,
-        HcclMem cclBuffer, const std::string &commName, HcclCommConfig *config, CollCommInitMode initMode) {
+        HcclMem cclBuffer, const std::string &commName, const HcclCommConfig *config, CollCommInitMode initMode) {
         // 不校验config，为空时配置默认加速模式
 
         // aicpu侧初始化状态的回调函数
@@ -416,9 +416,9 @@ namespace hccl
         cclBuffer.size = static_cast<uint64_t>(cclBufferSize);
         cclBuffer.addr = cclBufferAddr;
         cclBuffer.type = HcclMemType::HCCL_MEM_TYPE_DEVICE;
-        constexpr HcclCommConfig* config = nullptr;
+        constexpr const HcclCommConfig* config = nullptr;
 
-        ret = InitCollComm(nullptr, rankGraphV1, userRank, cclBuffer, commName, const_cast<HcclCommConfig*>(config),
+        ret = InitCollComm(nullptr, rankGraphV1, userRank, cclBuffer, commName, config,
                            CollCommInitMode::simpleMode);
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR("[%s] InitCollComm failed, comm[%s], ret=%d", __func__, commName.c_str(), ret);

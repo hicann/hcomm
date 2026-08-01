@@ -61,18 +61,19 @@ uint16_t CcuRepFuncBlock::GetCallLayer() const
 void CcuRepFuncBlock::DefineInArg(const Variable &var)
 {
     inArgCount++;
-    if (inArgCount > FUNC_ARG_MAX) {
-        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_ARG_MAX);
+    if (inArgCount > FUNC_IN_MAX) {
+        HCCL_ERROR("[%s]CcuFunc Max ArgCount = %u, Current ArgCount = %u", __func__, FUNC_IN_MAX, inArgCount);
+        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_IN_MAX);
     }
     inArgs.push_back(CcuRepArg(var));
-    HCCL_INFO("Define Input Arg: Index[%u], Type[Variable] Id[%u]", inArgs.size(), var.Id());
+    HCCL_INFO("[%s]Define Input Arg: Index[%u], Type[Variable] Id[%u]", __func__, inArgs.size(), var.Id());
 }
 
 void CcuRepFuncBlock::DefineOutArg(const Variable &var)
 {
     outArgCount++;
-    if (outArgCount > FUNC_ARG_MAX) {
-        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_ARG_MAX);
+    if (outArgCount > FUNC_OUT_MAX) {
+        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_OUT_MAX);
     }
     outArgs.push_back(CcuRepArg(var));
     HCCL_INFO("Define Output Arg: Index[%u], Type[Variable] Id[%u]", outArgs.size(), var.Id());
@@ -81,11 +82,12 @@ void CcuRepFuncBlock::DefineOutArg(const Variable &var)
 void CcuRepFuncBlock::DefineInArg(const std::vector<Variable> &varList)
 {
     inArgCount += varList.size();
-    if (inArgCount > FUNC_ARG_MAX) {
-        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_ARG_MAX);
+    if (inArgCount > FUNC_IN_MAX) {
+        HCCL_ERROR("[%s]CcuFunc Max ArgCount = %u, Current ArgCount = %u", __func__, FUNC_IN_MAX, inArgCount);
+        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_IN_MAX);
     }
     inArgs.push_back(CcuRepArg(varList));
-    HCCL_INFO("Define Input Arg: Index[%u], Type[Variable List]: ", inArgs.size());
+    HCCL_INFO("[%s]Define Input Arg: Index[%u], Type[Variable List]: ", __func__, inArgs.size());
     for (uint32_t index = 0; index < varList.size(); index++) {
         HCCL_INFO("    Index[%u].Id[%u]", index, varList[index].Id());
     }
@@ -94,8 +96,8 @@ void CcuRepFuncBlock::DefineInArg(const std::vector<Variable> &varList)
 void CcuRepFuncBlock::DefineOutArg(const std::vector<Variable> &varList)
 {
     outArgCount += varList.size();
-    if (outArgCount > FUNC_ARG_MAX) {
-        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_ARG_MAX);
+    if (outArgCount > FUNC_OUT_MAX) {
+        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_OUT_MAX);
     }
     outArgs.push_back(CcuRepArg(varList));
     HCCL_INFO("Define Output Arg: Index[%u], Type[Variable List]: ", outArgs.size());

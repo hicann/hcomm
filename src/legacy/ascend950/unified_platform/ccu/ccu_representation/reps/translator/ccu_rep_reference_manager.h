@@ -22,8 +22,9 @@
 namespace Hccl {
 namespace CcuRep {
 
-constexpr uint16_t FUNC_ARG_MAX            = 32;
-constexpr uint16_t FUNC_NEST_MAX           = 8;
+constexpr uint16_t FUNC_IN_MAX             = 32;
+constexpr uint16_t FUNC_OUT_MAX            = 1;
+constexpr uint16_t FUNC_NEST_MAX           = 1;
 constexpr uint16_t FUNC_CALL_LAYER_INVALID = 0xFFFF;
 
 class CcuRepReferenceManager {

@@ -28,6 +28,14 @@ struct BlockInfo {
     bool allocated{false};
 };
 
+struct CcuResBlockNums {
+    uint32_t loopNum{0};
+    uint32_t msNum{0};
+    uint32_t ckeNum{0};
+    uint32_t xnNum{0};
+    uint32_t gsaNum{0};
+};
+
 class CcuResBatchAllocator {
 public:
     CcuResBatchAllocator(const CcuResBatchAllocator &that) = delete;
@@ -41,6 +49,10 @@ public:
     HcclResult AllocResHandle(const CcuResReq& resReq, CcuResHandle &resHandle);
     HcclResult ReleaseResHandle(const CcuResHandle& handle);
     HcclResult GetResource(const CcuResHandle& handle, CcuResRepository &ccuResRepo);
+    HcclResult QueryRemainRes(uint8_t dieId, ResType resType, uint32_t &remainNum) const;
+    // 获取指定 die 上可分配的块类型资源数量 = 预分配块数量 × CcuBlockResStrategy 对应块大小
+    // 仅支持 ResType::LOOP / MS / CKE / XN / GSA
+    HcclResult GetAllocatableMaxBlockResNum(ResType resType, uint8_t dieId, uint32_t &num) const;
 private:
     class CcuMissionMgr {
     public:
@@ -53,7 +65,8 @@ private:
         HcclResult Alloc(const uintptr_t handleKey, const MissionReq &missionReq,
             MissionResInfo &missionInfos);
         void Release(MissionResInfo &missionInfos);
-    
+        const std::vector<BlockInfo>& GetBlocks() const { return blocks; }
+
     private:
         uint32_t stragtegy{0};
         std::array<bool, MAX_CCU_IODIE_NUM> dieEnableFlags;
@@ -63,17 +76,18 @@ private:
     // 键值为CcuResRepository裸指针转换的uintptr_t
     std::unordered_map<uintptr_t, std::unique_ptr<CcuResRepository>> handleMap;
     CcuMissionMgr missionMgr;
+    CcuResBlockNums maxResBlockNums{};
     
     int32_t devLogicId{0};
     std::array<bool, MAX_CCU_IODIE_NUM> dieEnableFlags;
-    std::array<CcuBlockResStrategy, MAX_CCU_IODIE_NUM> resStrategys;
+    std::array<CcuBlockResStrategy, MAX_CCU_IODIE_NUM> resStrategies;
     bool preAllocated{false};
-    std::array<std::vector<std::vector<BlockInfo>>, MAX_CCU_IODIE_NUM> resBlocks;
-    std::mutex innerMutex;
+    std::array<std::unordered_map<ResType, std::vector<BlockInfo>, std::EnumClassHash>, MAX_CCU_IODIE_NUM> resBlocks{};
+    mutable std::mutex innerMutex;
 
     explicit CcuResBatchAllocator() = default;
 
-    uint32_t GetPreAllocatedMaxBlockNum(const uint8_t dieId) const;
+    CcuResBlockNums GetPreAllocatedMaxBlockNums(const uint8_t dieId) const;
 
     HcclResult PreAllocBlockRes();
     HcclResult TryAllocResHandle(const uintptr_t handleKey, const CcuResReq& resReq,
@@ -87,6 +101,8 @@ private:
     HcclResult ReleaseResource(std::unique_ptr<CcuResRepository>& resRepoPtr);
     void ReleaseBlockResource(std::unique_ptr<CcuResRepository> &resRepoPtr);
     HcclResult ReleaseNonBlockTypeRes(std::unique_ptr<CcuResRepository>& resRepoPtr) const;
+    // 根据 resType 解析对应的 blocks 指针，用于 QueryRemainRes 降低圈复杂度
+    HcclResult ResolveBlocksPtr(uint8_t dieId, ResType resType, const std::vector<BlockInfo>*& blocksPtr) const;
 };
 
 }; // namespace Hccl

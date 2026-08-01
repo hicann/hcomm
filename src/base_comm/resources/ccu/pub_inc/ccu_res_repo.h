@@ -59,9 +59,10 @@ struct CcuResRepository {
     std::array<std::vector<ResInfo>, CCU_MAX_IODIE_NUM> blockMs{};
     std::array<std::vector<ResInfo>, CCU_MAX_IODIE_NUM> cke{};
     std::array<std::vector<ResInfo>, CCU_MAX_IODIE_NUM> blockCke{};
-    std::array<std::vector<ResInfo>, CCU_MAX_IODIE_NUM> continuousXn{};
     std::array<std::vector<ResInfo>, CCU_MAX_IODIE_NUM> xn{};
+    std::array<std::vector<ResInfo>, CCU_MAX_IODIE_NUM> blockXn{};
     std::array<std::vector<ResInfo>, CCU_MAX_IODIE_NUM> gsa{};
+    std::array<std::vector<ResInfo>, CCU_MAX_IODIE_NUM> blockGsa{};
     MissionResInfo mission{};
 };
 
@@ -77,9 +78,10 @@ struct CcuResReq {
     std::array<uint32_t, CCU_MAX_IODIE_NUM> blockMsReq{};
     std::array<uint32_t, CCU_MAX_IODIE_NUM> ckeReq{};
     std::array<uint32_t, CCU_MAX_IODIE_NUM> blockCkeReq{};
-    std::array<uint32_t, CCU_MAX_IODIE_NUM> continuousXnReq{};
     std::array<uint32_t, CCU_MAX_IODIE_NUM> xnReq{};
+    std::array<uint32_t, CCU_MAX_IODIE_NUM> blockXnReq{};
     std::array<uint32_t, CCU_MAX_IODIE_NUM> gsaReq{};
+    std::array<uint32_t, CCU_MAX_IODIE_NUM> blockGsaReq{};
     MissionReq missionReq{};
 };
 

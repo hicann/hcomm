@@ -11,6 +11,7 @@
 set(src_list
     ccu_res_pack.cc
     ccu_instance.cc
+    ccu_res_desc_mgr.cc
     ccu_instance_mgr.cc
 )
 

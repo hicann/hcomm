@@ -34,6 +34,39 @@ hcomm::ClusterMonitor &CollCommMgr::GetClusterMonitor(s32 deviceLogicId)
 	return clusterMonitor_[deviceLogicId];
 }
 
+HcclResult CollCommMgr::TryReserveCcuMsComm(s32 deviceLogicId, const std::string &commId, bool &reserved)
+{
+    reserved = false;
+    if (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM || commId.empty()) {
+        HCCL_ERROR("[%s] invalid parameter, deviceLogicId[%d], max device num[%u], commId empty[%d].", __func__,
+            deviceLogicId, MAX_MODULE_DEVICE_NUM, commId.empty());
+        return HCCL_E_PARA;
+    }
+
+    std::lock_guard<std::mutex> lock(ccuMsCommMutex_);
+    auto &owner = ccuMsCommIds_[deviceLogicId];
+    if (owner.empty()) {
+        owner = commId;
+        reserved = true;
+    }
+    return HCCL_SUCCESS;
+}
+
+void CollCommMgr::ReleaseCcuMsComm(s32 deviceLogicId, const std::string &commId)
+{
+    if (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM) {
+        HCCL_WARNING("[%s] deviceLogicId[%d] is invalid, max device num[%u].", __func__, deviceLogicId,
+            MAX_MODULE_DEVICE_NUM);
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(ccuMsCommMutex_);
+    auto &owner = ccuMsCommIds_[deviceLogicId];
+    if (owner == commId) {
+        owner.clear();
+    }
+}
+
 void CollCommMgr::RegisteCollComm(CollComm* collComm)
 {
     std::lock_guard<std::mutex> lock(mutex_);

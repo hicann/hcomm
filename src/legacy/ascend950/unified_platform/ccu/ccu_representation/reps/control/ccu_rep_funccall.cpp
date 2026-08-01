@@ -46,17 +46,19 @@ void CcuRepFuncCall::SetFuncManager(CcuRepReferenceManager *funcManager)
 void CcuRepFuncCall::SetInArg(const Variable &var)
 {
     inArgCount++;
-    if (inArgCount > FUNC_ARG_MAX) {
-        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_ARG_MAX);
+    if (inArgCount > FUNC_IN_MAX) {
+        HCCL_ERROR("[%s]CcuFunc Max ArgCount = %u, Current ArgCount = %u", __func__, FUNC_IN_MAX, inArgCount);
+        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_IN_MAX);
     }
     inArgs.push_back(CcuRepArg(var));
+    HCCL_INFO("[%s]Define Input Arg: Index[%u], Type[Variable] Id[%u]", __func__, inArgs.size(), var.Id());
 }
 
 void CcuRepFuncCall::SetOutArg(const Variable &var)
 {
     outArgCount++;
-    if (outArgCount > FUNC_ARG_MAX) {
-        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_ARG_MAX);
+    if (outArgCount > FUNC_OUT_MAX) {
+        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_OUT_MAX);
     }
     outArgs.push_back(CcuRepArg(var));
 }
@@ -64,17 +66,19 @@ void CcuRepFuncCall::SetOutArg(const Variable &var)
 void CcuRepFuncCall::SetInArg(const std::vector<Variable> &varList)
 {
     inArgCount += varList.size();
-    if (inArgCount > FUNC_ARG_MAX) {
-        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_ARG_MAX);
+    if (inArgCount > FUNC_IN_MAX) {
+        HCCL_ERROR("[%s]CcuFunc Max ArgCount = %u, Current ArgCount = %u", __func__, FUNC_IN_MAX, inArgCount);
+        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_IN_MAX);
     }
     inArgs.push_back(CcuRepArg(varList));
+    HCCL_INFO("[%s]Define Input Arg: Index[%u], Type[Variable List]: ", __func__, inArgs.size());
 }
 
 void CcuRepFuncCall::SetOutArg(const std::vector<Variable> &varList)
 {
     outArgCount += varList.size();
-    if (outArgCount > FUNC_ARG_MAX) {
-        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_ARG_MAX);
+    if (outArgCount > FUNC_OUT_MAX) {
+        THROW<CcuApiException>("CcuFunc Max ArgCount = %u", FUNC_OUT_MAX);
     }
     outArgs.push_back(CcuRepArg(varList));
 }

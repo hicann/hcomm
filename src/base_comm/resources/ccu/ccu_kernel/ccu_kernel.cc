@@ -112,8 +112,7 @@ static HcclResult GetDieIdByChannels(const std::unordered_set<ChannelHandle> &ch
             }
         }
 
-        HCCL_ERROR("[CcuKernel][%s] failed, all dies are disable, devLogicId[%d].",
-            __func__, devLogicId);
+        HCCL_ERROR("[CcuKernel][%s] failed, all dies are disable, devLogicId[%d].", __func__, devLogicId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -129,6 +128,21 @@ static HcclResult GetDieIdByChannels(const std::unordered_set<ChannelHandle> &ch
     }
 
     dieId = firstDieId;
+    return HcclResult::HCCL_SUCCESS;
+}
+
+static HcclResult CheckChannelsDie(
+    const std::unordered_set<ChannelHandle> &channels, const uint32_t targetDieId)
+{
+    for (const auto channel : channels) {
+        uint32_t channelDieId = 0;
+        CHK_RET(GetDieIdByChannel(channel, channelDieId));
+        if (channelDieId != targetDieId) {
+            HCCL_ERROR("[%s] failed, channel[0x%llx] dieId[%u] differs from target dieId[%u].",
+                __func__, channel, channelDieId, targetDieId);
+            return HcclResult::HCCL_E_PARA;
+        }
+    }
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -148,6 +162,7 @@ static void MoveResourcesToDie(CcuRepResource &res, uint32_t targetDieId)
     moveAndSet(res.completedEvent);
     moveAndSet(res.blockCompletedEvent);
     moveAndSet(res.address);
+    moveAndSet(res.blockAddress);
     moveAndSet(res.continuousVariable);
     moveAndSet(res.variable);
     moveAndSet(res.localNotify);
@@ -201,17 +216,41 @@ static HcclResult UpdateProfilingInfo(
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuKernel::SelectDie()
+HcclResult CcuKernel::ApplyDieFromChannels()
 {
     uint32_t dieId{0};
     CHK_RET(GetDieIdByChannels(channels_, dieId));
-    CHK_PRT_RET(dieId >= CCU_MAX_IODIE_NUM,
-        HCCL_ERROR("[CcuKernel][%s] failed, dieId[%u] should be less than [%u].",
-            __func__, dieId, CCU_MAX_IODIE_NUM),
+    CHK_PRT_RET(
+        dieId >= CCU_MAX_IODIE_NUM,
+        HCCL_ERROR("[CcuKernel][%s] failed, dieId[%u] should be less than [%u].", __func__, dieId, CCU_MAX_IODIE_NUM),
         HcclResult::HCCL_E_PARA);
     SetDieId(dieId);
     MoveResourcesToDie(res_, dieId);
     (void)UpdateProfilingInfo(profilingInfo, dieId, name_);
+
+    return HcclResult::HCCL_SUCCESS;
+}
+
+HcclResult CcuKernel::ValidateAndApplyDie(const uint32_t targetDieId)
+{
+    CHK_PRT_RET(targetDieId >= CCU_MAX_IODIE_NUM,
+        HCCL_ERROR("[CcuKernel][%s] failed, dieId[%u] should be less than [%u].",
+            __func__, targetDieId, CCU_MAX_IODIE_NUM),
+        HcclResult::HCCL_E_PARA);
+
+    const int32_t devLogicId = HcclGetThreadDeviceId();
+    bool enableFlag = false;
+    CHK_RET(static_cast<HcclResult>(
+        CcuGetDieEnableInfo(devLogicId, static_cast<uint8_t>(targetDieId), enableFlag)));
+    CHK_PRT_RET(!enableFlag,
+        HCCL_ERROR("[CcuKernel][%s] failed, target dieId[%u] is disabled, devLogicId[%d].",
+            __func__, targetDieId, devLogicId),
+        HcclResult::HCCL_E_PARA);
+    CHK_RET(CheckChannelsDie(channels_, targetDieId));
+
+    SetDieId(targetDieId);
+    MoveResourcesToDie(res_, targetDieId);
+    (void)UpdateProfilingInfo(profilingInfo, targetDieId, name_);
 
     return HcclResult::HCCL_SUCCESS;
 }
@@ -325,24 +364,25 @@ CcuResReq CcuKernel::GetResourceRequest()
     uint32_t dieId = GetDieId();
     req.msReq[dieId]              = res_.ccubufs[dieId].size();
     req.blockMsReq[dieId]         = res_.blockCcubufs[dieId].size();
-    req.ckeReq[dieId]             = res_.completedEvent[dieId].size()
-                                    + res_.localNotify[dieId].size();
-    req.blockCkeReq[dieId]        = res_.blockCompletedEvent[dieId].size();
+    req.ckeReq[dieId]             = res_.completedEvent[dieId].size();
+    req.blockCkeReq[dieId]        = res_.blockCompletedEvent[dieId].size() + res_.localNotify[dieId].size();
     req.loopEngineReq[dieId]      = res_.executor[dieId].size();
     req.blockLoopEngineReq[dieId] = res_.blockExecutor[dieId].size();
     req.gsaReq[dieId]             = res_.address[dieId].size();
+    req.blockGsaReq[dieId]        = res_.blockAddress[dieId].size();
     req.xnReq[dieId]              = res_.variable[dieId].size();
-    req.continuousXnReq[dieId]    = res_.continuousVariable[dieId].size();
+    req.blockXnReq[dieId]         = res_.continuousVariable[dieId].size();
 
     req.missionReq.reqType           = MissionReqType::FUSION_MULTIPLE_DIE;
     req.missionReq.req[dieId] = 1;
 
     auto info
         = Hccl::StringFormat("resource request: dieId[%u], ms[%u], blockMs[%u], cke[%u], blockCke[%u], "
-                       "loopEngine[%u], blockLoopEngine[%u], gsa[%u], xn[%u], continuous xn[%u], missionId[%u]",
+                       "loopEngine[%u], blockLoopEngine[%u], gsa[%u], blockGsa[%u], xn[%u], blockXn[%u], "
+                       "missionId[%u]",
                        dieId, req.msReq[dieId], req.blockMsReq[dieId], req.ckeReq[dieId], req.blockCkeReq[dieId],
-                       req.loopEngineReq[dieId], req.blockLoopEngineReq[dieId], req.gsaReq[dieId], req.xnReq[dieId],
-                       req.continuousXnReq[dieId], req.missionReq.req[dieId]);
+                       req.loopEngineReq[dieId], req.blockLoopEngineReq[dieId], req.gsaReq[dieId], req.blockGsaReq[dieId],
+                       req.xnReq[dieId], req.blockXnReq[dieId], req.missionReq.req[dieId]);
 
     HCCL_INFO("%s", info.c_str());
 
@@ -392,7 +432,7 @@ CcuResult CcuKernel::AddressAlloc(CcuAddressHandle *addrHandle)
 CcuResult CcuKernel::EventAlloc(CcuEventHandle *eventHandle)
 {
     PLF_CONFIG_INFO(PLF_DATA_OP, "[EventAlloc]");
-    const auto &event = CreateResAssist(res_.completedEvent);
+    const auto &event = CreateResAssist(res_.blockCompletedEvent);
     CcuEventHandle handle = ccuEventMap_.size();
     ccuEventMap_.emplace(handle, event);
     *eventHandle = handle;
@@ -401,7 +441,7 @@ CcuResult CcuKernel::EventAlloc(CcuEventHandle *eventHandle)
 CcuResult CcuKernel::BufferAlloc(CcuBufferHandle *bufHandle)
 {
     PLF_CONFIG_INFO(PLF_DATA_OP, "[BufferAlloc]");
-    const auto &buf = CreateResAssist(res_.ccubufs);
+    const auto &buf = CreateResAssist(res_.blockCcubufs);
     CcuBufferHandle handle = ccuBufferMap_.size();
     ccuBufferMap_.emplace(handle, buf);
     *bufHandle = handle;
@@ -2222,8 +2262,8 @@ CcuResult CcuKernel::FuncCall(uint64_t handle, const CcuVariableHandle *inArgs, 
 }
 
 // 按 maxLoopNum 把 res_.blockExecutor[0] 扩容到至少 maxLoopNum 个 LoopEngine。
-// 与 CreateBlockResAssist 对齐：所有 LoopEngine 资源先落在 die0 池，待
-// SelectDie 完成后再由 MoveResourcesToDie 迁移到目标 die。
+// 与 CreateBlockResAssist 对齐：所有 LoopEngine 资源先落在 die0 池，待实际 die 确定后
+// 再由 MoveResourcesToDie 迁移到目标 die。
 // 不同 LoopGroup 通过 local loopIdx 复用同一池低位 executorId，所以这里只
 // "补足"而不是"累加"。
 CcuResult CcuKernel::EnsureLoopEnginePool(uint32_t maxLoopNum)
@@ -2593,7 +2633,7 @@ CcuRep::Address CcuKernel::CreateAddress()
         // A6创建Address时，需要添加到Variable的列表中，但是仍以Address返回
         return CcuRep::Address(CreateResAssist(res_.continuousVariable));
     }
-    return CreateResAssist(res_.address);
+    return CreateResAssist(res_.blockAddress);
 }
 
 CcuRep::LocalNotify CcuKernel::CreateLocalNotify()
@@ -2603,17 +2643,17 @@ CcuRep::LocalNotify CcuKernel::CreateLocalNotify()
 
 CcuRep::CompletedEvent CcuKernel::CreateCompletedEvent()
 {
-    return CreateResAssist(res_.completedEvent);
+    return CreateResAssist(res_.blockCompletedEvent);
 }
 
 CcuRep::CcuBuf CcuKernel::CreateCcuBuf()
 {
-    return CreateResAssist(res_.ccubufs);
+    return CreateResAssist(res_.blockCcubufs);
 }
 
 CcuRep::Executor CcuKernel::CreateExecutor()
 {
-    return CreateResAssist(res_.executor);
+    return CreateResAssist(res_.blockExecutor);
 }
 
 CcuRep::LocalAddr CcuKernel::CreateLocalAddr()

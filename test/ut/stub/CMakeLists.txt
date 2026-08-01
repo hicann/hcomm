@@ -444,6 +444,7 @@ target_include_directories(hccl_llt  PRIVATE
  
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_kernel
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_instance
+    ${HCCL_CODE_ROOT}/src/base_comm/primitives/api_c_adpt/ccu/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_dfx
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_representation
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode

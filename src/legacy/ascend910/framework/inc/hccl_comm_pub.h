@@ -374,7 +374,7 @@ public:
     bool IsCommunicatorV2();
 #ifndef HCCD
     HcclResult InitCollComm(void* commV2, void* rankGraph, uint32_t userRank,
-        HcclMem cclBuffer, const std::string &commName, HcclCommConfig *config,
+        HcclMem cclBuffer, const std::string &commName, const HcclCommConfig *config,
         CollCommInitMode initMode = CollCommInitMode::fullMode);
     HcclResult InitCollCommInner(uint32_t userRank);
 #endif

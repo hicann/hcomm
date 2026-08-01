@@ -10,6 +10,7 @@
 
 #include "ccu_res_allocator.h"
 
+#include <algorithm>
 #include <climits>
 
 #include "ccu_res_specs.h"
@@ -250,10 +251,34 @@ HcclResult CcuResAllocator::Release(const ResType resType, const uint32_t startI
     return resTypeIter->second->Release(startId, num);
 }
 
+uint32_t CcuResIdAllocator::GetConsecutiveRemainSize() const
+{
+    // 扫描 resInfos_ 找最大连续空闲区 (类似 QueryRemainRes 的 gap scan)
+    uint32_t cursor = 0;
+    uint32_t maxGap = 0;
+    for (const auto &r : resInfos_) {
+        if (r.startId > cursor) {
+            maxGap = std::max(maxGap, r.startId - cursor);
+        }
+        cursor = r.startId + r.num;
+    }
+    if (capacity_ > cursor) {
+        maxGap = std::max(maxGap, capacity_ - cursor);
+    }
+    return maxGap;
+}
+
 std::string CcuResIdAllocator::Describe() const
 {
     return Hccl::StringFormat("CcuResIdAllocator[capacity=%u, allocatedSize=%u, "
         "resInfos_size=%u]", capacity_, allocatedSize_, resInfos_.size());
+}
+
+uint32_t CcuResAllocator::GetConsecutiveRemainSize(const ResType resType) const
+{
+    auto it = idAllocatorMap_.find(static_cast<uint8_t>(resType));
+    if (it == idAllocatorMap_.end()) return 0;
+    return it->second->GetConsecutiveRemainSize();
 }
 
 std::string CcuResAllocator::Describe() const
@@ -261,7 +286,6 @@ std::string CcuResAllocator::Describe() const
     return Hccl::StringFormat("CcuResAllocator[devLogicId=%u, dieId=%u, "
         "idAllocatorSize=[%u]]", devLogicId_, dieId_, idAllocatorMap_.size());
 }
-
 
 HcclResult CcuResAllocator::AllocCountXn(const uint32_t num, ResInfo &resInfo)
 {

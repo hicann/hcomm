@@ -487,9 +487,11 @@ HcclResult CheckOpBasedHcom(HcclOpInfoCtx &opBaseHcom, const uint32_t rank, cons
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommInitCollComm(uint32_t rank, void **commV2, HcclCommConfig *config, HcclComm *comm)
+HcclResult HcclCommInitCollComm(uint32_t rank, void **commV2, const HcclCommConfig *config, HcclComm *comm)
 {
+    CHK_PTR_NULL(comm);
     CHK_PTR_NULL(*commV2);
+    *comm = nullptr;
     HCCL_INFO("[HcclCommInitCollComm] CollComm init start.");
 #if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
     HcclUs startut = TIME_NOW();
@@ -519,12 +521,20 @@ HcclResult HcclCommInitCollComm(uint32_t rank, void **commV2, HcclCommConfig *co
 
     //Collcomm初始化
     CHK_RET(hcclCommPtr->InitCollComm(*commV2, rankGraph, rank, cclBuffer, commName, config));
-    *comm = static_cast<HcclComm>(hcclCommPtr.get());
 
     std::unique_lock<std::mutex> lock(opBaseHcom.opGroupMapMutex);
     opBaseHcom.opGroup2CommMap[hcclCommPtr->GetIdentifier()] = hcclCommPtr;
     lock.unlock();
-    CHK_RET(HcomSetGroupTopoInfo(commName, rankNum));
+
+    HcclResult ret = HcomSetGroupTopoInfo(commName, rankNum);
+    if (ret != HCCL_SUCCESS) {
+        HcomUnSetGroupTopoInfo(commName);
+        std::unique_lock<std::mutex> lock(opBaseHcom.opGroupMapMutex);
+        opBaseHcom.opGroup2CommMap.erase(commName);
+        lock.unlock();
+        CHK_RET(ret);
+    }
+    *comm = static_cast<HcclComm>(hcclCommPtr.get());
     HCCL_RUN_INFO("[%s] success, take time [%lld]us.", __func__, DURATION_US(TIME_NOW() - startut));
 #endif
     return HCCL_SUCCESS;
@@ -1920,7 +1930,7 @@ HcclResult HcclCommInitRootInfoConfigInner(uint32_t nRanks, const HcclRootInfo *
         [&]() -> HcclResult {
             void *commV2 = nullptr;
             CHK_RET(HcclCommInitRootInfoConfigV2(nRanks, rootInfo, rank, config, &commV2));
-            HcclResult ret = HcclCommInitCollComm(rank, &commV2, const_cast<HcclCommConfig *>(config), comm);
+            HcclResult ret = HcclCommInitCollComm(rank, &commV2, config, comm);
             if (ret != HCCL_SUCCESS) {
                 HCCL_ERROR("[HcclCommInitCollComm]HcclCommInitCollComm failed.Destroy comv2");
                 CHK_RET(HcclCommDestroyV2(commV2));

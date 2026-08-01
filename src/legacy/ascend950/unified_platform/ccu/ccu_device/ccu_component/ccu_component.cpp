@@ -860,6 +860,13 @@ HcclResult CcuComponent::ReleaseRes(const uint8_t dieId, const ResType resType, 
     return HcclResult::HCCL_SUCCESS;
 }
 
+uint32_t CcuComponent::GetInsConsecutiveRemainSize(const uint8_t dieId) const
+{
+    CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
+    if (resAllocators[dieId] == nullptr) return 0;
+    return resAllocators[dieId]->GetConsecutiveRemainSize(ResType::INS);
+}
+
 HcclResult CcuComponent::AllocIns(const uint8_t dieId, const uint32_t num, ResInfo &insInfo)
 {
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));

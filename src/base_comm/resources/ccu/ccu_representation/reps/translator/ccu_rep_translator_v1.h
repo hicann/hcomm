@@ -58,7 +58,7 @@ private:
     std::shared_ptr<CcuRepReferenceManager> refManager{nullptr};
     Variable                             var[XN_NUM];
     Address                              addr[GSA_NUM];
-    LocalNotify                          signal[CKE_NUM];
+    CompletedEvent                       signal[CKE_NUM]; // 声明为CompletedEvent，使用离散cke
     TransDep                             transDep{0};
     CcuVersion                           ccuVersion{CcuVersion::CCU_INVALID};
 };

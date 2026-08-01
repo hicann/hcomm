@@ -24,8 +24,10 @@ extern "C" {
  * @param[in] insHandle CCU 实例句柄。
  * @return HcclResult。
  * @note 一个通信域最多绑定一个 CCU 实例。重复绑定相同或不同实例均返回 HCCL_E_PARA，且不修改原绑定。
- * @note 绑定成功后，实例所有权转移给通信域；调用方不得销毁该实例，也不得将同一实例绑定到其他通信域。
- *       绑定失败时，实例所有权仍归调用方。
+ * @note 绑定成功后，insHandle 的所有权和销毁责任转移给通信域，调用方不得再调用
+ *       HcommCcuInsDestroy，也不得将同一 insHandle 绑定到其他通信域；绑定失败时所有权仍归调用方。
+ * @note 本接口仅保证多个 HcclCommAssignCcuIns 调用之间的并发安全。调用方必须保证本接口不与
+ *       HcclCommQueryCcuIns 或 HcclCommDestroy 并发执行。
  */
 extern HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle);
 
@@ -35,8 +37,8 @@ extern HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle);
  * @param[out] insHandles 查询成功后返回 CCU 实例句柄数组，不可为 nullptr。
  * @param[out] insNum 查询成功后返回 CCU 实例数量，不可为 nullptr。
  * @return HcclResult。
- * @note 当前一个通信域最多返回一个 CCU 实例。查询成功时，insHandles[0] 为已绑定实例句柄，*insNum 为 1。
- *       查询结果仅供借用，不转移实例所有权。
+ * @note 返回的 CCU 实例句柄仅供借用，不转移所有权，调用方不得销毁该句柄。
+ * @note 调用方必须保证本接口不与 HcclCommAssignCcuIns 或 HcclCommDestroy 并发执行。
  */
 extern HcclResult HcclCommQueryCcuIns(HcclComm comm,
     CcuInsHandle *insHandles, uint32_t *insNum);

@@ -30,7 +30,7 @@ void SymmetricMemoryDeleter::operator()(SymmetricMemory *ptr) const
 
 CollComm::CollComm(void * comm, uint32_t rankId, const std::string &commName, const ManagerCallbacks& callbacks,
                    CollCommInitMode initMode)
-    : comm_(comm), rankId_(rankId), commId_ (commName), callbacks_(callbacks), initMode_(initMode)
+    : comm_(comm), rankId_(rankId), commId_ (commName), config_(commName), callbacks_(callbacks), initMode_(initMode)
 {
     groupScheduleMgr = std::make_shared<GroupScheduleMgr>();
 }

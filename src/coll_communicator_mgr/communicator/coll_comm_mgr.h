@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <vector>
 #include <array>
 #include "coll_comm.h"
@@ -29,13 +30,17 @@ public:
     void UnRegisteCollComm(CollComm* collComm);
     std::unordered_map<std::string, CollComm*> GetAllCollComms();
     hcomm::ClusterMonitor &GetClusterMonitor(s32 deviceLogicId);
+    HcclResult TryReserveCcuMsComm(s32 deviceLogicId, const std::string &commId, bool &reserved);
+    void ReleaseCcuMsComm(s32 deviceLogicId, const std::string &commId);
 
 private:
     static CollCommMgr* instance_;
     std::unordered_map<std::string, CollComm*> allCollComms_;
     std::array<hcomm::ClusterMonitor, MAX_MODULE_DEVICE_NUM> clusterMonitor_;
+    std::array<std::string, MAX_MODULE_DEVICE_NUM> ccuMsCommIds_{};
 
     std::mutex mutex_;
+    std::mutex ccuMsCommMutex_;
 };
 }
 #endif // COLL_COMM_MGR_H

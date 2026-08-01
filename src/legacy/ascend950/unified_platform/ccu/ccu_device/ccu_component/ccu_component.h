@@ -56,6 +56,7 @@ public:
     
     HcclResult AllocIns(const uint8_t dieId, const uint32_t num, ResInfo &insInfo);
     HcclResult ReleaseIns(const uint8_t dieId, const ResInfo &insInfo);
+    uint32_t GetInsConsecutiveRemainSize(const uint8_t dieId) const;
     HcclResult AllocCke(const uint8_t dieId, const uint32_t num, vector<ResInfo> &ckeInfos);
     HcclResult ReleaseCke(const uint8_t dieId, const vector<ResInfo> &ckeInfos);
     HcclResult AllocXn(const uint8_t dieId, const uint32_t num, vector<ResInfo> &xnInfos);

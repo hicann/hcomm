@@ -65,6 +65,8 @@ struct CcuBlockResStrategy {
     uint32_t loopNum{16};
     uint32_t ckeNum{16};
     uint32_t msNum{128};
+    uint32_t xnNum{16};
+    uint32_t gsaNum{16};
     uint32_t missionNum{2};
 };
 

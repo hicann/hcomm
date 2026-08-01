@@ -115,9 +115,17 @@ HcclResult CtxMgrGetResourceStub(
     ccuResRepo.gsa[0][0].startId = 0;
     ccuResRepo.gsa[0][0].num = 48;
 
+    ccuResRepo.blockGsa[0].resize(1);
+    ccuResRepo.blockGsa[0][0].startId = 0;
+    ccuResRepo.blockGsa[0][0].num = 48;
+
     ccuResRepo.xn[0].resize(1);
     ccuResRepo.xn[0][0].startId = 0;
     ccuResRepo.xn[0][0].num = 1248;
+
+    ccuResRepo.blockXn[0].resize(1);
+    ccuResRepo.blockXn[0][0].startId = 0;
+    ccuResRepo.blockXn[0][0].num = 1248;
 
     ccuResRepo.mission.mission[0].resize(1);
     ccuResRepo.mission.mission[0][0].startId = 0;
@@ -283,9 +291,17 @@ HcclResult CtxMgrGetResourceSharedResStub(
     ccuResRepo.xn[0][0].startId = 0;
     ccuResRepo.xn[0][0].num = 45;
 
+    ccuResRepo.blockXn[0].resize(1);
+    ccuResRepo.blockXn[0][0].startId = 0;
+    ccuResRepo.blockXn[0][0].num = 45;
+
     ccuResRepo.gsa[0].resize(1);
     ccuResRepo.gsa[0][0].startId = 0;
     ccuResRepo.gsa[0][0].num = 1;
+
+    ccuResRepo.blockGsa[0].resize(1);
+    ccuResRepo.blockGsa[0][0].startId = 0;
+    ccuResRepo.blockGsa[0][0].num = 3;
 
     ccuResRepo.mission.mission[0].resize(1);
     ccuResRepo.mission.mission[0][0].startId = 0;

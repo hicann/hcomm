@@ -28,6 +28,7 @@ set(src_to_test_list
     comms/api_c_adpt/ut_hcomm_c_adpt.cc
     comms/api_c_adpt/ut_hcomm_c_adpt_ubattr.cc
     coll_comms/rank/ut_my_rank.cc
+    coll_comms/rank/ut_ccu_ms_per_device_exclusive.cc
     coll_comms/rank/comm_mems/test_getHcclBuffer_api.cc
     coll_comms/rank/ut_my_rank_tls.cc
     coll_comms/rank/comm_mems/test_comm_reg_mem_api.cc
@@ -61,6 +62,7 @@ set(src_to_test_list
     comms/endpoints/reged_mems/ut_ub_mem_test.cc
     comms/endpoints/reged_mems/ut_hccs_reged_mem_mgr_test.cc
     coll_comms/api_c_adpt/ut_coll_comm_res_c_adpt.cc
+    coll_comms/api_c_adpt/ut_coll_comm_ccu_c_adpt.cc
     comms/endpoints/reged_mems/ut_aicpu_ts_roce_mem.cc
     # Ns recovery相关测试用例
     comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_urma_channel.cc
@@ -99,6 +101,7 @@ target_include_directories(hccl_utest_test_next_resource PRIVATE
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/endpoints
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/remote/rank_pairs
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine_reses/notify
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/cluster_monitor
 )
 
 target_compile_definitions(hccl_utest_test_next_resource PRIVATE

@@ -15,6 +15,7 @@ set(src_list
     ccu_res_batch_allocator.cc
     ccu_dev_mgr_imp.cc
     ccu_drv_handle.cc
+    ccu_res_desc.cc
 )
 
 if(TARGET hcomm)

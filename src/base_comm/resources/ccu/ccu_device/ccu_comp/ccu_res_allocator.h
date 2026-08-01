@@ -29,6 +29,7 @@ public:
     HcclResult Alloc(const uint32_t num, const bool consecutive,
         std::vector<ResInfo> &allocatedResInfos, const std::string &dfxInfo = "");
     HcclResult Release(const uint32_t startId, const uint32_t num);
+    uint32_t GetConsecutiveRemainSize() const;
 
     std::string Describe() const;
 
@@ -53,6 +54,7 @@ public:
     HcclResult Alloc(const ResType resType, const uint32_t num, const bool consecutive,
         std::vector<ResInfo>& resInfos);
     HcclResult Release(const ResType resType, const uint32_t startId, const uint32_t num);
+    uint32_t GetConsecutiveRemainSize(const ResType resType) const;
 
     // 0.5rtt专用
     HcclResult AllocCountXn(const uint32_t num, ResInfo &resInfo);

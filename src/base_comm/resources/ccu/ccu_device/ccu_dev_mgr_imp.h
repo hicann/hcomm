@@ -289,9 +289,11 @@ public:
     static HcclResult GetResource(const int32_t deviceLogicId, const CcuResHandle resHandle, CcuResRepository &ccuResRepo);
     static HcclResult AllocResHandle(const int32_t deviceLogicId, const CcuResReq resReq, CcuResHandle &resHandle);
     static HcclResult ReleaseResHandle(const int32_t deviceLogicId, const CcuResHandle resHandle);
+    static HcclResult QueryRemainRes(const int32_t deviceLogicId, const uint8_t dieId, const ResType &internalType, uint32_t &remainNum);
 
     static HcclResult AllocIns(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t num, ResInfo &insInfo);
     static HcclResult ReleaseIns(const int32_t deviceLogicId, const uint8_t dieId, const ResInfo &insInfo);
+    static uint32_t GetInsConsecutiveRemainSize(const int32_t deviceLogicId, const uint8_t dieId);
     static HcclResult AllocCke(const int32_t deviceLogicId, const uint8_t dieId, const uint32_t num,
         std::vector<ResInfo>& ckeInfos);
     static HcclResult ReleaseCke(const int32_t deviceLogicId, const uint8_t dieId, const std::vector<ResInfo> &ckeInfos);
@@ -308,7 +310,13 @@ public:
         const std::string &resGroupTag, uint32_t &totalCntXn);
 
     static HcclResult GetMissionKey(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &missionKey);
-    static HcclResult GetInstructionNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &instrNum);
+    static HcclResult GetResSpecsInstructionNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &instrNum);
+    static HcclResult GetAllocatableMaxLoopEngineNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &loopNum);
+    static HcclResult GetAllocatableMaxMsNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &msNum);
+    static HcclResult GetAllocatableMaxCkeNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &ckeNum);
+    static HcclResult GetAllocatableMaxXnNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &xnNum);
+    static HcclResult GetAllocatableMaxGsaNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &gsaNum);
+    static HcclResult GetResSpecsMissionNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &missionNum);
     static HcclResult GetXnBaseAddr(const int32_t devLogicId, const uint8_t dieId, uint64_t &xnBaseAddr);
     static HcclResult GetCkeBaseAddr(const int32_t devLogicId, const uint8_t dieId, uint64_t &ckeBaseAddr);
     static HcclResult GetXnOffsetCcumAddrById(const int32_t devLogicId, const uint8_t dieId, uint16_t id, uint64_t& xnAddr);

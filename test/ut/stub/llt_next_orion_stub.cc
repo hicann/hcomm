@@ -2713,6 +2713,14 @@ HcclResult HcclCommDestroyV2(HcclComm comm)
     return HCCL_SUCCESS;
 }
 
+HcclResult HcclGetRankSizeV2(HcclComm comm, uint32_t *rankSize)
+{
+    if (rankSize != nullptr) {
+        *rankSize = 1;
+    }
+    return HCCL_SUCCESS;
+}
+
 HcclResult HcommFlushV2()
 {
     return HCCL_SUCCESS;

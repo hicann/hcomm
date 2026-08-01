@@ -15,6 +15,7 @@
 #include "ccu_dev_mgr_imp.h"
 
 HcclResult MockCcuResourcesDefault(int32_t devLogicId, hcomm::CcuVersion ccuVersion);
+HcclResult InitMockCcuResourcesForDevice(int32_t devLogicId, hcomm::CcuVersion ccuVersion);
 
 // 为 ccu 两个die添加网络通信设备
 void MockCcuNetworkDeviceDefault(int32_t devPhyId);

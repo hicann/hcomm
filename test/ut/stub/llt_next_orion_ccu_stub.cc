@@ -232,6 +232,11 @@ const std::array<bool, MAX_CCU_IODIE_NUM> &CcuComponent::GetDieEnableFlags() con
     return dieEnableFlags;
 }
 
+uint32_t CcuComponent::GetInsConsecutiveRemainSize(const uint8_t dieId) const
+{
+    return 0;
+}
+
 void CcuResBatchAllocator::Init()
 {
 }
@@ -251,6 +256,16 @@ HcclResult CcuResBatchAllocator::ReleaseResHandle(const CcuResHandle& handle)
 }
 
 HcclResult CcuResBatchAllocator::GetResource(const CcuResHandle& handle, CcuResRepository &ccuResRepo)
+{
+    return HcclResult::HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult CcuResBatchAllocator::QueryRemainRes(uint8_t dieId, ResType resType, uint32_t &remainNum) const
+{
+    return HcclResult::HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult CcuResBatchAllocator::GetAllocatableMaxBlockResNum(ResType resType, uint8_t dieId, uint32_t &num) const
 {
     return HcclResult::HCCL_E_NOT_SUPPORT;
 }

@@ -71,7 +71,8 @@ public:
     ~CcuKernel() override;
 
     HcclResult SetupProfilingInfo(const char *kernelFuncName);
-    HcclResult SelectDie();
+    HcclResult ApplyDieFromChannels();
+    HcclResult ValidateAndApplyDie(uint32_t targetDieId);
 
     CcuResReq          GetResourceRequest();
     CcuResRepository  &GetResRepository();
@@ -104,7 +105,7 @@ public:
         std::vector<CcuProfilingInfo> &allCcuProfilingInfo);
 
     const std::vector<CcuProfilingInfo> &GetAllCcuProfilingInfo() { return allCcuProfilingInfos_; };
-	
+
     // process const values
     std::unordered_map<uint64_t, CcuRep::Variable>& GetConstValue2VarMap() { return constValue2VarMap; }
     HcclResult Add2ConstValue2VarMap(std::vector<uint64_t> &values);
@@ -491,4 +492,4 @@ private:
 
 } // namespace hcomm
 
-#endif // HCOMM_CCU_KERNEL_H 
+#endif // HCOMM_CCU_KERNEL_H

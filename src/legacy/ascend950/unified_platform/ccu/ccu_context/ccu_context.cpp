@@ -244,18 +244,20 @@ CcuResReq CcuContext::GetResourceRequest()
     req.loopEngineReq[dieId]      = res.executor[dieId].size();
     req.blockLoopEngineReq[dieId] = res.blockExecutor[dieId].size();
     req.gsaReq[dieId]             = res.address[dieId].size();
+    req.blockGsaReq[dieId]        = res.blockAddress[dieId].size();
     req.xnReq[dieId]              = res.variable[dieId].size();
-    req.continuousXnReq[dieId]    = res.continuousVariable[dieId].size();
+    req.blockXnReq[dieId]         = res.continuousVariable[dieId].size();
 
     req.missionReq.reqType           = MissionReqType::FUSION_MULTIPLE_DIE;
     req.missionReq.req[dieId] = 1;
 
     auto info
         = StringFormat("resource request: dieId[%u], ms[%u], blockMs[%u], cke[%u], blockCke[%u], "
-                       "loopEngine[%u], blockLoopEngine[%u], gsa[%u], xn[%u], continuous xn[%u], missionId[%u]",
+                       "loopEngine[%u], blockLoopEngine[%u], gsa[%u], blockGsa[%u], xn[%u], block xn[%u], missionId[%u]",
                        dieId, req.msReq[dieId], req.blockMsReq[dieId], req.ckeReq[dieId], req.blockCkeReq[dieId],
-                       req.loopEngineReq[dieId], req.blockLoopEngineReq[dieId], req.gsaReq[dieId], req.xnReq[dieId],
-                       req.continuousXnReq[dieId], req.missionReq.req[dieId]);
+                       req.loopEngineReq[dieId], req.blockLoopEngineReq[dieId],
+                       req.gsaReq[dieId], req.blockGsaReq[dieId], req.xnReq[dieId],
+                       req.blockXnReq[dieId], req.missionReq.req[dieId]);
 
     HCCL_INFO("%s", info.c_str());
 
@@ -1102,7 +1104,7 @@ T CcuContext::CreateResAssist(std::array<std::vector<T>, MAX_CCU_IODIE_NUM> &res
 
 CcuRep::Variable CcuContext::CreateVariable()
 {
-    return CreateResAssist(res.variable);
+    return CreateResAssist(res.continuousVariable);
 }
 
 CcuRep::Variable CcuContext::CreateContinuousVariable()
@@ -1112,22 +1114,22 @@ CcuRep::Variable CcuContext::CreateContinuousVariable()
 
 CcuRep::Address CcuContext::CreateAddress()
 {
-    return CreateResAssist(res.address);
+    return CreateResAssist(res.blockAddress);
 }
 
 CcuRep::MaskSignal CcuContext::CreateMaskSignal()
 {
-    return CreateResAssist(res.maskSignal);
+    return CreateResAssist(res.blockMaskSignal);
 }
 
 CcuRep::CcuBuffer CcuContext::CreateCcuBuffer()
 {
-    return CreateResAssist(res.ccubuffers);
+    return CreateResAssist(res.blockCcubuffers);
 }
 
 CcuRep::Executor CcuContext::CreateExecutor()
 {
-    return CreateResAssist(res.executor);
+    return CreateResAssist(res.blockExecutor);
 }
 
 CcuRep::Memory CcuContext::CreateMemory()

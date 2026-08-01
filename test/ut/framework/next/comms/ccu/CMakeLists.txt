@@ -13,7 +13,8 @@ set(src_to_test_list
     hccl_api_base_test.cc
     ut_CcuComponent_test.cc
     ut_HcommCcuControlApi_test.cc
-    ut_hcomm_ccu_res_stub_api_test.cc
+    ut_HcommCcuResDescApi_test.cc
+    ut_HcommCcuKernelQueryResReq_test.cc
 
     mocks/ccu_device_mock_utils.cc
     mocks/ccu_drv_handle_mock.cc
@@ -50,6 +51,7 @@ target_include_directories(hccl_utest_comms_ccu_features PRIVATE
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_device/ccu_comp/ccu_channel/ccu_channel_ctx_v2/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/ccu_transport/
     ${UT_COMMON_INCLUDE_LIST}
+    ${HCOMM_DIR}/src/base_comm/primitives/api_c_adpt/ccu
     ${HCOMM_DIR}/pkg_inc/hcomm/ccu
 )
 

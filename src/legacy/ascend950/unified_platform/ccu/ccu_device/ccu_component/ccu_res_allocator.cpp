@@ -10,6 +10,7 @@
 
 #include "ccu_res_allocator.h"
 
+#include <algorithm>
 #include <climits>
 
 #include "ccu_res_specs.h"
@@ -245,10 +246,34 @@ HcclResult CcuResAllocator::Release(const ResType resType, const uint32_t startI
     return resTypeIter->second->Release(startId, num);
 }
 
+uint32_t CcuResIdAllocator::GetConsecutiveRemainSize() const
+{
+    uint32_t maxGap = 0;
+    uint32_t cursor = 0;
+    // resInfo 保证按startId升序排列，因此无需排序
+    for (const auto &r : resInfos) {
+        if (r.startId > cursor) {
+            maxGap = std::max(maxGap, r.startId - cursor);
+        }
+        cursor = r.num + r.startId;
+    }
+    if (capacity_ > cursor) {
+        maxGap = std::max(maxGap, capacity_ - cursor);
+    }
+    return maxGap;
+}
+
 std::string CcuResIdAllocator::Describe() const
 {
     return StringFormat("CcuResIdAllocator[capacity=%u, allocatedSize=%u, "
         "resInfos_size=%u]", capacity_, allocatedSize, resInfos.size());
+}
+
+uint32_t CcuResAllocator::GetConsecutiveRemainSize(const ResType resType) const
+{
+    auto it = idAllocatorMap.find(static_cast<uint8_t>(resType));
+    if (it == idAllocatorMap.end()) return 0;
+    return it->second->GetConsecutiveRemainSize();
 }
 
 std::string CcuResAllocator::Describe() const

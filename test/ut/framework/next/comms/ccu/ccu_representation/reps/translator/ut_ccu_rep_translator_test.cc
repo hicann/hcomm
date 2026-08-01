@@ -134,13 +134,13 @@ TEST_F(CcuRepReferenceManagerTest, Constructor_Normal)
 TEST_F(CcuRepReferenceManagerTest, GetResReq_Normal)
 {
     CcuResReq req = CcuRepReferenceManager::GetResReq(0);
-    EXPECT_GT(req.continuousXnReq[0], 0u);
+    EXPECT_GT(req.xnReq[0], 0u);
 }
 
 TEST_F(CcuRepReferenceManagerTest, GetResReq_DifferentDieId)
 {
     CcuResReq req = CcuRepReferenceManager::GetResReq(1);
-    EXPECT_GT(req.continuousXnReq[1], 0u);
+    EXPECT_GT(req.xnReq[1], 0u);
 }
 
 TEST_F(CcuRepReferenceManagerTest, GetFuncIn_Normal)
@@ -258,7 +258,7 @@ TEST_F(CcuRepReferenceManagerTest, GetRes_Normal)
 {
     CcuRepResource res;
     mgr->GetRes(res);
-    EXPECT_FALSE(res.continuousVariable[0].empty());
+    EXPECT_FALSE(res.variable[0].empty());
 }
 
 }

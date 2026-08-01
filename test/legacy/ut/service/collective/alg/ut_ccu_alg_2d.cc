@@ -310,12 +310,26 @@ HcclResult CtxMgrGetResourceStubAlg(
     ccuResRepo.gsa[1][0].startId = 0;
     ccuResRepo.gsa[1][0].num = 100;
 
+    ccuResRepo.blockGsa[0].resize(1);
+    ccuResRepo.blockGsa[0][0].startId = 0;
+    ccuResRepo.blockGsa[0][0].num = 100;
+    ccuResRepo.blockGsa[1].resize(1);
+    ccuResRepo.blockGsa[1][0].startId = 0;
+    ccuResRepo.blockGsa[1][0].num = 100;
+
     ccuResRepo.xn[0].resize(1);
     ccuResRepo.xn[0][0].startId = 1024;
     ccuResRepo.xn[0][0].num = 1536;
     ccuResRepo.xn[1].resize(1);
     ccuResRepo.xn[1][0].startId = 1024;
     ccuResRepo.xn[1][0].num = 1536;
+
+    ccuResRepo.blockXn[0].resize(1);
+    ccuResRepo.blockXn[0][0].startId = 1024;
+    ccuResRepo.blockXn[0][0].num = 1536;
+    ccuResRepo.blockXn[1].resize(1);
+    ccuResRepo.blockXn[1][0].startId = 1024;
+    ccuResRepo.blockXn[1][0].num = 1536;
 
     ccuResRepo.mission.mission[0].resize(1);
     ccuResRepo.mission.mission[0][0].startId = 0;

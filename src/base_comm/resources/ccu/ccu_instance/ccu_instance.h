@@ -8,9 +8,10 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CCU_RES_CONTAINER_H
-#define CCU_RES_CONTAINER_H
+#ifndef HCOMM_CCU_INSTANCE_H
+#define HCOMM_CCU_INSTANCE_H
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -18,6 +19,8 @@
 #include "ccu_res_pack.h"
 #include "ccu_drv_handle.h"
 #include "ccu_device_res.h"
+#include "ccu_res_desc.h"
+#include "ccu_res_desc_mgr.h"
 
 namespace hcomm {
 
@@ -26,11 +29,17 @@ namespace hcomm {
  */
 class CcuInstance {
 public:
-    explicit CcuInstance(CcuInstanceType insType) : insType_(insType) {};
+    explicit CcuInstance(){};
     ~CcuInstance();
-    CcuResult Init();
+    CcuResult InitByInsType(const CcuInstanceType insType);
+    // 基于资源描述符数组初始化（新接口路径，资源数量由 resDesc 驱动）
+    CcuResult InitByResDescs(const CcuResDesc *descs[], uint32_t descNum);
+    // 使用当前 Device 上所有已使能 ioDie 的全部资源初始化
+    CcuResult InitByAllRes();
     CcuResult Reset();
     CcuResPack *GetResPack();
+    // 获取 ccuIns 在指定 die 上持有的资源描述符，用于查询接口
+    const CcuResDesc &GetTotalResDescs(uint8_t dieId) const;
     CcuResult SaveKernel(const CcuKernelHandle kernelHandle);
     const std::vector<CcuKernelHandle> &GetUntranslatedKernels();
 
@@ -40,15 +49,18 @@ public:
     void AbortRegister();
 
 private:
+    // 从 resPack_ 取 CcuResRepository，把各 die 各资源类型的占用数量写入 totalResDescs_
+    CcuResult FillTotalResDescs();
+
     enum class RegisterState { IDLE, REGISTERING, REGISTER_ABORTED };
     RegisterState registerState_{RegisterState::IDLE};
-    CcuInstanceType insType_{CcuInstanceType::CCU_UNUSED};
     int32_t devLogicId_{INT32_MAX};
     std::shared_ptr<hcomm::CcuDrvHandle> ccuDrvHandle_{};
     std::unique_ptr<CcuResPack> resPack_{};
     std::vector<CcuKernelHandle> kernelHandles_{};
     std::vector<CcuKernelHandle> untranslatedKernelHandles_{};
+    std::array<CcuResDesc, CCU_MAX_IODIE_NUM> totalResDescs_{}; // ccuIns持有的全部资源描述符
 };
 
 } // namespace hcomm
-#endif // CCU_RES_CONTAINER_H
+#endif // HCOMM_CCU_INSTANCE_H

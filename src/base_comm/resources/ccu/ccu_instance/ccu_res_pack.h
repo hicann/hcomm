@@ -11,16 +11,19 @@
 #define CCU_RES_PACK_H
 
 #include "ccu_types.h"
+#include "ccu_res_desc.h"
 #include "ccu_device_pub.h"
 
 namespace hcomm {
 
 class CcuResPack{
 public:
-    explicit CcuResPack(CcuInstanceType insType) : insType_(insType) {};
+    explicit CcuResPack() {};
     ~CcuResPack();
-
-    CcuResult Init();
+    // 基于实例类型初始化
+    CcuResult InitByInsType(const CcuInstanceType insType);
+    // 基于资源描述符数组初始化（资源数量由 resDesc 驱动，与 Init 的 insType 路径区分）
+    CcuResult InitByResDescs(const CcuResDesc *descs[], uint32_t descNum);
     CcuResult Reset();
 
     CcuResRepository &GetCcuResRepo();
@@ -32,7 +35,6 @@ private:
     CcuResPack &operator=(CcuResPack &&that) = delete;
 
     int32_t devLogicId_{0};
-    CcuInstanceType insType_{CcuInstanceType::CCU_UNUSED};
     CcuResHandle resHandle_{nullptr};
     CcuResRepository resRepo_{};
 };

@@ -55,24 +55,26 @@ CcuResult CcuInstanceMgr::Deinit()
 {
     std::unique_lock<std::shared_timed_mutex> lock(insMapMutex_);
     insMap_.clear();
+    (void)resDescMgr_.Deinit();
     initializedFlag_ = false;
     return CcuResult::CCU_SUCCESS;
 }
 
-CcuResult CcuInstanceMgr::Create(
-    CcuInstanceType insType, CcuInsHandle &insHandle)
+CcuResult CcuInstanceMgr::CreateByInsType(const CcuInstanceType insType, CcuInsHandle &insHandle)
 {
     std::unique_lock<std::shared_timed_mutex> lock(insMapMutex_);
 
     std::unique_ptr<CcuInstance> instance{nullptr};
     EXCEPTION_CATCH(
-        instance = std::make_unique<CcuInstance>(insType),
-        return CcuResult::CCU_E_PTR);
+        instance = std::make_unique<CcuInstance>(),
+        return CcuResult::CCU_E_INTERNAL);
 
-    CCU_CHK_RET(instance->Init());
+    CCU_CHK_RET(instance->InitByInsType(insType));
 
     instanceId_ += 1;
-    insMap_.emplace(instanceId_, std::move(instance));
+    EXCEPTION_CATCH(
+        insMap_.emplace(instanceId_, std::move(instance)),
+        return CcuResult::CCU_E_INTERNAL);
     insHandle = instanceId_;
     return CcuResult::CCU_SUCCESS;
 }
@@ -102,6 +104,82 @@ CcuResult CcuInstanceMgr::Destroy(CcuInsHandle insHandle)
 
     insMap_.erase(it);
     return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuInstanceMgr::CreateByResDescs(
+    const CcuResDesc *descs[], uint32_t descNum, CcuInsHandle &insHandle)
+{
+    std::unique_lock<std::shared_timed_mutex> lock(insMapMutex_);
+
+    std::unique_ptr<CcuInstance> instance{nullptr};
+    EXCEPTION_CATCH(
+        instance = std::make_unique<CcuInstance>(),
+        return CcuResult::CCU_E_INTERNAL);
+
+    CCU_CHK_RET(instance->InitByResDescs(descs, descNum));
+
+    instanceId_ += 1;
+    EXCEPTION_CATCH(
+        insMap_.emplace(instanceId_, std::move(instance)),
+        return CcuResult::CCU_E_INTERNAL);
+    insHandle = instanceId_;
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuInstanceMgr::CreateByAllRes(CcuInsHandle &insHandle)
+{
+    std::unique_lock<std::shared_timed_mutex> lock(insMapMutex_);
+
+    std::unique_ptr<CcuInstance> instance{nullptr};
+    EXCEPTION_CATCH(
+        instance = std::make_unique<CcuInstance>(),
+        return CcuResult::CCU_E_INTERNAL);
+
+    CCU_CHK_RET(instance->InitByAllRes());
+
+    instanceId_ += 1;
+    EXCEPTION_CATCH(
+        insMap_.emplace(instanceId_, std::move(instance)),
+        return CcuResult::CCU_E_INTERNAL);
+    insHandle = instanceId_;
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuInstanceMgr::QueryInsResDesc(CcuInsHandle &ccuInsHandle, uint8_t dieId, HcommCcuResDescHandle &resDesc)
+{
+    std::shared_lock<std::shared_timed_mutex> lock(insMapMutex_);
+
+    auto it = insMap_.find(ccuInsHandle);
+    if (it == insMap_.end()) {
+        HCCL_ERROR("[CcuInstanceMgr][%s] handle[%llx] is not existed.",
+            __func__, ccuInsHandle);
+        return CcuResult::CCU_E_NOT_FOUND;
+    }
+
+    // 从 ccuIns 持有的 totalResDescs_ 取该 die 的资源描述符，逐项写入入参 resDesc
+    const auto &totalDesc = it->second->GetTotalResDescs(dieId);
+    uint32_t num = 0;
+    CCU_CHK_RET(totalDesc.QueryResNum(ResType::LOOP, num));
+    CCU_CHK_RET(resDescMgr_.SetResNum(resDesc, ResType::LOOP, num));
+    CCU_CHK_RET(totalDesc.QueryResNum(ResType::MS, num));
+    CCU_CHK_RET(resDescMgr_.SetResNum(resDesc, ResType::MS, num));
+    CCU_CHK_RET(totalDesc.QueryResNum(ResType::CKE, num));
+    CCU_CHK_RET(resDescMgr_.SetResNum(resDesc, ResType::CKE, num));
+    CCU_CHK_RET(totalDesc.QueryResNum(ResType::XN, num));
+    CCU_CHK_RET(resDescMgr_.SetResNum(resDesc, ResType::XN, num));
+    CCU_CHK_RET(totalDesc.QueryResNum(ResType::GSA, num));
+    CCU_CHK_RET(resDescMgr_.SetResNum(resDesc, ResType::GSA, num));
+    CCU_CHK_RET(totalDesc.QueryResNum(ResType::MISSION, num));
+    CCU_CHK_RET(resDescMgr_.SetResNum(resDesc, ResType::MISSION, num));
+    CCU_CHK_RET(totalDesc.QueryResNum(ResType::INS, num));
+    CCU_CHK_RET(resDescMgr_.SetResNum(resDesc, ResType::INS, num));
+
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResDescMgr &CcuInstanceMgr::GetResDescMgr()
+{
+    return resDescMgr_;
 }
 
 } // namespace hcomm

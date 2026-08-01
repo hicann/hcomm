@@ -27,6 +27,7 @@ struct CcuRepResource {
     std::array<std::vector<CcuRep::CompletedEvent>, CCU_MAX_IODIE_NUM> completedEvent;
     std::array<std::vector<CcuRep::CompletedEvent>, CCU_MAX_IODIE_NUM> blockCompletedEvent;
     std::array<std::vector<CcuRep::Address>, CCU_MAX_IODIE_NUM>    address;
+    std::array<std::vector<CcuRep::Address>, CCU_MAX_IODIE_NUM>    blockAddress;
     std::array<std::vector<CcuRep::Variable>, CCU_MAX_IODIE_NUM>   continuousVariable;
     std::array<std::vector<CcuRep::Variable>, CCU_MAX_IODIE_NUM>   variable;
     std::array<std::vector<CcuRep::LocalNotify>, CCU_MAX_IODIE_NUM> localNotify;

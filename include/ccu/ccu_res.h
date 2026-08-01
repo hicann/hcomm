@@ -19,44 +19,55 @@ extern "C" {
 #endif // __cplusplus
 
 /**
- * @brief 创建空白 CCU 资源描述符。
- * @param[in] dieId CCU 资源描述符归属的 ioDie ID。
- * @param[out] resDesc 创建成功后返回的资源描述符句柄，不可为 nullptr。
- * @return CcuResult。
+ * @brief 创建 CCU 实例资源描述符
+ * @param[in]  dieId    IO Die 编号，取值范围 [0, CCU_MAX_IODIE_NUM)
+ * @param[out] resDesc  输出指针，成功时写入 HcommCcuResDescHandle 句柄；调用方负责通过
+ *                      HcommCcuInsResDescDestroy 释放
+ * @return CCU_SUCCESS  创建成功
+ *         CCU_E_PARA   dieId 超出合法范围
+ *         CCU_E_PTR    resDesc 为 nullptr
+ *         CCU_E_INTERNAL 内部资源描述符创建或登记失败
  */
 extern CcuResult HcommCcuInsResDescCreate(uint32_t dieId, HcommCcuResDescHandle *resDesc);
 
 /**
- * @brief 销毁 CCU 资源描述符。
- * @param[in] resDesc 资源描述符句柄。
- * @return CcuResult。
+ * @brief 销毁 CCU 实例资源描述符
+ * @param[in] resDesc 资源描述符句柄，由 HcommCcuInsResDescCreate 创建
+ * @return CCU_SUCCESS  销毁成功
+ *         CCU_E_NOT_FOUND resDesc 未注册
  */
 extern CcuResult HcommCcuInsResDescDestroy(HcommCcuResDescHandle resDesc);
 
 /**
- * @brief 查询 CCU 资源描述符归属的 ioDie ID。
- * @param[in] resDesc 资源描述符句柄。
- * @param[out] dieId 查询成功后返回 ioDie ID，不可为 nullptr。
- * @return CcuResult。
+ * @brief 查询 CCU 资源描述符中已设置的 Die ID
+ * @param[in]  resDesc  资源描述符句柄
+ * @param[out] dieId    输出指针，接收已设置的 Die ID
+ * @return CCU_SUCCESS  查询成功
+ *         CCU_E_PTR    dieId 为 nullptr
+ *         CCU_E_NOT_FOUND resDesc 未注册
  */
 extern CcuResult HcommCcuInsResDescQueryDieId(HcommCcuResDescHandle resDesc, uint32_t *dieId);
 
 /**
- * @brief 设置指定 CCU 资源描述符内指定资源类型的资源数量。
- * @param[in] resDesc 资源描述符句柄。
- * @param[in] resType 资源类型。
- * @param[in] resNum 资源数量。
- * @return CcuResult。
+ * @brief 按资源类型设置 CCU 资源描述符中的资源数量
+ * @param[in,out] resDesc  由 HcommCcuInsResDescCreate 创建的资源描述符句柄，成功时更新指定资源类型的资源数量
+ * @param[in] resType  资源类型，取 HcommCcuResType 枚举值
+ * @param[in] resNum   期望的资源数量；设置为 0 表示不申请该类型资源
+ * @return CCU_SUCCESS  设置成功
+ *         CCU_E_PARA   resType 不是合法的 HcommCcuResType 枚举值
+ *         CCU_E_NOT_FOUND resDesc 未注册
  */
-extern CcuResult HcommCcuInsResDescSetNum(
-    HcommCcuResDescHandle resDesc, HcommCcuResType resType, uint32_t resNum);
+extern CcuResult HcommCcuInsResDescSetNum(HcommCcuResDescHandle resDesc, HcommCcuResType resType, uint32_t resNum);
 
 /**
- * @brief 查询指定 CCU 资源描述符内指定资源类型的资源数量。
- * @param[in] resDesc 资源描述符句柄。
- * @param[in] resType 资源类型。
- * @param[out] resNum 查询成功后返回资源数量，不可为 nullptr。
- * @return CcuResult。
+ * @brief 按资源类型查询 CCU 资源描述符中已设置的资源数量
+ * @param[in]  resDesc  资源描述符句柄
+ * @param[in]  resType  资源类型，取 HcommCcuResType 枚举值
+ * @param[out] resNum   输出指针，接收已设置的资源数量
+ * @return CCU_SUCCESS  查询成功
+ *         CCU_E_PARA   resType 超出合法范围
+ *         CCU_E_PTR    resNum 为 nullptr
+ *         CCU_E_NOT_FOUND resDesc 未注册
  */
 extern CcuResult HcommCcuInsResDescQueryNum(
     HcommCcuResDescHandle resDesc, HcommCcuResType resType, uint32_t *resNum);
@@ -66,17 +77,22 @@ extern CcuResult HcommCcuInsResDescQueryNum(
  * @param[in] resDescs 资源描述符句柄数组。
  * @param[in] resDescNum 资源描述符数量。
  * @param[out] ccuInsHandle 创建成功后返回的 CCU 实例句柄，不可为 nullptr。
- * @return CcuResult。
+ * @return CCU_SUCCESS  创建成功
+ *         CCU_E_PTR    resDescs 或 ccuInsHandle 为 nullptr，或内部资源包分配失败
+ *         CCU_E_PARA   resDescNum 超出合法范围，或资源描述符中的 ioDie ID 重复
+ *         CCU_E_INTERNAL 内部 CCU 实例创建或登记失败
  */
 extern CcuResult HcommCcuInsCreate(
     const HcommCcuResDescHandle *resDescs, uint32_t resDescNum, CcuInsHandle *ccuInsHandle);
 
 /**
- * @brief 使用指定 ioDie 上的默认资源创建 CCU 实例。
- * @param[in] dieIds ioDie ID 数组。
- * @param[in] dieNum ioDie 数量。
+ * @brief 使用当前 Device 上所有已使能 ioDie 的全部资源创建 CCU 实例。
+ * @param[in] dieIds 保留参数，当前版本不读取，调用方应传入 nullptr。
+ * @param[in] dieNum 保留参数，当前版本不读取，调用方应传入 0。
  * @param[out] ccuInsHandle 创建成功后返回的 CCU 实例句柄，不可为 nullptr。
- * @return CcuResult。
+ * @return CCU_SUCCESS  创建成功
+ *         CCU_E_PTR    ccuInsHandle 为 nullptr，或内部资源包分配失败
+ *         CCU_E_INTERNAL 内部 CCU 实例创建或登记失败
  */
 extern CcuResult HcommCcuInsCreateDefault(
     const uint32_t *dieIds, uint32_t dieNum, CcuInsHandle *ccuInsHandle);
@@ -91,15 +107,21 @@ extern CcuResult HcommCcuInsDestroy(CcuInsHandle ccuInsHandle);
 /**
  * @brief 查询 CCU 实例在资源描述符所属 ioDie 上占用的资源。
  * @param[in] ccuInsHandle CCU 实例句柄。
- * @param[in,out] resDesc 调用方基于待查询 ioDie 创建的资源描述符句柄，查询成功后写入该 ioDie 上的占用资源数量。
+ * @param[in,out] resDesc 由 HcommCcuInsResDescCreate 创建的资源描述符句柄；接口读取创建 resDesc 时设置的
+ *                        dieId 作为待查询 ioDie，查询成功后写入该 ioDie 上的占用资源数量。
  * @return CcuResult。
  */
 extern CcuResult HcommCcuInsQueryResDesc(CcuInsHandle ccuInsHandle, HcommCcuResDescHandle resDesc);
 
 /**
- * @brief 查询资源描述符所属 ioDie 上的剩余 CCU 资源。
- * @param[in,out] resDesc 调用方基于待查询 ioDie 创建的资源描述符句柄，查询成功后写入该 ioDie 上的剩余资源数量。
- * @return CcuResult。
+ * @brief 查询指定 Die 上的剩余 CCU 资源（查询最大连续资源）
+ * @param[in,out] resDesc 由 HcommCcuInsResDescCreate 创建的资源描述符句柄；接口读取创建 resDesc 时设置的
+ *                        dieId 作为待查询 ioDie，查询成功后写入各资源类型的最大连续剩余数量
+ * @return CCU_SUCCESS     查询成功
+ *         CCU_E_NOT_FOUND resDesc 未注册
+ *         CCU_E_PARA      dieId 超出合法范围
+ *         CCU_E_UNAVAIL   指定的 Die 未使能
+ *         CCU_E_INTERNAL  底层资源查询失败
  */
 extern CcuResult HcommCcuQueryRemainResDesc(HcommCcuResDescHandle resDesc);
 
@@ -108,7 +130,8 @@ extern CcuResult HcommCcuQueryRemainResDesc(HcommCcuResDescHandle resDesc);
  * @param[in] kernelFunc CCU Kernel 函数指针，不可为 nullptr。
  * @param[in] kernelArgs CCU Kernel 参数数组；argNum 为 0 时可为 nullptr。
  * @param[in] argNum CCU Kernel 参数数量。
- * @param[in,out] resDesc 调用方创建的资源描述符句柄，查询成功后写入资源诉求。
+ * @param[in,out] resDesc 由 HcommCcuInsResDescCreate 创建的资源描述符句柄；接口读取创建 resDesc 时设置的
+ *                        dieId 作为资源统计的目标 ioDie，查询成功后写入资源诉求。
  * @return CcuResult。
  */
 extern CcuResult HcommCcuKernelQueryResReq(

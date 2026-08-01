@@ -82,6 +82,7 @@ void CcuContextReduceNHR1DMem2mem::InitResources()
     }
 
     input_ = CreateVariable();
+    isInputOutputEqual_ = CreateVariable();
     for (uint32_t transportIdx = 0; transportIdx < localSize_; transportIdx++) {
         HCCL_DEBUG("[CcuContextReduceNHR1DMem2mem] MyRank[%u], TransportId[%u]", rankId_, transportIdx);
         CHK_PRT_RET(transports[transportIdx] == nullptr,

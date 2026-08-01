@@ -17,15 +17,15 @@ namespace CcuRep {
 
 CcuRepReferenceManager::CcuRepReferenceManager(uint8_t deiId) : dieId(deiId)
 {
-    funcInVar.resize(FUNC_ARG_MAX);
-    funcOutVar.resize(FUNC_ARG_MAX);
+    funcInVar.resize(FUNC_IN_MAX);
+    funcOutVar.resize(FUNC_OUT_MAX);
     funcCallVar.resize(1 + FUNC_NEST_MAX + 1); // FUNC_NEST_MAX个xn存放返回地址，1个xn存放block的起始地址和1个xn存放函数地址调用时返回地址
 }
 
 CcuResReq CcuRepReferenceManager::GetResReq(uint8_t reqDieId)
 {
     CcuResReq resReq;
-    resReq.xnReq[reqDieId] = FUNC_ARG_MAX + FUNC_ARG_MAX + 1 + FUNC_NEST_MAX + 1;
+    resReq.xnReq[reqDieId] = FUNC_IN_MAX + FUNC_OUT_MAX + 1 + FUNC_NEST_MAX + 1;
     return resReq;
 }
 

@@ -58,11 +58,12 @@ public:
     
     HcclResult AllocIns(const uint8_t dieId, const uint32_t num, ResInfo &insInfo);
     HcclResult ReleaseIns(const uint8_t dieId, const ResInfo &insInfo);
+    uint32_t GetInsConsecutiveRemainSize(const uint8_t dieId) const;
     HcclResult AllocCke(const uint8_t dieId, const uint32_t num, std::vector<ResInfo> &ckeInfos);
     HcclResult ReleaseCke(const uint8_t dieId, const std::vector<ResInfo> &ckeInfos);
     HcclResult AllocXn(const uint8_t dieId, const uint32_t num, std::vector<ResInfo> &xnInfos);
     HcclResult ReleaseXn(const uint8_t dieId, const std::vector<ResInfo> &xnInfos);
-    
+
     // 0.5rtt专用接口
     HcclResult AllocWishCntXn(const uint8_t dieId,
         const std::string &resGroupTag, uint32_t &wishCntXn);

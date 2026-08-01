@@ -20,16 +20,40 @@
 
 #include "ccu_comp.h"
 #include "ccu_res_specs.h"
+#include "ccu_res_type_converter.h"
+#include "ccu_device_res.h"
+#include "ccu_rep_reference_manager_v1.h"
+#include "ccu_rep_reference_manager.h"
 
 namespace hcomm {
 
-constexpr uint32_t REQ_RES_TYPE_NUM = 10;
-constexpr uint32_t BLOCK_RES_TYPE_NUM = 3;
+constexpr uint32_t REQ_RES_TYPE_NUM = 11;
+constexpr uint32_t BLOCK_RES_TYPE_NUM = 5;
 constexpr uint32_t CONS_RES_TYPE_NUM = 1;
-constexpr uint32_t DISCRETE_RES_TYPE_NUM = 5;
+constexpr uint32_t DISCRETE_RES_TYPE_NUM = 4;
 constexpr uint32_t NON_BLOCK_TYPE_NUM = CONS_RES_TYPE_NUM + DISCRETE_RES_TYPE_NUM;
 constexpr uint32_t BLOCK_SIZE_MS_AX_DIE0 = 128;
 constexpr uint32_t CCUA_NUM = 4;
+
+constexpr uint32_t CCU_REPREFMGR_NEW_XN_NUM = hcomm::CcuRep::FUNC_ARG_MAX
+                                            + hcomm::CcuRep::FUNC_ARG_MAX
+                                            + 1 + hcomm::CcuRep::FUNC_NEST_MAX + 1;
+constexpr uint32_t CCU_REPREFMGR_LEGACY_XN_NUM = Hccl::CcuRep::FUNC_IN_MAX
+                                            + Hccl::CcuRep::FUNC_OUT_MAX
+                                            + 1 + Hccl::CcuRep::FUNC_NEST_MAX + 1;
+constexpr uint32_t CCU_REP_TRANSLATOR_GSA_NUM = 3;
+constexpr uint32_t CCU_REP_TRANSLATOR_CKE_NUM = 2;
+constexpr uint32_t CCU_REP_TRANSLATOR_XN_NUM = 4;
+// 建链预留数量 + 开源+legacy的CcuRepTranslator预留数量
+constexpr uint32_t RESERVED_DISCRETE_CKE_NUM = 4 * 128
+                                            + (CCU_REP_TRANSLATOR_CKE_NUM * 16) * 2;
+// 建链预留数量 + 开源+legacy的CcuRepReferenceManager预留数量 + 开源+legacy的CcuRepTranslator预留数量
+constexpr uint32_t RESERVED_DISCRETE_XN_NUM = 4 * 128
+                                            + CCU_REPREFMGR_LEGACY_XN_NUM * 16
+                                            + CCU_REPREFMGR_NEW_XN_NUM * 16
+                                            + (CCU_REP_TRANSLATOR_XN_NUM * 16) * 2;
+// 开源+legacy的CcuRepTranslator预留数量
+constexpr uint32_t RESERVED_DISCRETE_GSA_NUM = (CCU_REP_TRANSLATOR_GSA_NUM * 16) * 2;
 
 CcuResBatchAllocator &CcuResBatchAllocator::GetInstance(const int32_t deviceLogicId)
 {
@@ -65,7 +89,7 @@ HcclResult CcuResBatchAllocator::Init()
     }
     CHK_RET(ret);
 
-    ret = missionMgr_.PreAlloc(devLogicId_, resStrategys_[0].missionNum, dieEnableFlags_);
+    ret = missionMgr_.PreAlloc(devLogicId_, resStrategies_[0].missionNum, dieEnableFlags_);
     if (ret == HcclResult::HCCL_E_UNAVAIL) {
         HCCL_WARNING("[CcuResBatchAllocator][%s] pre alloc mission res failed but passed, "
             "some sources are not enough, devLogicId[%d].", __func__, devLogicId_);
@@ -89,36 +113,81 @@ HcclResult CcuResBatchAllocator::Deinit()
     return HcclResult::HCCL_SUCCESS;
 }
 
-struct CcuResBlockNum {
-    uint32_t loopNum{0};
-    uint32_t msNum{0};
-    uint32_t ckeNum{0};
-};
-
-static CcuResBlockNum GetPreAllocatedMaxBlockNum(const uint32_t devLogicId, const uint8_t dieId,
-    const std::array<CcuBlockResStrategy, CCU_MAX_IODIE_NUM> &resStrategys)
+static CcuResBlockNums GetPreAllocatedMaxBlockNums(const uint32_t devLogicId, const uint8_t dieId,
+    const std::array<CcuBlockResStrategy, CCU_MAX_IODIE_NUM> &resStrategies)
 {
-    CcuResBlockNum blockNum{};
+    CcuResBlockNums blockNums{};
 
     CcuResSpecifications &ccuResSepcs = CcuResSpecifications::GetInstance(devLogicId);
 
     uint32_t loopNum = 0;
     (void)ccuResSepcs.GetLoopEngineNum(dieId, loopNum);
-    blockNum.loopNum = loopNum / resStrategys[dieId].loopNum;
+    blockNums.loopNum = loopNum / resStrategies[dieId].loopNum;
 
     uint32_t msNum = 0;
     (void)ccuResSepcs.GetMsNum(dieId, msNum);
-    blockNum.msNum = msNum / resStrategys[dieId].msNum;
+    blockNums.msNum = msNum / resStrategies[dieId].msNum;
 
     uint32_t ckeNum = 0;
     (void)ccuResSepcs.GetCkeNum(dieId, ckeNum);
-    const uint32_t maxCkeBlockNum = ckeNum / resStrategys[dieId].ckeNum;
-    blockNum.ckeNum = std::min({std::max({blockNum.loopNum, blockNum.msNum}), maxCkeBlockNum});
+    if (ckeNum > RESERVED_DISCRETE_CKE_NUM) {
+        blockNums.ckeNum = (ckeNum - RESERVED_DISCRETE_CKE_NUM) / resStrategies[dieId].ckeNum;
+    } else {
+        blockNums.ckeNum = 0;
+    }
+
+    uint32_t xnNum = 0;
+    (void)ccuResSepcs.GetXnNum(dieId, xnNum);
+    if (xnNum > RESERVED_DISCRETE_XN_NUM) {
+        blockNums.xnNum = (xnNum - RESERVED_DISCRETE_XN_NUM) / resStrategies[dieId].xnNum;
+    } else {
+        blockNums.xnNum = 0;
+    }
+
+    if (ccuResSepcs.GetCcuVersion() == CcuVersion::CCU_V1) {
+        uint32_t gsaNum = 0;
+        (void)ccuResSepcs.GetGsaNum(dieId, gsaNum);
+        if (gsaNum > RESERVED_DISCRETE_GSA_NUM) {
+            blockNums.gsaNum = (gsaNum - RESERVED_DISCRETE_GSA_NUM) / resStrategies[dieId].gsaNum;
+        } else {
+            blockNums.gsaNum = 0;
+        }
+    } else {
+        blockNums.gsaNum = 0;
+    }
 
     HCCL_INFO("[CcuResBatchAllocator][%s] batch allocator will alloc blocks resources: loop blocks[%u] "
-        "ms blocks[%u] cke blocks[%u], devLogicId[%d] dieId[%u].", __func__, blockNum.loopNum,
-        blockNum.msNum, blockNum.ckeNum, devLogicId, dieId);
-    return blockNum;
+        "ms blocks[%u] cke blocks[%u] xn blocks[%u] gsa blocks[%u], devLogicId[%d] dieId[%u].",
+        __func__, blockNums.loopNum, blockNums.msNum, blockNums.ckeNum, blockNums.xnNum, blockNums.gsaNum,
+        devLogicId, dieId);
+    return blockNums;
+}
+
+HcclResult CcuResBatchAllocator::GetAllocatableMaxBlockResNum(ResType resType,
+    uint8_t dieId, uint32_t &num) const
+{
+    switch (resType) {
+        case ResType::LOOP:
+            num = maxResBlockNums_.loopNum * resStrategies_[dieId].loopNum;
+            break;
+        case ResType::MS:
+            num = maxResBlockNums_.msNum * resStrategies_[dieId].msNum;
+            break;
+        case ResType::CKE:
+            num = maxResBlockNums_.ckeNum * resStrategies_[dieId].ckeNum;
+            break;
+        case ResType::XN:
+            num = maxResBlockNums_.xnNum * resStrategies_[dieId].xnNum;
+            break;
+        case ResType::GSA:
+            num = maxResBlockNums_.gsaNum * resStrategies_[dieId].gsaNum;
+            break;
+        default:
+            HCCL_ERROR("[CcuResBatchAllocator][%s] unsupported block res type[%s], devLogicId[%d] dieId[%u].",
+                __func__, resType.Describe().c_str(), devLogicId_, dieId);
+            return HcclResult::HCCL_E_PARA;
+    }
+    return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuResBatchAllocator::PreAllocBlockRes()
@@ -132,11 +201,13 @@ HcclResult CcuResBatchAllocator::PreAllocBlockRes()
             continue;
         }
 
-        CcuResBlockNum blockNums = GetPreAllocatedMaxBlockNum(devLogicId_, dieId, resStrategys_);
+        maxResBlockNums_ = GetPreAllocatedMaxBlockNums(devLogicId_, dieId, resStrategies_);
         const std::array<std::tuple<ResType, uint32_t, uint32_t>, BLOCK_RES_TYPE_NUM> blockResReqs = {
-            std::make_tuple(ResType::LOOP, blockNums.loopNum, resStrategys_[dieId].loopNum),
-            std::make_tuple(ResType::MS, blockNums.msNum, resStrategys_[dieId].msNum),
-            std::make_tuple(ResType::CKE, blockNums.ckeNum, resStrategys_[dieId].ckeNum),
+            std::make_tuple(ResType::LOOP, maxResBlockNums_.loopNum, resStrategies_[dieId].loopNum),
+            std::make_tuple(ResType::MS, maxResBlockNums_.msNum, resStrategies_[dieId].msNum),
+            std::make_tuple(ResType::CKE, maxResBlockNums_.ckeNum, resStrategies_[dieId].ckeNum),
+            std::make_tuple(ResType::XN, maxResBlockNums_.xnNum, resStrategies_[dieId].xnNum),
+            std::make_tuple(ResType::GSA, maxResBlockNums_.gsaNum, resStrategies_[dieId].gsaNum),
         };
 
         for (auto &resReq : blockResReqs) {
@@ -175,7 +246,7 @@ HcclResult CcuResBatchAllocator::PreAllocBlockRes()
                 blockInfo.handle    = 0;
                 tempBlocks.emplace_back(blockInfo);
             }
-            resBlocks_[dieId].emplace_back(tempBlocks);
+            resBlocks_[dieId][resType] = std::move(tempBlocks);
         }
     }
 
@@ -194,16 +265,17 @@ static bool CheckReqValid(const CcuResReq &req, int32_t devLogicId,
             req.blockMsReq[i],
             req.ckeReq[i],
             req.blockCkeReq[i],
-            req.continuousXnReq[i],
             req.xnReq[i],
+            req.blockXnReq[i],
             req.gsaReq[i],
+            req.blockGsaReq[i],
             req.missionReq.req[i]
         };
 
         const bool ifReqEmpty = std::all_of(std::begin(reqs), std::end(reqs),
             [](uint32_t x) { return x == 0; });
         if (!dieEnableFlags[i] && !ifReqEmpty) { // 当前die未使能，但请求资源
-            HCCL_WARNING("[CcuResBatchAllocator][%s] failed, dieId[%u] is not enable, "
+            HCCL_ERROR("[CcuResBatchAllocator][%s] failed, dieId[%u] is not enable, "
                 "but resource request is not empty, devLogicId[%d].",
                 __func__, i, devLogicId);
             return false;
@@ -216,7 +288,7 @@ static bool CheckReqValid(const CcuResReq &req, int32_t devLogicId,
     }
 
     if (!ifValid) {
-        HCCL_WARNING("[CcuResBatchAllocator][%s] all dies resource request is empty, "
+        HCCL_ERROR("[CcuResBatchAllocator][%s] all dies resource request is empty, "
             "devLogicId[%d].", __func__, devLogicId);
     }
 
@@ -331,11 +403,15 @@ HcclResult CcuResBatchAllocator::AllocBlockRes(const uintptr_t handleKey,
 
         std::array<ResTypeReqNumBlockNumFunc, BLOCK_RES_TYPE_NUM> blockReqParas = {
             std::make_tuple(ResType::LOOP, resReq.blockLoopEngineReq[dieId],
-                resStrategys_[dieId].loopNum, std::ref(resRepoPtr->blockLoopEngine[dieId])),
+                resStrategies_[dieId].loopNum, std::ref(resRepoPtr->blockLoopEngine[dieId])),
             std::make_tuple(ResType::MS, resReq.blockMsReq[dieId],
-                resStrategys_[dieId].msNum, std::ref(resRepoPtr->blockMs[dieId])),
+                resStrategies_[dieId].msNum, std::ref(resRepoPtr->blockMs[dieId])),
             std::make_tuple(ResType::CKE, resReq.blockCkeReq[dieId],
-                resStrategys_[dieId].ckeNum, std::ref(resRepoPtr->blockCke[dieId]))
+                resStrategies_[dieId].ckeNum, std::ref(resRepoPtr->blockCke[dieId])),
+            std::make_tuple(ResType::XN, resReq.blockXnReq[dieId],
+                resStrategies_[dieId].xnNum, std::ref(resRepoPtr->blockXn[dieId])),
+            std::make_tuple(ResType::GSA, resReq.blockGsaReq[dieId],
+                resStrategies_[dieId].gsaNum, std::ref(resRepoPtr->blockGsa[dieId]))
         };
         
         for (uint32_t blockType = 0; blockType < BLOCK_RES_TYPE_NUM; blockType++) {
@@ -347,7 +423,7 @@ HcclResult CcuResBatchAllocator::AllocBlockRes(const uintptr_t handleKey,
 
             const ResType resType = std::get<0>(req);
             const uint32_t blockSize = std::get<2>(req);
-            auto &blocks = resBlocks_[dieId][blockType];
+            auto &blocks = resBlocks_[dieId][resType];
             auto &resInfos = std::get<3>(req);
             auto ret = HandleBlockRes(handleKey, num, blockSize, blocks, resInfos);
             if (ret != HcclResult::HCCL_SUCCESS) {
@@ -355,7 +431,7 @@ HcclResult CcuResBatchAllocator::AllocBlockRes(const uintptr_t handleKey,
                     "failed to allocate [%s] block resource, remaining block resources are "
                     "not enough, request num[%u].", __func__, devLogicId_, dieId,
                     resType.Describe().c_str(), num);
-                DumpBlockResInfo(std::get<0>(req), resBlocks_[dieId][blockType]);
+                DumpBlockResInfo(resType, resBlocks_[dieId][resType]);
                 return ret;
             }
         }
@@ -377,8 +453,8 @@ HcclResult CcuResBatchAllocator::AllocConsecutiveRes(const CcuResReq &resReq,
         }
 
         std::array<ResTypeReqNumResInfoTuple, CONS_RES_TYPE_NUM> reqParas = {
-            std::make_tuple(ResType::XN, resReq.continuousXnReq[dieId],
-                std::ref(resRepoPtr->continuousXn[dieId]))
+            std::make_tuple(ResType::XN, resReq.xnReq[dieId],
+                std::ref(resRepoPtr->xn[dieId]))
         };
 
         for (const auto &req : reqParas) {
@@ -422,7 +498,6 @@ HcclResult CcuResBatchAllocator::AllocDiscreteRes(const CcuResReq &resReq,
                 std::ref(resRepoPtr->loopEngine[dieId])),
             std::make_tuple(ResType::MS, resReq.msReq[dieId], std::ref(resRepoPtr->ms[dieId])),
             std::make_tuple(ResType::CKE, resReq.ckeReq[dieId], std::ref(resRepoPtr->cke[dieId])),
-            std::make_tuple(ResType::XN, resReq.xnReq[dieId], std::ref(resRepoPtr->xn[dieId])),
             std::make_tuple(ResType::GSA, resReq.gsaReq[dieId], std::ref(resRepoPtr->gsa[dieId]))
         };
 
@@ -546,7 +621,7 @@ HcclResult CcuResBatchAllocator::ReleaseResource(std::unique_ptr<CcuResRepositor
 
 void CcuResBatchAllocator::ReleaseBlockResource(std::unique_ptr<CcuResRepository> &resRepoPtr)
 {
-    using BlockSizeResNum = std::pair<uint32_t, std::vector<ResInfo>&>;
+    using BlockSizeResNum = std::tuple<ResType, uint32_t, std::vector<ResInfo>&>;
 
     for (uint8_t i = 0; i < CCU_MAX_IODIE_NUM; i++) {
         if (!dieEnableFlags_[i]) {
@@ -554,19 +629,22 @@ void CcuResBatchAllocator::ReleaseBlockResource(std::unique_ptr<CcuResRepository
         }
 
         const std::array<BlockSizeResNum, BLOCK_RES_TYPE_NUM> blockReqParas = {
-            std::make_pair(resStrategys_[i].loopNum, std::ref(resRepoPtr->blockLoopEngine[i])),
-            std::make_pair(resStrategys_[i].msNum, std::ref(resRepoPtr->blockMs[i])),
-            std::make_pair(resStrategys_[i].ckeNum, std::ref(resRepoPtr->blockCke[i]))
+            std::make_tuple(ResType::LOOP, resStrategies_[i].loopNum, std::ref(resRepoPtr->blockLoopEngine[i])),
+            std::make_tuple(ResType::MS, resStrategies_[i].msNum, std::ref(resRepoPtr->blockMs[i])),
+            std::make_tuple(ResType::CKE, resStrategies_[i].ckeNum, std::ref(resRepoPtr->blockCke[i])),
+            std::make_tuple(ResType::XN, resStrategies_[i].xnNum, std::ref(resRepoPtr->blockXn[i])),
+            std::make_tuple(ResType::GSA, resStrategies_[i].gsaNum, std::ref(resRepoPtr->blockGsa[i]))
         };
 
         for (uint32_t j = 0; j < BLOCK_RES_TYPE_NUM; j++) {
             auto req = blockReqParas[j];
-            std::vector<ResInfo> &resInfos = req.second;
-            if (resInfos.size() == 0) {
+            std::vector<ResInfo> &resInfos = std::get<2>(req);
+            auto resType = std::get<0>(req);
+            std::vector<BlockInfo> &blocks = resBlocks_[i][resType];
+            if (resInfos.size() == 0 || blocks.size() == 0) {
                 continue;
             }
-
-            ReleaseBlockRes(req.first, resBlocks_[i][j], resInfos);
+            ReleaseBlockRes(std::get<1>(req), blocks, resInfos);
         }
     }
 }
@@ -629,7 +707,6 @@ HcclResult CcuResBatchAllocator::ReleaseNonBlockTypeRes(
             {ResType::LOOP, &resRepoPtr->loopEngine[dieId]},
             {ResType::MS,   &resRepoPtr->ms[dieId]},
             {ResType::CKE,  &resRepoPtr->cke[dieId]},
-            {ResType::XN,   &resRepoPtr->continuousXn[dieId]},
             {ResType::XN,   &resRepoPtr->xn[dieId]},
             {ResType::GSA,  &resRepoPtr->gsa[dieId]}
         }};
@@ -820,6 +897,67 @@ void CcuResBatchAllocator::CcuMissionMgr::Release(MissionResInfo &missionInfos)
 void CcuResBatchAllocator::CcuMissionMgr::Reset()
 {
     blocks_.clear();
+}
+
+// 根据 resType 解析对应的 blocks 指针，将 MISSION 与普通块类型的分支收敛至此
+// GetAllocatableMaxBlockResNum 内部通过 switch 校验块类型，非法类型直接返回错误
+HcclResult CcuResBatchAllocator::ResolveBlocksPtr(uint8_t dieId, ResType resType,
+    const std::vector<BlockInfo>*& blocksPtr) const
+{
+    if (resType == ResType::MISSION) {
+        blocksPtr = &missionMgr_.GetBlocks();
+        return HCCL_SUCCESS;
+    }
+
+    uint32_t poolSize = 0;
+    CHK_RET(GetAllocatableMaxBlockResNum(resType, dieId, poolSize));
+    if (poolSize == 0) {
+        blocksPtr = nullptr;
+        return HCCL_SUCCESS;
+    }
+
+    auto it = resBlocks_[dieId].find(resType);
+    if (it == resBlocks_[dieId].end()) {
+        blocksPtr = nullptr;
+        return HCCL_SUCCESS;
+    }
+    blocksPtr = &it->second;
+    return HCCL_SUCCESS;
+}
+
+// 直接扫描 resBlocks 的 allocated 标志计算最大连续空闲块数 × blockSize
+// Block 分配时 HandleBlockRes 同步更新 allocated, 无需绕道 handleMap
+HcclResult CcuResBatchAllocator::QueryRemainRes(
+    uint8_t dieId, ResType resType, uint32_t &remainNum) const
+{
+    const std::vector<BlockInfo> *blocksPtr = nullptr;
+    uint32_t blockSize = 0;
+
+    CHK_RET(ResolveBlocksPtr(dieId, resType, blocksPtr));
+    if (blocksPtr == nullptr || blocksPtr->empty()) {
+        remainNum = 0;
+        return HCCL_SUCCESS;
+    }
+
+    blockSize = blocksPtr->front().num;
+    uint32_t maxFreeBlocks = 0;
+    uint32_t curFreeBlocks = 0;
+    for (const auto &block : *blocksPtr) {
+        if (!block.allocated) {
+            curFreeBlocks++;
+            continue;
+        }
+        maxFreeBlocks = curFreeBlocks > maxFreeBlocks ? curFreeBlocks : maxFreeBlocks;
+        curFreeBlocks = 0;
+    }
+    if (curFreeBlocks > maxFreeBlocks) {
+        maxFreeBlocks = curFreeBlocks;
+    }
+
+    remainNum = maxFreeBlocks * blockSize;
+    HCCL_INFO("[CcuResBatchAllocator][%s] resType[%s] maxFreeBlocks[%u] blockSize[%u] remainNum[%u]",
+        __func__, resType.Describe().c_str(), maxFreeBlocks, blockSize, remainNum);
+    return HCCL_SUCCESS;
 }
 
 }; // namespace hcomm

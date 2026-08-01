@@ -63,6 +63,12 @@ static HcclResult MockReleaseResHandle(const int32_t deviceLogicId, const CcuRes
     return CcuResBatchAllocator::GetInstance(deviceLogicId).ReleaseResHandle(handle);
 }
 
+static HcclResult MockQueryRemainRes(const int32_t deviceLogicId,
+    const uint8_t dieId, const ResType &internalType, uint32_t &remainNum)
+{
+    return CcuResBatchAllocator::GetInstance(deviceLogicId).QueryRemainRes(dieId, internalType, remainNum);
+}
+
 static HcclResult MockAllocIns(const int32_t deviceLogicId, const uint8_t dieId,
     const uint32_t num, ResInfo &insInfo)
 {
@@ -111,7 +117,37 @@ static HcclResult MockGetInstructionNum(const int32_t deviceLogicId, const uint8
     return CcuResSpecifications::GetInstance(deviceLogicId).GetInstructionNum(dieId, instrNum);
 }
 
-static HcclResult MockGetXnBaseAddr(const uint32_t devLogicId, const uint8_t dieId,
+static HcclResult MockGetLoopEngineNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    return CcuResBatchAllocator::GetInstance(deviceLogicId).GetAllocatableMaxBlockResNum(ResType::LOOP, dieId, num);
+}
+
+static HcclResult MockGetMsNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    return CcuResBatchAllocator::GetInstance(deviceLogicId).GetAllocatableMaxBlockResNum(ResType::MS, dieId, num);
+}
+
+static HcclResult MockGetCkeNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    return CcuResBatchAllocator::GetInstance(deviceLogicId).GetAllocatableMaxBlockResNum(ResType::CKE, dieId, num);
+}
+
+static HcclResult MockGetXnNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    return CcuResBatchAllocator::GetInstance(deviceLogicId).GetAllocatableMaxBlockResNum(ResType::XN, dieId, num);
+}
+
+static HcclResult MockGetGsaNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    return CcuResBatchAllocator::GetInstance(deviceLogicId).GetAllocatableMaxBlockResNum(ResType::GSA, dieId, num);
+}
+
+static HcclResult MockGetMissionNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    return CcuResSpecifications::GetInstance(deviceLogicId).GetMissionNum(dieId, num);
+}
+
+static HcclResult MockGetXnBaseAddr(const int32_t devLogicId, const uint8_t dieId,
     uint64_t &xnBaseAddr)
 {
     return CcuResSpecifications::GetInstance(devLogicId).GetXnBaseAddr(dieId, xnBaseAddr);
@@ -181,6 +217,7 @@ void MockCcuDevMgr()
     MOCKER(hcomm::CcuDevMgrImp::GetLoopChannelId).stubs().will(invoke(hcomm::MockGetLoopChannelId));
     MOCKER(hcomm::CcuDevMgrImp::GetResource).stubs().will(invoke(hcomm::MockGetResource));
     MOCKER(hcomm::CcuDevMgrImp::ReleaseResHandle).stubs().will(invoke(hcomm::MockReleaseResHandle));
+    MOCKER(hcomm::CcuDevMgrImp::QueryRemainRes).stubs().will(invoke(hcomm::MockQueryRemainRes));
     MOCKER(hcomm::CcuDevMgrImp::AllocIns).stubs().will(invoke(hcomm::MockAllocIns));
     MOCKER(hcomm::CcuDevMgrImp::ReleaseIns).stubs().will(invoke(hcomm::MockReleaseIns));
     MOCKER(hcomm::CcuDevMgrImp::AllocCke).stubs().will(invoke(hcomm::MockAllocCke));
@@ -188,7 +225,13 @@ void MockCcuDevMgr()
     MOCKER(hcomm::CcuDevMgrImp::AllocXn).stubs().will(invoke(hcomm::MockAllocXn));
     MOCKER(hcomm::CcuDevMgrImp::ReleaseXn).stubs().will(invoke(hcomm::MockReleaseXn));
     MOCKER(hcomm::CcuDevMgrImp::GetMissionKey).stubs().will(invoke(hcomm::MockGetMissionKey));
-    MOCKER(hcomm::CcuDevMgrImp::GetInstructionNum).stubs().will(invoke(hcomm::MockGetInstructionNum));
+    MOCKER(hcomm::CcuDevMgrImp::GetResSpecsInstructionNum).stubs().will(invoke(hcomm::MockGetInstructionNum));
+    MOCKER(hcomm::CcuDevMgrImp::GetAllocatableMaxLoopEngineNum).stubs().will(invoke(hcomm::MockGetLoopEngineNum));
+    MOCKER(hcomm::CcuDevMgrImp::GetAllocatableMaxMsNum).stubs().will(invoke(hcomm::MockGetMsNum));
+    MOCKER(hcomm::CcuDevMgrImp::GetAllocatableMaxCkeNum).stubs().will(invoke(hcomm::MockGetCkeNum));
+    MOCKER(hcomm::CcuDevMgrImp::GetAllocatableMaxXnNum).stubs().will(invoke(hcomm::MockGetXnNum));
+    MOCKER(hcomm::CcuDevMgrImp::GetAllocatableMaxGsaNum).stubs().will(invoke(hcomm::MockGetGsaNum));
+    MOCKER(hcomm::CcuDevMgrImp::GetResSpecsMissionNum).stubs().will(invoke(hcomm::MockGetMissionNum));
     MOCKER(hcomm::CcuDevMgrImp::GetXnBaseAddr).stubs().will(invoke(hcomm::MockGetXnBaseAddr));
     MOCKER(hcomm::CcuDevMgrImp::ConfigChannel).stubs().will(invoke(hcomm::MockConfigChannel));
     MOCKER(hcomm::CcuDevMgrImp::GetCcuResourceSpaceBufInfo).stubs().will(invoke(hcomm::MockGetCcuResourceSpaceBufInfo));

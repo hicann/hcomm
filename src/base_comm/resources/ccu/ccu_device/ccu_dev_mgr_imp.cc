@@ -38,6 +38,7 @@
 
 #include "ccu_types.h"
 #include "ccu_log.h"
+#include "ccu_res_desc.h"
 
 #include "dev_type.h"
 
@@ -137,11 +138,163 @@ CcuResult CcuGetDieEnableInfo(int32_t deviceLogicId, uint8_t dieId, bool &enable
     return CcuResult::CCU_SUCCESS;
 }
 
+// 查询指定 die 上各资源类型可分配的总量
+CcuResult CcuGetLoopEngineNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    CCU_CHK_RET(CcuDevMgrImp::GetAllocatableMaxLoopEngineNum(deviceLogicId, dieId, num));
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuGetMsNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    CCU_CHK_RET(CcuDevMgrImp::GetAllocatableMaxMsNum(deviceLogicId, dieId, num));
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuGetCkeNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    CCU_CHK_RET(CcuDevMgrImp::GetAllocatableMaxCkeNum(deviceLogicId, dieId, num));
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuGetXnNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    CCU_CHK_RET(CcuDevMgrImp::GetAllocatableMaxXnNum(deviceLogicId, dieId, num));
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuGetGsaNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    CCU_CHK_RET(CcuDevMgrImp::GetAllocatableMaxGsaNum(deviceLogicId, dieId, num));
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuGetInstructionNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    CCU_CHK_RET(CcuDevMgrImp::GetResSpecsInstructionNum(deviceLogicId, dieId, num));
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuGetMissionNum(int32_t deviceLogicId, uint8_t dieId, uint32_t &num)
+{
+    CCU_CHK_RET(CcuDevMgrImp::GetResSpecsMissionNum(deviceLogicId, dieId, num));
+    return CcuResult::CCU_SUCCESS;
+}
+
+HcclResult CcuGetMainboardType(uint32_t deviceLogicId, Hccl::HcclMainboardId &hcclMainboardId)
+{
+    CHK_RET(CcuGetMainboardId(deviceLogicId, hcclMainboardId));
+    return HcclResult::HCCL_SUCCESS;
+}
+
+// 单个描述符的资源数量映射到 CcuResReq 的 block 字段
+static CcuResult FillResReqByResDesc(CcuResReq &resReq, uint8_t dieId, const CcuResDesc &desc)
+{
+    uint32_t num = 0;
+    CCU_CHK_RET(desc.QueryResNum(ResType::LOOP, num));
+    resReq.blockLoopEngineReq[dieId] = num;
+    CCU_CHK_RET(desc.QueryResNum(ResType::MS, num));
+    resReq.blockMsReq[dieId] = num;
+    CCU_CHK_RET(desc.QueryResNum(ResType::CKE, num));
+    resReq.blockCkeReq[dieId] = num;
+    CCU_CHK_RET(desc.QueryResNum(ResType::XN, num));
+    resReq.blockXnReq[dieId] = num;
+    CCU_CHK_RET(desc.QueryResNum(ResType::GSA, num));
+    resReq.blockGsaReq[dieId] = num;
+
+    resReq.loopEngineReq[dieId] = 0;
+    resReq.msReq[dieId] = 0;
+    resReq.ckeReq[dieId] = 0;
+    resReq.xnReq[dieId] = 0;
+    resReq.gsaReq[dieId] = 0;
+    return CcuResult::CCU_SUCCESS;
+}
+
+// 查询各 die 是否启用；若全部未启用则返回错误
+static CcuResult CheckEnabledDies(int32_t deviceLogicId, std::array<bool, CCU_MAX_IODIE_NUM> &dieEnableFlags)
+{
+    dieEnableFlags = {false, false};
+    for (uint8_t dieId = 0; dieId < CCU_MAX_IODIE_NUM; dieId++) {
+        CCU_CHK_RET(CcuGetDieEnableInfo(deviceLogicId, dieId, dieEnableFlags[dieId]));
+    }
+
+    if (!dieEnableFlags[0] && !dieEnableFlags[1]) {
+        HCCL_ERROR("[%s] failed, all ccu dies are disable, devLogicId[%d].", __func__, deviceLogicId);
+        return CcuResult::CCU_E_INTERNAL;
+    }
+    return CcuResult::CCU_SUCCESS;
+}
+
+// 根据资源描述符数组构造 CcuResReq：
+// 跳过未启用 die；block 字段由各 die 的 resDesc 填充；
+// missionReq 取所有 die 的最大值，再统一回填到各启用 die
+static CcuResult BuildResReqByDescs(const CcuResDesc *descs[], uint32_t descNum,
+    const std::array<bool, CCU_MAX_IODIE_NUM> &dieEnableFlags, int32_t deviceLogicId, CcuResReq &resReq)
+{
+    resReq = CcuResReq{};
+    resReq.missionReq.reqType = MissionReqType::FUSION_MULTIPLE_DIE;
+
+    uint32_t maxMissionReq = 0;
+    for (uint32_t i = 0; i < descNum; i++) {
+        if (descs[i] == nullptr) {
+            HCCL_ERROR("[%s] failed, descs[%u] is nullptr, devLogicId[%d].", __func__, i, deviceLogicId);
+            return CcuResult::CCU_E_PARA;
+        }
+        uint8_t dieId = 0;
+        dieId = static_cast<uint8_t>(descs[i]->dieId);
+        if (dieId >= CCU_MAX_IODIE_NUM) {
+            HCCL_ERROR("[%s] failed, dieId[%u] is invalid, devLogicId[%d].", __func__, dieId, deviceLogicId);
+            return CcuResult::CCU_E_PARA;
+        }
+
+        // 不跳过未启用的die，如果die未启用，但请求资源，在分配资源时检查返回错误
+        CCU_CHK_RET(FillResReqByResDesc(resReq, dieId, *descs[i]));
+        uint32_t missionNum = 0;
+        CCU_CHK_RET(descs[i]->QueryResNum(ResType::MISSION, missionNum));
+        if (missionNum > maxMissionReq) {
+            maxMissionReq = missionNum;
+        }
+    }
+
+    if (maxMissionReq > 0) {
+        for (uint8_t dieId = 0; dieId < CCU_MAX_IODIE_NUM; dieId++) {
+            if (dieEnableFlags[dieId]) {
+                resReq.missionReq.req[dieId] = maxMissionReq;
+            }
+        }
+    }
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuAllocResHandleByResDescs(int32_t deviceLogicId,
+    const CcuResDesc *descs[], uint32_t descNum, CcuResHandle &resHandle)
+{
+    if (descs == nullptr || descNum == 0 || descNum > hcomm::CCU_MAX_IODIE_NUM) {
+        HCCL_ERROR("[%s] failed, invalid descs[%p] descNum[%u], devLogicId[%d].", __func__, descs, descNum, deviceLogicId);
+        return CcuResult::CCU_E_PARA;
+    }
+
+    std::array<bool, CCU_MAX_IODIE_NUM> dieEnableFlags = {false, false};
+    CCU_CHK_RET(CheckEnabledDies(deviceLogicId, dieEnableFlags));
+
+    CcuResReq resReq{};
+    CCU_CHK_RET(BuildResReqByDescs(descs, descNum, dieEnableFlags, deviceLogicId, resReq));
+
+    if (mainBoardType == Hccl::HcclMainboardId::MAINBOARD_OTHERS) {
+        CCU_CHK_RET(CcuGetMainboardId(deviceLogicId, mainBoardType));
+    }
+
+    CCU_CHK_RET(CcuDevMgrImp::AllocResHandle(deviceLogicId, resReq, resHandle));
+
+    HCCL_INFO("[%s] succeed, get res handle[%llx], devLogicId[%d], descNum[%u]",
+        __func__, resHandle, deviceLogicId, descNum);
+    return CcuResult::CCU_SUCCESS;
+}
+
 constexpr u32 CCU_MS_DEFAULT_BLOCK_LOOP_ENGINE_REQ = 8 * 8 * 2;
 constexpr u32 CCU_MS_DEFAULT_BLOCK_MS_REQ = 64 * 8 * 2;
-constexpr u32 CCU_MS_DEFAULT_CKE_REQ = 32;
-constexpr u32 CCU_MS_DEFAULT_BLOCK_CKE_REQ = 8 * 8 * 2;
-constexpr u32 CCU_MS_DEFAULT_CONTINUOUS_XN_REQ = 400;
+constexpr u32 CCU_MS_DEFAULT_BLOCK_CKE_REQ = 32 + 8 * 8 * 2;
+constexpr u32 CCU_MS_DEFAULT_BLOCK_XN_REQ = 400;
 constexpr u32 CCU_MS_DEFAULT_GSA_REQ = 400;
 constexpr u32 CCU_MS_DEFAULT_MISSIONREQ_REQ = 2;
 inline void ConfigCcuResReqCcuMs(CcuResReq &resReq, uint8_t dieId, CcuVersion version)
@@ -150,15 +303,16 @@ inline void ConfigCcuResReqCcuMs(CcuResReq &resReq, uint8_t dieId, CcuVersion ve
     resReq.blockLoopEngineReq[dieId] = CCU_MS_DEFAULT_BLOCK_LOOP_ENGINE_REQ;
     resReq.msReq[dieId] = 0;
     resReq.blockMsReq[dieId] = CCU_MS_DEFAULT_BLOCK_MS_REQ;
-    resReq.ckeReq[dieId] = CCU_MS_DEFAULT_CKE_REQ;
+    resReq.ckeReq[dieId] = 0;
     resReq.blockCkeReq[dieId] = CCU_MS_DEFAULT_BLOCK_CKE_REQ;
     resReq.xnReq[dieId] = 0;
+    resReq.gsaReq[dieId] = 0;
     if (version == CcuVersion::CCU_V2) {
-        resReq.continuousXnReq[dieId] = CCU_MS_DEFAULT_CONTINUOUS_XN_REQ * 2;  // V2场景下申请2倍的Xn数量
-        resReq.gsaReq[dieId] = 0;
+        resReq.blockXnReq[dieId] = CCU_MS_DEFAULT_BLOCK_XN_REQ * 2;  // V2场景下申请2倍的Xn数量
+        resReq.blockGsaReq[dieId] = 0;
     } else {
-        resReq.continuousXnReq[dieId] = CCU_MS_DEFAULT_CONTINUOUS_XN_REQ;
-        resReq.gsaReq[dieId] = CCU_MS_DEFAULT_GSA_REQ;
+        resReq.blockXnReq[dieId] = CCU_MS_DEFAULT_BLOCK_XN_REQ;
+        resReq.blockGsaReq[dieId] = CCU_MS_DEFAULT_GSA_REQ;
     }
     resReq.missionReq.reqType = MissionReqType::FUSION_MULTIPLE_DIE;
     resReq.missionReq.req[dieId] = CCU_MS_DEFAULT_MISSIONREQ_REQ;
@@ -166,9 +320,8 @@ inline void ConfigCcuResReqCcuMs(CcuResReq &resReq, uint8_t dieId, CcuVersion ve
 
 constexpr u32 CCU_SCHED_DEFAULT_BLOCK_LOOP_ENGINE_REQ = 16;
 constexpr u32 CCU_SCHED_DEFAULT_BLOCK_MS_REQ = 128;
-constexpr u32 CCU_SCHED_DEFAULT_CKE_REQ = 32;
-constexpr u32 CCU_SCHED_DEFAULT_BLOCK_CKE_REQ = 16;
-constexpr u32 CCU_SCHED_DEFAULT_CONTINUOUS_XN_REQ = 400;
+constexpr u32 CCU_SCHED_DEFAULT_BLOCK_CKE_REQ = 32 + 16;
+constexpr u32 CCU_SCHED_DEFAULT_BLOCK_XN_REQ = 400;
 constexpr u32 CCU_SCHED_DEFAULT_GSA_REQ = 400;
 constexpr u32 CCU_SCHED_DEFAULT_MISSIONREQ_REQ = 2;
 inline void ConfigCcuResReqCcuSched(CcuResReq &resReq, uint8_t dieId, CcuVersion version)
@@ -177,15 +330,16 @@ inline void ConfigCcuResReqCcuSched(CcuResReq &resReq, uint8_t dieId, CcuVersion
     resReq.blockLoopEngineReq[dieId] = CCU_SCHED_DEFAULT_BLOCK_LOOP_ENGINE_REQ;
     resReq.msReq[dieId] = 0;
     resReq.blockMsReq[dieId] = CCU_SCHED_DEFAULT_BLOCK_MS_REQ;
-    resReq.ckeReq[dieId] = CCU_SCHED_DEFAULT_CKE_REQ;
+    resReq.ckeReq[dieId] = 0;
     resReq.blockCkeReq[dieId] = CCU_SCHED_DEFAULT_BLOCK_CKE_REQ;
     resReq.xnReq[dieId] = 0;
+    resReq.gsaReq[dieId] = 0;
     if (version == CcuVersion::CCU_V2) {
-        resReq.continuousXnReq[dieId] = CCU_SCHED_DEFAULT_CONTINUOUS_XN_REQ * 2;  // V2场景下申请2倍的Xn数量
-        resReq.gsaReq[dieId] = 0;
+        resReq.blockXnReq[dieId] = CCU_SCHED_DEFAULT_BLOCK_XN_REQ * 2;  // V2场景下申请2倍的Xn数量
+        resReq.blockGsaReq[dieId] = 0;
     } else {
-        resReq.continuousXnReq[dieId] = CCU_SCHED_DEFAULT_CONTINUOUS_XN_REQ;
-        resReq.gsaReq[dieId] = CCU_SCHED_DEFAULT_GSA_REQ;
+        resReq.blockXnReq[dieId] = CCU_SCHED_DEFAULT_BLOCK_XN_REQ;
+        resReq.blockGsaReq[dieId] = CCU_SCHED_DEFAULT_GSA_REQ;
     }
 
     resReq.missionReq.reqType = MissionReqType::FUSION_MULTIPLE_DIE;
@@ -424,6 +578,17 @@ HcclResult CcuDevMgrImp::ReleaseResHandle(const int32_t deviceLogicId,
     return ret;
 }
 
+HcclResult CcuDevMgrImp::QueryRemainRes(const int32_t deviceLogicId, const uint8_t dieId, const ResType &internalType, uint32_t &remainNum)
+{
+    HcclResult ret;
+    EXCEPTION_HANDLE_BEGIN
+    ret = CheckCcuOpenSourceEnable() ?
+        CcuResBatchAllocator::GetInstance(deviceLogicId).QueryRemainRes(dieId, internalType, remainNum) :
+        Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId).QueryRemainRes(dieId, internalType, remainNum);
+    EXCEPTION_HANDLE_END
+    return ret;
+}
+
 HcclResult CcuDevMgrImp::AllocIns(const int32_t deviceLogicId, const uint8_t dieId,
     const uint32_t num, ResInfo &insInfo)
 {
@@ -446,6 +611,13 @@ HcclResult CcuDevMgrImp::ReleaseIns(const int32_t deviceLogicId, const uint8_t d
         Hccl::CcuComponent::GetInstance(deviceLogicId).ReleaseIns(dieId, insInfo);
     EXCEPTION_HANDLE_END
     return ret;
+}
+
+uint32_t CcuDevMgrImp::GetInsConsecutiveRemainSize(const int32_t deviceLogicId, const uint8_t dieId)
+{
+    return CheckCcuOpenSourceEnable() ?
+        CcuComponent::GetInstance(deviceLogicId).GetInsConsecutiveRemainSize(dieId) :
+        Hccl::CcuComponent::GetInstance(deviceLogicId).GetInsConsecutiveRemainSize(dieId);
 }
 
 HcclResult CcuDevMgrImp::AllocCke(const int32_t deviceLogicId, const uint8_t dieId,
@@ -562,7 +734,7 @@ HcclResult CcuDevMgrImp::GetMissionKey(const int32_t deviceLogicId, const uint8_
     return ret;
 }
 
-HcclResult CcuDevMgrImp::GetInstructionNum(const int32_t deviceLogicId, const uint8_t dieId,
+HcclResult CcuDevMgrImp::GetResSpecsInstructionNum(const int32_t deviceLogicId, const uint8_t dieId,
     uint32_t &instrNum)
 {
     HcclResult ret;
@@ -572,6 +744,86 @@ HcclResult CcuDevMgrImp::GetInstructionNum(const int32_t deviceLogicId, const ui
             .GetInstructionNum(dieId, instrNum) :
         Hccl::CcuResSpecifications::GetInstance(deviceLogicId)
             .GetInstructionNum(dieId, instrNum);
+    EXCEPTION_HANDLE_END
+    return ret;
+}
+
+HcclResult CcuDevMgrImp::GetAllocatableMaxLoopEngineNum(const int32_t deviceLogicId, const uint8_t dieId,
+    uint32_t &loopNum)
+{
+    HcclResult ret;
+    EXCEPTION_HANDLE_BEGIN
+    ret = CheckCcuOpenSourceEnable() ?
+        CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::LOOP, dieId, loopNum) :
+        Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::LOOP, dieId, loopNum);
+    EXCEPTION_HANDLE_END
+    return ret;
+}
+
+HcclResult CcuDevMgrImp::GetAllocatableMaxMsNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &msNum)
+{
+    HcclResult ret;
+    EXCEPTION_HANDLE_BEGIN
+    ret = CheckCcuOpenSourceEnable() ?
+        CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::MS, dieId, msNum) :
+        Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::MS, dieId, msNum);
+    EXCEPTION_HANDLE_END
+    return ret;
+}
+
+HcclResult CcuDevMgrImp::GetAllocatableMaxCkeNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &ckeNum)
+{
+    HcclResult ret;
+    EXCEPTION_HANDLE_BEGIN
+    ret = CheckCcuOpenSourceEnable() ?
+        CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::CKE, dieId, ckeNum) :
+        Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::CKE, dieId, ckeNum);
+    EXCEPTION_HANDLE_END
+    return ret;
+}
+
+HcclResult CcuDevMgrImp::GetAllocatableMaxXnNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &xnNum)
+{
+    HcclResult ret;
+    EXCEPTION_HANDLE_BEGIN
+    ret = CheckCcuOpenSourceEnable() ?
+        CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::XN, dieId, xnNum) :
+        Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::XN, dieId, xnNum);
+    EXCEPTION_HANDLE_END
+    return ret;
+}
+
+HcclResult CcuDevMgrImp::GetAllocatableMaxGsaNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &gsaNum)
+{
+    HcclResult ret;
+    EXCEPTION_HANDLE_BEGIN
+    ret = CheckCcuOpenSourceEnable() ?
+        CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::GSA, dieId, gsaNum) :
+        Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId)
+            .GetAllocatableMaxBlockResNum(ResType::GSA, dieId, gsaNum);
+    EXCEPTION_HANDLE_END
+    return ret;
+}
+
+HcclResult CcuDevMgrImp::GetResSpecsMissionNum(const int32_t deviceLogicId, const uint8_t dieId,
+    uint32_t &missionNum)
+{
+    HcclResult ret;
+    EXCEPTION_HANDLE_BEGIN
+    ret = CheckCcuOpenSourceEnable() ?
+        CcuResSpecifications::GetInstance(deviceLogicId)
+            .GetMissionNum(dieId, missionNum) :
+        Hccl::CcuResSpecifications::GetInstance(deviceLogicId)
+            .GetMissionNum(dieId, missionNum);
     EXCEPTION_HANDLE_END
     return ret;
 }

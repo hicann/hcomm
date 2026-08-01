@@ -9,15 +9,17 @@
  */
 
 #include "ccu_launch.h"
+
+#include <algorithm>
+#include <iterator>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "adapter_rts_common.h"
 #include "ccu_res.h"
 
-#include <vector>
-
-#include "ccu_device_res.h"
-
 #include "ccu_log.h"
-#include "ccu_types.h"
 
 #include "hcom_common.h"
 
@@ -28,7 +30,6 @@
 
 #include "env_config/env_config.h" // 暂时引用orion的环境变量处理模块
 
-
 #include "hcomm_adapter_rts.h"
 
 #include "task_param.h"
@@ -37,81 +38,6 @@
 
 #include "unified_platform/pub_inc/config_plf_log.h"
 using Hccl::PLF_TASK;
-
-CcuResult HcommCcuInsCreateLegacy(const void *resDesc, uint32_t descNum, CcuInsHandle *insHandle)
-{
-    CCU_CHK_PTR_NULL(resDesc);
-    CCU_CHK_PTR_NULL(insHandle);
-    if (descNum != 1) {
-        HCCL_ERROR("[%s] failed, desc num[%u] is more than expected[1].",
-            __func__, descNum);
-        return CcuResult::CCU_E_PARA;
-    }
-
-    auto *resDescPtr = static_cast<const CcuResDesc *>(resDesc);
-    if (resDescPtr->dieId != hcomm::CCU_MAX_IODIE_NUM) {
-        HCCL_ERROR("[%s] failed, ccu instance cannot be created with die id now.", __func__);
-        return CcuResult::CCU_E_PARA;
-    }
-
-    const uint32_t devLogicId = HcclGetThreadDeviceId();
-    CCU_CHK_RET(hcomm::CcuInstanceMgr::GetInstance(devLogicId).Create(resDescPtr->insType, *insHandle));
-
-    return CcuResult::CCU_SUCCESS;
-}
-
-CcuResult HcommCcuInsCreate(const HcommCcuResDescHandle *, uint32_t, CcuInsHandle *)
-{
-    return CcuResult::CCU_E_NOT_SUPPORT;
-}
-
-CcuResult HcommCcuInsCreateDefault(const uint32_t *, uint32_t, CcuInsHandle *)
-{
-    return CcuResult::CCU_E_NOT_SUPPORT;
-}
-
-CcuResult HcommCcuInsDestroy(CcuInsHandle)
-{
-    return CcuResult::CCU_E_NOT_SUPPORT;
-}
-
-CcuResult HcommCcuInsQueryResDesc(CcuInsHandle, HcommCcuResDescHandle)
-{
-    return CcuResult::CCU_E_NOT_SUPPORT;
-}
-
-/**
- * @brief 关闭CCU特性，解初始化CCU平台层
- *
- * @param insHandle CCU实例句柄
- * @param curDeviceLogicId 当前设备逻辑ID
- * @return CcuResult 执行结果状态码，CCU_SUCCESS表示成功，其他值表示失败
- */
-CcuResult HcommCcuInsDestroyLegacy(CcuInsHandle insHandle, int32_t curDeviceLogicId)
-{
-    // 获取当前线程的 DeviceId（线程变量）
-    const int32_t threadDevId = HcclGetThreadDeviceId();
-    HCCL_INFO("[%s] curDeviceLogicId[%d], threadDevId[%d]", __func__, curDeviceLogicId, threadDevId);
-
-    // 先切换为目标 curDeviceLogicId
-    bool isDiffDevId = false;
-    if (curDeviceLogicId != threadDevId) {
-        CCU_CHK_RET(hrtSetDevice(curDeviceLogicId));
-        isDiffDevId = true;
-    }
-
-    // 销毁 CcuInstance
-    CcuResult ret = hcomm::CcuInstanceMgr::GetInstance(curDeviceLogicId).Destroy(insHandle);
-    if (ret != CCU_SUCCESS) {
-        HCCL_ERROR("[%s] Destroy CcuInstance failed, ret[%d]", __func__, ret);
-    }
-
-    /// 切换回原来的 DeviceId
-    if (isDiffDevId) {
-        CCU_CHK_RET(hrtSetDevice(threadDevId));
-    }
-    return ret;
-}
 
 CcuResult HcommCcuKernelRegisterStart(CcuInsHandle insHandle)
 {
@@ -131,12 +57,12 @@ CcuResult HcommCcuKernelRegisterStart(CcuInsHandle insHandle)
 }
 
 static CcuResult CcuKernelTryRegister(hcomm::CcuInstance *ccuIns, hcomm::CcuResPack *resPack,
-    uint32_t devLogicId, const char *kernelFuncName, const void *kernelFunc,
+    uint32_t devLogicId, uint32_t dieId, const char *kernelFuncName, const void *kernelFunc,
     const void **kernelArgs, uint32_t argNum, CcuKernelHandle &newHandle)
 {
     CCU_EXCEPTION_HANDLE_BEGIN
     auto &kernelMgr = hcomm::CcuKernelMgr::GetInstance(devLogicId);
-    CCU_CHK_RET(kernelMgr.Register(*resPack, kernelFuncName,
+    CCU_CHK_RET(kernelMgr.Register(*resPack, dieId, kernelFuncName,
         kernelFunc, kernelArgs, argNum, newHandle));
     CCU_CHK_RET(ccuIns->SaveKernel(newHandle));
     CCU_EXCEPTION_HANDLE_END
@@ -158,8 +84,6 @@ CcuResult HcommCcuKernelRegister(CcuInsHandle insHandle, uint32_t dieId,
         CCU_CHK_PTR_NULL(kernelArgs);
     }
 
-    (void)dieId; // dieId 当前预留不使用
-
     const uint32_t devLogicId = HcclGetThreadDeviceId();
     auto *ccuIns = hcomm::CcuInstanceMgr::GetInstance(devLogicId).Get(insHandle);
     CCU_CHK_PTR_NULL(ccuIns);
@@ -170,7 +94,7 @@ CcuResult HcommCcuKernelRegister(CcuInsHandle insHandle, uint32_t dieId,
     CCU_CHK_PTR_NULL(resPack);
 
     CcuKernelHandle newHandle{0};
-    CcuResult ret = CcuKernelTryRegister(ccuIns, resPack, devLogicId, kernelFuncName,
+    CcuResult ret = CcuKernelTryRegister(ccuIns, resPack, devLogicId, dieId, kernelFuncName,
         kernelFunc, kernelArgs, argNum, newHandle);
     if (ret != CcuResult::CCU_SUCCESS) {
         ccuIns->AbortRegister();
