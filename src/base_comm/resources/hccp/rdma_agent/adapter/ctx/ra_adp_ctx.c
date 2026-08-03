@@ -521,14 +521,28 @@ int RaRsCtxQpUnimport(char *inBuf, char *outBuf, int *outLen, int *opResult, int
     union OpCtxQpUnimportData *opData = (union OpCtxQpUnimportData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxQpUnimportData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxQpUnimportData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
-    *opResult = gRaRsCtxOps.ctxQpUnimport(&devInfo, opData->txData.remJettyId);
+    *opResult = gRaRsCtxOps.ctxQpUnimport(&devInfo, opData->txData.rawRemJettyId, REM_JETTY_ID_SIZE);
     if (*opResult != 0) {
-        hccp_err("[deinit][ra_rs_qp]unimport failed, ret[%d] phyId[%u] devIndex[0x%x] rem_qp_id[%u]",
-            *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.remJettyId);
+        hccp_err("unimport failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId, devInfo.devIndex);
+    }
+
+    return 0;
+}
+
+int RaRsCtxQpUnimportDeprecated(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
+{
+    union OpCtxQpUnimportData *opData = (union OpCtxQpUnimportData *)(inBuf + sizeof(struct MsgHead));
+    struct RaRsDevInfo devInfo = {0};
+
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxQpUnimportData), sizeof(struct MsgHead), rcvBufLen, opResult);
+
+    RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
+    *opResult = gRaRsCtxOps.ctxQpUnimport(&devInfo, opData->txData.rawRemJettyId, REM_JETTY_ID_DEPRECATED_SIZE);
+    if (*opResult != 0) {
+        hccp_err("unimport failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId, devInfo.devIndex);
     }
 
     return 0;

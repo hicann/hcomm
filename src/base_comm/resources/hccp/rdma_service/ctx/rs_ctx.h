@@ -73,7 +73,7 @@ RS_ATTRI_VISI_DEF int RsCtxQpDestroy(struct RaRsDevInfo *devInfo, unsigned int i
 RS_ATTRI_VISI_DEF int RsCtxQpDestroyBatch(struct RaRsDevInfo *devInfo, unsigned int ids[], unsigned int *num);
 RS_ATTRI_VISI_DEF int RsCtxQpImport(struct RaRsDevInfo *devInfo, struct RsJettyImportAttr *importAttr,
     struct RsJettyImportInfo *importInfo);
-RS_ATTRI_VISI_DEF int RsCtxQpUnimport(struct RaRsDevInfo *devInfo, unsigned int remJettyId);
+RS_ATTRI_VISI_DEF int RsCtxQpUnimport(struct RaRsDevInfo *devInfo, unsigned char rawRemJettyId[], unsigned int size);
 RS_ATTRI_VISI_DEF int RsCtxQpBind(struct RaRsDevInfo *devInfo, struct RsCtxQpInfo *localQpInfo,
     struct RsCtxQpInfo *remoteQpInfo);
 RS_ATTRI_VISI_DEF int RsCtxQpUnbind(struct RaRsDevInfo *devInfo, unsigned int qpId);

@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <dlfcn.h>
+#include <string.h>
 #include <urma_opcode.h>
 #include <udma_u_ctl.h>
 #include "securec.h"
@@ -439,8 +440,7 @@ int RsUbCtxInit(struct rs_cb *rsCb, struct CtxInitAttr *attr, unsigned int *devI
     RsListAddTail(&devCb->list, &rsCb->udevList);
     RS_PTHREAD_MUTEX_ULOCK(&rsCb->mutex);
 
-    hccp_run_info("[init][rs_ctx]phy_id:%u, eidIndex:%u, devIndex:0x%x init success", attr->phyId,
-        attr->ub.eidIndex, *devIndex);
+    hccp_run_info("phy_id:%u, eidIndex:%u, devIndex:0x%x init success", attr->phyId, attr->ub.eidIndex, *devIndex);
 
     return 0;
 
@@ -1154,7 +1154,7 @@ int RsUbCtxDeinit(struct RsUbDevCb *devCb)
 
     RsUbApiDeinit();
 
-    hccp_run_info("[deinit][rs_ctx]deinit success, phyId:%u, devIndex:0x%x", devCb->phyId, devCb->index);
+    hccp_run_info("phyId:%u, devIndex:0x%x deinit success", devCb->phyId, devCb->index);
     free(devCb);
     devCb = NULL;
     return ret;
@@ -1243,25 +1243,24 @@ int RsUbCtxLmemReg(struct RsUbDevCb *devCb, struct MemRegAttrT *memAttr, struct 
     struct RsSegCb *lsegCb = NULL;
     int ret;
 
-    CHK_PRT_RETURN(memAttr->mem.size == 0, hccp_err("[init][rs_ctx_lmem]mem_attr->mem.size is 0"), -EINVAL);
-
-    hccp_run_info("[init][rs_ctx_lmem]devIndex:0x%x addr:0x%llx, len[0x%llx], access[0x%x]",
-        devCb->index, memAttr->mem.addr, memAttr->mem.size, memAttr->ub.flags.bs.access);
+    CHK_PRT_RETURN(memAttr->mem.size == 0, hccp_err("mem_attr->mem.size is 0"), -EINVAL);
 
     lsegCb = calloc(1, sizeof(struct RsSegCb));
-    CHK_PRT_RETURN(lsegCb == NULL, hccp_err("[init][rs_ctx_lmem]calloc lseg_cb failed"), -ENOMEM);
+    CHK_PRT_RETURN(lsegCb == NULL, hccp_err("calloc lseg_cb failed"), -ENOMEM);
     lsegCb->devCb = devCb;
     lsegCb->tokenValue.token = memAttr->ub.tokenValue;
 
     ret = RsUbInitSegCb(memAttr, devCb, lsegCb);
     if (ret != 0) {
-        hccp_err("[init][rs_ctx_lmem]rs_ub_init_seg_cb failed, ret:%d", ret);
+        hccp_err("RsUbInitSegCb failed, ret:%d devIndex:0x%x addr:0x%llx, len[0x%llx], flag[0x%x]",
+            ret, devCb->index, memAttr->mem.addr, memAttr->mem.size, memAttr->ub.flags.value);
         goto init_err;
     }
 
     ret = memcpy_s(memInfo->key.value, sizeof(memInfo->key.value), &lsegCb->segInfo.seg, sizeof(urma_seg_t));
     if (ret != 0) {
-        hccp_err("[init][rs_ctx_lmem]memcpy_s for seg failed ret:%d", ret);
+        hccp_err("memcpy_s seg failed ret:%d sizeof(memInfo->key.value):%zu sizeof(urma_seg_t):%zu",
+            ret, sizeof(memInfo->key.value), sizeof(urma_seg_t));
         ret = -ESAFEFUNC;
         goto reg_err;
     }
@@ -1269,8 +1268,8 @@ int RsUbCtxLmemReg(struct RsUbDevCb *devCb, struct MemRegAttrT *memAttr, struct 
     memInfo->ub.tokenId = lsegCb->segment->token_id->token_id;
     memInfo->ub.targetSegHandle = (uintptr_t)lsegCb->segment;
 
-    hccp_info("[init][rs_ctx_lmem]reg succ, devIndex:0x%x addr:0x%llx, len[0x%llx], access[0x%x]",
-        devCb->index, memAttr->mem.addr, memAttr->mem.size, memAttr->ub.flags.bs.access);
+    hccp_run_info("devIndex:0x%x addr:0x%llx, len[0x%llx], flag[0x%x] segment:0x%llx register success",
+        devCb->index, memAttr->mem.addr, memAttr->mem.size, memAttr->ub.flags.value, memInfo->ub.targetSegHandle);
     return 0;
 
 reg_err:
@@ -1286,19 +1285,19 @@ int RsUbCtxLmemUnreg(struct RsUbDevCb *devCb, unsigned long long addr)
     struct RsSegCb *lsegCb = NULL;
     int ret;
 
-    hccp_info("[deinit][rs_ctx_lmem]devIndex:0x%x addr:0x%llx", devCb->index, addr);
-
     ret = RsUbQuerySegCb(devCb, addr, &lsegCb, &devCb->lsegList);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[deinit][rs_ctx_lmem]rs_ub_query_seg_cb failed ret:%d ", ret), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("RsUbQuerySegCb failed ret:%d devIndex:0x%x segment:0x%llx",
+        ret, devCb->index, addr), ret);
 
     ret = RsUrmaUnregisterSeg(lsegCb->segment);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[deinit][rs_ctx_lmem]rs_urma_unregister_seg failed ret:%d ", ret), -EOPENSRC);
+    CHK_PRT_RETURN(ret != 0, hccp_err("urma_unregister_seg failed ret:%d devIndex:0x%x segment:0x%llx",
+        ret, devCb->index, addr), ret);
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     RsListDel(&lsegCb->list);
     devCb->lsegCnt--;
     RS_PTHREAD_MUTEX_ULOCK(&devCb->mutex);
-    hccp_run_info("[deinit][rs_ctx_lmem]devIndex:0x%x addr:0x%llx unregister segment success", devCb->index, addr);
+    hccp_run_info("devIndex:0x%x segment:0x%llx unregister success", devCb->index, addr);
     free(lsegCb);
     lsegCb = NULL;
     return 0;
@@ -1342,7 +1341,7 @@ int RsUbCtxRmemImport(struct RsUbDevCb *devCb, struct MemImportAttrT *memAttr,
     remSegCb->segInfo.addr = memInfo->ub.targetSegHandle;
     remSegCb->segInfo.len = 1;
 
-    hccp_run_info("[init][rs_ctx_rmem]devIndex:0x%x import addr:0x%llx", devCb->index, remSegCb->segInfo.addr);
+    hccp_run_info("devIndex:0x%x segment:0x%llx import success", devCb->index, remSegCb->segInfo.addr);
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     RsListAddTail(&remSegCb->list, &devCb->rsegList);
@@ -1361,8 +1360,6 @@ int RsUbCtxRmemUnimport(struct RsUbDevCb *devCb, unsigned long long addr)
     struct RsSegCb *remSegCb = NULL;
     int ret;
 
-    hccp_run_info("[deinit][rs_ctx_rmem]devIndex:0x%x unimport addr:0x%llx", devCb->index, addr);
-
     ret = RsUbQuerySegCb(devCb, addr, &remSegCb, &devCb->rsegList);
     CHK_PRT_RETURN(ret != 0, hccp_warn("[deinit][rs_ctx_rmem]can not find rem seg cb for addr:0x%llx", addr), 0);
 
@@ -1370,6 +1367,8 @@ int RsUbCtxRmemUnimport(struct RsUbDevCb *devCb, unsigned long long addr)
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     RsListDel(&remSegCb->list);
     RS_PTHREAD_MUTEX_ULOCK(&devCb->mutex);
+
+    hccp_run_info("devIndex:0x%x segment:0x%llx unimport success", devCb->index, addr);
 
     free(remSegCb);
     remSegCb = NULL;
@@ -1652,10 +1651,6 @@ STATIC int RsUbCtxDrvJettyCreate(struct RsCtxJettyCb *jettyCb, struct RsCtxJfcCb
     }
 
     jettyCb->state = RS_JETTY_STATE_CREATED;
-
-    hccp_run_info("chip_id:%u, devIndex:0x%x, jettyId:%u jetty create succ", jettyCb->devCb->rscb->chipId,
-        jettyCb->devCb->index, jettyCb->jetty->jetty_id.id);
-
     return 0;
 }
 
@@ -1741,7 +1736,7 @@ int RsUbCtxJettyCreate(struct RsUbDevCb *devCb, struct CtxQpAttr *attr, struct Q
     devCb->jettyCnt++;
     RS_PTHREAD_MUTEX_ULOCK(&devCb->mutex);
 
-    hccp_run_info("[init][rs_ctx]devIndex:0x%x qp_id:%u mode:%d create success, jettyCnt:%u",
+    hccp_run_info("devIndex:0x%x jettyId:%u mode:%d create success, jettyCnt:%u",
         devCb->index, info->ub.id, jettyCb->jettyMode, devCb->jettyCnt);
 
     return 0;
@@ -1795,7 +1790,7 @@ int RsUbCtxJettyDestroy(struct RsUbDevCb *devCb, unsigned int jettyId)
 
     RsUbCtxFreeJettyCb(jettyCb);
 
-    hccp_run_info("[deinit][rs_ctx]devIndex:0x%x qp_id:%u destroy success, jettyCnt:%u",
+    hccp_run_info("devIndex:0x%x jettyId:%u destroy success, jettyCnt:%u",
         devCb->index, jettyId, devCb->jettyCnt);
 
     return 0;
@@ -1845,13 +1840,48 @@ jetty_found:
     return 0;
 }
 
+STATIC int RsUbGetRemJettyCb(struct RsUbDevCb *devCb, urma_jetty_id_t *remJettyId,
+    struct RsCtxRemJettyCb **rjettyCb)
+{
+    struct RsCtxRemJettyCb **tempJettyCb = rjettyCb;
+    struct RsCtxRemJettyCb *jettyCbCurr = NULL;
+    struct RsCtxRemJettyCb *jettyCbNext = NULL;
+
+    RS_LIST_GET_HEAD_ENTRY(jettyCbCurr, jettyCbNext, &devCb->rjettyList, list, struct RsCtxRemJettyCb);
+    for (; (&jettyCbCurr->list) != &devCb->rjettyList;
+         jettyCbCurr = jettyCbNext,
+         jettyCbNext = list_entry(jettyCbNext->list.next, struct RsCtxRemJettyCb, list)) {
+        if (jettyCbCurr->tjetty == NULL) {
+            hccp_warn("devIndex:0x%x remJettyId:%u tjetty is NULL", devCb->index, remJettyId->id);
+            continue;
+        }
+        if (memcmp(&jettyCbCurr->tjetty->id, remJettyId, sizeof(urma_jetty_id_t)) == 0) {
+            *tempJettyCb = jettyCbCurr;
+            return 0;
+        }
+    }
+
+    *tempJettyCb = NULL;
+    hccp_warn("devIndex:0x%x remJettyId:%u do not available!", devCb->index, remJettyId->id);
+    return -ENODEV;
+}
+
 STATIC int RsUbCtxInitRjettyCb(struct RsUbDevCb *devCb, struct RsJettyImportAttr *importAttr,
     struct RsCtxRemJettyCb **rjettyCb)
 {
     struct RsCtxRemJettyCb *tmpRjettyCb = NULL;
+    urma_jetty_id_t remJettyId = {0};
+    int ret;
+
+    ret = memcpy_s(&remJettyId, sizeof(remJettyId), importAttr->key.value, REM_JETTY_ID_SIZE);
+    CHK_PRT_RETURN(ret != 0, hccp_err("memcpy_s remJettyId failed, size:%u sizeof(remJettyId):%zu",
+        REM_JETTY_ID_SIZE, sizeof(remJettyId)), -ESAFEFUNC);
+    ret = RsUbGetRemJettyCb(devCb, &remJettyId, &tmpRjettyCb);
+    CHK_PRT_RETURN(ret == 0, hccp_err("devIndex:0x%x remJettyId:%u not support to import again",
+        ret, devCb->index, remJettyId.id), -EEXIST);
 
     tmpRjettyCb = calloc(1, sizeof(struct RsCtxRemJettyCb));
-    CHK_PRT_RETURN(tmpRjettyCb == NULL, hccp_err("calloc tmp_rjetty_cb failed, errno:%d", errno), -ENOMEM);
+    CHK_PRT_RETURN(tmpRjettyCb == NULL, hccp_err("calloc tmpRjettyCb failed, errno:%d", errno), -ENOMEM);
 
     tmpRjettyCb->devCb = devCb;
     tmpRjettyCb->jettyKey = importAttr->key;
@@ -1913,11 +1943,11 @@ int RsUbCtxJettyImport(struct RsUbDevCb *devCb, struct RsJettyImportAttr *import
     int ret;
 
     ret = RsUbCtxInitRjettyCb(devCb, importAttr, &rjettyCb);
-    CHK_PRT_RETURN(ret != 0, hccp_err("alloc mem for rjetty_cb failed, ret:%d", ret), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("RsUbCtxInitRjettyCb failed, ret:%d devIndex:0x%x", ret, devCb->index), ret);
 
     ret = RsUbCtxDrvJettyImport(rjettyCb);
     if (ret != 0) {
-        hccp_err("rs_ub_ctx_drv_jetty_import failed, ret:%d", ret);
+        hccp_err("RsUbCtxDrvJettyImport failed, ret:%d devIndex:0x%x", ret, devCb->index);
         goto free_rjetty_cb;
     }
 
@@ -1932,8 +1962,8 @@ int RsUbCtxJettyImport(struct RsUbDevCb *devCb, struct RsJettyImportAttr *import
 
     rjettyCb->state = RS_JETTY_STATE_IMPORTED;
 
-    hccp_run_info("[init][rs_ctx]devIndex:0x%x rem_qp_id:%u mode:%d import success, rjettyCnt:%u",
-        devCb->index, importInfo->remJettyId, importAttr->attr.mode, devCb->rjettyCnt);
+    hccp_run_info("devIndex:0x%x remJettyId:%u rjettyHandle:0x%llx mode:%d import success, rjettyCnt:%u",
+        devCb->index, importInfo->remJettyId, rjettyCb->tjetty->handle, importAttr->attr.mode, devCb->rjettyCnt);
 
     return 0;
 
@@ -1944,8 +1974,8 @@ free_rjetty_cb:
     return ret;
 }
 
-STATIC int RsUbGetRemJettyCb(struct RsUbDevCb *devCb, unsigned int remJettyId,
-                                  struct RsCtxRemJettyCb **rjettyCb)
+STATIC int RsUbGetRemJettyCbDeprecated(struct RsUbDevCb *devCb, unsigned int remJettyId,
+    struct RsCtxRemJettyCb **rjettyCb)
 {
     struct RsCtxRemJettyCb **tempJettyCb = rjettyCb;
     struct RsCtxRemJettyCb *jettyCbCurr = NULL;
@@ -1971,16 +2001,29 @@ STATIC int RsUbGetRemJettyCb(struct RsUbDevCb *devCb, unsigned int remJettyId,
     return -ENODEV;
 }
 
-int RsUbCtxJettyUnimport(struct RsUbDevCb *devCb, unsigned int remJettyId)
+int RsUbCtxJettyUnimport(struct RsUbDevCb *devCb, unsigned char rawRemJettyId[], unsigned int size)
 {
     struct RsCtxRemJettyCb *rjettyCb = NULL;
-    unsigned int rjettyCnt;
+    urma_jetty_id_t remJettyId = {0};
+    unsigned int rjettyCnt = 0;
+    uint64_t rjettyHandle = 0;
     int ret;
 
-    ret = RsUbGetRemJettyCb(devCb, remJettyId, &rjettyCb);
-    CHK_PRT_RETURN(ret != 0, hccp_err("get rjetty_cb failed, ret:%d remJettyId:%u", ret, remJettyId), ret);
-    CHK_PRT_RETURN(rjettyCb->state != RS_JETTY_STATE_IMPORTED, hccp_err("rjetty_cb->state:%u not support to "
-        "unimport, jettyId:%u", rjettyCb->state, remJettyId), -EINVAL);
+    if (size == REM_JETTY_ID_DEPRECATED_SIZE) {
+        (void)memcpy_s(&remJettyId.id, size, rawRemJettyId, size);
+        ret = RsUbGetRemJettyCbDeprecated(devCb, remJettyId.id, &rjettyCb);
+    } else { // size == REM_JETTY_ID_SIZE
+        ret = memcpy_s(&remJettyId, sizeof(remJettyId), rawRemJettyId, size);
+        CHK_PRT_RETURN(ret != 0, hccp_err("memcpy_s remJettyId failed, size:%u sizeof(remJettyId):%u",
+            size, sizeof(remJettyId)), -ESAFEFUNC);
+        ret = RsUbGetRemJettyCb(devCb, &remJettyId, &rjettyCb);
+    }
+    CHK_PRT_RETURN(ret != 0, hccp_err("RsUbGetRemJettyCb failed, ret:%d devIndex:0x%x remJettyId:%u size:%u",
+        ret, devCb->index, remJettyId.id, size), ret);
+
+    rjettyHandle = rjettyCb->tjetty->handle;
+    CHK_PRT_RETURN(rjettyCb->state != RS_JETTY_STATE_IMPORTED, hccp_err("unimport failed, remJettyId:%u "
+        "rjettyHandle:0x%llx state:%u", remJettyId.id, rjettyHandle, rjettyCb->state), -EINVAL);
 
     RS_PTHREAD_MUTEX_LOCK(&devCb->mutex);
     RsListDel(&rjettyCb->list);
@@ -1990,13 +2033,13 @@ int RsUbCtxJettyUnimport(struct RsUbDevCb *devCb, unsigned int remJettyId)
 
     ret = RsUrmaUnimportJetty(rjettyCb->tjetty);
     if (ret != 0) {
-        hccp_err("rs_urma_unimport_jetty failed, ret:%d, remJettyId %u", ret, remJettyId);
-        ret = -EOPENSRC;
+        hccp_err("urma_unimport_jetty failed, ret:%d devIndex:0x%x remJettyId:%u rjettyHandle:0x%llx",
+            ret, devCb->index, remJettyId.id, rjettyHandle);
         goto out;
     }
 
-    hccp_run_info("[deinit][rs_qp]unimport jetty_id:%u success, rjettyCnt:%u, devIndex:0x%x",
-        remJettyId, rjettyCnt, devCb->index);
+    hccp_run_info("devIndex:0x%x remJettyId:%u rjettyHandle:0x%llx unimport success, rjettyCnt:%u",
+        devCb->index, remJettyId.id, rjettyHandle, rjettyCnt);
 out:
     free(rjettyCb);
     rjettyCb = NULL;
@@ -2013,7 +2056,7 @@ int RsUbCtxJettyBind(struct RsUbDevCb *devCb, struct RsCtxQpInfo *jettyInfo,
     ret = RsUbGetJettyCb(devCb, jettyInfo->id, &jettyCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("get jetty_cb failed, ret:%d, jettyId %u", ret, jettyInfo->id), ret);
 
-    ret = RsUbGetRemJettyCb(devCb, rjettyInfo->id, &rjettyCb);
+    ret = RsUbGetRemJettyCbDeprecated(devCb, rjettyInfo->id, &rjettyCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("get rjetty_cb failed, ret:%d, remJettyId %u", ret, rjettyInfo->id), ret);
 
     if (jettyCb->state != RS_JETTY_STATE_CREATED || rjettyCb->state != RS_JETTY_STATE_IMPORTED) {
@@ -2177,7 +2220,7 @@ STATIC int RsUbCtxInitJfsWr(struct RsCtxJettyCb *jettyCb, struct udma_u_jfs_wr_e
 
     if (opcode == URMA_OPC_READ || opcode == URMA_OPC_WRITE || opcode == URMA_OPC_WRITE_NOTIFY ||
         opcode == URMA_OPC_WRITE_IMM) {
-        ret = RsUbGetRemJettyCb(jettyCb->devCb, (unsigned int)wrData->ub.remJetty, &rjettyCb);
+        ret = RsUbGetRemJettyCbDeprecated(jettyCb->devCb, (unsigned int)wrData->ub.remJetty, &rjettyCb);
         CHK_PRT_RETURN(ret != 0, hccp_err("[send][rs_ub_ctx]get rjetty_cb failed, ret:%d remJettyId:%llu", ret, wrData->ub.remJetty), ret);
 
         ubWr->wr.tjetty = rjettyCb->tjetty;

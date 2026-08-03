@@ -17,6 +17,8 @@
 #define MAX_RSGE_NUM    2
 #define MAX_CTX_WR_NUM  4
 #define MAX_INLINE_SIZE 64
+#define REM_JETTY_ID_DEPRECATED_SIZE (sizeof(unsigned int))
+#define REM_JETTY_ID_SIZE 24 // refer to urma_jetty_id_t in struct QpKey
 
 struct MemRegAttrT {
     struct HccpMemInfo mem;

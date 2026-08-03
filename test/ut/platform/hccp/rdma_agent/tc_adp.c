@@ -1184,7 +1184,8 @@ void TcRaRsTestCtxOps()
     TcCommonTest();
 
     TcAdpEnvInit();
-    mocker((stub_fn_t)gRaRsCtxOps.ctxQpUnimport, 1, 0);
+    mocker((stub_fn_t)gRaRsCtxOps.ctxQpUnimport, 2, 0);
+    AddTestMsg(RA_RS_CTX_QP_UNIMPORT_DEPRECATED, sizeof(union OpCtxQpUnimportData));
     AddTestMsg(RA_RS_CTX_QP_UNIMPORT, sizeof(union OpCtxQpUnimportData));
     TcCommonTest();
 

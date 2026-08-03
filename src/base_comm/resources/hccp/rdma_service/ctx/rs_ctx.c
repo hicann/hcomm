@@ -587,7 +587,7 @@ RS_ATTRI_VISI_DEF int RsCtxQpImport(struct RaRsDevInfo *devInfo, struct RsJettyI
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsCtxQpUnimport(struct RaRsDevInfo *devInfo, unsigned int remJettyId)
+RS_ATTRI_VISI_DEF int RsCtxQpUnimport(struct RaRsDevInfo *devInfo, unsigned char rawRemJettyId[], unsigned int size)
 {
     struct RsUbDevCb *devCb = NULL;
     struct rs_cb *rscb = NULL;
@@ -601,7 +601,7 @@ RS_ATTRI_VISI_DEF int RsCtxQpUnimport(struct RaRsDevInfo *devInfo, unsigned int 
     ret = RsUbGetDevCb(rscb, devInfo->devIndex, &devCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
-    ret = RsUbCtxJettyUnimport(devCb, remJettyId);
+    ret = RsUbCtxJettyUnimport(devCb, rawRemJettyId, size);
     CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_unimport failed, ret:%d devIndex:0x%x",
         ret, devInfo->devIndex), ret);
 
