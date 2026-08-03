@@ -86,7 +86,7 @@ HcclResult HcclRankGraphGetLinks(HcclComm comm, uint32_t netLayer, uint32_t srcR
     hcclComm->GetIdentifier().c_str(), netLayer, srcRank, dstRank);
     ret = hcclComm->GetLinks(netLayer, srcRank, dstRank, links, linkNum);
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] Failed to get links for netLayer[%d], srcRank[%u], dstRank[%u] ret[%d]",
+        HCCL_ERROR("[%s] Failed to get links for netLayer[%u], srcRank[%u], dstRank[%u] ret[%d]",
             __func__, netLayer, srcRank, dstRank, ret);
         return ret;
     }

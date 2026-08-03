@@ -35,12 +35,12 @@ HcclResult HcclChannelGetNotifyNum(HcclComm comm, ChannelHandle channel, uint32_
 
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[%s] Failed to get channel notifyNum, group[%s], channel[%llu], ret[%d]",
-           __func__, hcclComm->GetIdentifier().c_str(), channel, ret);
+           __func__, hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), ret);
         return ret;
     }
 
-    HCCL_RUN_INFO("[%s] get channel notifyNum success, group[%s], channel[%llu], notifyNum[%lu], ret[%d]", 
-        __func__, hcclComm->GetIdentifier().c_str(), channel, *notifyNum, ret);
+    HCCL_RUN_INFO("[%s] get channel notifyNum success, group[%s], channel[%llu], notifyNum[%u], ret[%d]",
+         __func__, hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), *notifyNum, ret);
     return HCCL_SUCCESS;
 }
 
@@ -65,12 +65,12 @@ HcclResult CommChannelDestroy(HcclComm comm, ChannelHandle *channelList, uint32_
     }
     
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] Failed to destroy channel, group[%s], channelList[%p], channelNum[%lu], ret[%d]",
+        HCCL_ERROR("[%s] Failed to destroy channel, group[%s], channelList[%p], channelNum[%u], ret[%d]",
            __func__, hcclComm->GetIdentifier().c_str(), channelList, channelNum, ret);
         return ret;
     }
 
-    HCCL_RUN_INFO("[%s] destroy channel success, group[%s], channelList[%p], channelNum[%lu], ret[%d]", 
+    HCCL_RUN_INFO("[%s] destroy channel success, group[%s], channelList[%p], channelNum[%u], ret[%d]", 
         __func__, hcclComm->GetIdentifier().c_str(), channelList, channelNum, ret);
     return HCCL_SUCCESS;
 }
@@ -108,15 +108,16 @@ HcclResult HcclChannelGetHcclBuffer(HcclComm comm, ChannelHandle channel, void *
     HcclResult ret = channelMgr.ChannelCommGetHcclBuffer(channel, &commBuffer);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[%s] Failed to get channel hccl buffer, group[%s], channel[%llu], ret[%d]",
-           __func__, hcclComm->GetIdentifier().c_str(), channel, ret);
+           __func__, hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), ret);
         return ret;
     }
     *buffer = commBuffer.addr;
     *size = commBuffer.size;
 
-    HCCL_RUN_INFO("[%s] get channel hccl buffer success, group[%s], channel[%llu], " 
-        "buffer[type:%d, addr:%p, size:%llu], ret[%d]", __func__, hcclComm->GetIdentifier().c_str(), 
-        channel, commBuffer.type, commBuffer.addr, commBuffer.size, ret);
+    HCCL_RUN_INFO("[%s] get channel hccl buffer success, group[%s], channel[%llu], "
+        "buffer[type:%d, addr:%p, size:%llu], ret[%d]", __func__, hcclComm->GetIdentifier().c_str(),
+        static_cast<unsigned long long>(channel), commBuffer.type, commBuffer.addr,
+        static_cast<unsigned long long>(commBuffer.size), ret);
     return HCCL_SUCCESS;
 }
 

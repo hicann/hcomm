@@ -788,7 +788,7 @@ HcclResult MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, Cha
             CHK_PRT_CONT(GetLocalTlsStatus(tlsStatus) != HCCL_SUCCESS,
                 HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus"));
             logger::ChannelLogger::PrintChannelErrorDetails(
-                rankId_, channelNum, channelDescs, channelHandles, statusList, elapsed, tlsStatus);
+                rankId_, channelNum, channelDescs, channelHandles, statusList, static_cast<uint64_t>(elapsed), tlsStatus);
             return HCCL_E_TIMEOUT;
         }
 
@@ -808,7 +808,7 @@ HcclResult MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, Cha
             CHK_PRT_CONT(GetLocalTlsStatus(tlsStatus) != HCCL_SUCCESS,
                 HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus"));
             logger::ChannelLogger::PrintChannelErrorDetails(
-                rankId_, channelNum, channelDescs, channelHandles, statusList, elapsed, tlsStatus);
+                rankId_, channelNum, channelDescs, channelHandles, statusList, static_cast<uint64_t>(elapsed), tlsStatus);
             return ret;
         }
 

@@ -140,7 +140,7 @@ TEST_F(TestHcclCommMemReg, Ut_HcclCommMemReg_When_MemTag_TooLong_Return_HCCL_E_P
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
-TEST_F(TestHcclCommMemReg, Ut_HcclCommMemReg_When_Mem_Nullptr_Return_HCCL_E_PARA)
+TEST_F(TestHcclCommMemReg, Ut_HcclCommMemReg_When_Mem_Nullptr_Return_HCCL_E_PTR)
 {
     std::shared_ptr<hccl::hcclComm> hcclCommPtr;
     BuildV2HcclComm(hcclCommPtr);
@@ -151,10 +151,10 @@ TEST_F(TestHcclCommMemReg, Ut_HcclCommMemReg_When_Mem_Nullptr_Return_HCCL_E_PARA
     HcclMemHandle memHandle = nullptr;
 
     HcclResult ret = HcclCommMemReg(comm, memTag, mem, &memHandle);
-    EXPECT_EQ(ret, HCCL_E_PARA);
+    EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(TestHcclCommMemReg, Ut_HcclCommMemReg_When_MemHandle_Nullptr_Return_HCCL_E_PARA)
+TEST_F(TestHcclCommMemReg, Ut_HcclCommMemReg_When_MemHandle_Nullptr_Return_HCCL_E_PTR)
 {
     std::shared_ptr<hccl::hcclComm> hcclCommPtr;
     BuildV2HcclComm(hcclCommPtr);
@@ -168,7 +168,7 @@ TEST_F(TestHcclCommMemReg, Ut_HcclCommMemReg_When_MemHandle_Nullptr_Return_HCCL_
     HcclMemHandle *memHandle = nullptr;
 
     HcclResult ret = HcclCommMemReg(comm, memTag, &mem, memHandle);
-    EXPECT_EQ(ret, HCCL_E_PARA);
+    EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(TestHcclCommMemReg, Ut_HcclCommMemReg_When_MemType_Invalid_Return_HCCL_E_PARA)

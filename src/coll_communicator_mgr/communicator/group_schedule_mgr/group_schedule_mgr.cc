@@ -95,7 +95,7 @@ HcclResult GroupScheduleMgr::InitGroupPlanner(HcclComm comm)
             this->serverToRankList_[serverIdx].emplace_back(rankIdx++);
         }
     }
-    HCCL_INFO("[InitGroupPlanner] ranksize:%d, serverNum:%d nTaskP2p:%d", this->rankSize_, this->serverNum_,
+    HCCL_INFO("[InitGroupPlanner] ranksize:%u, serverNum:%u nTaskP2p:%d", this->rankSize_, this->serverNum_,
         this->nTasksP2p_);
 
     return HCCL_SUCCESS;
@@ -121,7 +121,7 @@ HcclResult GroupScheduleMgr::GetCurLocalRank(uint32_t &localRank)
     }
 
     if (curLocalRank >= this->serverToRankSize_.at(curServerIdx)) {
-        HCCL_ERROR("[getCurLocalRank] is inValid:%u", curLocalRank);
+        HCCL_ERROR("[getCurLocalRank] is invalid:%u", curLocalRank);
         return HCCL_E_INTERNAL;
     }
 

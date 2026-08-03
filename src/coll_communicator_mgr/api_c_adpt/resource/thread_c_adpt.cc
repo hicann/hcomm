@@ -148,14 +148,14 @@ HcclResult HcclThreadAcquireWithConfig(HcclComm comm, CommEngine engine, uint32_
         if (engine == CommEngine::COMM_ENGINE_AICPU) {
             // 上报流
             if (threadNum != threadId.size()) {
-                HCCL_ERROR("[%s] threadNum [%u] != threadId.size[%u]", __func__, threadNum, threadId.size());
+                HCCL_ERROR("[%s] threadNum [%u] != threadId.size[%zu]", __func__, threadNum, threadId.size());
                 return HCCL_E_PARA;
             }
             CHK_RET(HcclStreamProfilingReport(comm, threadNum, threadId.data()));
         }
     }
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] Failed to create threads for engine[%s], threadNum[%u], ret[%d].",
+        HCCL_ERROR("[%s] failed to create threads for engine[%s], threadsNum[%u], ret[%d].",
             __func__, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), threadNum, ret);
         return ret;
     }
@@ -222,7 +222,7 @@ HcclResult HcclThreadAcquire(HcclComm comm, CommEngine engine, uint32_t threadNu
         ret = engineResMgr.HcclThreadAcquire(newEngine, threadNum, type, config.get(), threads, threadId);
         if (newEngine == CommEngine::COMM_ENGINE_AICPU) {
             if (threadNum != threadId.size()) {
-                HCCL_ERROR("[%s] threadNum [%u] != threadId.size[%u]",
+                HCCL_ERROR("[%s] threadNum [%u] != threadId.size[%zu]",
                     __func__, threadNum, threadId.size());
                 return HCCL_E_PARA;
             }
@@ -230,8 +230,8 @@ HcclResult HcclThreadAcquire(HcclComm comm, CommEngine engine, uint32_t threadNu
         }
     }
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] Failed to create threads for engine[%d], threadNum[%u], ret[%d]",
-            __func__, newEngine, threadNum, ret);
+        HCCL_ERROR("[%s] Failed to create threads for engine[%s], threadNum[%u], ret[%d]",
+            __func__, GetEnumToString(GetCommEngineStatusStrMap(), newEngine).c_str(), threadNum, ret);
         return ret;
     }
 
@@ -358,7 +358,7 @@ HcclResult HcclAllocNotify(HcclComm comm, CommEngine commEngine, ::NotifyType no
  
     auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
     std::string commId = hcclComm->GetIdentifier();
-    HCCL_RUN_INFO("Entry-%s:comm[%s] commEngine[%s] notifyType[%u] notifyNum[%p]",
+    HCCL_RUN_INFO("Entry-%s:comm[%s] commEngine[%s] notifyType[%u] notifyNum[%u]",
         __func__, commId.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), commEngine).c_str(), notifyType, notifyNum);
     HcclResult ret = HCCL_SUCCESS;
     if (hcclComm->IsCommunicatorV2()) {
@@ -446,7 +446,7 @@ HcclResult HcclThreadExportToCommEngine(HcclComm comm, uint32_t threadNum, const
 
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Thread export failed. Export threadNum[%u], commEngine[%s], threadsPtr[%p], exportedThreadsPtr[%p]",
          __func__, threadNum, GetEnumToString(GetCommEngineStatusStrMap(), dstCommEngine).c_str(), threads, exportedThreads), ret);
-    HCCL_INFO("[%s]:comm[%s] export success. ", __func__, commId.c_str());
+    HCCL_INFO("[%s]:comm[%s] export success.", __func__, commId.c_str());
     return HCCL_SUCCESS;
 }
 #ifdef __cplusplus
@@ -460,7 +460,7 @@ HcclResult HcclThreadResGetInfo(HcclComm comm, ThreadHandle thread, ThreadResTyp
     hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
     std::string commId = hcclComm->GetIdentifier();
     HCCL_INFO("Entry-[%s]:comm[%s], thread[0x%llx], resType[%d], infoLen[%u], info[%p]",
-             __func__, commId.c_str(), thread, static_cast<int32_t>(resType), infoLen, info);
+             __func__, commId.c_str(), static_cast<unsigned long long>(thread), static_cast<int32_t>(resType), infoLen, info);
     HcclResult ret = HCCL_SUCCESS;
     if (hcclComm->IsCommunicatorV2()) {
         hccl::CollComm* collComm = hcclComm->GetCollComm();
@@ -477,7 +477,7 @@ HcclResult HcclThreadResGetInfo(HcclComm comm, ThreadHandle thread, ThreadResTyp
         return HCCL_E_NOT_SUPPORT;
     }
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] thread resource get info failed. thread[0x%llx], resType[%d], infoLen[%u], info[%p]",
-         __func__, thread, static_cast<int32_t>(resType), infoLen, info), ret);
-    HCCL_INFO("[%s]:comm[%s] get thread resource success. ", __func__, commId.c_str());
+         __func__, static_cast<unsigned long long>(thread), static_cast<int32_t>(resType), infoLen, info), ret);
+    HCCL_INFO("[%s]:comm[%s] get thread resource success.", __func__, commId.c_str());
     return HCCL_SUCCESS;
 }

@@ -28,9 +28,9 @@ HcclResult HcclEngineCtxCreate(HcclComm comm, const char *ctxTag, CommEngine eng
     CHK_PTR_NULL(ctx);
     const char *ctxTagTmp = (ctxTag == nullptr) ? COMM_RESERVE_CTX_TAG : ctxTag;
     CHK_PRT_RET(strlen(ctxTagTmp) > HCCL_RES_TAG_MAX_LEN,
-        HCCL_ERROR("[%s] ctxTag length exceeds maximum length, ctxTag length[%zu], max length[%d]",
+        HCCL_ERROR("[%s] ctxTag length exceeds maximum length, ctxTag length[%zu], max length[%u]",
             __func__,  strlen(ctxTagTmp), HCCL_RES_TAG_MAX_LEN), HCCL_E_PARA);
-    CHK_PRT_RET(size == 0, HCCL_ERROR("[%s]Invalid CtxSize, CtxSize[%u]", __func__, size), HCCL_E_PARA);
+    CHK_PRT_RET(size == 0, HCCL_ERROR("[%s]Invalid CtxSize, CtxSize[%llu]", __func__, static_cast<unsigned long long>(size)), HCCL_E_PARA);
 
 #if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
     HCCLV2_FUNC_RUN(
@@ -48,9 +48,9 @@ HcclResult HcclEngineCtxCreate(HcclComm comm, const char *ctxTag, CommEngine eng
             ret = engineCtxs->CreateCommEngineCtx(ctxTagTmp, engine, size, ctx);
             CHK_PRT_RET(ret != HCCL_SUCCESS,
                 HCCL_ERROR("[%s] Failed to create CommEngineCtx with ctxTag[%s], engine[%s], ctx size[%llu], ret[%d]",
-                __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), size, ret), ret);
-            HCCL_RUN_INFO("HcclEngineCtxCreate success, ctxTag[%s], engine[%s], size[%llu], ctx[%p], group[%s]", ctxTagTmp, 
-                GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), size, *ctx, hcclComm->GetIdentifier().c_str());
+                __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), static_cast<unsigned long long>(size), ret), ret);
+            HCCL_RUN_INFO("HcclEngineCtxCreate success, ctxTag[%s], engine[%s], size[%llu], ctx[%p], group[%s]", ctxTagTmp,
+                GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), static_cast<unsigned long long>(size), *ctx, hcclComm->GetIdentifier().c_str());
             return HCCL_SUCCESS;
         }());
 #endif
@@ -60,12 +60,12 @@ HcclResult HcclEngineCtxCreate(HcclComm comm, const char *ctxTag, CommEngine eng
     HcclResult ret = contextMgr.CreateCommEngineCtx(ctxTagTmp, engine, size, ctx);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[%s] Failed to create CommEngineCtx with ctxTag[%s], engine[%s], ctx size[%llu], ret[%d]",
-            __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), size, ret);
+            __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), static_cast<unsigned long long>(size), ret);
         return ret;
     }
 
     HCCL_RUN_INFO("[%s] success, ctxTag[%s], engine[%s], size[%llu], ctx[%p], group[%s]", __func__, ctxTagTmp,
-        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), size, *ctx, hcclComm->GetIdentifier().c_str());
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), static_cast<unsigned long long>(size), *ctx, hcclComm->GetIdentifier().c_str());
     return HCCL_SUCCESS;
 }
 
@@ -77,7 +77,7 @@ HcclResult HcclEngineCtxGet(HcclComm comm, const char *ctxTag, CommEngine engine
     CHK_PTR_NULL(size);
     const char *ctxTagTmp = (ctxTag == nullptr) ? COMM_RESERVE_CTX_TAG : ctxTag;
     CHK_PRT_RET(strlen(ctxTagTmp) > HCCL_RES_TAG_MAX_LEN,
-        HCCL_ERROR("[%s] ctxTag length exceeds maximum length, ctxTag length[%zu], max length[%d]",
+        HCCL_ERROR("[%s] ctxTag length exceeds maximum length, ctxTag length[%zu], max length[%u]",
             __func__, strlen(ctxTagTmp), HCCL_RES_TAG_MAX_LEN), HCCL_E_PARA);
 
 #if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
@@ -110,7 +110,7 @@ HcclResult HcclEngineCtxGet(HcclComm comm, const char *ctxTag, CommEngine engine
     }
 
     HCCL_RUN_INFO("[%s] success, ctxTag[%s], engine[%s], ctx[%p], size[%llu], group[%s]", __func__, ctxTagTmp,
-        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), *ctx, *size, hcclComm->GetIdentifier().c_str());
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), *ctx, static_cast<unsigned long long>(*size), hcclComm->GetIdentifier().c_str());
     return HCCL_SUCCESS;
 }
 
@@ -121,9 +121,9 @@ HcclResult HcclEngineCtxCopy(HcclComm comm, CommEngine engine, const char *ctxTa
     CHK_PTR_NULL(srcCtx);
     const char *ctxTagTmp = (ctxTag == nullptr) ? COMM_RESERVE_CTX_TAG : ctxTag;
     CHK_PRT_RET(strlen(ctxTagTmp) > HCCL_RES_TAG_MAX_LEN,
-        HCCL_ERROR("[%s] ctxTag length exceeds maximum length, ctxTag length[%zu], max length[%d]",
+        HCCL_ERROR("[%s] ctxTag length exceeds maximum length, ctxTag length[%zu], max length[%u]",
             __func__,  strlen(ctxTagTmp), HCCL_RES_TAG_MAX_LEN), HCCL_E_PARA);
-    CHK_PRT_RET(size == 0, HCCL_ERROR("[%s]Invalid size, size[%llu]", __func__, size), HCCL_E_PARA);
+    CHK_PRT_RET(size == 0, HCCL_ERROR("[%s]Invalid size, size[%llu]", __func__, static_cast<unsigned long long>(size)), HCCL_E_PARA);
 
 #if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
     HCCLV2_FUNC_RUN(
@@ -141,9 +141,9 @@ HcclResult HcclEngineCtxCopy(HcclComm comm, CommEngine engine, const char *ctxTa
             ret = engineCtxs->CopyCommEngineCtx(ctxTagTmp, engine, srcCtx, size, dstCtxOffset);
             CHK_PRT_RET(ret != HCCL_SUCCESS,
                 HCCL_WARNING("[%s] Failed to copy CommEngineCtx with ctxTag[%s], engine[%s], size[%llu], dstCtxOffset[%llu],"
-                " ret[%d]", __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), size, dstCtxOffset, ret), ret);
-            HCCL_RUN_INFO("[%s] success, ctxTag[%s], engine[%s], srcCtx[%p], size[%llu], dstCtxOffset[%llu], group[%s]", 
-                __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), srcCtx, size, dstCtxOffset, hcclComm->GetIdentifier().c_str());
+                " ret[%d]", __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), static_cast<unsigned long long>(size), static_cast<unsigned long long>(dstCtxOffset), ret), ret);
+            HCCL_RUN_INFO("[%s] success, ctxTag[%s], engine[%s], srcCtx[%p], size[%llu], dstCtxOffset[%llu], group[%s]",
+                __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), srcCtx, static_cast<unsigned long long>(size), static_cast<unsigned long long>(dstCtxOffset), hcclComm->GetIdentifier().c_str());
             return HCCL_SUCCESS;
         }());
 #endif
@@ -153,12 +153,12 @@ HcclResult HcclEngineCtxCopy(HcclComm comm, CommEngine engine, const char *ctxTa
     HcclResult ret = contextMgr.CopyCommEngineCtx(std::string(ctxTagTmp), engine, srcCtx, size, dstCtxOffset);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[%s] Failed to copy CommEngineCtx with ctxTag[%s], engine[%s], size[%llu], dstCtxOffset[%llu],"
-            " ret[%d]", __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), size, dstCtxOffset, ret);
+            " ret[%d]", __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), static_cast<unsigned long long>(size), static_cast<unsigned long long>(dstCtxOffset), ret);
         return ret;
     }
 
-    HCCL_RUN_INFO("[%s] success, ctxTag[%s], engine[%s], srcCtx[%p], size[%llu], dstCtxOffset[%llu], group[%s]", 
-        __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), srcCtx, size, dstCtxOffset, hcclComm->GetIdentifier().c_str());
+    HCCL_RUN_INFO("[%s] success, ctxTag[%s], engine[%s], srcCtx[%p], size[%llu], dstCtxOffset[%llu], group[%s]",
+        __func__, ctxTagTmp, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), srcCtx, static_cast<unsigned long long>(size), static_cast<unsigned long long>(dstCtxOffset), hcclComm->GetIdentifier().c_str());
     return HCCL_SUCCESS;
 }
 
@@ -167,7 +167,7 @@ HcclResult HcclEngineCtxDestroy(HcclComm comm, const char *ctxTag, CommEngine en
     CHK_PTR_NULL(comm);
     const char *ctxTagTmp = (ctxTag == nullptr) ? COMM_RESERVE_CTX_TAG : ctxTag;
     CHK_PRT_RET(strlen(ctxTagTmp) > HCCL_RES_TAG_MAX_LEN,
-        HCCL_ERROR("[%s] ctxTag length exceeds maximum length, ctxTag length[%zu], max length[%d]",
+        HCCL_ERROR("[%s] ctxTag length exceeds maximum length, ctxTag length[%zu], max length[%u]",
             __func__,  strlen(ctxTagTmp), HCCL_RES_TAG_MAX_LEN), HCCL_E_PARA);
 
 #if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))

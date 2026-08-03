@@ -27,7 +27,7 @@ HcclResult HcclAicpuHdcHandler::GetKfcCommand(Hccl::KfcCommand &cmd)
         return ret;
     }
     if (lastCmd_ != cmd) {
-        HCCL_INFO("[HcclAicpuHdcHandler][GetKfcCommand] Get new KfcCommand[%u], last KfcCommand[%u]", cmd, lastCmd_);
+        HCCL_INFO("[HcclAicpuHdcHandler][GetKfcCommand] Get new KfcCommand[%d], last KfcCommand[%d]", static_cast<int>(cmd), static_cast<int>(lastCmd_));
         lastCmd_ = cmd;
     }
     return HCCL_SUCCESS;
@@ -38,7 +38,7 @@ void HcclAicpuHdcHandler::SetKfcExecStatus(Hccl::KfcStatus state, Hccl::KfcErrTy
     Hccl::KfcExecStatus status;
     status.kfcStatus = state;
     status.kfcError  = errorCode;
-    HCCL_INFO("[HcclAicpuHdcHandler][SetKfcExecStatus] SetKfcExecStatus: state[%u], errorCode[%u]", state, errorCode);
+    HCCL_INFO("[HcclAicpuHdcHandler][SetKfcExecStatus] SetKfcExecStatus: state[%d], errorCode[%d]", static_cast<int>(state), static_cast<int>(errorCode));
     auto ret = d2hTransfer_->Put(0, sizeof(Hccl::KfcExecStatus), reinterpret_cast<uint8_t *>(&status));
     if (ret != HcclResult::HCCL_SUCCESS) {
         HCCL_ERROR("[HcclAicpuHdcHandler][SetKfcExecStatus] d2hTransfer Put fail, ret[%d]", ret);

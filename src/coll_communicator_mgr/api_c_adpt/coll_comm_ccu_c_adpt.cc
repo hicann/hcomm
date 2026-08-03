@@ -50,7 +50,7 @@ HcclResult HcclCommQueryCcuIns(HcclComm comm,
     auto ccuInsHandle = myRank->GetCcuInstance();
     if (ccuInsHandle == 0) {
         auto opExpansionMode = myRank->GetOpExpansionMode();
-        HCCL_WARNING("[%s] failed to get ccu instance, commId[%s] op expansion mode[%d].",
+        HCCL_WARNING("[%s] failed to get ccu instance, commId[%s] op expansion mode[%u].",
             __func__, commId.c_str(), opExpansionMode);
         return HcclResult::HCCL_E_UNAVAIL;
     }
@@ -58,7 +58,7 @@ HcclResult HcclCommQueryCcuIns(HcclComm comm,
     insHandles[0] = ccuInsHandle;
     *insNum = 1;
     HCCL_INFO("[%s] success, take time [%lld]us.",
-        __func__, DURATION_US(TIME_NOW() - startut));
+        __func__, DURATION_US(TIME_NOW() - startut).count());
     
     EXCEPTION_HANDLE_END
     return HcclResult::HCCL_SUCCESS;

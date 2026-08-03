@@ -103,7 +103,7 @@ void CollCommAicpu::InitIndopEnv(CommAicpuParam *commAicpuParam)
 
 void CollCommAicpu::SetCommmStatus(HcclCommStatus status)
 {
-    HCCL_INFO("[%s]group[%s], flag[%d]", __func__, identifier_.c_str(), static_cast<int>(status));
+    HCCL_INFO("[%s]group[%s], commStatus[%d]", __func__, identifier_.c_str(), static_cast<int>(status));
     commStatus_ = status;
 }
 
@@ -140,7 +140,7 @@ HcclResult CollCommAicpu::InitThreads(ThreadMgrAicpuParam *param)
     CHK_PTR_NULL(threadArray);
     for (size_t i = 0; i < outThreads.size(); ++i) {
         threadArray[i] = reinterpret_cast<ThreadHandle>(outThreads[i].get());  // 拷贝裸指针
-        HCCL_INFO("[CollCommAicpu][%s] threadArray[%u] = [%lu]", __func__, i, threadArray[i]);
+        HCCL_INFO("[CollCommAicpu][%s] threadArray[%zu] = [%llu]", __func__, i, static_cast<unsigned long long>(threadArray[i]));
         CHK_RET(RegisterThreadAddDfxTaskInfo(threadArray[i]));
     }
     std::unique_lock<std::shared_mutex> rwLock(threadMutex_);
@@ -156,7 +156,7 @@ HcclResult CollCommAicpu::RegisterThreadAddDfxTaskInfo(ThreadHandle thread)
     int32_t ret = HcommThreadRegisterDfx(thread, dfx_.GetCallback());
     if (ret != 0) {
         HCCL_ERROR("[%s] HcommThreadRegisterDfx failed, ret[%d], thread[0x%llx], dfx_.GetCallback[%p]",
-            __func__, ret, thread, dfx_.GetCallback());
+            __func__, ret, static_cast<unsigned long long>(thread), dfx_.GetCallback());
         return HCCL_E_PTR;
     }
 
@@ -166,7 +166,7 @@ HcclResult CollCommAicpu::RegisterThreadAddDfxTaskInfo(ThreadHandle thread)
     ret = HcommThreadRegisterCheckExecStatus(thread, checkExecStatusCallback);
     if (ret != 0) {
         HCCL_ERROR("[%s]HcommThreadRegisterCheckExecStatus failed, ret[%d], thread[0x%llx], checkExecStatusCallback[%p]",
-            __func__, ret, thread, checkExecStatusCallback);
+            __func__, ret, static_cast<unsigned long long>(thread), static_cast<const void*>(&checkExecStatusCallback));
         return HCCL_E_PTR;
     }
  	return HCCL_SUCCESS;
@@ -206,7 +206,7 @@ HcclResult CollCommAicpu::ProcessUrmaRes(HcclChannelUrmaRes *commParam, bool isI
 
         Hccl::AicpuResMgrType resType = Hccl::AicpuResMgrType::STREAM; // 待修改
         if (static_cast<u32>(resType) >= dataVec.size()) {
-            HCCL_ERROR("[CollCommAicpu][%s] fail, resType[%d], dataVec size[%u]", __func__, resType, dataVec.size());
+            HCCL_ERROR("[CollCommAicpu][%s] fail, resType[%d], dataVec size[%zu]", __func__, resType, dataVec.size());
             return HCCL_E_PARA;
         }
 
@@ -228,7 +228,7 @@ HcclResult CollCommAicpu::ProcessUrmaRes(HcclChannelUrmaRes *commParam, bool isI
         
         // 打印
         HCCL_INFO("[CollCommAicpu][%s] index[%u], currentSrcAddr[%p], channelSizeAddr[%p], channelHandle[0x%llx]",
-            __func__, index, currentSrcAddr, commParam->channelSizeAddr, channelHandle);
+            __func__, index, currentSrcAddr, commParam->channelSizeAddr, static_cast<unsigned long long>(channelHandle));
     }
 
     return HCCL_SUCCESS;
@@ -241,7 +241,7 @@ HcclResult CollCommAicpu::InitUrmaChannel(HcclChannelUrmaRes *commParam)
 
 HcclResult CollCommAicpu::ParsePackData(std::vector<char> &data, ChannelHandle &handle)
 {
-    HCCL_DEBUG("[CollCommAicpu][%s] data: ptr[%p], size[%u]", __func__, data.data(), data.size());
+    HCCL_DEBUG("[CollCommAicpu][%s] data: ptr[%p], size[%zu]", __func__, data.data(), data.size());
     Hccl::BinaryStream binaryStream(data);
 
     std::vector<char> transpUniqueId;
@@ -296,17 +296,17 @@ HcclResult CollCommAicpu::NotifyFree(NotifyMgrAicpuParam *param)
     CHK_PTR_NULL(notifyArray);
     for (size_t i = 0; i < notifyNum; ++i) {
         LocalNotify* notify = reinterpret_cast<LocalNotify*>(notifyArray[i]);
-        HCCL_INFO("[CollCommAicpu][%s] notifyArray[%u]=[%lu]", __func__, i, notifyArray[i]);
+        HCCL_INFO("[CollCommAicpu][%s] notifyArray[%zu]=[%llu]", __func__, i, static_cast<unsigned long long>(notifyArray[i]));
         auto it = std::find_if(notifys_.begin(), notifys_.end(),
             [notify](const std::unique_ptr<LocalNotify>& ptr) {
             return ptr.get() == notify;
         });
         if (it != notifys_.end()) {
-            HCCL_INFO("[CollCommAicpu][%s] comm identifier[%s], free notifys[%u] success",
-                __func__, hcomId.c_str(), notifyArray[i]);
+            HCCL_INFO("[CollCommAicpu][%s] comm identifier[%s], free notifys[%llu] success",
+                __func__, hcomId.c_str(), static_cast<unsigned long long>(notifyArray[i]));
             notifys_.erase(it);
         } else {
-            HCCL_RUN_WARNING("[CollCommAicpu][%s] localNotify[%u] not found in notifys_", __func__, i);
+            HCCL_RUN_WARNING("[CollCommAicpu][%s] localNotify[%zu] not found in notifys_", __func__, i);
         }
     }
 
@@ -321,7 +321,7 @@ HcclResult CollCommAicpu::NotifyAlloc(NotifyMgrAicpuParam *param)
     std::string notifysStr = std::string(param->notifyParam, NOTIFY_UNIQUE_ID_MAX_SIZE);
     std::string hcomId(param->hcomId);
     size_t notifySize = notifys_.size();
-    HCCL_INFO("[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] begin, before notifySize[%u]",
+    HCCL_INFO("[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] begin, before notifySize[%zu]",
         __func__, hcomId.c_str(), notifyNum, notifySize);
     if (UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         std::ostringstream oss;
@@ -334,18 +334,19 @@ HcclResult CollCommAicpu::NotifyAlloc(NotifyMgrAicpuParam *param)
     }
     HcclResult ret = NotifyManager::ParseBinNotifys(notifysStr, notifys_);
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] failed %u",
-            __func__, hcomId.c_str(), notifyNum, ret);
+        HCCL_ERROR("[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] failed %d",
+            __func__, hcomId.c_str(), notifyNum, static_cast<int>(ret));
         return ret;
     }
-    HCCL_INFO("[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] end, after notifySize[%u]",
+    HCCL_INFO("[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] end, after notifySize[%zu]",
         __func__, hcomId.c_str(), notifyNum, notifys_.size());
     NotifyHandle *notifyArray = static_cast<NotifyHandle*>(param->deviceHandle);
     CHK_PTR_NULL(notifyArray);
     // 空指针校验
     for (size_t i = 0; i < notifyNum; ++i) {
         notifyArray[i] = reinterpret_cast<NotifyHandle>(notifys_[i + notifySize].get());  // 拷贝裸指针
-        HCCL_INFO("[CollCommAicpu][%s] notifyArray[%u] = [%lu]", __func__, i + notifySize, notifyArray[i]);
+        HCCL_INFO("[CollCommAicpu][%s] notifyArray[%zu] = [%llu]", __func__, i + notifySize,
+            static_cast<unsigned long long>(notifyArray[i]));
     }
 
     HCCL_INFO("[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] success",
@@ -363,7 +364,7 @@ HcclResult CollCommAicpu::Clean()
     for (auto& transPort : ubTransportMap_) {
         CHK_RET(transPort.second->Clean());
     }
-    HCCL_INFO("CollCommAicpu::Clean() finished");
+    HCCL_INFO("[%s][CollCommAicpu]Clean() finished", __func__);
     
     return HCCL_SUCCESS;
 }
@@ -446,7 +447,7 @@ HcclResult CollCommAicpu::BackGroundSetStatus(Hccl::KfcStatus state)
 {
     Hccl::KfcExecStatus status;
     status.kfcStatus = state;
-    HCCL_INFO("[%s]group[%s], state[%u]", __func__, identifier_.c_str(), state);
+    HCCL_INFO("[%s]group[%s], state[%d]", __func__, identifier_.c_str(), static_cast<int>(state));
     HcclResult ret = kfcStatusTransferD2H_->Put(0, sizeof(status.kfcStatus), reinterpret_cast<uint8_t *>(&status));
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s]fail, group[%s]", __func__, identifier_.c_str()), ret);
     return HCCL_SUCCESS;
@@ -463,11 +464,11 @@ HcclResult CollCommAicpu::SendErrorMessageReportToHost(Hccl::ErrorMessageReport&
 HcclResult CollCommAicpu::RegisterProfCallBack()
 {
     if (MsprofRegisterCallback != nullptr) {
-        HCCL_INFO("RegisterProfCallBack not null");
+        HCCL_INFO("[%s]RegisterProfCallBack not null", __func__);
         int32_t ret = MsprofRegisterCallback(AICPU, &Hccl::DeviceCommandHandle);
         CHK_PRT_RET((ret != 0), HCCL_ERROR("[%s] failed. ret = [%d]", __func__, ret), HCCL_E_PARA);
     } else {
-        HCCL_INFO("RegisterProfCallBack is null");
+        HCCL_INFO("[%s]RegisterProfCallBack is null", __func__);
     }
     return HCCL_SUCCESS;
 }

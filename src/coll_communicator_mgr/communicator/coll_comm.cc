@@ -470,7 +470,7 @@ Hccl::ErrorMessageReport CollComm::GetAicpuTaskException()
        sizeof(errorMessage),reinterpret_cast<uint8_t *>(&errorMessage));
    
     CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[%s]fail, group [%s], ret[%u]", __func__, commId_.c_str() ,ret), errorMessage);
+        HCCL_ERROR("[%s]fail, group [%s], ret[%d]", __func__, commId_.c_str(), static_cast<int>(ret)), errorMessage);
     HCCL_INFO("[%s]group[%s] success", __func__, commId_.c_str());
    return errorMessage;
 }
@@ -503,7 +503,7 @@ HcclResult CollComm::GetHcclBinHandle(aclrtBinHandle &binHcclHandle)
             = LoadBinaryFromFile(hcclJsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0, binHcclHandle_);
         CHK_PRT_RET(ret != HCCL_SUCCESS,
             HCCL_ERROR("[%s]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u] cpuKernelMode[%u].", __func__,
-                ret, hcclJsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0),
+                HCCL_ERROR_CODE(ret), hcclJsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0),
             ret);
 
         HCCL_INFO("[%s]load aicpu file success, path[%s] optionType[%u] cpuKernelMode[%u].", __func__,

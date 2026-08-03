@@ -118,25 +118,25 @@ static HcclResult CheckA5Config(hccl::CommConfig commConfig, const HcclChannelDe
     u32 tc = commConfig.GetConfigTrafficClass();
     CHK_PRT_RET((tc != TC_DEFAULT) && (tc > TC_MAX || (tc % MULTIPLE != 0)),
         HCCL_ERROR("[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaTrafficClass[%u], must be 0xFFFFFFFF or in [0,255] and a multiple of 4",
-            HCCL_ERROR_CODE(HCCL_E_PARA), tc),
+            static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), tc),
         HCCL_E_PARA);
 
     u32 sl = commConfig.GetConfigServiceLevel();
     CHK_PRT_RET((sl != SL_DEFAULT) && (sl > SL_MAX),
         HCCL_ERROR("[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaServiceLevel[%u], must be 0xFFFFFFFF or in [0,7]",
-            HCCL_ERROR_CODE(HCCL_E_PARA), sl),
+            static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), sl),
         HCCL_E_PARA);
 
     u32 retryInterval = channelDesc.roceAttr.retryInterval;
     CHK_PRT_RET((retryInterval != INVALID_UINT) && (retryInterval < RETRY_INTERVAL_MIN || retryInterval > A5_RETRY_INTERVAL_MAX),
         HCCL_ERROR("[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaRetryInterval[%u], must be 0xFFFFFFFF or in [5,24]",
-        HCCL_ERROR_CODE(HCCL_E_PARA), retryInterval),
+        static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), retryInterval),
         HCCL_E_PARA);
 
     u32 retryCnt = channelDesc.roceAttr.retryCnt;
     CHK_PRT_RET((retryCnt != INVALID_UINT) && (retryCnt < RETRY_CNT_MIN || retryCnt > RETRY_CNT_MAX),
         HCCL_ERROR("[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaRetryCnt[%u], must be 0xFFFFFFFF or in [1,7]",
-        HCCL_ERROR_CODE(HCCL_E_PARA), retryCnt),
+        static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), retryCnt),
         HCCL_E_PARA);
     return HCCL_SUCCESS;
 }
@@ -471,7 +471,7 @@ HcclResult RegisterToClusterMonitor(HcclComm comm)
     auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
     CHK_PTR_NULL(hcclComm);
     if (!hcclComm->IsCommunicatorV2()) {
-        HCCL_ERROR("comm is not support [%s]", __func__);
+        HCCL_ERROR("[%s] comm is not support", __func__);
         return HCCL_E_NOT_SUPPORT;
     }
     hccl::CollComm* collComm = hcclComm->GetCollComm();
@@ -508,7 +508,7 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
         HcclChannelDescInit(&channelDescFinal, 1);
         ret = ProcessHcclResPackReq(channelDescs[idx], channelDescFinal, hcclComm);
         CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] channelNum[%llu], ret[%d]", idx, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
+            HCCL_ERROR("ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] channelNum[%u], ret[%d]", idx, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
         channelDescFinals.push_back(channelDescFinal);
     }
  
@@ -535,7 +535,7 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
  
         const uint32_t opExpansionMode = myRank->GetOpExpansionMode();
         if (!CheckCommEngine(engine, opExpansionMode)) {
-            HCCL_ERROR("[%s] failed, coll comm[%p] group[%s] opExpansionMode[%d] is not supported by CCU engine[%s].", 
+            HCCL_ERROR("[%s] failed, coll comm[%p] group[%s] opExpansionMode[%u] is not supported by CCU engine[%s].", 
                 __func__, hcclComm, hcclComm->GetIdentifier().c_str(), opExpansionMode, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
             return HcclResult::HCCL_E_PARA;
         }
@@ -543,7 +543,7 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
         if (engine != CommEngine::COMM_ENGINE_CPU) { // host dpu场景暂不支持cluster monitor
             ret = RegisterToClusterMonitor(comm);
             CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("RegisterToClusterMonitor failed. group[%s], engine[%s], channelNum[%llu], ret[%d]", hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
+                HCCL_ERROR("RegisterToClusterMonitor failed. group[%s], engine[%s], channelNum[%u], ret[%d]", hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
         }
 
         if (!GetDebugConfigInited()) {
@@ -607,11 +607,11 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
     }
  
     CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] Failed to acquire channel, group[%s], engine[%s], channelNum[%llu], ret[%d]", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
+        HCCL_ERROR("[%s] Failed to acquire channel, group[%s], engine[%s], channelNum[%u], ret[%d]", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
 
     CHK_RET(ConvertAivChannelHandlesToDevicePtrs(engine, channelDescFinals.data(), channelNum, channels));
  
-    HCCL_RUN_INFO("[%s] acquire channel success, group[%s], engine[%s], channelNum[%llu], take time [%lld]us.", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, DURATION_US(TIME_NOW() - startut));
+    HCCL_RUN_INFO("[%s] acquire channel success, group[%s], engine[%s], channelNum[%u], take time [%lld]us.", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, DURATION_US(TIME_NOW() - startut).count());
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;
 }

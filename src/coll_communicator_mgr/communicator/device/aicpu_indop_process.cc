@@ -101,7 +101,7 @@ CollCommAicpuMgr *AicpuIndopProcess::AicpuGetCommMgrbyGroup(const std::string &g
         std::shared_lock<std::shared_mutex> rwlock(g_commAicpuInfo.commAicpuMgrMapMutex);
         auto iter = g_commAicpuInfo.commMgrMap.find(group);
         if (iter == g_commAicpuInfo.commMgrMap.end()) { // 通信域未创建
-            HCCL_ERROR("[AicpuIndopProcess][%s] exist group size is [%u]", __func__, g_commAicpuInfo.commMgrMap.size());
+            HCCL_ERROR("[AicpuIndopProcess][%s] exist group size is [%zu]", __func__, g_commAicpuInfo.commMgrMap.size());
             auto curIter = g_commAicpuInfo.commMgrMap.begin();
 
             while (curIter != g_commAicpuInfo.commMgrMap.end()) {
