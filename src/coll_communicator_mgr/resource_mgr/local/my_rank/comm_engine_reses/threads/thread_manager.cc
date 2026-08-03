@@ -62,7 +62,7 @@ HcclResult ThreadMgr::CheckNotifyNum(CommEngine engine, uint32_t threadNum, uint
     }
 
     HCCL_INFO("[ThreadMgr][%s] Hcom[%s] HcclThreadAcquire quota: engine[%s], "
-        "remainNotifyQuota[%u]", __func__, commId_.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), remainNotifyQuota);
+        "remainNotifyQuota[%llu]", __func__, commId_.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), remainNotifyQuota);
     return HCCL_SUCCESS;
 }
 
@@ -76,7 +76,7 @@ HcclResult ThreadMgr::CheckThreadNum(CommEngine engine, uint32_t threadNum, uint
         return HCCL_E_UNAVAIL;
     }
 
-    HCCL_INFO("[ThreadMgr][%s] Hcom[%s] HcclThreadAcquire quota: engine[%s] threadNum[%llu].",
+    HCCL_INFO("[ThreadMgr][%s] Hcom[%s] HcclThreadAcquire quota: engine[%s] threadNum[%u].",
         __func__, commId_.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), remainQuota);
     return CheckNotifyNum(engine, threadNum, notifyNumPerThread);
 }
@@ -316,12 +316,12 @@ HcclResult ThreadMgr::AssignThreadHandles(CommEngine engine,
         CHK_RET(SupplementThread(engine, newThreads, hostHandle));
         for (size_t i = 0; i < newThreads.size(); ++i) {
             threads[i] = hostHandle[i];
-            HCCL_INFO("[ThreadMgr][%s] aicpu threadArray[%u] = [%lu]", __func__, i, threads[i]);
+            HCCL_INFO("[ThreadMgr][%s] aicpu threadArray[%u] = [%llu]", __func__, i, threads[i]);
         }
     } else {
         for (size_t i = 0; i < newThreads.size(); ++i) {
             threads[i] = reinterpret_cast<ThreadHandle>(newThreads[i].get());
-            HCCL_INFO("[ThreadMgr][%s] host threadArray[%u] = [%lu]", __func__, i, threads[i]);
+            HCCL_INFO("[ThreadMgr][%s] host threadArray[%u] = [%llu]", __func__, i, threads[i]);
         }
     }
     return HCCL_SUCCESS;
@@ -441,7 +441,7 @@ HcclResult ThreadMgr::ThreadExportToCommEngineCpu(uint32_t threadNum, const Thre
     std::lock_guard<std::mutex> lock(threadMapMutex_);
     for (u32 i = 0; i < threadNum; i++) {
         if (threadHandleOthersToCpu_.find(threads[i]) == threadHandleOthersToCpu_.end()) {
-            HCCL_ERROR("[CommEngineResMgr]%s Unknown ThreadHandle[%lu]", __func__, threads[i]);
+            HCCL_ERROR("[CommEngineResMgr]%s Unknown ThreadHandle[%llu]", __func__, threads[i]);
             return HCCL_E_PARA;
         }
         exportedThreads[i] = threadHandleOthersToCpu_[threads[i]];
@@ -468,7 +468,7 @@ HcclResult ThreadMgr::GetExportedThread(const ThreadHandle threadHandle, CommEng
         }
     }
 
-    HCCL_ERROR("[ThreadMgr][%s]Unknown ThreadHandle[%lu]", __func__, threadHandle);
+    HCCL_ERROR("[ThreadMgr][%s]Unknown ThreadHandle[%llu]", __func__, threadHandle);
     return HCCL_E_PARA;
 }
 
@@ -512,7 +512,7 @@ HcclResult ThreadMgr::ThreadExportToCommEngineAicpu(uint32_t threadNum, const Th
             exportedThreads[index[i]] = aicpuHandle[i];
             CHK_RET(hostThreads[i]->AddThreadHandleToMap(dstCommEngine, aicpuHandle[i]));
             threadHandleOthersToCpu_[aicpuHandle[i]] = threads[index[i]];
-            HCCL_INFO("[ThreadMgr][%s] aicpu threadArray[%u] = [%lu]", __func__, i, aicpuHandle[i]);
+            HCCL_INFO("[ThreadMgr][%s] aicpu threadArray[%u] = [%llu]", __func__, i, aicpuHandle[i]);
         }
     }
     return HCCL_SUCCESS;

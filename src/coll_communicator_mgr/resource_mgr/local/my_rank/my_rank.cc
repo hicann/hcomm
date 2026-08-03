@@ -730,7 +730,7 @@ HcclResult MyRank::BatchCreateChannels(CommEngine engine, const HcclChannelDesc*
 
     // 如果申请失败，清理endpoint pair中记录的channel handle
     if (!isAllSuccess) {
-        HCCL_RUN_WARNING("[%s] create channel failed, destroy new channels num[%u], engine[%s]", __func__, newChannels_.size(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
+        HCCL_RUN_WARNING("[%s] create channel failed, destroy new channels num[%zu], engine[%s]", __func__, newChannels_.size(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         CHK_RET(DestroyNewChannels(engine, channelDescs));
         return HCCL_E_UNAVAIL;
     }
@@ -766,7 +766,7 @@ HcclResult MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, Cha
     auto startTime = std::chrono::steady_clock::now();
 
     HCCL_INFO("[%s] start connecting channels, channelNum[%u], timeout[%lld]sec",
-        __func__, channelNum, timeout);
+        __func__, channelNum, timeout.count());
 
     std::vector<int32_t> statusVec(channelNum, 0);
     int32_t* statusList = statusVec.data();
@@ -781,7 +781,7 @@ HcclResult MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, Cha
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - startTime).count();
             HCCL_ERROR("[%s] channel connect timeout after %lld sec, channelNum[%u], elapsed[%lld]ms, retryCount[%u]",
-                __func__, timeout, channelNum, elapsed, retryCount);
+                __func__, timeout.count(), channelNum, elapsed, retryCount);
             RPT_INPUT_ERR(true, "EI0006", std::vector<std::string>({"reason"}), \
                 std::vector<std::string>({GET_SOCKET_TIMEOUT_REASON_CLOSE_DETECT}));
             Hccl::TlsStatus tlsStatus = Hccl::TlsStatus::UNKNOWN;
@@ -871,7 +871,7 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
         CHK_RET(BatchConnectChannels(channelDescs, hostChannelHandleList, channelNum));
         auto end = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        HCCL_RUN_INFO("[MyRank][CreateChannels] CreateChannels Time Elapsed [%llu]us, channelNum [%u]", duration, channelNum);
+        HCCL_RUN_INFO("[MyRank][CreateChannels] CreateChannels Time Elapsed [%lld]us, channelNum [%u]", duration, channelNum);
     }
 
     // 借用hcommDescs.socket，完成一致性校验必要的数据交换
@@ -883,7 +883,7 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
             channelDescs, hcommDescs, channelNum, newChannels_, collCommConfigConsistency_, engine));
         auto endConsistency = std::chrono::steady_clock::now();
         auto durationConsistency = std::chrono::duration_cast<std::chrono::microseconds>(endConsistency - startConsistency).count();
-        HCCL_INFO("[MyRank][CreateChannels] BatchExchangeAndCheckConsistency Time Elapsed [%llu]us, channelNum [%u]",
+        HCCL_INFO("[MyRank][CreateChannels] BatchExchangeAndCheckConsistency Time Elapsed [%lld]us, channelNum [%u]",
             durationConsistency, channelNum);
     }
 

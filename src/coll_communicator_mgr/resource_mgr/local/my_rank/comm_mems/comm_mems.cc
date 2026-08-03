@@ -81,7 +81,7 @@ HcclResult CommMems::Init(HcclMem cclBuffer)
     errno_t sRet = strncpy_s(cclMemInfo_.memTag, HCOMM_RES_TAG_MAX_LEN, memTag.c_str(), memTag.size());
     CHK_PRT_RET(sRet != EOK,
         HCCL_ERROR("[CommMems][Init] strncpy_s failed, return [%d].", sRet), HCCL_E_MEMORY);
-    HCCL_INFO("[CommMems][Init] addr[%p] size[%u] memType[%u]", cclBuffer.addr, cclBuffer.size, cclBuffer.type);
+    HCCL_INFO("[CommMems][Init] addr[%p] size[%llu] memType[%u]", cclBuffer.addr, cclBuffer.size, cclBuffer.type);
     return HCCL_SUCCESS;
 }
 
@@ -93,7 +93,7 @@ HcclResult CommMems::GetMemoryHandles(std::vector<HcclMem> &mem)
     memTemp.addr = cclMemInfo_.mem.addr;
     mem.push_back(memTemp);
 
-    HCCL_INFO("[CommMems][%s] HcclMem: size[%u], addr[%p], type[%d]", 
+    HCCL_INFO("[CommMems][%s] HcclMem: size[%llu], addr[%p], type[%d]", 
         __func__, memTemp.size, memTemp.addr, (int)memTemp.type
     );
 

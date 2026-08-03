@@ -709,3 +709,76 @@ TEST_F(MyRankTest, Ut_CreateChannels_When_BatchExchangeAndCheckConsistency_Timeo
     HcclResult ret = myRank->CreateChannels(COMM_ENGINE_AICPU_TS, "test", channelDesc, 1, channelHandles);
     EXPECT_EQ(ret, HCCL_E_TIMEOUT);
 }
+
+TEST_F(MyRankTest, Ut_CreateChannels_When_NullChannelDesc_Expect_EPtr)
+{
+    HcclMem cclBuffer;
+    CreateCclBuffer(cclBuffer);
+    EXPECT_EQ(myRank->Init(cclBuffer, 2, 2), HCCL_SUCCESS);
+
+    ChannelHandle channelHandles[1];
+    HcclResult ret = myRank->CreateChannels(COMM_ENGINE_AICPU_TS, "test", nullptr, 1, channelHandles);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(MyRankTest, Ut_CreateChannels_When_NullChannelHandles_Expect_EPtr)
+{
+    HcclMem cclBuffer;
+    CreateCclBuffer(cclBuffer);
+    EXPECT_EQ(myRank->Init(cclBuffer, 2, 2), HCCL_SUCCESS);
+
+    HcclChannelDesc channelDesc[1];
+    channelDesc[0].channelProtocol = COMM_PROTOCOL_UB_MEM;
+    channelDesc[0].remoteRank = 1;
+    channelDesc[0].notifyNum = 2;
+    HcclResult ret = myRank->CreateChannels(COMM_ENGINE_AICPU_TS, "test", channelDesc, 1, nullptr);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(MyRankTest, Ut_CreateChannels_When_ZeroChannelNum_Expect_EPara)
+{
+    HcclMem cclBuffer;
+    CreateCclBuffer(cclBuffer);
+    EXPECT_EQ(myRank->Init(cclBuffer, 2, 2), HCCL_SUCCESS);
+
+    HcclChannelDesc channelDesc[1];
+    ChannelHandle channelHandles[1];
+    HcclResult ret = myRank->CreateChannels(COMM_ENGINE_AICPU_TS, "test", channelDesc, 0, channelHandles);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_CcuMs_Expect_CorrectDepth)
+{
+    myRank->opExpansionMode_ = CCU_MS_MODE;
+    HcommChannelDesc hcommDesc;
+    hcommDesc.ubAttr.sqDepth = 0;
+    HcclResult ret = myRank->ConfigSqDepthByExpansionMode(COMM_ENGINE_CCU, hcommDesc);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(hcommDesc.ubAttr.sqDepth, 128u);
+}
+
+TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_CcuSched_Expect_CorrectDepth)
+{
+    myRank->opExpansionMode_ = CCU_SCHED_MODE;
+    HcommChannelDesc hcommDesc;
+    hcommDesc.ubAttr.sqDepth = 0;
+    HcclResult ret = myRank->ConfigSqDepthByExpansionMode(COMM_ENGINE_CCU, hcommDesc);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(hcommDesc.ubAttr.sqDepth, 16u);
+}
+
+TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_CcuInvalidMode_Expect_EInternal)
+{
+    myRank->opExpansionMode_ = DEFAULT_MODE;
+    HcommChannelDesc hcommDesc;
+    HcclResult ret = myRank->ConfigSqDepthByExpansionMode(COMM_ENGINE_CCU, hcommDesc);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+}
+
+TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_NonCcuEngine_Expect_Success)
+{
+    myRank->opExpansionMode_ = DEFAULT_MODE;
+    HcommChannelDesc hcommDesc;
+    HcclResult ret = myRank->ConfigSqDepthByExpansionMode(COMM_ENGINE_AICPU_TS, hcommDesc);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}

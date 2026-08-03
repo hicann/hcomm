@@ -216,3 +216,36 @@ TEST_F(TestKernelLaunchAicpu, Ut_groupLaunchA5_When_OneSendAndOneRecvTask_Expect
     EXPECT_EQ(ret, HCCL_SUCCESS);
     GlobalMockObject::verify();
 }
+
+TEST_F(TestKernelLaunchAicpu, Ut_HcclAicpuKernelLaunch_When_OpInfoNull_Expect_HCCL_E_PTR)
+{
+    HcclComm comm = reinterpret_cast<HcclComm>(0x1000);
+    HcclKernelFuncInfo funcInfo;
+    ThreadHandle aicpuThreadHandle = 0;
+    aclrtStream userStream = reinterpret_cast<aclrtStream>(0x1000);
+    HcclKernelLaunchCfg kernelLaunchCfg;
+    kernelLaunchCfg.timeOut = 120U;
+
+    HcclResult ret = HcclAicpuKernelLaunch(comm, nullptr, &funcInfo, aicpuThreadHandle, userStream, &kernelLaunchCfg);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(TestKernelLaunchAicpu, Ut_HcclAicpuKernelLaunch_When_KernelLaunchCfgNull_Expect_HCCL_E_PTR)
+{
+    HcclComm comm = reinterpret_cast<HcclComm>(0x1000);
+    HcclOpDesc opInfo;
+    HcclKernelFuncInfo funcInfo;
+    ThreadHandle aicpuThreadHandle = 0;
+    aclrtStream userStream = reinterpret_cast<aclrtStream>(0x1000);
+
+    HcclResult ret = HcclAicpuKernelLaunch(comm, &opInfo, &funcInfo, aicpuThreadHandle, userStream, nullptr);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(TestKernelLaunchAicpu, Ut_groupLaunchA5_When_NoGroupComm_Expect_HCCL_SUCCESS)
+{
+    GetHcclGroupCommList().clear();
+    SetHcclP2pTaskNums(0);
+    HcclResult ret = groupLaunchA5();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}

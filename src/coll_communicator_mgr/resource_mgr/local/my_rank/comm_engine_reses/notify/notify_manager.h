@@ -45,7 +45,7 @@ public:
 
     inline LocalNotify* GetNotify(u32 index) const {
         if (index > notifyNum_) {
-            HCCL_ERROR("[NotifyManager][GetNotify]notifyNum[%u], notifyIdx[%u] out of range[0, %u]", \
+            HCCL_ERROR("[NotifyManager][GetNotify]notifyNum[%u], notifyIdx[%u] out of range, maxIndex[%u]", \
                 notifyNum_, index, (notifyNum_ == 0 ? 0 : notifyNum_ - 1));
             return nullptr;
         }

@@ -292,3 +292,95 @@ TEST_F(TestCollComm, Ut_UpdateSymmetricRemoteMem_When_ChannelReturnsRemoteMem_Ex
     EXPECT_EQ(remoteMemIt->second[1].addr, remoteMem.addr);
     EXPECT_EQ(remoteMemIt->second[1].size, remoteMem.size);
 }
+
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_NullptrConfig_Expect_TcSlSkipped)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_tcsl", hccl::ManagerCallbacks{});
+    HcclCommConfig config{};
+    UtInitHcclCommConfig(config);
+    config.hcclRdmaTrafficClass = 0xFFFFFFFFu;
+    config.hcclRdmaServiceLevel = 0xFFFFFFFFu;
+    config.hcclQos = 0xFFFFFFFFu;
+    uint32_t opExpansionMode = 0U;
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigTrafficClass(), 0xFFFFFFFFu);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigServiceLevel(), 0xFFFFFFFFu);
+}
+
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_TcNotMultipleOf4_Expect_EPara)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_tc", hccl::ManagerCallbacks{});
+    HcclCommConfig config{};
+    UtInitHcclCommConfig(config);
+    config.hcclRdmaTrafficClass = 3U;
+    uint32_t opExpansionMode = 0U;
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_E_PARA);
+}
+
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_TcValidMultipleOf4_Expect_Success)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_tc_valid", hccl::ManagerCallbacks{});
+    HcclCommConfig config{};
+    UtInitHcclCommConfig(config);
+    config.hcclRdmaTrafficClass = 4U;
+    config.hcclRdmaServiceLevel = 5U;
+    config.hcclQos = 0xFFFFFFFFu;
+    uint32_t opExpansionMode = 0U;
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigTrafficClass(), 4U);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigServiceLevel(), 5U);
+}
+
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_QosDefault_Expect_Success)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_qos_def", hccl::ManagerCallbacks{});
+    HcclCommConfig config{};
+    UtInitHcclCommConfig(config);
+    config.hcclQos = 0xFFFFFFFFu;
+    uint32_t opExpansionMode = 0U;
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
+}
+
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_QosValid_Expect_Success)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_qos_valid", hccl::ManagerCallbacks{});
+    HcclCommConfig config{};
+    UtInitHcclCommConfig(config);
+    config.hcclQos = 7U;
+    config.hcclRdmaTrafficClass = 0xFFFFFFFFu;
+    config.hcclRdmaServiceLevel = 0xFFFFFFFFu;
+    uint32_t opExpansionMode = 0U;
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigHcclQos(), 7U);
+}
+
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_LowVersionQos_Expect_QosNotSet)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_qos_ver", hccl::ManagerCallbacks{});
+    HcclCommConfig config{};
+    UtInitHcclCommConfig(config);
+    config.hcclQos = 5U;
+    config.hcclRdmaTrafficClass = 0xFFFFFFFFu;
+    config.hcclRdmaServiceLevel = 0xFFFFFFFFu;
+    CommConfigInfo info{};
+    info.version = 5U;
+    errno_t sRet = memcpy_s(config.reserved, sizeof(config.reserved), &info, sizeof(info));
+    ASSERT_EQ(sRet, EOK);
+    uint32_t opExpansionMode = 0U;
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigHcclQos(), HCCL_COMM_QOS_CONFIG_NOT_SET);
+}
+
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_TcZero_Expect_Success)
+{
+    hccl::CollComm coll(nullptr, 0, "ut_tc_zero", hccl::ManagerCallbacks{});
+    HcclCommConfig config{};
+    UtInitHcclCommConfig(config);
+    config.hcclRdmaTrafficClass = 0U;
+    config.hcclRdmaServiceLevel = 0U;
+    config.hcclQos = 0xFFFFFFFFu;
+    uint32_t opExpansionMode = 0U;
+    EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigTrafficClass(), 0U);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigServiceLevel(), 0U);
+}

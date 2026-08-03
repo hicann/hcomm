@@ -81,7 +81,7 @@ std::string NotifyManager::GetBinNotifys(std::vector<std::unique_ptr<LocalNotify
             __func__, notifyInfo.resId, notifyInfo.tsId, notifyInfo.devId);
         oss.write(reinterpret_cast<const char_t *>(&notifyInfo), sizeof(notifyInfo));
     }
-    HCCL_RUN_INFO("[NotifyManager][%s] GetUniqueId success, notifyNum[%u], notifyType[%u], uniqueId[%s]",
+    HCCL_RUN_INFO("[NotifyManager][%s] GetUniqueId success, notifyNum[%zu], notifyType[%u], uniqueId[%s]",
         __func__, notifyNum, notifyType, oss.str().c_str());
     uniqueIdStr = oss.str();
     return uniqueIdStr;
@@ -138,12 +138,12 @@ HcclResult NotifyManager::HcclAllocNotify(CommEngine commEngine, ::NotifyType no
         }
         CHK_RET(AicpuLaunchMgr::NotifyKernelLaunchAlloc(newNotifys, commId_, handles, binHandle_));
         for (uint32_t i = 0; i < notifyNum; ++i) {
-            HCCL_INFO("[NotifyManager][%s] aicpu handles[%u] = [%lu]", __func__, i, handles[i]);
+            HCCL_INFO("[NotifyManager][%s] aicpu handles[%u] = [%llu]", __func__, i, handles[i]);
         }
     } else {
         for (uint32_t i = 0; i < notifyNum; ++i) {
             handles[i] = reinterpret_cast<NotifyHandle>(newNotifys[i].get());
-            HCCL_INFO("[NotifyManager][%s] host handles[%u] = [%lu]", __func__, i, handles[i]);
+            HCCL_INFO("[NotifyManager][%s] host handles[%u] = [%llu]", __func__, i, handles[i]);
         }
     }
     for (uint32_t i = 0; i < notifyNum; ++i) {
@@ -171,13 +171,13 @@ HcclResult NotifyManager::HcommFreeNotify(uint32_t notifyNum, NotifyHandle *noti
     // 1. 预扫描，判断是否为 AICPU，并收集 LocalNotify 指针
     for (uint32_t i = 0; i < notifyNum; ++i) {
         NotifyHandle handle = notifyHandleList[i];
-        HCCL_INFO("[NotifyManager][%s] handles[%u] = [%lu]", __func__, i, handle);
+        HCCL_INFO("[NotifyManager][%s] handles[%u] = [%llu]", __func__, i, handle);
         auto itInfo = std::find_if(notifysInfo_.begin(), notifysInfo_.end(),
             [handle](const auto &pair) {
                 return pair.second.notifyHandle == handle;
             });
         if (itInfo == notifysInfo_.end()) {
-            HCCL_RUN_WARNING("[NotifyManager][%s] handle[%lu] not found in notifysInfo_", __func__, handle);
+            HCCL_RUN_WARNING("[NotifyManager][%s] handle[%llu] not found in notifysInfo_", __func__, handle);
             continue;
         }
         LocalNotify *localNotify = itInfo->first;
@@ -193,7 +193,7 @@ HcclResult NotifyManager::HcommFreeNotify(uint32_t notifyNum, NotifyHandle *noti
     if (hasAicpu) {
         HcclResult ret = AicpuLaunchMgr::NotifyKernelLaunchFree(aicpuNotifys, aicpuNotifys.size(), commId_, binHandle_);
         if (ret != HCCL_SUCCESS) {
-            HCCL_ERROR("[NotifyManager][%s] NotifyKernelLaunchFree failed ret[%d], num[%u], skip host erase",
+            HCCL_ERROR("[NotifyManager][%s] NotifyKernelLaunchFree failed ret[%d], num[%zu], skip host erase",
                 __func__, ret, aicpuNotifys.size());
             return ret; // 保留 Host 状态以便恢复
         }

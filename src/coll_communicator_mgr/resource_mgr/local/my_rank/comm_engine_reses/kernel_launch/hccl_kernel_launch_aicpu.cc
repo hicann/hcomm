@@ -231,7 +231,7 @@ static HcclResult AicpuKernelLaunchDirect(HcclComm comm, const HcclKernelFuncInf
     std::string kernelNameCStr(funcInfo->kernelFuncName);
     HcclResult ret = HcclReportAicpuKernel(comm, beginTime, kernelNameCStr.data()); // AicpuKernel report end
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[AicpuKernelLaunchDirect] HcclReportAicpuKernel failed, beginTime %lu, kernelName %s, ret %d ",
+        HCCL_ERROR("[AicpuKernelLaunchDirect] HcclReportAicpuKernel failed, beginTime %llu, kernelName %s, ret %d ",
             beginTime, kernelNameCStr.c_str(), ret);
         return ret;
     }
@@ -259,7 +259,7 @@ HcclResult HcclAicpuKernelLaunch(HcclComm comm, const HcclOpDesc *opInfo, const 
     }
 
     HCCL_INFO("[HcclAicpuKernelLaunch] opDescType[%u], kernelSo[%s], kernelFuncName[%s], argSize[%u], "
-              "aicpuThreadHandle[%lu], hcclGroupDepth[%d]",
+              "aicpuThreadHandle[%llu], hcclGroupDepth[%d]",
         opInfo->opDescType, funcInfo->kernelSoName, funcInfo->kernelFuncName, argSize, aicpuThreadHandle, hcclGroupDepth);
 
     if (hcclGroupDepth > 0) {
@@ -306,7 +306,7 @@ static HcclResult GetStreams(const CollComm *collComm, const std::vector<HcclP2p
 HcclResult groupLaunchA5()
 {
     std::vector<HcclComm> hcclGroupCommListV2 = GetHcclGroupCommList();
-    HCCL_INFO("[groupLaunchA5] to the start hcclGroupCommListV2.size[%u]", hcclGroupCommListV2.size());
+    HCCL_INFO("[groupLaunchA5] to the start hcclGroupCommListV2.size[%zu]", hcclGroupCommListV2.size());
 
     for (HcclComm comm : hcclGroupCommListV2) {
         hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);

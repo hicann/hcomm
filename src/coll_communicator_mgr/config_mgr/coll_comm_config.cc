@@ -24,7 +24,7 @@ static HcclResult GetHcclCommConfigVersion(const HcclCommConfig *config, uint32_
     CommConfigInfo info{};
     s32 sRet = memcpy_s(&info, sizeof(info), config->reserved, sizeof(info));
     CHK_PRT_RET(sRet != EOK,
-        HCCL_ERROR("[GetHcclCommConfigVersion] memcpy_s failed, errno[%d]", sRet),
+        HCCL_ERROR("[GetHcclCommConfigVersion] memcpy_s failed, errNo[%d]", sRet),
         HCCL_E_MEMORY);
     version = info.version;
     return HCCL_SUCCESS;
@@ -64,7 +64,7 @@ static HcclResult ApplyTrafficClassAndServiceLevel(const HcclCommConfig *hcclCom
 
     u32 tc = hcclCommConfig->hcclRdmaTrafficClass;
     CHK_PRT_RET((tc != TC_DEFAULT) && (tc > TC_MAX || (tc % MULTIPLE != 0)),
-        HCCL_ERROR("[ApplyHcclCommConfig]errNo[0x%016llx] invalid hcclRdmaTrafficClass[%u], "
+        HCCL_ERROR("[ApplyTrafficClassAndServiceLevel]errNo[0x%016llx] invalid hcclRdmaTrafficClass[%u], "
             "must be 0xFFFFFFFF or in [0,255] and a multiple of 4",
             HCCL_ERROR_CODE(HCCL_E_PARA), tc),
         HCCL_E_PARA);
@@ -72,7 +72,7 @@ static HcclResult ApplyTrafficClassAndServiceLevel(const HcclCommConfig *hcclCom
 
     u32 sl = hcclCommConfig->hcclRdmaServiceLevel;
     CHK_PRT_RET((sl != SL_DEFAULT) && (sl > SL_MAX),
-        HCCL_ERROR("[ApplyHcclCommConfig]errNo[0x%016llx] invalid hcclRdmaServiceLevel[%u], "
+        HCCL_ERROR("[ApplyTrafficClassAndServiceLevel]errNo[0x%016llx] invalid hcclRdmaServiceLevel[%u], "
             "must be 0xFFFFFFFF or in [0,7]",
             HCCL_ERROR_CODE(HCCL_E_PARA), sl),
         HCCL_E_PARA);

@@ -176,7 +176,7 @@ void ChannelManager::ClearOpTransportResponseLinks(OpCommTransport &opTransportR
             u32 size = singleSubCommTransport.transportRequests.size();
             singleSubCommTransport.links.resize(size, nullptr);
             singleSubCommTransport.status.resize(size, TransportStatus::INIT);
-            HCCL_INFO("[%s] size[%u], linksSize[%d]", __func__, size, singleSubCommTransport.links.size());
+            HCCL_INFO("[%s] size[%u], linksSize[%zu]", __func__, size, singleSubCommTransport.links.size());
         }
     }
 }
@@ -297,7 +297,7 @@ HcclResult ChannelManager::ParseChannelRemoteDataToMem(const OpCommTransport &op
     uint32_t level0 = 0;
     auto &singleSubCommTransport = opTransportResponse[level0][level0];
     CHK_PRT_RET(channelParam.listNum == 0, 
-        HCCL_ERROR("[%s]invalid listNum, listNum[%d]", __func__, channelParam.listNum), HCCL_E_PARA);
+        HCCL_ERROR("[%s]invalid listNum, listNum[%u]", __func__, channelParam.listNum), HCCL_E_PARA);
     CHK_PRT_RET((channelParam.listNum != singleSubCommTransport.links.size()), 
         HCCL_ERROR("[%s]invalid listNum, listNum[%u] but links size is [%zu]", 
         __func__, channelParam.listNum, singleSubCommTransport.links.size()), HCCL_E_PARA);
@@ -757,7 +757,7 @@ HcclResult ChannelManager::ChannelCommGetHcclBuffer(ChannelHandle channel, CommB
     CHK_RET(transportPtr->GetRemoteMemSize(UserMemType::INPUT_MEM, tempSize));
     buffer->size = static_cast<uint64_t>(tempSize);
     buffer->type = HCCL_MEM_TYPE_DEVICE;
-    HCCL_INFO("[%s]channel[%llu] channelKey[%s] get remote hccl buffer success, remote addr[%p], size[%u]", 
+    HCCL_INFO("[%s]channel[%llu] channelKey[%s] get remote hccl buffer success, remote addr[%p], size[%llu]", 
         __func__, channel, keyMap_[channel].c_str(), buffer->addr, buffer->size);
     return HCCL_SUCCESS;
 }
