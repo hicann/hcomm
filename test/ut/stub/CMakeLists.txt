@@ -215,6 +215,7 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/notify
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_mems
+    ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res
     ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/launch
     ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/engine_ctxs
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/hcom/

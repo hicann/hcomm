@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 #include "symmetric_memory_agent.h"
-#include "hccl_mem_alloc.h"
+#include "hcomm_res.h"
 
 // HCCL
 #include "hccl/base.h"

@@ -15,7 +15,8 @@
 #define private public
 #define protected public
 #include "hccl_comm.h"
-#include "hccl_mem_alloc.h"
+#include "hcomm_res.h"
+#include "acl/acl_rt.h"
 #undef private
 #undef protected
 

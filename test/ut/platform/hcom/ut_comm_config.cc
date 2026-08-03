@@ -21,6 +21,7 @@
 #include "adapter_rts.h"
 #include "env_config.h"
 #include "aicpu_indop_env.h"
+#include "config.h"
 
 #define private public
 #define protected public

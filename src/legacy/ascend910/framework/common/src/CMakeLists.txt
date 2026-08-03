@@ -17,7 +17,6 @@ if(TARGET hcomm)
     target_sources(hcomm PRIVATE
         ${src_list}
         ${CMAKE_CURRENT_SOURCE_DIR}/hccl_hash_utils.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/hccl_mem_alloc.cc
     )
     target_include_directories(hcomm PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}

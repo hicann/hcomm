@@ -15,6 +15,8 @@
 #include "param_check_pub.h"
 #include "exception_handler.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_res.h"
+#include "hcomm_mem_alloc.h"
 #ifdef ENABLE_EXPERIMENTAL
 #include "nic_plugin_dispatcher.h"
 #endif
@@ -170,4 +172,14 @@ HcommResult HcommMemGetAllMemHandles(EndpointHandle endpointHandle, void **memHa
         HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
     CHK_RET(endpoint->GetAllMemHandles(memHandles, memHandleNum));
     return HCCL_SUCCESS;
+}
+
+HcommResult HcommMemAlloc(void **ptr, size_t size)
+{
+    return hcomm::MemAlloc(ptr, size);
+}
+
+HcommResult HcommMemFree(void *ptr)
+{
+    return hcomm::MemFree(ptr);
 }
