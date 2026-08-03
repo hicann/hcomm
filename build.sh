@@ -37,7 +37,7 @@ ENABLE_ST="off"
 ST_TASKS=()
 ENABLE_GCOV="off"
 ENABLE_NO_EXEC="off"
-CMAKE_BUILD_TYPE="Debug"
+BUILD_TYPE="Release"
 
 if [ "${USER_ID}" != "0" ]; then
     DEFAULT_TOOLKIT_INSTALL_DIR="${HOME}/Ascend/ascend-toolkit/latest"
