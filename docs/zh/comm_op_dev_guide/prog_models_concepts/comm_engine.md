@@ -18,7 +18,7 @@ HCCL可以使用不同通信引擎实现通信算子，不同的通信引擎适�
 由AI CPU向任务调度系统（Task Scheduler，简写为TS）提交通信操作相关任务。
 
 1. Host提交一个AI CPU Kernel至任务队列。
-2. AI CPU Kernel被任务调度器调度后交给AI CPU执行
+2. AI CPU Kernel被任务调度器调度后交给AI CPU执行。
 3. AI CPU提交通信任务至任务队列。
 4. AI CPU提交的通信任务被调度器调度至执行器执行。
 

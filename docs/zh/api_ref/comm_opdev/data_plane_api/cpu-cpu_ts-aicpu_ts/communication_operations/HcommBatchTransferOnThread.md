@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-在指定线程和通道上异步提交一组传输任务。每个传输任务由[HcommBatchTransferDesc](../../../datatype_definition/HcommBatchTransferDesc.md)描述，支持单边写、单边读、写规约、带通知的写以及通知记录/等待等操作类型。
+在指定线程和通道上异步提交一组传输任务。每个传输任务由[HcommBatchTransferDesc](../../../datatype_definition/HcommBatchTransferDesc.md)描述，支持单边写、单边读、写归约、带通知的写以及通知记录/等待等操作类型。
 
 ## 函数原型
 

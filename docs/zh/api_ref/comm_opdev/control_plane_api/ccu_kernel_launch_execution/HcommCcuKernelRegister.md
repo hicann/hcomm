@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-注册一个CCU Kernel函数。本接口在主机侧执行一次用户提供的Kernel函数，该函数体内所有`Ccu*`接口不执行实际硬件操作，仅记录该Kernel的完整操作序列。注册成功后返回Kernel句柄，供后续[HcommCcuKernelLaunch](HcommCcuKernelLaunch.md)使用。
+注册一个CCU Kernel函数。本接口在Host侧执行一次用户提供的Kernel函数，该函数体内所有`Ccu*`接口不执行实际硬件操作，仅记录该Kernel的完整操作序列。注册成功后返回Kernel句柄，供后续[HcommCcuKernelLaunch](HcommCcuKernelLaunch.md)使用。
 
 注册失败时框架自动回滚当前Kernel，已注册的其他Kernel不受影响。Kernel函数体内的`CCU_IF`分支若未显式配对`CCU_ELSE`，会在本次`HcommCcuKernelRegister`调用结束时自动关闭。
 
@@ -65,7 +65,7 @@ CcuResult HcommCcuKernelRegister(CcuInsHandle insHandle, uint32_t dieId,
 - `argNum`当前仅支持`0`或`1`；为`1`时仅`kernelArgs[0]`生效，其余元素被忽略。
 - `kernelArgs[0]`指向的标量在注册阶段即被读取，并固化为立即数。若某个标量的值需在每次启动时动态指定，须通过`taskArgs`数组与Kernel内的`CcuLoadArg`接口传入，而不是通过`kernelArgs`。
 - `dieId`为预留参数，当前实现未使用。
-- 本接口只能在主机侧调用，不能嵌套调用（即Kernel函数体内不能再次调用本接口）。
+- 本接口只能在Host侧调用，不能嵌套调用（即Kernel函数体内不能再次调用本接口）。
 
 ## 调用示例
 

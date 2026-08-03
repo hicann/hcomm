@@ -45,3 +45,15 @@ HcclResult HcclCommDeactivateCommMemory(HcclComm comm, void *virPtr)
 ## 约束说明
 
 无
+
+## 调用示例
+
+```c
+// 假设virPtr为已通过HcclCommActivateCommMemory激活的虚拟内存地址
+
+// 反激活已激活的虚拟内存
+HcclCommDeactivateCommMemory(hcclComm, virPtr);
+
+// 后续该地址无法再用于零拷贝通信
+// 如需重新使用，需再次调用HcclCommActivateCommMemory激活
+```

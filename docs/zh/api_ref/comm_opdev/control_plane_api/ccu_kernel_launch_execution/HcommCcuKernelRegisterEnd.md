@@ -55,7 +55,7 @@ CcuResult HcommCcuKernelRegisterEnd(CcuInsHandle insHandle);
 > 须按 [HcommCcuKernelRegisterStart](HcommCcuKernelRegisterStart.md) → [HcommCcuKernelRegister](HcommCcuKernelRegister.md) → 本接口的顺序调用。未先调用[HcommCcuKernelRegisterStart](HcommCcuKernelRegisterStart.md)就调用本接口会返回`CCU_E_INTERNAL`。
 
 - 本接口调用成功后，本轮注册的Kernel即可独立启动。若需注册新一轮Kernel，须重新调用[HcommCcuKernelRegisterStart](HcommCcuKernelRegisterStart.md)开始新一轮流程。
-- 本接口只能在主机侧调用，不能在Kernel函数体内调用。
+- 本接口只能在Host侧调用，不能在Kernel函数体内调用。
 
 ## 调用示例
 

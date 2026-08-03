@@ -84,7 +84,7 @@ CcuResult MyKernel(CcuKernelArg arg) {
     return CCU_SUCCESS;
 }
 
-// host侧对应的Launch调用（示意）：
+// Host侧对应的Launch调用（示意）：
 // uint64_t taskArgs[] = {100, 4096};   // n=100轮，offset=4096字节
 // HcommCcuKernelLaunch(..., taskArgs, /*argNum=*/2);
 ```

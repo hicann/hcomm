@@ -51,9 +51,10 @@ HcclResult HcclCommMemReg(HcclComm comm, const char *memTag, const CommMem *mem,
 
 ```c
 HcclComm comm; // 通信域句柄，省略获取
-char* memTag = "memTag"; // 内存标签
+const char* memTag = "memTag"; // 内存标签
+void *deviceBuffer = nullptr; // 已申请的设备内存地址（需通过aclrtMalloc等接口申请）
 CommMem memInfo; // 内存信息
-memInfo.addr = 0x00; // 配置已申请的内存地址     
+memInfo.addr = deviceBuffer; // 配置已申请的内存地址
 memInfo.size = 1024; // 配置已申请的内存大小
 memInfo.type = COMM_MEM_TYPE_DEVICE; // 配置已申请的内存类型
 HcclMemHandle memHandle; // 内存句柄

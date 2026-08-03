@@ -45,3 +45,16 @@ HcclResult HcclCommUnsetMemoryRange(HcclComm comm, void *baseVirPtr)
 ## 约束说明
 
 如果本虚拟地址空间内仍存在激活的内存，此接口会执行失败。
+
+## 调用示例
+
+```c
+// 假设已通过HcclCommSetMemoryRange设置了虚拟内存范围
+// baseVirPtr为HcclCommSetMemoryRange传入的虚拟内存基地址
+
+// 确保该地址范围内所有已激活的内存均已反激活
+// HcclCommDeactivateCommMemory(hcclComm, activatedVirPtr);
+
+// 取消预留的虚拟内存
+HcclCommUnsetMemoryRange(hcclComm, baseVirPtr);
+```

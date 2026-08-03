@@ -25,7 +25,7 @@
 ## 函数原型
 
 ```c
-HcommResult HcommMemExport(EndpointHandle endpointHandle, void* memHandle, void** memDesc, uint32_t* memDescLen)
+HcommResult HcommMemExport(EndpointHandle endpointHandle, HcommMemHandle memHandle, void** memDesc, uint32_t* memDescLen)
 ```
 
 ## 参数说明

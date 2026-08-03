@@ -56,7 +56,7 @@ CcuResult HcommCcuKernelLaunch(ThreadHandle threadHandle,
 - 必须在[HcommCcuKernelRegisterEnd](HcommCcuKernelRegisterEnd.md)之后调用。
 - `argNum`的单位是`uint64_t`元素个数，不是字节数。传入字节数会导致`CCU_E_INTERNAL`错误。
 - 当`taskArgs`参数较多时，框架会自动分批下发，无需用户干预。
-- 本接口只能在主机侧调用，不能在Kernel函数体内调用。
+- 本接口只能在Host侧调用，不能在Kernel函数体内调用。
 
 ## 调用示例
 

@@ -25,7 +25,7 @@
 ## 函数原型
 
 ```c
-HcclResult HcclCommInitAll(uint32_t ndev, int32_t*  devices, HcclComm* comms)
+HcclResult HcclCommInitAll(uint32_t ndev, int32_t* devices, HcclComm* comms)
 ```
 
 ## 参数说明

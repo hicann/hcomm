@@ -50,3 +50,27 @@ HcclResult HcclCommActivateCommMemory(HcclComm comm, void *virPtr, size_t size, 
 
 - 待激活的虚拟内存地址必须在[HcclCommSetMemoryRange](HcclCommSetMemoryRange.md)设置的地址范围内。
 - 该虚拟内存地址不能与已经激活的虚拟内存地址有重叠、交叠。
+
+## 调用示例
+
+```c
+// 假设已通过HcclCommSetMemoryRange设置了虚拟内存范围
+// baseVirPtr为虚拟内存基地址
+
+// 申请物理内存
+aclrtDrvMemHandle handle;
+aclrtMallocPhysical(&handle, size, NULL, 0);
+
+// 将物理内存映射到虚拟内存
+void *virPtr = baseVirPtr;
+aclrtMapMem(virPtr, size, 0, handle, 0);
+
+// 激活预留的虚拟内存
+HcclCommActivateCommMemory(hcclComm, virPtr, size, 0, handle, 0);
+
+// 后续可使用激活后的内存进行零拷贝通信
+// ...
+
+// 反激活内存
+HcclCommDeactivateCommMemory(hcclComm, virPtr);
+```

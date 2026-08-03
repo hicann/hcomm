@@ -47,6 +47,7 @@ HcommResult：接口成功返回0，其他失败。
 
 ```c
 ThreadHandle thread[2];
-HcommResult ret =  HcommThreadAlloc(COMM_ENGINE_AICPU_TS, 2, 3, thread);
-HcommResult ret =  HcommThreadFree(thread, 2);
+const uint32_t notifyNumPerThread[2] = {3, 3};
+HcommResult ret = HcommThreadAlloc(COMM_ENGINE_AICPU_TS, 2, notifyNumPerThread, thread);
+ret = HcommThreadFree(thread, 2);
 ```

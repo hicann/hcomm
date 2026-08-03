@@ -25,7 +25,7 @@
 ## 函数原型
 
 ```c
-int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notifyIdx, uint32_t timeout)
+int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notifyIdx, uint32_t timeOut)
 ```
 
 ## 参数说明
@@ -34,7 +34,7 @@ int32_t HcommThreadNotifyWaitOnThread(ThreadHandle thread, uint32_t notifyIdx, u
 | --- | --- | --- |
 | thread | 输入 | 线程句柄，为通过[HcclThreadAcquire](../../../control_plane_api/comms_domain_resource_mgmt/HcclThreadAcquire.md)接口获取到的threads。<br>ThreadHandle类型的定义请参见[ThreadHandle](../../../datatype_definition/ThreadHandle.md)。 |
 | notifyIdx | 输入 | 需等待的Notify通知索引。<br>取值范围为：[0, [HcclThreadAcquire](../../../control_plane_api/comms_domain_resource_mgmt/HcclThreadAcquire.md)接口传入的notifyNumPerThread参数的值)。 |
-| timeout | 输入 | 超时时间，单位：秒。<br>  - 0：表示永久等待。<br>  - >0：配置的具体超时时间。<br> |
+| timeOut | 输入 | 超时时间，单位：秒。<br>  - 0：表示永久等待。<br>  - >0：配置的具体超时时间。<br> |
 
 ## 返回值
 

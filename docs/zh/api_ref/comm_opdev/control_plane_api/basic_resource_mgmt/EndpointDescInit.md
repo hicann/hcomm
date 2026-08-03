@@ -37,7 +37,7 @@ HcommResult EndpointDescInit(EndpointDesc *endpoint, uint32_t num)
 
 ## 返回值
 
-HcommResult：接口成功返回0，其他失败。
+[HcommResult](../../datatype_definition/HcommResult.md)：接口成功返回0，其他失败。
 
 ## 约束说明
 

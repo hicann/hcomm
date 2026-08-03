@@ -32,7 +32,7 @@ HcclResult HcclBarrier(HcclComm comm, aclrtStream stream)
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| comm | 输入 | 集合通信操作所在的通信域。 |
+| comm | 输入 | 集合通信操作所在的通信域。<br>HcclComm类型的定义可参见[HcclComm](./data_type_definition/HcclComm.md)。 |
 | stream | 输入 | 本rank所使用的stream。 |
 
 ## 返回值

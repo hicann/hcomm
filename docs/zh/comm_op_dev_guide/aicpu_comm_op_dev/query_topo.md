@@ -24,7 +24,7 @@ HCCL控制面接口支持查询的拓扑信息如下表所示。
     ```c
     u32 userRank = INVALID_VALUE_RANKID;
     HcclResult ret = HcclGetRankId(comm, &userRank);
-    if (userRank == root && sendBuf == nullptr) {     // root节点的send_buff不允许为空
+    if (userRank == root && sendBuf == nullptr) {     // root节点的sendBuf不允许为空
         return HCCL_E_PTR;
     }
     ```
@@ -79,7 +79,7 @@ struct TopoInfo {
     uint32_t rankSize; // 参与此次集合通信的rank的数量
     std::vector<u32> rankList; // 参与此次集合通信的rank的rankId集合
     CommTopo topoType; // 链路连接类型：COMM_TOPO_1DMESH/COMM_TOPO_CLOS等
-    std::vector<HcclCHannelDesc> channels; // 本rank和其他卡之间的链路信息
+    std::vector<HcclChannelDesc> channels; // 本rank和其他卡之间的链路信息
 };
 HcclResult FillSimpleTopoInfo(HcclComm comm, TopoInfo &topoInfo){
     HcclResult ret = HcclGetRankId(comm, &topoInfo.rankId);

@@ -1,6 +1,6 @@
 # 简介
 
-本节包含CCU Kernel主机侧生命周期管理接口及内存Token查询接口。
+本节包含CCU Kernel Host侧生命周期管理接口及内存Token查询接口。
 
 通过这些接口，用户可以完成CCU实例的创建与销毁、Kernel的注册与翻译、Kernel的启动执行，以及进程虚拟地址到CCU访问Token的转换。
 
@@ -30,8 +30,8 @@
     }
     ```
 
-> 该接口属于 hccl 层（不在 `Hcomm*` / `Ccu*` 系列内），暂未提供独立 API 参考页面，
-> 完整签名以头文件 `include/hccl/hccl_ccu_res.h` 为准。
+> 该接口属于Hccl层（不在`Hcomm*`/`Ccu*`系列内），暂未提供独立API参考页面，
+> 完整签名以头文件`include/hccl/hccl_ccu_res.h`为准。
 
 ## 接口调用顺序
 
