@@ -139,6 +139,6 @@ function(pack_built_in)
 
   # ============= CPack =============
   if (NOT ENABLE_COV AND NOT ENABLE_UT)
- 	  set_cann_cpack_config(hcomm ENABLE_DEVICE ${ENABLE_DEVICE} SHARE_INFO_NAME hcomm)
+ 	  set_cann_cpack_config(hcomm ENABLE_DEVICE ${ENABLE_DEVICE} SHARE_INFO_NAME hcomm PACKAGE_TYPE "${PACKAGE_TYPE}")
   endif()
 endfunction()

@@ -26,6 +26,7 @@ ENABLE_EXPERIMENTAL="OFF"
 CANN_3RD_LIB_PATH="${CURRENT_DIR}/third_party"
 CUSTOM_SIGN_SCRIPT=""
 ENABLE_SIGN="false"
+PACKAGE_TYPE="run"
 
 MOCK_FWK_HLT="0"
 
@@ -279,6 +280,8 @@ function usage() {
   echo "    --build-type=<TYPE>"
   echo "                   Specify build type (TYPE options: Release/Debug), Default: Release"
   echo "    -j<N>          Set the number of threads used for building, default is 8"
+  echo "    --pkg-type=<TYPE>"
+  echo "                   Specify package type (TYPE option: run/rpm/deb/all), Default: run"
   echo "    --cann_3rd_lib_path=<PATH>"
   echo "                   Set ascend third_party package install path, default ./output/third_party"
   echo "    -p, --package-path <PATH>"
@@ -326,6 +329,17 @@ while [[ $# -gt 0 ]]; do
         # 跳过 --pkg，不做处理
         shift
         ;;
+    --pkg-type=*)
+ 	     PACKAGE_TYPE="${1#*=}"
+ 	     case "${PACKAGE_TYPE}" in
+ 	         run|rpm|deb|all) ;;
+ 	         *)
+ 	             log "Error: --pkg-type only supports run/rpm/deb/all"
+ 	             exit 1
+ 	             ;;
+ 	     esac
+ 	     shift
+ 	     ;;
     --cann_3rd_lib_path=*)
         OPTARG=$1
         CANN_3RD_LIB_PATH="$(realpath ${OPTARG#*=})"
@@ -504,6 +518,7 @@ CUSTOM_OPTION="${CUSTOM_OPTION} -DCMAKE_BUILD_TYPE=${BUILD_TYPE}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_BUILD_DEVICE=${ENABLE_BUILD_DEVICE}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_BUILD_AARCH=${ENABLE_BUILD_AARCH}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_EXPERIMENTAL=${ENABLE_EXPERIMENTAL}"
+CUSTOM_OPTION="${CUSTOM_OPTION} -DPACKAGE_TYPE=${PACKAGE_TYPE}"
 
 CUSTOM_OPTION="${CUSTOM_OPTION} -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT}"
 CUSTOM_OPTION="${CUSTOM_OPTION} -DENABLE_SIGN=${ENABLE_SIGN}"
