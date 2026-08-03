@@ -122,7 +122,7 @@ function(hcomm_experimental_plugin_common target_name output_name)
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/communicator
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank/endpoints
-        ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine_reses/engine_ctxs
+        ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/engine_ctxs
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/resource_mgr/remote/rank_pairs
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu
         ${HCOMM_SOURCE_DIR}/src/framework/common/src/h2d_tlv

@@ -91,7 +91,7 @@ target_include_directories(ccl_kernel PRIVATE
     ${HCOMM_DIR}/src/coll_communicator_mgr
     ${HCOMM_DIR}/src/coll_communicator_mgr/communicator
     ${HCOMM_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank
-    ${HCOMM_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine_reses/engine_ctxs
+    ${HCOMM_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/engine_ctxs
     ${HCOMM_DIR}/src/coll_communicator_mgr/resource_mgr/remote/rank_pairs
     ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu
 

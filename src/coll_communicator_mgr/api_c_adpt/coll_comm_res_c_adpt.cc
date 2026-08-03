@@ -23,7 +23,7 @@
 #include "aicpu_ts_roce_channel_v2.h"
 #include "aiv_urma_channel.h"
 #include "hccl_group.h"
-#include "../resource_mgr/local/my_rank/comm_engine_reses/kernel_launch/hccl_kernel_launch_aicpu.h"
+#include "../resource_mgr/local/my_rank/comm_engine/kernel_launch/hccl_kernel_launch_aicpu.h"
 #include "param_check_basic_v2.h"
 #include "comm_engine_utils.h"
 #include "rank_consistency_checker_v2.h"

@@ -147,9 +147,9 @@ set(HCOMM_FRAMEWORK_INCLUDE_LIST
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/comm_engine_res/engine_ctxs
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/comm_engine_res/launch
-    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine_reses/threads
-    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine_reses/notify
-    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine_reses
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/threads
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/notify
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine
     ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_mems
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads/device/
@@ -176,7 +176,7 @@ set(HCOMM_FRAMEWORK_INCLUDE_LIST
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/endpoints/
     ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/endpoints
     ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_mems
-    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine_reses/engine_ctxs
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/engine_ctxs
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/endpoints/dfx
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/reged_mems/
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/
