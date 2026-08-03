@@ -12,6 +12,7 @@
 #include "endpoint_mgr.h"
 #include "log.h"
 #include "urma_mem.h"
+#include "proc_reged_mem_mgr_cache.h"
 #include "adapter_rts_common.h"
 #include "server_socket_manager.h"
 #include "hccp_peer_manager.h"
@@ -29,6 +30,7 @@ CpuUrmaEndpoint::~CpuUrmaEndpoint() noexcept
         ServerSocketStopListenImpl(dynamicPort_);
     }
     dynamicPort_ = HCCL_INVALID_PORT;
+    ProcRegedMemMgrCache::GetInstance().Release(cacheKey_);
 }
 
 HcclResult CpuUrmaEndpoint::Init()
@@ -61,8 +63,13 @@ HcclResult CpuUrmaEndpoint::Init()
         ipAddr.Describe().c_str(),
         ctxHandle_);
 
-    EXCEPTION_CATCH(regedMemMgr_ = std::make_unique<UbRegedMemMgr>(), return HCCL_E_PARA);
-    this->regedMemMgr_->rdmaHandle_ = this->ctxHandle_;
+    cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UBC_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
+    auto &cache = ProcRegedMemMgrCache::GetInstance();
+    EXCEPTION_CATCH(regedMemMgr_ = cache.GetOrCreate(cacheKey_, [this]() {
+        auto m = std::make_shared<UbRegedMemMgr>();
+        m->rdmaHandle_ = this->ctxHandle_;
+        return m;
+    }), return HCCL_E_PARA);
     return HCCL_SUCCESS;
 }
 

@@ -947,8 +947,8 @@ HcclResult HostCpuRoceChannel::WriteWithNotify(
     // 计算每个qp需要发送的数据量
     std::vector<Hccl::QpInfo> qpInfo = GetQpInfos();
     uint32_t useQpNum = qpInfo.size();
-    uint32_t tileLen = tailLen / useQpNum;
-    uint32_t tileLenTail = tailLen - (useQpNum - 1) * tileLen;
+    uint64_t tileLen = tailLen / useQpNum;
+    uint64_t tileLenTail = tailLen - (useQpNum - 1) * tileLen;
     if ((qpInfo.size() != 1) && (tileLen != 0) && (tileLen < channelDesc_.roceAttr.qpThreshold)) {
         useQpNum = (tailLen - 1) / channelDesc_.roceAttr.qpThreshold + 1; // 自适应选择QP数发送数据，保证每个qp分担的数据量满足最小阈值
         if (useQpNum > qpInfo.size()) {
@@ -963,19 +963,21 @@ HcclResult HostCpuRoceChannel::WriteWithNotify(
 
     // 构造 WR
     Hccl::TaskParam taskParam{};
-    uint32_t wrLen;
+    uint64_t wrLen;
     for (uint32_t i = 0; i < qpInfo.size(); i++) {
         if (i < useQpNum - 1) {
             wrLen = tileLen;
+            offset = tileLen * i;
         } else if (i == useQpNum - 1) {
             wrLen = tileLenTail;
+            offset = tileLen * i;
         } else {
             wrLen = 0;
+            offset = 0;
         }
         struct ibv_send_wr writeWithNotifyWr{};
         struct ibv_sge sgList{};
         writeWithNotifyWr.sg_list = &sgList;
-        uint64_t offset = (wrLen == 0) ? 0 : (tileLen * i);
         CHK_RET(PrepareWriteWrResource(static_cast<char *>(tailDst) + offset,
             static_cast<const char *>(tailSrc) + offset, wrLen, remoteNotifyIdx,
             writeWithNotifyWr, taskParam));
@@ -1065,8 +1067,8 @@ HcclResult HostCpuRoceChannel::PostRdmaOp(const char *caller, ibv_wr_opcode opco
     // 2. 构造 WR 并发送
     std::vector<Hccl::QpInfo> qpInfo = GetQpInfos();
     uint32_t useQpNum = qpInfo.size();
-    uint32_t tileLen = len / useQpNum;
-    uint32_t tileLenTail = len - (useQpNum - 1) * tileLen;
+    uint64_t tileLen = len / useQpNum;
+    uint64_t tileLenTail = len - (useQpNum - 1) * tileLen;
     if ((tileLen != 0) && (tileLen < channelDesc_.roceAttr.qpThreshold)) {
         useQpNum = (len - 1) / channelDesc_.roceAttr.qpThreshold + 1; // 自适应选择QP数发送数据，保证每个qp分担的数据量满足最小阈值
         if (useQpNum > qpInfo.size()) {
@@ -1079,24 +1081,22 @@ HcclResult HostCpuRoceChannel::PostRdmaOp(const char *caller, ibv_wr_opcode opco
                   __func__, tileLen, channelDesc_.roceAttr.qpThreshold, useQpNum);
     }
 
-    uint32_t wrLen;
+    uint64_t wrLen, offset;
     for (uint32_t i = 0; i < qpInfo.size(); i++) {
         if (i < useQpNum - 1) {
             wrLen = tileLen;
+            offset = tileLen * i;
         } else if (i == useQpNum - 1) {
             wrLen = tileLenTail;
+            offset = tileLen * i;
         } else {
             wrLen = 0;
-        }
-
-        if (wrLen == 0) {
-            HCCL_DEBUG("[HostCpuRoceChannel::%s] wrLen is 0, qp[%u] qpn[%u] skip post send.", __func__, i, qpInfo[i].qp->qp_num);
-            continue;
+            offset = 0;
         }
 
         struct ibv_send_wr wr{};
         struct ibv_sge sg;
-        BuildRdmaWr(caller, opcode, static_cast<char*>(localAddr) + tileLen * i, static_cast<const char*>(remoteAddr) + tileLen * i, wrLen, localIdx, rmtIdx, wr, sg);
+        BuildRdmaWr(caller, opcode, static_cast<char*>(localAddr) + offset, static_cast<const char*>(remoteAddr) + offset, wrLen, localIdx, rmtIdx, wr, sg);
         CHK_RET(PostAndCheckSend(qpInfo[i].qp, i, caller, wr));
         HCCL_INFO("[HostCpuRoceChannel::%s] Slice SUCCESS. qp[%u] wrLen[0x%llx], wqeNums_[%u]=%d", caller, i, wrLen, i, wqeNums_[i]);
     }

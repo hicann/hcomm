@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <utility>
 #include <vector>
 #include "hcomm_c_adpt.h"
@@ -55,6 +56,9 @@ public:
     }
 
     RdmaHandle rdmaHandle_{nullptr};
+
+    // 跨 Endpoint 并发访问 tree + allBuffers 保护
+    mutable std::mutex memMtx_;
 
 protected:
     template <typename RmaBuffer>

@@ -164,7 +164,7 @@ private:
                             CHK_RANGE_CLOSED<u32>(HCCL_UB_TIMEOUT_MIN, HCCL_UB_TIMEOUT_MAX)};
     CfgField<u32> queueNum{"HCCL_RDMA_QPS_PER_CONNECTION", u32(1), Str2T<u32>,
                                CHK_RANGE_CLOSED<u32>(1, 32)};
-    CfgField<u32> multiQpThreshold{"HCCL_MULTI_QP_THRESHOLD", u32(512), Str2T<u32>,
+    CfgField<u32> multiQpThreshold{"HCCL_MULTI_QP_THRESHOLD", u32(512 * 1024), Str2T<u32>,
                                CHK_RANGE_CLOSED<u32>(1, 8192), ConvertUnitQpThreshold};
 };
 

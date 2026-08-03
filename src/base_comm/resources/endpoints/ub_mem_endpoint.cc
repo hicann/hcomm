@@ -9,14 +9,36 @@
  */
 #include "ub_mem_endpoint.h"
 #include "log.h"
+#include "hccl/hccl_res.h"
+#include "adapter_rts_common.h"
+#include "server_socket_mgr.h"
 #include "ub_mem.h"
+#include "proc_reged_mem_mgr_cache.h"
+#include "hccl_mem_defs.h"
  
 namespace hcomm {
 UbMemEndpoint::UbMemEndpoint(const EndpointDesc &endpointDesc) : Endpoint(endpointDesc){}
 
+UbMemEndpoint::~UbMemEndpoint() noexcept
+{
+    ProcRegedMemMgrCache::GetInstance().Release(cacheKey_);
+}
+
 HcclResult UbMemEndpoint::Init()
 {
-    EXCEPTION_CATCH(regedMemMgr_ = std::make_unique<UbMemRegedMemMgr>(), return HCCL_E_INTERNAL);
+    Hccl::IpAddress ipAddr{};
+    CHK_RET(CommAddrToIpAddress(endpointDesc_.commAddr, ipAddr));
+
+    s32 devId = 0;
+    CHK_RET(hrtGetDevice(&devId));
+    u32 devPhyId = 0;
+    CHK_RET(hrtGetDevicePhyIdByIndex(devId, devPhyId));
+
+    cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UB_MEM, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
+    auto &cache = ProcRegedMemMgrCache::GetInstance();
+    EXCEPTION_CATCH(regedMemMgr_ = cache.GetOrCreate(cacheKey_, []() {
+        return std::make_shared<UbMemRegedMemMgr>();
+    }), return HCCL_E_INTERNAL);
 
     return HcclResult::HCCL_SUCCESS;
 }
