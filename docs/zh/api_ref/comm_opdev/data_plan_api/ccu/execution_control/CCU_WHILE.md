@@ -50,7 +50,7 @@ CCU_DO {
 ## 约束说明
 
 - `CCU_WHILE（condExpr）`后必须紧跟{}包裹的循环代码块
-- A5代际的`CCU_WHILE`当前的`condExpr`只支持==和！=两种判断模式
+- 针对Ascend 950PR/Ascend 950DT，`CCU_WHILE`当前的`condExpr`只支持==和！=两种判断模式
 - `condExpr`中比较的立即数（`imm`）必须为`uint64_t`类型。
 - 作为独立while循环使用时，`CCU_WHILE`可以嵌套，内层`CCU_WHILE`可在外层`CCU_WHILE`的body内使用。
 - `CCU_WHILE`（独立while）可以与`CCU_IF`组合嵌套。

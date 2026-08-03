@@ -38,11 +38,15 @@ HcclResult HcclEngineCtxCopy(HcclComm comm, CommEngine engine, const char *ctxTa
 ## 调用示例
 
 ```c
+// 通信域句柄
 HcclComm comm;
-CommEngine engine = CommEngine::COMM_ENGINE_AICPU_TS;
-string ctxTag = "ctxTag";
-AlgResourceCtx* resCtx;  // 有效的源ctx
+CommEngine engine = COMM_ENGINE_AICPU_TS;
+const char *ctxTag = "ctxTag";
+void *resCtx = nullptr;  // 有效的源ctx，需指向已分配的内存
 uint64_t size = 16; // 需要拷贝的实际大小
 uint64_t dstCtxOffset = 0; // 全部拷贝情况下，偏移传0
-ret = HcclEngineCtxCopy(comm, engine, ctxTag, resCtx, size, dstCtxOffset);
+HcclResult ret = HcclEngineCtxCopy(comm, engine, ctxTag, resCtx, size, dstCtxOffset);
+if (ret != HCCL_SUCCESS) {
+    // 错误处理
+}
 ```

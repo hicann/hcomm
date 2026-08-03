@@ -8,7 +8,7 @@
 
 ## 功能说明
 
-在指定线程和通道上异步提交一组传输任务。每个传输任务由[HcommBatchTransferDesc](../../../datatype_definition/HcommBatchTransferDesc.md)描述，支持单边写、单边读、写规约、带通知的写以及通知记录/等待等操作类型。
+在指定线程和通道上异步提交一组传输任务。每个传输任务由[HcommBatchTransferDesc](../../../datatype_definition/HcommBatchTransferDesc.md)描述，支持单边写、单边读、写归约、带通知的写以及通知记录/等待等操作类型。
 
 ## 函数原型
 
@@ -32,7 +32,10 @@ int32_t：接口成功返回0，其他失败。
 
 ## 约束说明
 
-当前仅支持Atlas A3/Atlas A2的Device RoCE，并使用HCOMM_TRANSFER_TYPE_WRITE和HCOMM_TRANSFER_TYPE_READ类型，其他类型返回HCCL_E_NOT_SUPPORT。
+针对如下产品，该接口仅支持通信协议RoCE，且transType仅支持HCOMM_TRANSFER_TYPE_WRITE和HCOMM_TRANSFER_TYPE_READ类型，其他类型返回HCCL_E_NOT_SUPPORT。
+
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品
 
 ## 调用示例
 

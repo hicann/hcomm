@@ -171,8 +171,8 @@ all:
     @echo "${TARGET} compile completed"
 
 # Test target
-test: 
-    export LD_LIBRARY_PATH=${CUSTOM_P2P_LIB_DIR}:${LD_LIBRARY_PATH}; \
+test:
+    export LD_LIBRARY_PATH=${CUSTOM_OPS_LIB_DIR}:${LD_LIBRARY_PATH}; \
     ./$(TARGET)
 
 # Clean build artifacts

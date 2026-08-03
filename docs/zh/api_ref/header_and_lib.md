@@ -41,7 +41,7 @@ include目录下各头文件的用途如下表所示：
 | hccl/hccl_res.h | 用于定义HCCL通道描述、内存句柄等资源结构与常量。 | libhcomm.so |
 | hccl/hccl_sym_win.h | 用于定义对称内存窗口（Symmetric Window）访问接口。 | libhcomm.so |
 | hccl/hccl_launch.h | 用于定义P2P算子描述与Launch相关结构。 | libhcomm.so |
-| hcomm/hcomm_primitives.h | 用于定义通道/线程句柄、规约算子等基础原语类型，提供数据搬运与同步原语。 | libhcomm.so |
+| hcomm/hcomm_primitives.h | 用于定义通道/线程句柄、归约算子等基础原语类型，提供数据搬运与同步原语。 | libhcomm.so |
 | hcomm/hcomm_res.h | 用于定义Endpoint/Channel/内存注册等资源管理C接口。 | libhcomm.so |
 | hcomm/hcomm_res_defs.h | 用于定义HCOMM ABI版本、句柄与资源描述结构。 | libhcomm.so |
 | hcomm/ccu/ccu_primitives.hpp | CCU原语聚合头，含类型别名与资源创建入口。 | libhcomm.so |

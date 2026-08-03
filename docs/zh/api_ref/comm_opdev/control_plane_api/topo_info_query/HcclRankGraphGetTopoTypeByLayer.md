@@ -47,7 +47,7 @@ HcclResult HcclRankGraphGetTopoTypeByLayer(HcclComm comm, uint32_t netLayer, Com
 
 ```c
 HcclComm comm;
-uint32_t topoType;
+CommTopo topoType;
 HcclRankGraphGetTopoTypeByLayer(comm, 0, &topoType);  
 // Layer0的topoType=1 (1DMesh)
 HcclRankGraphGetTopoTypeByLayer(comm, 1, &topoType);  
@@ -58,7 +58,7 @@ HcclRankGraphGetTopoTypeByLayer(comm, 1, &topoType);
 
 ```c
 HcclComm comm;
-uint32_t topoType;
+CommTopo topoType;
 HcclRankGraphGetTopoTypeByLayer(comm, 0, &topoType);  
 // Layer0的topoType=0 (Clos)
 HcclRankGraphGetTopoTypeByLayer(comm, 1, &topoType);  

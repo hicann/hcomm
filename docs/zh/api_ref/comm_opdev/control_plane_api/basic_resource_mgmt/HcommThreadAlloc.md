@@ -38,7 +38,7 @@ HcommResult：接口成功返回0，其他失败。
 ## 调用示例
 
 ```c
-ThreadHandle thread[3];
+ThreadHandle thread[2];
 //申请两条流，每条流Notify数量为3
 const uint32_t notifyNumPerThread[2] = {3, 3};
 HcommResult ret =  HcommThreadAlloc(COMM_ENGINE_AICPU_TS, 2, notifyNumPerThread, thread);

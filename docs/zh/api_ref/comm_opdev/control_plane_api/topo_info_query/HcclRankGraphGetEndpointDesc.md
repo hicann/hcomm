@@ -37,11 +37,17 @@ HcclResult HcclRankGraphGetEndpointDesc(HcclComm comm, uint32_t layer, uint32_t 
 ## 调用示例
 
 ```c
+// 通信域句柄
 HcclComm comm;
+
+// 获取EndPoint数量
 uint32_t layer = 0;
 uint32_t topoInstId = 0;
 uint32_t num = 0;
 HcclRankGraphGetEndpointNum(comm, layer, topoInstId, &num);
+
+// 获取EndPoint描述列表
 uint32_t descNum = num;
+EndpointDesc endpointDesc[descNum];
 HcclRankGraphGetEndpointDesc(comm, layer, topoInstId, &descNum, endpointDesc);
 ```

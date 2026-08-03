@@ -40,7 +40,8 @@ HcclResult HcclEngineCtxGet(HcclComm comm, const char *ctxTag, CommEngine engine
 HcclComm comm;
 uint64_t size = 0;
 void *ctx = nullptr;
-string ctxTag = "ctxTag";
+const char *ctxTag = "ctxTag";
 CommEngine engine = CommEngine::COMM_ENGINE_CPU_TS;
-ret = HcclEngineCtxGet(comm, ctxTag, engine, &ctx, &size);
+HcclResult ret = HcclEngineCtxGet(comm, ctxTag, engine, &ctx, &size);
+
 ```
