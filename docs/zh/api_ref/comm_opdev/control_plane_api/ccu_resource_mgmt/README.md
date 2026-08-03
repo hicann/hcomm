@@ -1,23 +1,6 @@
-# CCU 资源管理
+# 简介
 
 CCU资源管理接口用于查询和描述CCU资源诉求、按需创建CCU实例、查询实例资源占用，以及销毁调用方持有的实例。
-
-## 资源描述符
-
-- [HcommCcuInsResDescCreate](HcommCcuInsResDescCreate.md)
-- [HcommCcuInsResDescDestroy](HcommCcuInsResDescDestroy.md)
-- [HcommCcuInsResDescSetNum](HcommCcuInsResDescSetNum.md)
-- [HcommCcuInsResDescQueryNum](HcommCcuInsResDescQueryNum.md)
-- [HcommCcuInsResDescQueryDieId](HcommCcuInsResDescQueryDieId.md)
-- [HcommCcuKernelQueryResReq](HcommCcuKernelQueryResReq.md)
-- [HcommCcuQueryRemainResDesc](HcommCcuQueryRemainResDesc.md)
-
-## CCU实例
-
-- [HcommCcuInsCreate](HcommCcuInsCreate.md)
-- [HcommCcuInsCreateDefault](HcommCcuInsCreateDefault.md)
-- [HcommCcuInsQueryResDesc](HcommCcuInsQueryResDesc.md)
-- [HcommCcuInsDestroy](HcommCcuInsDestroy.md)
 
 按需创建CCU实例的典型流程如下：
 

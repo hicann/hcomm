@@ -34,7 +34,7 @@ Kernel注册和启动接口需要传入`CcuInsHandle`（CCU实例句柄）。当
     }
     ```
 
-> 该接口属于Hccl层（不在`Hcomm*`/`Ccu*`系列内），暂未提供独立API参考页面，
+> 该接口属于HCCL层（不在`Hcomm*`/`Ccu*`系列内），暂未提供独立API参考页面。
 > 完整签名以头文件`include/hccl/hccl_ccu_res.h`为准。
 > 如果通信域未绑定CCU实例，`HcclCommQueryCcuIns`返回`HCCL_E_UNAVAIL`。
 

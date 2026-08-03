@@ -20,9 +20,9 @@
 
 ## 功能说明
 
-创建空白 CCU 资源描述符。资源描述符用于描述 CCU 实例所需的各类资源（loop、buffer、variable、address、event、thread、instruction）的数量规格，不包含实际资源。
+创建空白CCU资源描述符。资源描述符用于描述CCU实例所需的各类资源（loop、buffer、variable、address、event、thread、instruction）的数量规格，不包含实际资源。
 
-一个资源描述符对应一个 IO Die。创建后其内部各资源类型的数量初始化为 0，后续可通过 `HcommCcuInsResDescSetNum` 逐类型设置。
+一个资源描述符对应一个IO Die。创建后其内部各资源类型的数量初始化为0，后续可通过`HcommCcuInsResDescSetNum`逐类型设置。
 
 ## 函数原型
 
@@ -36,32 +36,32 @@ CcuResult HcommCcuInsResDescCreate(uint32_t dieId, HcommCcuResDescHandle *resDes
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| dieId | 输入 | 资源描述符归属的 IO Die 编号，取值范围 `[0, CCU_MAX_IODIE_NUM)`。 |
-| resDesc | 输出 | 创建成功后返回的资源描述符句柄，不能为空指针。调用方负责通过 `HcommCcuInsResDescDestroy` 销毁。 |
+| dieId | 输入 | 资源描述符归属的 IO Die 编号，取值范围：`[0, CCU_MAX_IODIE_NUM)`。 |
+| resDesc | 输出 | 创建成功后返回的资源描述符句柄，不能为空指针。调用方负责通过`HcommCcuInsResDescDestroy`销毁。 |
 
 ## 返回值
 
-[CcuResult](../../datatype_definition/CcuResult.md)：接口成功返回 `CCU_SUCCESS`，其他值表示失败。
+[CcuResult](../../datatype_definition/CcuResult.md)：接口成功返回`CCU_SUCCESS`，其他值表示失败。
 
 | 返回值 | 说明 |
 | --- | --- |
-| `CCU_SUCCESS` | 创建成功，`*resDesc` 为有效的资源描述符句柄。 |
-| `CCU_E_PARA` | `dieId` 超出合法范围（`>= CCU_MAX_IODIE_NUM`）。 |
-| `CCU_E_PTR` | `resDesc` 为空指针。 |
+| `CCU_SUCCESS` | 创建成功，`*resDesc`为有效的资源描述符句柄。 |
+| `CCU_E_PARA` | `dieId`超出合法范围（`>= CCU_MAX_IODIE_NUM`）。 |
+| `CCU_E_PTR` | `resDesc`为空指针。 |
 | `CCU_E_INTERNAL` | 内存分配或内部注册失败。 |
 
 ## 约束说明
 
-- 调用本接口前须通过 AscendCL 接口 `aclrtSetDevice(int32_t deviceId)` 绑定当前线程到目标 NPU Device，本接口从当前线程获取设备上下文。
-- 创建成功后，调用方须在不再使用时通过 `HcommCcuInsResDescDestroy` 销毁该描述符，避免资源泄漏。
+- 调用本接口前须通过 AscendCL 接口`aclrtSetDevice(int32_t deviceId)`绑定当前线程到目标 NPU Device，本接口从当前线程获取设备上下文。
+- 创建成功后，调用方须在不再使用时通过`HcommCcuInsResDescDestroy`销毁该描述符，避免资源泄漏。
 - 资源描述符不能跨线程共享。调用方须保证同一描述符的访问串行执行。
 - 本接口只能在主机侧调用。
 
 ## 依赖关系
 
-- 依赖 `HcommCcuInsResDescDestroy` 销毁描述符。
-- 依赖 `HcommCcuInsResDescSetNum` 设置资源数量。
-- 依赖 `HcommCcuInsResDescQueryNum` / `HcommCcuInsResDescQueryDieId` / `HcommCcuQueryRemainResDesc` 查询描述符信息。
+- 依赖`HcommCcuInsResDescDestroy`销毁描述符。
+- 依赖`HcommCcuInsResDescSetNum`设置资源数量。
+- 依赖`HcommCcuInsResDescQueryNum`、`HcommCcuInsResDescQueryDieId`、`HcommCcuQueryRemainResDesc` 查询描述符信息。
 
 ## 调用示例
 

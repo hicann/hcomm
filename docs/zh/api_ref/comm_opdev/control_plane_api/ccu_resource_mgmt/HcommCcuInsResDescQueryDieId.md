@@ -34,28 +34,28 @@ CcuResult HcommCcuInsResDescQueryDieId(HcommCcuResDescHandle resDesc, uint32_t *
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| resDesc | 输入 | 资源描述符句柄，由 `HcommCcuInsResDescCreate` 创建。 |
-| dieId | 输出 | 查询成功后返回创建描述符时指定的 IO Die 编号，不能为空指针。 |
+| resDesc | 输入 | 资源描述符句柄，由`HcommCcuInsResDescCreate`创建。 |
+| dieId | 输出 | 查询成功后返回创建描述符时指定的IO Die编号，不能为空指针。 |
 
 ## 返回值
 
-[CcuResult](../../datatype_definition/CcuResult.md)：接口成功返回 `CCU_SUCCESS`，其他值表示失败。
+[CcuResult](../../datatype_definition/CcuResult.md)：接口成功返回`CCU_SUCCESS`，其他值表示失败。
 
 | 返回值 | 说明 |
 | --- | --- |
-| `CCU_SUCCESS` | 查询成功，`*dieId` 为描述符归属的 IO Die 编号。 |
-| `CCU_E_PTR` | `dieId` 为空指针。 |
-| `CCU_E_NOT_FOUND` | `resDesc` 未注册。 |
+| `CCU_SUCCESS` | 查询成功，`*dieId`为描述符归属的 IO Die 编号。 |
+| `CCU_E_PTR` | `dieId`为空指针。 |
+| `CCU_E_NOT_FOUND` | `resDesc`未注册。 |
 
 ## 约束说明
 
-- 调用本接口前须通过 `HcommCcuInsResDescCreate` 创建资源描述符。
+- 调用本接口前须通过 `HcommCcuInsResDescCreate`创建资源描述符。
 - 本接口只能在主机侧调用。
 
 ## 依赖关系
 
-- 依赖 `HcommCcuInsResDescCreate` 创建的资源描述符句柄。
-- 供 `HcommCcuQueryRemainResDesc` 内部获取 die ID 以查询对应 Die 的剩余资源。
+- 依赖 `HcommCcuInsResDescCreate`创建的资源描述符句柄。
+- 供 `HcommCcuQueryRemainResDesc`内部获取 die ID以查询对应Die的剩余资源。
 
 ## 调用示例
 

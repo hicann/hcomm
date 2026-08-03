@@ -1,0 +1,16 @@
+# CCU 资源管理
+
+- [简介](README.md)
+- [资源描述符]()
+  - [HcommCcuInsResDescCreate](HcommCcuInsResDescCreate.md)
+  - [HcommCcuInsResDescDestroy](HcommCcuInsResDescDestroy.md)
+  - [HcommCcuInsResDescSetNum](HcommCcuInsResDescSetNum.md)
+  - [HcommCcuInsResDescQueryNum](HcommCcuInsResDescQueryNum.md)
+  - [HcommCcuInsResDescQueryDieId](HcommCcuInsResDescQueryDieId.md)
+  - [HcommCcuKernelQueryResReq](HcommCcuKernelQueryResReq.md)
+  - [HcommCcuQueryRemainResDesc](HcommCcuQueryRemainResDesc.md)
+- [CCU实例]()
+  - [HcommCcuInsCreate](HcommCcuInsCreate.md)
+  - [HcommCcuInsCreateDefault](HcommCcuInsCreateDefault.md)
+  - [HcommCcuInsQueryResDesc](HcommCcuInsQueryResDesc.md)
+  - [HcommCcuInsDestroy](HcommCcuInsDestroy.md)

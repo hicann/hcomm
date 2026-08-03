@@ -47,6 +47,7 @@ const char *HcclGetErrorString(HcclResult code)
 ```c
 // 设备资源初始化
 aclInit(NULL);
+uint32_t devId = 0;
 aclrtSetDevice(devId);
 
 // 创建通信域

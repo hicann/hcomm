@@ -47,7 +47,7 @@ CcuResult HcommCcuQueryRemainResDesc(HcommCcuResDescHandle resDesc);
 | `CCU_SUCCESS` | 查询成功，各类资源的最大连续剩余数量已写入`resDesc`。 |
 | `CCU_E_PARA` | `resDesc`对应的描述符中IO Die编号超出合法范围。 |
 | `CCU_E_NOT_FOUND` | `resDesc`未注册。 |
-| `CCU_E_UNAVAIL` | 指定的 IO Die 未使能。 |
+| `CCU_E_UNAVAIL` | 指定的IO Die未使能。 |
 | `CCU_E_INTERNAL` | 查询过程中发生内部错误（如资源规格查询失败）。 |
 
 ## 约束说明

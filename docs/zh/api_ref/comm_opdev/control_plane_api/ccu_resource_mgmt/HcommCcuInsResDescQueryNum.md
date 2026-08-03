@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-按资源类型查询 CCU 资源描述符中已设置的资源数量。
+按资源类型查询CCU资源描述符中已设置的资源数量。
 
 ## 函数原型
 
@@ -35,20 +35,20 @@ CcuResult HcommCcuInsResDescQueryNum(HcommCcuResDescHandle resDesc,
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| resDesc | 输入 | 资源描述符句柄，由 `HcommCcuInsResDescCreate` 创建。 |
-| resType | 输入 | 资源类型，取 `HcommCcuResType` 枚举值。 |
+| resDesc | 输入 | 资源描述符句柄，由`HcommCcuInsResDescCreate`创建。 |
+| resType | 输入 | 资源类型，取`HcommCcuResType`枚举值。 |
 | resNum | 输出 | 查询成功后返回该资源类型已设置的数量，不能为空指针。 |
 
 ## 返回值
 
-[CcuResult](../../datatype_definition/CcuResult.md)：接口成功返回 `CCU_SUCCESS`，其他值表示失败。
+[CcuResult](../../datatype_definition/CcuResult.md)：接口成功返回`CCU_SUCCESS`，其他值表示失败。
 
 | 返回值 | 说明 |
 | --- | --- |
-| `CCU_SUCCESS` | 查询成功，`*resNum` 为已设置的资源数量。 |
-| `CCU_E_PARA` | `resType` 超出合法范围。 |
-| `CCU_E_PTR` | `resNum` 为空指针。 |
-| `CCU_E_NOT_FOUND` | `resDesc` 未注册。 |
+| `CCU_SUCCESS` | 查询成功，`*resNum`为已设置的资源数量。 |
+| `CCU_E_PARA` | `resType`超出合法范围。 |
+| `CCU_E_PTR` | `resNum`为空指针。 |
+| `CCU_E_NOT_FOUND` | `resDesc`未注册。 |
 
 ## 约束说明
 

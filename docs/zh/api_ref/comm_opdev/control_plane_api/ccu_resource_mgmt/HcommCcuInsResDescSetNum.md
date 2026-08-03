@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-按资源类型设置 CCU 资源描述符中的资源数量。可多次调用逐类型设置期望值。设置为 0 表示不申请该类型资源。
+按资源类型设置CCU资源描述符中的资源数量。可多次调用逐类型设置期望值。设置为“0”表示不申请该类型资源。
 
 ## 函数原型
 
@@ -37,7 +37,7 @@ CcuResult HcommCcuInsResDescSetNum(HcommCcuResDescHandle resDesc,
 | --- | --- | --- |
 | resDesc | 输入/输出 | 资源描述符句柄，由 `HcommCcuInsResDescCreate` 创建。设置成功后，指定资源类型的数量更新为`resNum`。 |
 | resType | 输入 | 资源类型，取 `HcommCcuResType` 枚举值。合法值：`HCOMM_CCU_RES_TYPE_LOOP`、`HCOMM_CCU_RES_TYPE_CCU_BUF`、`HCOMM_CCU_RES_TYPE_VARIABLE`、`HCOMM_CCU_RES_TYPE_ADDRESS`、`HCOMM_CCU_RES_TYPE_EVENT`、`HCOMM_CCU_RES_TYPE_CCU_THREAD`、`HCOMM_CCU_RES_TYPE_INSTRUCTION`。 |
-| resNum | 输入 | 期望的资源数量。设置为 0 表示不申请该类型资源。 |
+| resNum | 输入 | 期望的资源数量。设置为“0”表示不申请该类型资源。 |
 
 ## 返回值
 
@@ -46,21 +46,21 @@ CcuResult HcommCcuInsResDescSetNum(HcommCcuResDescHandle resDesc,
 | 返回值 | 说明 |
 | --- | --- |
 | `CCU_SUCCESS` | 设置成功。 |
-| `CCU_E_PARA` | `resType` 超出合法范围。 |
-| `CCU_E_NOT_FOUND` | `resDesc` 未注册。 |
+| `CCU_E_PARA` | `resType`超出合法范围。 |
+| `CCU_E_NOT_FOUND` | `resDesc`未注册。 |
 
 ## 约束说明
 
-- 调用本接口前须通过 `HcommCcuInsResDescCreate` 创建资源描述符。
+- 调用本接口前须通过`HcommCcuInsResDescCreate`创建资源描述符。
 - 多次调用本接口对同一资源类型进行设置，后一次的值覆盖前一次的值。
-- 本接口为纯数据写入操作，不校验 `resNum` 是否超过硬件容量上限。容量校验在使用描述符创建 CCU 实例或查询剩余资源时进行。
+- 本接口为纯数据写入操作，不校验`resNum`是否超过硬件容量上限。容量校验在使用描述符创建 CCU 实例或查询剩余资源时进行。
 - 本接口只能在主机侧调用。
 
 ## 依赖关系
 
-- 依赖 `HcommCcuInsResDescCreate` 创建的资源描述符句柄。
-- 依赖 `HcommCcuInsResDescQueryNum` 查询已设置的资源数量。
-- 配合 `HcommCcuQueryRemainResDesc` 使用：先查询剩余资源，再按需调整描述符中的资源数量。
+- 依赖`HcommCcuInsResDescCreate`创建的资源描述符句柄。
+- 依赖`HcommCcuInsResDescQueryNum`查询已设置的资源数量。
+- 配合`HcommCcuQueryRemainResDesc`使用：先查询剩余资源，再按需调整描述符中的资源数量。
 
 ## 调用示例
 
