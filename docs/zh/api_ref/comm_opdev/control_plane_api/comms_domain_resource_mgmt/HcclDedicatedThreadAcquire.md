@@ -59,6 +59,8 @@ HcclResult HcclDedicatedThreadAcquire(HcclComm comm, HcclDedicatedThreadType use
 
 4. 图模式下（useType为HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE）若通信域中尚未缓存该专用线程，接口不会实际创建线程，返回的thread句柄为0。
 
+5. 调用HcclDedicatedThreadAcquire接口申请专用线程前，必须先在同一线程上调用aclrtSetdevice接口指定deviceId。
+
 ## 调用示例
 
 申请AICPU任务下发的专用线程示例如下：
@@ -68,7 +70,7 @@ HcclResult HcclDedicatedThreadAcquire(HcclComm comm, HcclDedicatedThreadType use
 HcclComm comm;
 // 申请AICPU_LAUNCH类型的专用线程，包含2个notify
 ThreadHandle dedThread;
-HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 2, &dedThread);
+HcclResult ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH, 2, &dedThread);
 ```
 
 图模式下申请专用线程示例如下：
@@ -79,6 +81,6 @@ HcclComm comm;
 // 图模式下申请AICPU_LAUNCH_GE类型的专用线程
 // 若通信域中尚未缓存该线程，返回的thread为0，不会实际创建
 ThreadHandle dedThread;
-HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE, 2, &dedThread);
+HcclResult ret = HcclDedicatedThreadAcquire(comm, HCCL_DED_THREAD_TYPE_AICPU_LAUNCH_GE, 2, &dedThread);
 ```
 
