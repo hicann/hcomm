@@ -40,7 +40,7 @@ RankInfoDetect::RankInfoDetect()
 {
     userDevId_ = HrtGetDevice();
     aclError aclRet = aclrtGetLogicDevIdByUserDevId(userDevId_, &devLogicId_);  // userDevId 转 logicDevId
-    CHK_PRT_THROW(aclRet != ACL_SUCCESS, HCCL_ERROR("[RankInfoDetect::%s] aclrtGetLogicDevIdByUserDevId failed, userDevId[%u], ret[%d]",
+    CHK_PRT_THROW(aclRet != ACL_SUCCESS, HCCL_ERROR("[RankInfoDetect::%s] aclrtGetLogicDevIdByUserDevId failed, userDevId[%d], ret[%d]",
         __func__, userDevId_, aclRet), InternalException, "get logicDevId fail");
     s32 deviceNum = HrtGetDeviceCount();
     CHK_PRT_THROW(userDevId_ >= deviceNum,

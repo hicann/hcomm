@@ -65,6 +65,12 @@ struct GroupOpConfig {
     uint64_t memSlice;
 };
 
+// Kernel 查询信息结构体，由 CcuKernel::GetCcuKernelInfo 在锁内填充。
+// 后续新增查询字段时只需在此结构体中添加，无需新增接口。
+struct CcuKernelInfo {
+    uint32_t maxTaskArgsNum{0}; // taskArgs数组所需的元素个数，注册期间由LoadArg的argId推算: max(argId)+1，空则为0
+};
+
 class CcuKernel : public CcuRep::CcuRepContext {
 public:
     CcuKernel() = default;
@@ -128,6 +134,8 @@ public:
 
     //参数加载类 相关接口
     CcuResult LoadArg(CcuVariableHandle varHandle, uint32_t argId);
+    // 在锁内填充 Kernel 查询信息；当前包含 maxTaskArgsNum。
+    CcuResult GetCcuKernelInfo(CcuKernelInfo &info) const;
     CcuResult LoadVar(uint64_t addr, CcuVariableHandle varHandle, uint32_t num);
     CcuResult CcuLoadVarFromVarAddr(CcuVariableHandle addrHandle, CcuVariableHandle varHandle, uint32_t num);
     CcuResult StoreVar(uint64_t addr, CcuVariableHandle varHandle, uint32_t num);

@@ -44,6 +44,8 @@ public:
     CcuResult Translate(const std::vector<CcuKernelHandle> &kernelHandles);
 
     CcuKernel *GetKernel(CcuKernelHandle kernelHandle);
+    // 在锁内查找 kernel 并填充 CcuKernelInfo，裸指针不逃逸锁。
+    CcuResult GetCcuKernelInfo(CcuKernelHandle kernelHandle, CcuKernelInfo &info);
     CcuResult UnRegister(CcuKernelHandle kernelHandle);
 
     CcuKernel *GetCurrentKernel();

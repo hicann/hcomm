@@ -25,14 +25,16 @@ extern "C" {
 
 extern CcuResult HcommCcuKernelRegisterStart(CcuInsHandle insHandle) HCOMM_WEAK_SYMBOL;
 
-extern CcuResult HcommCcuKernelRegister(CcuInsHandle insHandle, uint32_t dieId,
-    const char *kernelFuncName, const void *kernelFunc,
-    const void **kernelArgs, uint32_t argNum, CcuKernelHandle *kernelHandle) HCOMM_WEAK_SYMBOL;
+extern CcuResult HcommCcuKernelRegister(
+    CcuInsHandle insHandle, uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs,
+    uint32_t argNum, CcuKernelHandle* kernelHandle) HCOMM_WEAK_SYMBOL;
 
 extern CcuResult HcommCcuKernelRegisterEnd(CcuInsHandle insHandle) HCOMM_WEAK_SYMBOL;
 
-extern CcuResult HcommCcuKernelLaunch(ThreadHandle threadHandle,
-    CcuKernelHandle kernelHandle, const void *taskArgs, uint32_t argNum) HCOMM_WEAK_SYMBOL;
+extern CcuResult HcommCcuGetTaskArgsNum(CcuKernelHandle kernelHandle, uint32_t* taskArgsNum);
+
+extern CcuResult HcommCcuKernelLaunch(
+    ThreadHandle threadHandle, CcuKernelHandle kernelHandle, const void* taskArgs, uint32_t argNum) HCOMM_WEAK_SYMBOL;
 
 #ifdef __cplusplus
 }

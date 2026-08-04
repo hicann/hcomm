@@ -133,6 +133,23 @@ CcuResult HcommCcuKernelRegisterEnd(CcuInsHandle insHandle)
     return CcuResult::CCU_SUCCESS;
 }
 
+CcuResult HcommCcuGetTaskArgsNum(CcuKernelHandle kernelHandle, uint32_t *taskArgsNum)
+{
+    HCCL_INFO("Entry-%s", __func__);
+    CCU_CHK_PTR_NULL(taskArgsNum);
+
+    const uint32_t devLogicId = HcclGetThreadDeviceId();
+    auto &kernelMgr = hcomm::CcuKernelMgr::GetInstance(devLogicId);
+
+    hcomm::CcuKernelInfo info{};
+    CCU_CHK_RET(kernelMgr.GetCcuKernelInfo(kernelHandle, info));
+
+    *taskArgsNum = info.maxTaskArgsNum;
+    HCCL_INFO("[%s] success, kernelHandle[%llx], taskArgsNum[%u].",
+        __func__, kernelHandle, *taskArgsNum);
+    return CcuResult::CCU_SUCCESS;
+}
+
 static std::shared_ptr<std::vector<Hccl::CcuProfilingInfo>> ConstructCcuDetailInfo(
     const std::vector<hcomm::CcuProfilingInfo> &allCcuProfilingInfo, bool isSaveProfilingData)
 {

@@ -1233,6 +1233,11 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelAlloc_When_AllFine_Expect_Return
     ccuRet = HcommCcuKernelRegisterEnd(insHandle);
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
+    // 验证 HcommCcuGetTaskArgsNum：CcuAllocDemoKernel 调用 LoadArg(0) 和 LoadArg(1)，max(argId)+1=2
+    uint32_t taskArgsNum = 0xFFFFFFFF;
+    EXPECT_EQ(HcommCcuGetTaskArgsNum(kernelHandle, &taskArgsNum), CcuResult::CCU_SUCCESS);
+    EXPECT_EQ(taskArgsNum, 2U);
+
     MockChannelDestory(handlePair);
     ccuRet = HcommCcuInsDestroy(insHandle);
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
@@ -2088,4 +2093,75 @@ TEST_F(HcommCcuInstanceDeviceRefreshTest,
     EXPECT_EQ(loopNum, originalLoopNum);
     EXPECT_NE(InsMgr(TEST_DEVICE_LOGIC_ID).Get(existingHandle), nullptr);
     EXPECT_EQ(g_deviceRefreshCalls, 5U);
+}
+// ============================================================================================
+// HcommCcuGetTaskArgsNum 单元测试
+// 对应业务代码：src/base_comm/primitives/api_c_adpt/ccu/ccu_launch.cc
+// 该接口取已注册 kernel 注册期间所有 LoadArg 中 argId 的最大值加1，写入 *taskArgsNum。
+// 调用链：HcommCcuGetTaskArgsNum -> CcuKernelMgr::GetInstance -> GetCcuKernelInfo -> CcuKernel::GetCcuKernelInfo
+// 由于 #define private public 已启用，可直接操作单例 kernelMap_ 注入 fake kernel 精确测试
+// ============================================================================================
+
+// 功能用例：loadArgUsedSet_ 含多个 argId，验证返回最大值
+TEST_F(HcommCcuControlApiTest, Ut_HcommCcuGetTaskArgsNum_When_MultiArgIds_Expect_MaxArgId) {
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 10;
+    MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(fakeDevId));
+
+    // 通过单例注入 fake kernel，设置 loadArgUsedSet_ = {0, 3, 1}，max=3，+1=4
+    constexpr CcuKernelHandle fakeHandle = 0xBEEF;
+    auto &kernelMgr = hcomm::CcuKernelMgr::GetInstance(static_cast<int32_t>(fakeDevId));
+    auto fakeKernel = std::make_unique<hcomm::CcuKernel>();
+    fakeKernel->loadArgUsedSet_ = {0, 3, 1};
+    kernelMgr.kernelMap_[fakeHandle] = std::move(fakeKernel);
+
+    uint32_t taskArgsNum = 0xFFFFFFFF;
+    CcuResult ret = HcommCcuGetTaskArgsNum(fakeHandle, &taskArgsNum);
+    EXPECT_EQ(ret, CcuResult::CCU_SUCCESS);
+    EXPECT_EQ(taskArgsNum, 4U) << "应返回 loadArgUsedSet_ 中最大 argId + 1";
+
+    // 清理 fake kernel，避免单例状态污染后续用例
+    kernelMgr.kernelMap_.erase(fakeHandle);
+}
+
+// 异常用例：taskArgsNum 为空指针，应返回 CCU_E_PTR
+TEST_F(HcommCcuControlApiTest, Ut_HcommCcuGetTaskArgsNum_When_NullPtr_Expect_CcuEPtr) {
+    constexpr CcuKernelHandle fakeHandle = 0xBEEF;
+    CcuResult ret = HcommCcuGetTaskArgsNum(fakeHandle, nullptr);
+    EXPECT_EQ(ret, CcuResult::CCU_E_PTR);
+}
+
+// 异常用例：kernelHandle 不存在，GetCcuKernelInfo 在锁内查找失败返回 CCU_E_NOT_FOUND
+TEST_F(HcommCcuControlApiTest, Ut_HcommCcuGetTaskArgsNum_When_InvalidHandle_Expect_CcuENotFound) {
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 10;
+    MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(fakeDevId));
+
+    // 不注册任何 kernel，使用不存在的 handle
+    constexpr CcuKernelHandle invalidHandle = 0xDEAD;
+    uint32_t taskArgsNum = 0xFFFFFFFF;
+    CcuResult ret = HcommCcuGetTaskArgsNum(invalidHandle, &taskArgsNum);
+    EXPECT_EQ(ret, CcuResult::CCU_E_NOT_FOUND);
+    // 出参不应被修改（GetCcuKernelInfo 在锁内查找失败，未写入 info）
+    EXPECT_EQ(taskArgsNum, 0xFFFFFFFFu);
+}
+
+// 安全/边界用例：未调用 LoadArg（loadArgUsedSet_ 为空），应返回 0 并覆盖脏出参
+TEST_F(HcommCcuControlApiTest, Ut_HcommCcuGetTaskArgsNum_When_NoLoadArg_Expect_Zero) {
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 10;
+    MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(fakeDevId));
+
+    // 注入 fake kernel，loadArgUsedSet_ 保持默认空集，GetCcuKernelInfo 填充 maxTaskArgsNum=0
+    constexpr CcuKernelHandle fakeHandle = 0xBEEF;
+    auto &kernelMgr = hcomm::CcuKernelMgr::GetInstance(static_cast<int32_t>(fakeDevId));
+    auto fakeKernel = std::make_unique<hcomm::CcuKernel>();
+    // loadArgUsedSet_ 默认为空，不 insert 任何 argId
+    kernelMgr.kernelMap_[fakeHandle] = std::move(fakeKernel);
+
+    // 出参初始为脏值 0xFFFFFFFF，验证被正确覆盖为 0
+    uint32_t taskArgsNum = 0xFFFFFFFF;
+    CcuResult ret = HcommCcuGetTaskArgsNum(fakeHandle, &taskArgsNum);
+    EXPECT_EQ(ret, CcuResult::CCU_SUCCESS);
+    EXPECT_EQ(taskArgsNum, 0U) << "未调用 LoadArg 时 maxArgId 应为 0，脏出参应被覆盖";
+
+    // 清理 fake kernel
+    kernelMgr.kernelMap_.erase(fakeHandle);
 }

@@ -792,6 +792,23 @@ CcuResult  CcuKernel::LoadArg(CcuVariableHandle varHandle, uint32_t argId)
     return CcuResult::CCU_SUCCESS;
 }
 
+CcuResult CcuKernel::GetCcuKernelInfo(CcuKernelInfo &info) const
+{
+    uint32_t maxTaskArgsNum = 0;
+    // 如果没有LoadArg指令，则说明不需要传入参数，直接返回0
+    if (loadArgUsedSet_.empty()) {
+        info.maxTaskArgsNum = 0;
+        return CcuResult::CCU_SUCCESS;
+    }
+    // 遍历loadArgUsedSet_，获取最大的argId，加1得到最大任务参数数量（argId从0连续）
+    for (const auto &argId : loadArgUsedSet_) {
+        maxTaskArgsNum = std::max(maxTaskArgsNum, argId);
+    }
+    maxTaskArgsNum += 1;
+    info.maxTaskArgsNum = maxTaskArgsNum;
+    return CcuResult::CCU_SUCCESS;
+}
+
 CcuResult CcuKernel::CheckContinuousVariables(CcuVariableHandle varHandle, uint32_t num,
     const CcuRep::Variable &baseVar, const char *tag)
 {
