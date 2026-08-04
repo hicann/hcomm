@@ -251,6 +251,9 @@ TEST_M(RdmaAgent, TcRaHdcRecvHandleSendPktUnsuccess);
 TEST_M(RdmaAgent, TcRaHdcGetEidByIp);
 TEST_M(RdmaAgent, TcRaRsGetEidByIp);
 TEST_M(RdmaAgent, TcRaPeerGetEidByIp);
+TEST_M(RdmaAgent, TcRaHdcGetIpByEid);
+TEST_M(RdmaAgent, TcRaRsGetIpByEid);
+TEST_M(RdmaAgent, TcRaPeerGetIpByEid);
 TEST_M(RdmaAgent, TcRaCtxGetAuxInfo);
 TEST_M(RdmaAgent, TcRaHdcCtxGetAuxInfo);
 TEST_M(RdmaAgent, TcRaRsCtxGetAuxInfo);
@@ -287,6 +290,7 @@ TEST_M(RdmaAgent, TcRaCtxQpBind);
 TEST_M(RdmaAgent, TcRaBatchSendWr);
 TEST_M(RdmaAgent, TcRaCtxUpdateCi);
 TEST_M(RdmaAgent, TcRaGetEidByIp);
+TEST_M(RdmaAgent, TcRaGetIpByEid);
 TEST_M(RdmaAgent, TcRaCtxGetCrErrInfoList);
 TEST_M(RdmaAgent, TcRaCtxGetJettyContext);
 
@@ -337,6 +341,8 @@ TEST_M(RdmaAgent, TcRaSocketBatchCloseAsync);
 TEST_M(RdmaAgent, TcRaHdcAsyncInitSession);
 TEST_M(RdmaAgent, TcRaGetEidByIpAsync);
 TEST_M(RdmaAgent, TcRaHdcGetEidByIpAsync);
+TEST_M(RdmaAgent, TcRaGetIpByEidAsync);
+TEST_M(RdmaAgent, TcRaHdcGetIpByEidAsync);
 
 TEST_M(RdmaAgent, TcRaTlvInit);
 TEST_M(RdmaAgent, TcRaTlvDeinit);

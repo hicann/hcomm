@@ -61,6 +61,7 @@ extern urma_eid_info_t *RsUrmaGetEidList(urma_device_t *dev, uint32_t *cnt);
 extern void RsUrmaFreeDeviceList(urma_device_t **deviceList);
 extern void RsUrmaFreeEidList(urma_eid_info_t *eidList);
 extern int RsUrmaGetEidByIp(const urma_context_t *ctx, const urma_net_addr_t *netAddr, urma_eid_t *eid);
+extern int RsUrmaGetIpByEid(const urma_context_t *ctx, const urma_eid_t *eid, urma_net_addr_t *netAddr);
 extern void RsUbCtxExtJettyCreate(struct RsCtxJettyCb *jettyCb, urma_jetty_cfg_t *jettyCfg);
 extern void RsUbCtxExtJettyDelete(struct RsCtxJettyCb *jettyCb);
 extern int RsUbCtxRegJettyDb(struct RsCtxJettyCb *jettyCb, struct udma_u_jetty_info *jettyInfo);
@@ -1476,6 +1477,57 @@ void TcRsUbGetEidByIp()
     }
     ret = RsUbGetEidByIp(&devCb, ip, eid, &num);
     EXPECT_INT_EQ(-259, ret);
+    mocker_clean();
+}
+
+void TcRsGetIpByEid()
+{
+    struct RaRsDevInfo devInfo = {0};
+    union HccpEid eid[32] = {0};
+    struct IpInfo ip[32] = {0};
+    unsigned int num = 32;
+    int ret = 0;
+
+    mocker(RsGetRsCb, 1, -1);
+    ret = RsGetIpByEid(&devInfo, eid, ip, &num);
+    EXPECT_INT_EQ(-1, ret);
+    mocker_clean();
+
+    mocker(RsGetRsCb, 1, 0);
+    mocker(RsUbGetDevCb, 1, -1);
+    ret = RsGetIpByEid(&devInfo, eid, ip, &num);
+    EXPECT_INT_EQ(-1, ret);
+    mocker_clean();
+
+    mocker(RsGetRsCb, 1, 0);
+    mocker(RsUbGetDevCb, 1, 0);
+    mocker(RsUbGetIpByEid, 1, -1);
+    ret = RsGetIpByEid(&devInfo, eid, ip, &num);
+    EXPECT_INT_EQ(-1, ret);
+    mocker_clean();
+
+    mocker(RsGetRsCb, 1, 0);
+    mocker(RsUbGetDevCb, 1, 0);
+    mocker(RsUbGetIpByEid, 1, 0);
+    ret = RsGetIpByEid(&devInfo, eid, ip, &num);
+    EXPECT_INT_EQ(0, ret);
+    mocker_clean();
+}
+
+void TcRsUbGetIpByEid()
+{
+    struct RsUbDevCb devCb = {0};
+    union HccpEid eid[32] = {0};
+    struct IpInfo ip[32] = {0};
+    unsigned int num = 32;
+    int ret = 0;
+
+    ret = RsUbGetIpByEid(&devCb, eid, ip, &num);
+    EXPECT_INT_EQ(0, ret);
+
+    mocker(RsUrmaGetIpByEid, 1, -1);
+    ret = RsUbGetIpByEid(&devCb, eid, ip, &num);
+    EXPECT_INT_EQ(-1, ret);
     mocker_clean();
 }
 

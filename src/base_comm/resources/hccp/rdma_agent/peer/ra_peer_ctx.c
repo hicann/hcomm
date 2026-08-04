@@ -104,8 +104,7 @@ int RaPeerCtxDeinit(struct RaCtxHandle *ctxHandle)
     return ret;
 }
 
-int RaPeerGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union HccpEid eid[],
-    unsigned int *num)
+int RaPeerGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union HccpEid eid[], unsigned int *num)
 {
     unsigned int phyId = ctxHandle->attr.phyId;
     struct RaRsDevInfo devInfo = {0};
@@ -119,6 +118,25 @@ int RaPeerGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union Hc
     RaPeerMutexUnlock(phyId);
     if (ret != 0) {
         hccp_err("[get][eid_by_ip]rs_get_eid_by_ip failed ret[%d] phy_id[%u]", ret, phyId);
+    }
+
+    return ret;
+}
+
+int RaPeerGetIpByEid(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int *num)
+{
+    unsigned int phyId = ctxHandle->attr.phyId;
+    struct RaRsDevInfo devInfo = {0};
+    int ret = 0;
+
+    RaRsSetDevInfo(&devInfo, phyId, ctxHandle->devIndex);
+
+    RaPeerMutexLock(phyId);
+    RsSetCtx(phyId);
+    ret = RsGetIpByEid(&devInfo, eid, ip, num);
+    RaPeerMutexUnlock(phyId);
+    if (ret != 0) {
+        hccp_err("[get][IpByEid]RsGetIpByEid failed ret[%d] phyId[%u]", ret, phyId);
     }
 
     return ret;

@@ -92,9 +92,17 @@ struct RaResponseEidList {
     unsigned int *num;
 };
 
+struct RaResponseIpList {
+    struct IpInfo *ipList;
+    unsigned int *num;
+};
+
 int RaHdcGetEidByIpAsync(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union HccpEid eid[],
     unsigned int *num, void **reqHandle);
 void RaHdcAsyncHandleGetEidByIp(struct RaRequestHandle *reqHandle);
+int RaHdcGetIpByEidAsync(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[],
+    unsigned int *num, void **reqHandle);
+void RaHdcAsyncHandleGetIpByEid(struct RaRequestHandle *reqHandle);
 int RaHdcCtxLmemRegisterAsync(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo,
     struct RaLmemHandle *lmemHandle, void **reqHandle);
 void RaHdcAsyncHandleLmemRegister(struct RaRequestHandle *reqHandle);

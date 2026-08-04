@@ -24,6 +24,7 @@ struct RsCtxOps {
     int (*ctxGetAsyncEvents)(struct RaRsDevInfo *devInfo, struct AsyncEvent asyncEvents[], unsigned int *num);
     int (*ctxDeinit)(struct RaRsDevInfo *devInfo);
     int (*getEidByIp)(struct RaRsDevInfo *devInfo, struct IpInfo ip[], union HccpEid eid[], unsigned int *num);
+    int (*getIpByEid)(struct RaRsDevInfo *devInfo, union HccpEid eid[], struct IpInfo ip[], unsigned int *num);
     int (*getTpInfoList)(struct RaRsDevInfo *devInfo, struct GetTpCfg *cfg, struct HccpTpInfo infoList[],
         unsigned int *num);
     int (*getTpAttr)(struct RaRsDevInfo *devInfo, unsigned int *attrBitmap, const uint64_t tpHandle,
@@ -70,6 +71,7 @@ int RaRsCtxInit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBu
 int RaRsCtxGetAsyncEvents(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsCtxDeinit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsGetEidByIp(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
+int RaRsGetIpByEid(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsGetTpInfoList(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsGetTpAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsSetTpAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);

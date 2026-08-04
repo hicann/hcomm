@@ -46,6 +46,8 @@ RS_ATTRI_VISI_DEF int RsCtxGetAsyncEvents(struct RaRsDevInfo *devInfo, struct As
 RS_ATTRI_VISI_DEF int RsCtxDeinit(struct RaRsDevInfo *devInfo);
 RS_ATTRI_VISI_DEF int RsGetEidByIp(struct RaRsDevInfo *devInfo, struct IpInfo ip[], union HccpEid eid[],
     unsigned int *num);
+RS_ATTRI_VISI_DEF int RsGetIpByEid(struct RaRsDevInfo *devInfo, union HccpEid eid[], struct IpInfo ip[],
+    unsigned int *num);
 RS_ATTRI_VISI_DEF int RsGetTpInfoList(struct RaRsDevInfo *devInfo, struct GetTpCfg *cfg,
     struct HccpTpInfo infoList[], unsigned int *num);
 RS_ATTRI_VISI_DEF int RsGetTpAttr(struct RaRsDevInfo *devInfo, unsigned int *attrBitmap,

@@ -1240,6 +1240,11 @@ void TcRaRsTestCtxOps()
     TcCommonTest();
 
     TcAdpEnvInit();
+    mocker((stub_fn_t)gRaRsCtxOps.getIpByEid, 1, 0);
+    AddTestMsg(RA_RS_GET_IP_BY_EID, sizeof(union OpGetIpByEidData));
+    TcCommonTest();
+
+    TcAdpEnvInit();
     mocker((stub_fn_t)gRaRsCtxOps.ctxGetAuxInfo, 1, 0);
     AddTestMsg(RA_RS_CTX_GET_AUX_INFO, sizeof(union OpCtxGetAuxInfoData));
     TcCommonTest();

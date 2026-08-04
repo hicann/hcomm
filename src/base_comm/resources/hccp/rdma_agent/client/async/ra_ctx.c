@@ -25,16 +25,42 @@ HCCP_ATTRI_VISI_DEF int RaGetEidByIpAsync(void *ctxHandle, struct IpInfo ip[], u
         hccp_err("[get][eid_by_ip]ctx_handle or ip or eid or num or req_handle is NULL"),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
-    CHK_PRT_RETURN(*num == 0 || *num > GET_EID_BY_IP_MAX_NUM, hccp_err("[get][eid_by_ip]num(%u) must greater than 0"
-        " and less or equal to %d", *num, GET_EID_BY_IP_MAX_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
+    CHK_PRT_RETURN(*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM, hccp_err("[get][eid_by_ip]num(%u) must greater than 0"
+        " and less or equal to %d", *num, HCCP_EID_IP_QUERY_MAX_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
 
     ctxHandleTmp = (struct RaCtxHandle *)ctxHandle;
 
-    hccp_run_info("Input parameters: phy_id(%u), devIndex(0x%x)",
-        ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex);
+    hccp_run_info("Input parameters: phy_id:%u, devIndex:0x%x num:%u",
+        ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex, *num);
     ret = RaHdcGetEidByIpAsync(ctxHandleTmp, ip, eid, num, reqHandle);
     if (ret != 0) {
         hccp_err("[get][eid_by_ip]ra_hdc_get_eid_by_ip_async failed, ret(%d) phyId(%u), devIndex(0x%x)", ret,
+            ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex);
+    }
+
+    return ret;
+}
+
+HCCP_ATTRI_VISI_DEF int RaGetIpByEidAsync(void *ctxHandle, union HccpEid eid[], struct IpInfo ip[],
+    unsigned int *num, void **reqHandle)
+{
+    struct RaCtxHandle *ctxHandleTmp = NULL;
+    int ret = 0;
+
+    CHK_PRT_RETURN(ctxHandle == NULL || eid == NULL || ip == NULL || num == NULL || reqHandle == NULL,
+        hccp_err("[get][IpByEid]ctxHandle or eid or ip or num or reqHandle is NULL"),
+        ConverReturnCode(RDMA_OP, -EINVAL));
+
+    CHK_PRT_RETURN(*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM, hccp_err("[get][IpByEid]num(%u) must greater than 0"
+        " and less or equal to %d", *num, HCCP_EID_IP_QUERY_MAX_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
+
+    ctxHandleTmp = (struct RaCtxHandle *)ctxHandle;
+
+    hccp_run_info("Input parameters: phy_id:%u, devIndex:0x%x num:%u",
+        ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex, *num);
+    ret = RaHdcGetIpByEidAsync(ctxHandleTmp, eid, ip, num, reqHandle);
+    if (ret != 0) {
+        hccp_err("[get][IpByEid]RaHdcGetIpByEidAsync failed, ret(%d) phyId(%u), devIndex(0x%x)", ret,
             ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex);
     }
 

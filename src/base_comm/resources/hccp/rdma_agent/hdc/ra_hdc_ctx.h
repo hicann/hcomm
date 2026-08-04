@@ -91,13 +91,29 @@ union OpGetEidByIpData {
     struct {
         unsigned int phyId;
         unsigned int devIndex;
-        struct IpInfo ip[GET_EID_BY_IP_MAX_NUM];
+        struct IpInfo ip[HCCP_EID_IP_QUERY_MAX_NUM];
         unsigned int num;
         unsigned int rsvd[RA_RSVD_NUM_4];
     } txData;
 
     struct {
-        union HccpEid eid[GET_EID_BY_IP_MAX_NUM];
+        union HccpEid eid[HCCP_EID_IP_QUERY_MAX_NUM];
+        unsigned int num;
+        unsigned int rsvd[RA_RSVD_NUM_4];
+    } rxData;
+};
+
+union OpGetIpByEidData {
+    struct {
+        unsigned int phyId;
+        unsigned int devIndex;
+        union HccpEid eid[HCCP_EID_IP_QUERY_MAX_NUM];
+        unsigned int num;
+        unsigned int rsvd[RA_RSVD_NUM_4];
+    } txData;
+
+    struct {
+        struct IpInfo ip[HCCP_EID_IP_QUERY_MAX_NUM];
         unsigned int num;
         unsigned int rsvd[RA_RSVD_NUM_4];
     } rxData;
@@ -415,6 +431,12 @@ void RaHdcPrepareGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], u
 int RaHdcGetEidResults(union OpGetEidByIpData *opData, unsigned int ipNum, union HccpEid eid[],
     unsigned int *num);
 int RaHdcGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union HccpEid eid[],
+    unsigned int *num);
+void RaHdcPrepareGetIpByEid(struct RaCtxHandle *ctxHandle, union HccpEid eid[], unsigned int eidNum,
+    union OpGetIpByEidData *opData);
+int RaHdcGetIpResults(union OpGetIpByEidData *opData, unsigned int eidNum, struct IpInfo ip[],
+    unsigned int *num);
+int RaHdcGetIpByEid(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[],
     unsigned int *num);
 int RaHdcCtxTokenIdAlloc(struct RaCtxHandle *ctxHandle, struct HccpTokenId *info,
     struct RaTokenIdHandle *tokenIdHandle);

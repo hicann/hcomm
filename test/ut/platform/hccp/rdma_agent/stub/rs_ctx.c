@@ -29,6 +29,11 @@ int RsGetEidByIp(struct RaRsDevInfo *devInfo, struct IpInfo ip[], unsigned int n
     return 0;
 }
 
+int RsGetIpByEid(struct RaRsDevInfo *devInfo, union HccpEid eid[], struct IpInfo ip[], unsigned int *num)
+{
+    return 0;
+}
+
 int RsCtxInit(struct CtxInitAttr *attr, unsigned int *devIndex, struct DevBaseAttr *devAttr)
 {
     return 0;

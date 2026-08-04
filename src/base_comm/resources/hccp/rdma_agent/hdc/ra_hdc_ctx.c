@@ -167,8 +167,7 @@ void RaHdcPrepareGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], u
     }
 }
 
-int RaHdcGetEidResults(union OpGetEidByIpData *opData, unsigned int ipNum, union HccpEid eid[],
-    unsigned int *num)
+int RaHdcGetEidResults(union OpGetEidByIpData *opData, unsigned int ipNum, union HccpEid eid[], unsigned int *num)
 {
     unsigned int i = 0;
 
@@ -200,6 +199,56 @@ int RaHdcGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union Hcc
         " devIndex[0x%x]", retTmp, phyId, ctxHandle->devIndex), retTmp);
 
     CHK_PRT_RETURN(ret != 0, hccp_err("[get][eid_by_ip]hdc message process failed ret[%d], phyId[%u]"
+        " devIndex[0x%x]", ret, phyId, ctxHandle->devIndex), ret);
+
+    return ret;
+}
+
+void RaHdcPrepareGetIpByEid(struct RaCtxHandle *ctxHandle, union HccpEid eid[], unsigned int eidNum,
+    union OpGetIpByEidData *opData)
+{
+    unsigned int i = 0;
+
+    opData->txData.phyId = ctxHandle->attr.phyId;
+    opData->txData.devIndex = ctxHandle->devIndex;
+    opData->txData.num = eidNum;
+    for (i = 0; i < eidNum; i++) {
+        (void)memcpy_s(&opData->txData.eid[i], sizeof(union HccpEid), &eid[i], sizeof(union HccpEid));
+    }
+}
+
+int RaHdcGetIpResults(union OpGetIpByEidData *opData, unsigned int eidNum, struct IpInfo ip[], unsigned int *num)
+{
+    unsigned int i = 0;
+
+    *num = 0;
+    CHK_PRT_RETURN(opData->rxData.num > eidNum, hccp_err("[get][IpByEid]rxData.num:%u > eidNum:%u",
+        opData->rxData.num, eidNum), -EINVAL);
+
+    *num = opData->rxData.num;
+    for (i = 0; i < opData->rxData.num; i++) {
+        (void)memcpy_s(&ip[i], sizeof(struct IpInfo), &opData->rxData.ip[i], sizeof(struct IpInfo));
+    }
+
+    return 0;
+}
+
+int RaHdcGetIpByEid(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int *num)
+{
+    unsigned int phyId = ctxHandle->attr.phyId;
+    union OpGetIpByEidData opData = {0};
+    unsigned int eidNum = *num;
+    int retTmp = 0;
+    int ret = 0;
+
+    RaHdcPrepareGetIpByEid(ctxHandle, eid, eidNum, &opData);
+    ret = RaHdcProcessMsg(RA_RS_GET_IP_BY_EID, phyId, (char *)&opData, sizeof(union OpGetIpByEidData));
+
+    retTmp = RaHdcGetIpResults(&opData, eidNum, ip, num);
+    CHK_PRT_RETURN(retTmp != 0, hccp_err("[get][IpByEid]RaHdcGetIpResults failed ret[%d], phyId[%u]"
+        " devIndex[0x%x]", retTmp, phyId, ctxHandle->devIndex), retTmp);
+
+    CHK_PRT_RETURN(ret != 0, hccp_err("[get][IpByEid]hdc message process failed ret[%d], phyId[%u]"
         " devIndex[0x%x]", ret, phyId, ctxHandle->devIndex), ret);
 
     return ret;

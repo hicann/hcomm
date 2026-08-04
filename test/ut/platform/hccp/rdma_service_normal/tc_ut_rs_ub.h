@@ -56,6 +56,8 @@ void TcRsUbCtxJettyDestroyBatch();
 void TcRsUbCtxQueryJettyBatch();
 void TcRsGetEidByIp();
 void TcRsUbGetEidByIp();
+void TcRsGetIpByEid();
+void TcRsUbGetIpByEid();
 void TcRsUbCtxGetAuxInfo();
 void TcRsUbGetTpAttr();
 void TcRsUbSetTpAttr();

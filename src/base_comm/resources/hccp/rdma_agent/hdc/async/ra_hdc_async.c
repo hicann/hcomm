@@ -28,6 +28,7 @@ struct HdcAsyncInfo gRaHdcAsync[RA_MAX_PHY_ID_NUM] = { 0 };
 
 struct RaAsyncOpHandle gRaAsyncOpHandle[] = {
     {RA_RS_GET_EID_BY_IP, RDMA_OP, RaHdcAsyncHandleGetEidByIp, sizeof(union OpGetEidByIpData)},
+    {RA_RS_GET_IP_BY_EID, RDMA_OP, RaHdcAsyncHandleGetIpByEid, sizeof(union OpGetIpByEidData)},
     {RA_RS_LMEM_REG, RDMA_OP, RaHdcAsyncHandleLmemRegister, sizeof(union OpLmemRegInfoData)},
     {RA_RS_LMEM_UNREG, RDMA_OP, NULL, sizeof(union OpLmemUnregInfoData)},
     {RA_RS_CTX_QP_CREATE, RDMA_OP, RaHdcAsyncHandleQpCreate, sizeof(union OpCtxQpCreateData)},

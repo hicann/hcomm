@@ -68,6 +68,11 @@ urma_status_t urma_get_eid_by_ip(const urma_context_t *ctx, const urma_net_addr_
 	return 0;
 }
 
+urma_status_t urma_get_ip_by_eid(const urma_context_t *ctx, const urma_eid_t *eid, urma_net_addr_t *net_addr)
+{
+	return 0;
+}
+
 /**
  * Un-init urma environment, it will free uasid.
  * Return: 0 on success, other value on error

@@ -162,6 +162,7 @@ TEST_M(RS, TcRsCtxBatchSendWr);
 TEST_M(RS, TcRsCtxUpdateCi);
 TEST_M(RS, TcRsCtxEsched);
 TEST_M(RS, TcRsGetEidByIp);
+TEST_M(RS, TcRsGetIpByEid);
 
 /* pingMesh ut cases */
 TEST_M(RS, TcRsPayloadHeaderResvCustomCheck);
@@ -230,6 +231,7 @@ TEST_M(RS, TcRsUbCtxJettyCreateFail);
 TEST_M(RS, TcRsUbCtxJettyImportFail);
 TEST_M(RS, TcRsUbCtxBatchSendWrFail);
 TEST_M(RS, TcRsUbGetEidByIp);
+TEST_M(RS, TcRsUbGetIpByEid);
 TEST_M(RS, TcRsCtxGetAuxInfo);
 TEST_M(RS, TcRsUbCtxGetAuxInfo);
 

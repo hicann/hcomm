@@ -594,6 +594,84 @@ void TcRaHdcGetEidByIpAsync()
     reqHandle = NULL;
 }
 
+void TcRaGetIpByEidAsync()
+{
+    struct RaRequestHandle *reqHandle = NULL;
+    struct RaCtxHandle ctxHandle = {0};
+    union HccpEid eid[32] = {0};
+    struct IpInfo ip[32] = {0};
+    unsigned int num = 32;
+    int ret = 0;
+
+    mocker_clean();
+    ret = RaGetIpByEidAsync(NULL, eid, ip, &num, (void **)&reqHandle);
+    EXPECT_INT_EQ(ret, 128103);
+
+    num = 33;
+    ret = RaGetIpByEidAsync(&ctxHandle, eid, ip, &num, (void **)&reqHandle);
+    EXPECT_INT_EQ(ret, 128103);
+
+    num = 32;
+    mocker(RaHdcGetIpByEidAsync, 10, -1);
+    ret = RaGetIpByEidAsync(&ctxHandle, eid, ip, &num, (void **)&reqHandle);
+    EXPECT_INT_EQ(ret, -1);
+    mocker_clean();
+
+    mocker(RaHdcGetIpByEidAsync, 10, 0);
+    ret = RaGetIpByEidAsync(&ctxHandle, eid, ip, &num, (void **)&reqHandle);
+    EXPECT_INT_EQ(ret, 0);
+    mocker_clean();
+}
+
+void TcRaHdcGetIpByEidAsync()
+{
+    union OpGetIpByEidData *asyncData = NULL;
+    struct RaResponseIpList *privData = NULL;
+    struct RaRequestHandle *reqHandle = NULL;
+    struct RaCtxHandle ctxHandle = {0};
+    unsigned int privDataNum = 1;
+    union HccpEid eid[32] = {0};
+    struct IpInfo ip[32] = {0};
+    unsigned int num = 32;
+    int ret = 0;
+
+    mocker_clean();
+    mocker(calloc, 1, NULL);
+    ret = RaHdcGetIpByEidAsync(&ctxHandle, eid, ip, &num, (void **)&reqHandle);
+    EXPECT_INT_EQ(ret, -ENOMEM);
+    mocker_clean();
+
+    mocker_invoke(calloc, CallocFirstStub, 2);
+    ret = RaHdcGetIpByEidAsync(&ctxHandle, eid, ip, &num, (void **)&reqHandle);
+    EXPECT_INT_EQ(ret, -ENOMEM);
+    mocker_clean();
+
+    mocker(RaHdcSendMsgAsync, 1, -1);
+    ret = RaHdcGetIpByEidAsync(&ctxHandle, eid, ip, &num, (void **)&reqHandle);
+    EXPECT_INT_EQ(ret, -1);
+    mocker_clean();
+
+    mocker(RaHdcSendMsgAsync, 1, 0);
+    ret = RaHdcGetIpByEidAsync(&ctxHandle, eid, ip, &num, (void **)&reqHandle);
+    EXPECT_INT_EQ(ret, 0);
+    mocker_clean();
+
+    mocker(memcpy_s, 1, 0);
+    asyncData = calloc(1, sizeof(union OpGetIpByEidData));
+    reqHandle->opRet = 0;
+    asyncData->rxData.num = 1;
+    privData = (struct RaResponseIpList *)(reqHandle->privData);
+    privData->num = &privDataNum;
+    reqHandle->recvBuf = (void *)asyncData;
+    RaHdcAsyncHandleGetIpByEid(reqHandle);
+    mocker_clean();
+
+    free(asyncData);
+    asyncData = NULL;
+    free(reqHandle);
+    reqHandle = NULL;
+}
+
 void TcRaHdcAsyncSessionClose()
 {
     int ret = 0;

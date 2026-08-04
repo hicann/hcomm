@@ -478,6 +478,32 @@ int RsUbGetEidByIp(struct RsUbDevCb *devCb, struct IpInfo ip[], union HccpEid ei
     return ret;
 }
 
+int RsUbGetIpByEid(struct RsUbDevCb *devCb, union HccpEid eid[], struct IpInfo ip[], unsigned int *num)
+{
+    urma_net_addr_t netAddr = {0};
+    unsigned int eidNum = *num;
+    urma_eid_t urmaEid = {0};
+    unsigned int i;
+    int ret = 0;
+
+    *num = 0;
+    for (i = 0; i < eidNum; i++) {
+        (void)memcpy_s(urmaEid.raw, sizeof(urma_eid_t), eid[i].raw, sizeof(union HccpEid));
+        ret = RsUrmaGetIpByEid(devCb->urmaCtx, &urmaEid, &netAddr);
+        CHK_PRT_RETURN(ret != 0, hccp_err("RsUrmaGetIpByEid failed, ret:%d devIndex:0x%x", ret, devCb->index),
+            ret);
+        ip[i].family = (int)netAddr.sin_family;
+        if (netAddr.sin_family == AF_INET) {
+            ip[i].ip.addr = netAddr.in4;
+        } else {
+            ip[i].ip.addr6 = netAddr.in6;
+        }
+        (*num)++;
+    }
+
+    return ret;
+}
+
 STATIC int RsUbGetJfcCb(struct RsUbDevCb *devCb, unsigned long long addr, struct RsCtxJfcCb **jfcCb)
 {
     struct RsCtxJfcCb **tempJfcCb = jfcCb;

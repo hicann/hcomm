@@ -26,6 +26,7 @@ struct RsCtxOps gRaRsCtxOps = {
     .ctxGetAsyncEvents = RsCtxGetAsyncEvents,
     .ctxDeinit = RsCtxDeinit,
     .getEidByIp = RsGetEidByIp,
+    .getIpByEid = RsGetIpByEid,
     .getTpInfoList = RsGetTpInfoList,
     .getTpAttr = RsGetTpAttr,
     .setTpAttr = RsSetTpAttr,
@@ -155,7 +156,7 @@ int RaRsGetEidByIp(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
     struct RaRsDevInfo devInfo = {0};
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetEidByIpData), sizeof(struct MsgHead), rcvBufLen, opResult);
-    HCCP_CHECK_PARAM_LEN_RET_HOST(opData->txData.num, 0, GET_EID_BY_IP_MAX_NUM, opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(opData->txData.num, 0, HCCP_EID_IP_QUERY_MAX_NUM, opResult);
 
     opDataOut->rxData.num = opData->txData.num;
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
@@ -163,6 +164,27 @@ int RaRsGetEidByIp(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
         &opDataOut->rxData.num);
     if (*opResult != 0) {
         hccp_err("[get][eid_by_ip]get_eid_by_ip failed, ret[%d], phyId[%u]", *opResult,
+            opData->txData.phyId);
+    }
+
+    return 0;
+}
+
+int RaRsGetIpByEid(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
+{
+    union OpGetIpByEidData *opDataOut = (union OpGetIpByEidData *)(outBuf + sizeof(struct MsgHead));
+    union OpGetIpByEidData *opData = (union OpGetIpByEidData *)(inBuf + sizeof(struct MsgHead));
+    struct RaRsDevInfo devInfo = {0};
+
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetIpByEidData), sizeof(struct MsgHead), rcvBufLen, opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(opData->txData.num, 0, HCCP_EID_IP_QUERY_MAX_NUM, opResult);
+
+    opDataOut->rxData.num = opData->txData.num;
+    RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
+    *opResult = gRaRsCtxOps.getIpByEid(&devInfo, opData->txData.eid, opDataOut->rxData.ip,
+        &opDataOut->rxData.num);
+    if (*opResult != 0) {
+        hccp_err("[get][IpByEid]getIpByEid failed, ret[%d], phyId[%u]", *opResult,
             opData->txData.phyId);
     }
 

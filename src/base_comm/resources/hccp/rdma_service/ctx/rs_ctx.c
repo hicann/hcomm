@@ -230,6 +230,30 @@ RS_ATTRI_VISI_DEF int RsGetEidByIp(struct RaRsDevInfo *devInfo, struct IpInfo ip
     return ret;
 }
 
+RS_ATTRI_VISI_DEF int RsGetIpByEid(struct RaRsDevInfo *devInfo, union HccpEid eid[], struct IpInfo ip[],
+    unsigned int *num)
+{
+    struct RsUbDevCb *devCb = NULL;
+    struct rs_cb *rscb = NULL;
+    int ret = 0;
+
+    RS_CHECK_POINTER_NULL_RETURN_INT(devInfo);
+    RS_CHECK_POINTER_NULL_RETURN_INT(eid);
+    RS_CHECK_POINTER_NULL_RETURN_INT(ip);
+    RS_CHECK_POINTER_NULL_RETURN_INT(num);
+
+    ret = RsGetRsCb(devInfo->phyId, &rscb);
+    CHK_PRT_RETURN(ret != 0, hccp_err("get rscb failed, ret:%d", ret), ret);
+
+    ret = RsUbGetDevCb(rscb, devInfo->devIndex, &devCb);
+    CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
+
+    ret = RsUbGetIpByEid(devCb, eid, ip, num);
+    CHK_PRT_RETURN(ret != 0, hccp_err("RsUbGetIpByEid failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
+
+    return ret;
+}
+
 RS_ATTRI_VISI_DEF int RsGetTpInfoList(struct RaRsDevInfo *devInfo, struct GetTpCfg *cfg,
     struct HccpTpInfo infoList[], unsigned int *num)
 {

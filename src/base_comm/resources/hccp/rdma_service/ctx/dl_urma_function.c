@@ -30,6 +30,7 @@ struct RsUrmaOps gUrmaOps = {
     .rsUrmaFreeEidList = urma_free_eid_list,
     .rsUrmaQueryDevice = urma_query_device,
     .rsUrmaGetEidByIp = urma_get_eid_by_ip,
+    .rsUrmaGetIpByEid = urma_get_ip_by_eid,
     .rsUrmaGetSmac = urma_get_smac,
     .rsUrmaGetDmac = urma_get_dmac,
     .rsUrmaCreateContext = urma_create_context,
@@ -131,6 +132,10 @@ STATIC int RsUrmaDeviceApiInit(void)
     gUrmaOps.rsUrmaGetEidByIp = (urma_status_t (*)(const urma_context_t *, const urma_net_addr_t *, urma_eid_t *))
         HccpDlsym(gUrmaApiHandle, "urma_get_eid_by_ip");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetEidByIp, "urma_get_eid_by_ip");
+
+    gUrmaOps.rsUrmaGetIpByEid = (urma_status_t (*)(const urma_context_t *, const urma_eid_t *, urma_net_addr_t *))
+        HccpDlsym(gUrmaApiHandle, "urma_get_ip_by_eid");
+    DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetIpByEid, "urma_get_ip_by_eid");
 
     gUrmaOps.rsUrmaGetSmac = (urma_status_t (*)(const urma_context_t *, uint8_t *))
         HccpDlsym(gUrmaApiHandle, "urma_get_smac");
@@ -572,6 +577,17 @@ int RsUrmaGetEidByIp(const urma_context_t *ctx, const urma_net_addr_t *netAddr, 
 #endif
     }
     return DlRetConvert(gUrmaOps.rsUrmaGetEidByIp(ctx, netAddr, eid));
+}
+
+int RsUrmaGetIpByEid(const urma_context_t *ctx, const urma_eid_t *eid, urma_net_addr_t *netAddr)
+{
+    if (gUrmaOps.rsUrmaGetIpByEid == NULL) {
+#ifndef CA_CONFIG_LLT
+        hccp_err("rsUrmaGetIpByEid is null");
+        return -EINVAL;
+#endif
+    }
+    return DlRetConvert(gUrmaOps.rsUrmaGetIpByEid(ctx, eid, netAddr));
 }
 
 int RsUrmaGetSmac(const urma_context_t *ctx, uint8_t *mac)

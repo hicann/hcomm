@@ -29,6 +29,8 @@ void TcRaSocketBatchCloseAsync();
 void TcRaHdcAsyncInitSession();
 void TcRaGetEidByIpAsync();
 void TcRaHdcGetEidByIpAsync();
+void TcRaGetIpByEidAsync();
+void TcRaHdcGetIpByEidAsync();
 void TcRaHdcAsyncSessionClose();
 #ifdef __cplusplus
 }

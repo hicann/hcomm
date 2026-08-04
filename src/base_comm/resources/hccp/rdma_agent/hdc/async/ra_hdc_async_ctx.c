@@ -22,8 +22,8 @@ int RaHdcGetEidByIpAsync(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], unio
     unsigned int *num, void **reqHandle)
 {
     struct RaRequestHandle *reqHandleTmp = NULL;
-    struct RaResponseEidList *asyncRsp = NULL;
     unsigned int phyId = ctxHandle->attr.phyId;
+    struct RaResponseEidList *asyncRsp = NULL;
     union OpGetEidByIpData asyncData = {0};
     int ret = 0;
 
@@ -66,8 +66,8 @@ out:
 
 void RaHdcAsyncHandleGetEidByIp(struct RaRequestHandle *reqHandle)
 {
-    union OpGetEidByIpData *asyncData = NULL;
     struct RaResponseEidList *asyncRsp = NULL;
+    union OpGetEidByIpData *asyncData = NULL;
     unsigned int ipNum = 0;
     int ret = 0;
 
@@ -78,6 +78,75 @@ void RaHdcAsyncHandleGetEidByIp(struct RaRequestHandle *reqHandle)
     ret = RaHdcGetEidResults(asyncData, ipNum, asyncRsp->eidList, asyncRsp->num);
     if (ret != 0) {
         hccp_err("[get][eid_by_ip]ra_hdc_get_eid_results failed ret[%d], phyId[%u] devIndex[0x%x]", ret,
+            reqHandle->phyId, reqHandle->devIndex);
+        reqHandle->opRet = ret;
+    }
+
+    free(reqHandle->privData);
+    reqHandle->privData = NULL;
+    return;
+}
+
+int RaHdcGetIpByEidAsync(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[],
+    unsigned int *num, void **reqHandle)
+{
+    struct RaRequestHandle *reqHandleTmp = NULL;
+    unsigned int phyId = ctxHandle->attr.phyId;
+    struct RaResponseIpList *asyncRsp = NULL;
+    union OpGetIpByEidData asyncData = {0};
+    int ret = 0;
+
+    asyncRsp = (struct RaResponseIpList *)calloc(1, sizeof(struct RaResponseIpList));
+    CHK_PRT_RETURN(asyncRsp == NULL,
+        hccp_err("[get][IpByEid]calloc asyncRsp failed, phyId[%u] devIndex[0x%x]",
+        phyId, ctxHandle->devIndex), -ENOMEM);
+    asyncRsp->ipList = ip;
+    asyncRsp->num = num;
+
+    reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
+    if (reqHandleTmp == NULL) {
+        hccp_err("[get][IpByEid]calloc reqHandleTmp failed, phyId[%u], devIndex[0x%x]",
+            phyId, ctxHandle->devIndex);
+        ret = -ENOMEM;
+        goto free_async;
+    }
+
+    RaHdcPrepareGetIpByEid(ctxHandle, eid, *num, &asyncData);
+    reqHandleTmp->devIndex = ctxHandle->devIndex;
+    reqHandleTmp->privData = (void *)asyncRsp;
+    ret = RaHdcSendMsgAsync(RA_RS_GET_IP_BY_EID, phyId, (char *)&asyncData, sizeof(union OpGetIpByEidData),
+        reqHandleTmp);
+    if (ret != 0) {
+        hccp_err("[get][IpByEid]hdc async send message failed ret[%d], phyId[%u], devIndex[0x%x]",
+            ret, phyId, ctxHandle->devIndex);
+        free(reqHandleTmp);
+        reqHandleTmp = NULL;
+        goto free_async;
+    }
+
+    *reqHandle = (void *)reqHandleTmp;
+    return ret;
+
+free_async:
+    free(asyncRsp);
+    asyncRsp = NULL;
+    return ret;
+}
+
+void RaHdcAsyncHandleGetIpByEid(struct RaRequestHandle *reqHandle)
+{
+    union OpGetIpByEidData *asyncData = NULL;
+    struct RaResponseIpList *asyncRsp = NULL;
+    unsigned int eidNum = 0;
+    int ret = 0;
+
+    asyncData = (union OpGetIpByEidData *)reqHandle->recvBuf;
+    asyncRsp = (struct RaResponseIpList *)reqHandle->privData;
+    eidNum = *asyncRsp->num;
+
+    ret = RaHdcGetIpResults(asyncData, eidNum, asyncRsp->ipList, asyncRsp->num);
+    if (ret != 0) {
+        hccp_err("[get][IpByEid]RaHdcGetIpResults failed ret[%d], phyId[%u] devIndex[0x%x]", ret,
             reqHandle->phyId, reqHandle->devIndex);
         reqHandle->opRet = ret;
     }

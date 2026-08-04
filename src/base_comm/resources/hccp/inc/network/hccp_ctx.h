@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define GET_EID_BY_IP_MAX_NUM 32
+#define HCCP_EID_IP_QUERY_MAX_NUM 32
 #define DEV_EID_INFO_MAX_NAME 64
 
 struct HccpDevEidInfo {
@@ -572,13 +572,25 @@ HCCP_ATTRI_VISI_DEF int RaGetDevBaseAttr(void *ctxHandle, struct DevBaseAttr *at
  * @param ctx_handle [IN] ctx handle
  * @param ip [IN] ip array, see struct IpInfo
  * @param eid [IN/OUT] eid array, see union HccpEid
- * @param num [IN/OUT] num of ip and eid array, max num is GET_EID_BY_IP_MAX_NUM
+ * @param num [IN/OUT] num of ip and eid array, max num is HCCP_EID_IP_QUERY_MAX_NUM
  * @see ra_ctx_init
  * @retval #zero Success
  * @retval #non-zero Failure
 */
-HCCP_ATTRI_VISI_DEF int RaGetEidByIp(void *ctxHandle, struct IpInfo ip[], union HccpEid eid[],
-    unsigned int *num);
+HCCP_ATTRI_VISI_DEF int RaGetEidByIp(void *ctxHandle, struct IpInfo ip[], union HccpEid eid[], unsigned int *num);
+
+/**
+ * @ingroup libudma
+ * @brief get corresponding ip by eid
+ * @param ctx_handle [IN] ctx handle
+ * @param eid [IN] eid array, see union HccpEid
+ * @param ip [IN/OUT] ip array, see struct IpInfo
+ * @param num [IN/OUT] num of ip and eid array, max num is HCCP_EID_IP_QUERY_MAX_NUM
+ * @see ra_ctx_init
+ * @retval #zero Success
+ * @retval #non-zero Failure
+*/
+HCCP_ATTRI_VISI_DEF int RaGetIpByEid(void *ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int *num);
 
 /**
  * @ingroup libudma

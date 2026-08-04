@@ -22,6 +22,7 @@ struct RaCtxOps gRaHdcCtxOps = {
     .raCtxGetAsyncEvents = RaHdcCtxGetAsyncEvents,
     .raCtxDeinit = RaHdcCtxDeinit,
     .raCtxGetEidByIp = RaHdcGetEidByIp,
+    .raCtxGetIpByEid = RaHdcGetIpByEid,
     .raCtxTokenIdAlloc = RaHdcCtxTokenIdAlloc,
     .raCtxTokenIdFree = RaHdcCtxTokenIdFree,
     .raCtxLmemRegister = RaHdcCtxLmemRegister,
@@ -50,6 +51,7 @@ struct RaCtxOps gRaPeerCtxOps = {
     .raCtxGetAsyncEvents = RaPeerCtxGetAsyncEvents,
     .raCtxDeinit = RaPeerCtxDeinit,
     .raCtxGetEidByIp = RaPeerGetEidByIp,
+    .raCtxGetIpByEid = RaPeerGetIpByEid,
     .raCtxTokenIdAlloc = RaPeerCtxTokenIdAlloc,
     .raCtxTokenIdFree = RaPeerCtxTokenIdFree,
     .raCtxLmemRegister = RaPeerCtxLmemRegister,
@@ -253,19 +255,45 @@ HCCP_ATTRI_VISI_DEF int RaGetEidByIp(void *ctxHandle, struct IpInfo ip[], union 
     CHK_PRT_RETURN(ctxHandle == NULL || ip == NULL || eid == NULL || num == NULL,
         hccp_err("[get][eid_by_ip]ctx_handle or ip or eid or num is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
-    CHK_PRT_RETURN(*num == 0 || *num > GET_EID_BY_IP_MAX_NUM, hccp_err("[get][eid_by_ip]num(%u) must greater than 0"
-        " and less or equal to %d", *num, GET_EID_BY_IP_MAX_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
+    CHK_PRT_RETURN(*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM, hccp_err("[get][eid_by_ip]num(%u) must greater than 0"
+        " and less or equal to %d", *num, HCCP_EID_IP_QUERY_MAX_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
 
     ctxHandleTmp = (struct RaCtxHandle *)ctxHandle;
 
     CHK_PRT_RETURN(ctxHandleTmp->ctxOps == NULL || ctxHandleTmp->ctxOps->raCtxGetEidByIp == NULL,
         hccp_err("[get][eid_by_ip]ctx_ops or ra_ctx_get_eid_by_ip is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
-    hccp_run_info("Input parameters: phy_id(%u), devIndex(0x%x)",
-        ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex);
+    hccp_run_info("Input parameters: phyId:%u, devIndex:0x%x num:%u",
+        ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex, *num);
 
     ret = ctxHandleTmp->ctxOps->raCtxGetEidByIp(ctxHandle, ip, eid, num);
     CHK_PRT_RETURN(ret != 0, hccp_err("[get][eid_by_ip]ra_ctx_get_eid_by_ip failed, ret(%d) phyId(%u) devIndex(0x%x)",
+        ret, ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex), ConverReturnCode(RDMA_OP, ret));
+
+    return ConverReturnCode(RDMA_OP, ret);
+}
+
+HCCP_ATTRI_VISI_DEF int RaGetIpByEid(void *ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int *num)
+{
+    struct RaCtxHandle *ctxHandleTmp = NULL;
+    int ret = 0;
+
+    CHK_PRT_RETURN(ctxHandle == NULL || eid == NULL || ip == NULL || num == NULL,
+        hccp_err("[get][IpByEid]ctxHandle or eid or ip or num is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
+
+    CHK_PRT_RETURN(*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM, hccp_err("[get][IpByEid]num(%u) must greater than 0"
+        " and less or equal to %d", *num, HCCP_EID_IP_QUERY_MAX_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
+
+    ctxHandleTmp = (struct RaCtxHandle *)ctxHandle;
+
+    CHK_PRT_RETURN(ctxHandleTmp->ctxOps == NULL || ctxHandleTmp->ctxOps->raCtxGetIpByEid == NULL,
+        hccp_err("[get][IpByEid]ctxOps or raCtxGetIpByEid is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
+
+    hccp_run_info("Input parameters: phy_id:%u, devIndex:0x%x num:%u",
+        ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex, *num);
+
+    ret = ctxHandleTmp->ctxOps->raCtxGetIpByEid(ctxHandle, eid, ip, num);
+    CHK_PRT_RETURN(ret != 0, hccp_err("[get][IpByEid]raCtxGetIpByEid failed, ret(%d) phyId(%u) devIndex(0x%x)",
         ret, ctxHandleTmp->attr.phyId, ctxHandleTmp->devIndex), ConverReturnCode(RDMA_OP, ret));
 
     return ConverReturnCode(RDMA_OP, ret);

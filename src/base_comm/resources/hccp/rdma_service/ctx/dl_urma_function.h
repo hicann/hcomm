@@ -29,6 +29,7 @@ struct RsUrmaOps {
     void (*rsUrmaFreeEidList)(urma_eid_info_t *eidList);
     urma_status_t (*rsUrmaQueryDevice)(urma_device_t *dev, urma_device_attr_t *devAttr);
     urma_status_t (*rsUrmaGetEidByIp)(const urma_context_t *ctx, const urma_net_addr_t *netAddr, urma_eid_t *eid);
+    urma_status_t (*rsUrmaGetIpByEid)(const urma_context_t *ctx, const urma_eid_t *eid, urma_net_addr_t *netAddr);
     urma_status_t (*rsUrmaGetSmac)(const urma_context_t *ctx, uint8_t *mac);
     urma_status_t (*rsUrmaGetDmac)(const urma_context_t *ctx, const urma_net_addr_t *netaddr, uint8_t *mac);
     urma_context_t *(*rsUrmaCreateContext)(urma_device_t *dev, uint32_t eidIndex);
@@ -102,6 +103,7 @@ urma_eid_info_t *RsUrmaGetEidList(urma_device_t *dev, uint32_t *cnt);
 void RsUrmaFreeEidList(urma_eid_info_t *eidList);
 int RsUrmaQueryDevice(urma_device_t *dev, urma_device_attr_t *devAttr);
 int RsUrmaGetEidByIp(const urma_context_t *ctx, const urma_net_addr_t *netAddr, urma_eid_t *eid);
+int RsUrmaGetIpByEid(const urma_context_t *ctx, const urma_eid_t *eid, urma_net_addr_t *netAddr);
 int RsUrmaGetSmac(const urma_context_t *ctx, uint8_t *mac);
 int RsUrmaGetDmac(const urma_context_t *ctx, const urma_net_addr_t *netaddr, uint8_t *mac);
 urma_context_t *RsUrmaCreateContext(urma_device_t *dev, uint32_t eidIndex);

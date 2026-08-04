@@ -109,6 +109,7 @@ struct OpcodeInterfaceInfo gInterfaceInfoList[] = {
     {RA_RS_CTX_GET_ASYNC_EVENTS, 2},
     {RA_RS_CTX_DEINIT, 1},
     {RA_RS_GET_EID_BY_IP, 1},
+    {RA_RS_GET_IP_BY_EID, 1},
     {RA_RS_GET_TP_INFO_LIST, 2},
     {RA_RS_GET_TP_ATTR, 3},
     {RA_RS_SET_TP_ATTR, 3},

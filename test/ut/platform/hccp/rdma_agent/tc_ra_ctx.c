@@ -56,6 +56,7 @@ extern int RaRsSetTpAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 extern int RaRsCtxGetCrErrInfoList(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 extern int RaRsCtxQpQueryBatch(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 extern int RaRsGetEidByIp(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
+extern int RaRsGetIpByEid(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 extern int RaRsCtxGetAuxInfo(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 extern void HdcAsyncHandleRecvBroken(struct HdcAsyncInfo *asyncInfo);
 extern int RaAsyncHandlePkt(int handle, void *recvBuf, int len);
@@ -1563,6 +1564,109 @@ void TcRaPeerGetEidByIp()
 
     mocker(RsGetEidByIp, 1, -1);
     ret = RaPeerGetEidByIp(&ctxHandle, ip, eid, &num);
+    EXPECT_INT_EQ(ret, -1);
+    mocker_clean();
+}
+
+void TcRaGetIpByEid()
+{
+    struct RaCtxHandle ctxHandle = {0};
+    union HccpEid eid[32] = {0};
+    struct IpInfo ip[32] = {0};
+    unsigned int num = 32;
+    int ret = 0;
+
+    ret = RaGetIpByEid(NULL, eid, ip, &num);
+    EXPECT_INT_EQ(ret, 128103);
+
+    num = 33;
+    ret = RaGetIpByEid(&ctxHandle, eid, ip, &num);
+    EXPECT_INT_EQ(ret, 128103);
+
+    num = 32;
+    ret = RaGetIpByEid(&ctxHandle, eid, ip, &num);
+    EXPECT_INT_EQ(ret, 128103);
+
+    ctxHandle.ctxOps = &gRaHdcCtxOps;
+    mocker(RaHdcGetIpByEid, 1, 0);
+    ret = RaGetIpByEid(&ctxHandle, eid, ip, &num);
+    EXPECT_INT_EQ(ret, 0);
+    mocker_clean();
+
+    mocker(RaHdcGetIpByEid, 1, -1);
+    ret = RaGetIpByEid(&ctxHandle, eid, ip, &num);
+    EXPECT_INT_EQ(ret, 128100);
+    mocker_clean();
+}
+
+void TcRaHdcGetIpByEid()
+{
+    struct RaCtxHandle ctxHandle = {0};
+    union HccpEid eid[32] = {0};
+    struct IpInfo ip[32] = {0};
+    unsigned int num = 32;
+    int ret = 0;
+
+    mocker(RaHdcProcessMsg, 1, -1);
+    mocker(RaHdcGetIpResults, 1, 0);
+    ret = RaHdcGetIpByEid(&ctxHandle, eid, ip, &num);
+    EXPECT_INT_EQ(ret, -1);
+    mocker_clean();
+
+    mocker(RaHdcProcessMsg, 1, 0);
+    mocker(RaHdcGetIpResults, 1, 0);
+    ret = RaHdcGetIpByEid(&ctxHandle, eid, ip, &num);
+    EXPECT_INT_EQ(ret, 0);
+    mocker_clean();
+}
+
+void TcRaRsGetIpByEid()
+{
+    union OpGetIpByEidData dataOut = {0};
+    union OpGetIpByEidData dataIn = {0};
+
+    int rcvBufLen = 0;
+    int opResult = 0;
+    int outLen = 0;
+    int ret;
+
+    char* inBuf = calloc(1, sizeof(struct MsgHead) + sizeof(union OpGetIpByEidData));
+    char* outBuf = calloc(1, sizeof(struct MsgHead) + sizeof(union OpGetIpByEidData));
+
+    dataIn.txData.phyId = 0;
+    dataIn.txData.devIndex = 0;
+    memcpy_s(inBuf + sizeof(struct MsgHead), sizeof(union OpGetIpByEidData),
+        &dataIn, sizeof(union OpGetIpByEidData));
+    dataIn.txData.num = 32;
+    mocker(RsGetIpByEid, 1, 0);
+    ret = RaRsGetIpByEid(inBuf, outBuf, &outLen, &opResult, rcvBufLen);
+    EXPECT_INT_EQ(opResult, 0);
+    mocker_clean();
+
+    mocker(RsGetIpByEid, 1, -1);
+    ret = RaRsGetIpByEid(inBuf, outBuf, &outLen, &opResult, rcvBufLen);
+    EXPECT_INT_EQ(opResult, -1);
+    mocker_clean();
+
+    free(inBuf);
+    inBuf = NULL;
+    free(outBuf);
+    outBuf = NULL;
+}
+
+void TcRaPeerGetIpByEid()
+{
+    struct RaCtxHandle ctxHandle = {0};
+    union HccpEid eid[32] = {0};
+    struct IpInfo ip[32] = {0};
+    unsigned int num = 32;
+    int ret = 0;
+
+    ret = RaPeerGetIpByEid(&ctxHandle, eid, ip, &num);
+    EXPECT_INT_EQ(ret, 0);
+
+    mocker(RsGetIpByEid, 1, -1);
+    ret = RaPeerGetIpByEid(&ctxHandle, eid, ip, &num);
     EXPECT_INT_EQ(ret, -1);
     mocker_clean();
 }

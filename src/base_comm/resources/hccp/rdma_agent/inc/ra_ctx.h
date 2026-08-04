@@ -68,6 +68,8 @@ struct RaCtxOps {
     int (*raCtxDeinit)(struct RaCtxHandle *ctxHandle);
     int (*raCtxGetEidByIp)(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union HccpEid eid[],
         unsigned int *num);
+    int (*raCtxGetIpByEid)(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[],
+        unsigned int *num);
     int (*raCtxTokenIdAlloc)(struct RaCtxHandle *ctxHandle, struct HccpTokenId *info,
         struct RaTokenIdHandle *tokenIdHandle);
     int (*raCtxTokenIdFree)(struct RaCtxHandle *ctxHandle, struct RaTokenIdHandle *tokenIdHandle);
