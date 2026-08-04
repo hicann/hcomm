@@ -83,9 +83,14 @@ void RankInfoDetect::SetupServer(HcclRootHandleV2 &rootHandle)
     GetRootHandle(rootHandle);
 
     // 3. 拉起线程，调用RankInfoDetectService.Run()，注意新线程中需要HrtSetDevice
-    thread threadHandle(&RankInfoDetect::SetupRankInfoDetectService, this, serverSocket, devLogicId_, devPhyId_,
-                        identifier_, wlistInfo_);
-    threadHandle.detach();
+    // 线程由 serviceThreadPtr_ 持有，在 ~RankInfoDetect 中 join，避免 detach 后主线程提前退出
+    serviceThreadPtr_.reset(new (std::nothrow) std::thread(
+        &RankInfoDetect::SetupRankInfoDetectService, this, serverSocket, devLogicId_, devPhyId_, identifier_,
+        wlistInfo_));
+    CHK_PRT_THROW(
+        serviceThreadPtr_ == nullptr,
+        HCCL_ERROR("[RankInfoDetect::%s] create RankInfoDetectService thread fail.", __func__), InternalException,
+        "create RankInfoDetectService thread fail");
 
     HCCL_INFO("[RankInfoDetect::%s] setup server end.", __func__);
 }
@@ -346,7 +351,13 @@ void RankInfoDetect::WaitComplete(u32 listenPort, u32 listenStatus) const
     };
 }
 
-RankInfoDetect::~RankInfoDetect()
+void RankInfoDetect::JoinServiceThread()
 {
+    if (serviceThreadPtr_ && serviceThreadPtr_->joinable()) {
+        serviceThreadPtr_->join();
+    }
+    serviceThreadPtr_ = nullptr;
 }
+
+RankInfoDetect::~RankInfoDetect() { JoinServiceThread(); }
 }  // namespace Hccl

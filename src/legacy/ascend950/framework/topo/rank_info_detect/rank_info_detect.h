@@ -11,6 +11,8 @@
 #ifndef HCCL_RANK_INFO_DETECT_H
 #define HCCL_RANK_INFO_DETECT_H
 
+#include <memory>
+#include <thread>
 #include "types.h"
 #include "socket.h"
 #include "ip_address.h"
@@ -48,7 +50,7 @@ private:
     vector<RaSocketWhitelist> wlistInfo_{};
     std::string               identifier_{};
     std::shared_ptr<RankInfoDetectClient> rankInfoDetectClient;
-
+    std::unique_ptr<std::thread> serviceThreadPtr_{nullptr};
     void                    SetupRankInfoDetectService(shared_ptr<Socket> serverSocket, s32 devLogicId, u32 devPhyId,
                                                        std::string identifier, vector<RaSocketWhitelist> wlistInfo);
     std::shared_ptr<Socket> ServerInit();
@@ -57,6 +59,7 @@ private:
     u32                     GetHostListenPort();
     void                    GetRootHandle(HcclRootHandleV2 &rootHandle);
     SocketHandle            GetHostSocketHandle();
+    void JoinServiceThread();
 
     static UniversalConcurrentMap<u32, volatile u32> g_detectServerStatus_;
 };

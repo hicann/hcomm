@@ -436,8 +436,9 @@ HcclResult ClusterMonitor::SendFrameFromBuffer(ClusterUIDType &dst, ClusterMonit
         ClusterMonitorFrame hbf = uid2SocketRefMap_[dst].sendBuffer.front();
         u64 sendDis = sizeof(ClusterMonitorFrame) - uid2SocketRefMap_[dst].restSize;
         uint64_t compSize = 0;
-        HcclResult ret = SocketSendNb(uid2SocketRefMap_[dst].socketHandler,
-            (reinterpret_cast<std::byte *>(&hbf) + sendDis), uid2SocketRefMap_[dst].restSize, &compSize);
+        void* sendPtr = static_cast<char*>(static_cast<void*>(&hbf)) + sendDis;
+        HcclResult ret
+            = SocketSendNb(uid2SocketRefMap_[dst].socketHandler, sendPtr, uid2SocketRefMap_[dst].restSize, &compSize);
         if (ret != HCCL_SUCCESS) {
             HCCL_WARNING("[CreateTransportHandle] SocketSendNb failed, ret[%d]", ret);
             return ret;

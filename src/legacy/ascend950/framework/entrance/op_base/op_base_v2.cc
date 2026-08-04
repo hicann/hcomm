@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <future>
 #include <map>
+#include <mutex>
 #include <fstream>
 #include <string>
 #include <hccl/hccl_types.h>
@@ -516,6 +517,11 @@ HcclResult HcclGetRootInfoV2(HcclRootInfo *rootInfo)
     std::shared_ptr<RankInfoDetect> rankInfoDetectServer;
     EXCEPTION_CATCH((rankInfoDetectServer = std::make_shared<RankInfoDetect>()), return HCCL_E_MEMORY);
     TRY_CATCH_RETURN(rankInfoDetectServer->SetupServer(rootHandle));
+
+    // 先保活 server，避免后续校验失败时局部 shared_ptr 析构 join 卡住调用线程
+    HcclCommInfoV2& opbasedCommInfoV2 = GetCommInfoV2();
+    std::lock_guard<std::mutex> detectServerGuard(opbasedCommInfoV2.detectServerLock);
+    opbasedCommInfoV2.hcclCommRankInfoDetectServer.insert({rootHandle.identifier, rankInfoDetectServer});
 
     // 校验rootHandle大小是否超过rootInfo->internal大小
     u32 rootHandleLen = sizeof(HcclRootHandleV2);
@@ -1654,6 +1660,17 @@ HcclResult RootInfoDetect(std::shared_ptr<RankInfoDetect> rankInfoDetectAgent, c
 
     // 若探测流程异常返回错误信息
     CHK_PRT_RET(hasException, HCCL_ERROR("[%s] RankInfoDetect SetupAgent fail, identifier[%s].", __func__, rootHandle.identifier), HCCL_E_INTERNAL);
+
+    // server 探测已结束（或失败），释放 GetRootInfo 保活的 server 对象，析构中 join 子线程
+    HcclCommInfoV2& opbasedCommInfoV2 = GetCommInfoV2();
+    {
+        std::lock_guard<std::mutex> detectServerGuard(opbasedCommInfoV2.detectServerLock);
+        auto iterServer = opbasedCommInfoV2.hcclCommRankInfoDetectServer.find(rootHandle.identifier);
+        if (iterServer != opbasedCommInfoV2.hcclCommRankInfoDetectServer.end()) {
+            opbasedCommInfoV2.hcclCommRankInfoDetectServer.erase(iterServer);
+            HCCL_INFO("[%s] release RankInfoDetect server, identifier[%s]", __func__, rootHandle.identifier);
+        }
+    }
 
     // 获取ranktable
     rankInfoDetectAgent->GetRankTable(rankTable);
