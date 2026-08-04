@@ -15,12 +15,14 @@
 
 #include "aicpu/aicpu_ts_roce_channel.h"
 #include "aicpu/aicpu_ts_urma_channel.h"
+#include "aiv/aiv_urma_channel.h"
 #include "aiv/aiv_ub_mem_channel.h"
 #include "ccu_urma_channel.h"
 #include "channel.h"
 #include "host/host_cpu_roce_channel.h"
 #include "hcomm_res_defs.h"
 #include "endpoint.h"
+#include "tp_manager.h"
 
 using namespace hcomm;
 
@@ -207,6 +209,33 @@ TEST_F(UtChannelRoceFactory, CreateChannel_AivUbMem_MockInit_Returns_SUCCESS)
     MOCKER_CPP_VIRTUAL(*raw, &AivUbMemChannel::Init, AivUbMemChannelInitFp).stubs().will(returnValue(HCCL_SUCCESS));
     ASSERT_EQ(ch->Init(), HCCL_SUCCESS);
     ASSERT_NE(ch.get(), nullptr);
+}
+
+TEST_F(UtChannelRoceFactory, CreateChannel_AivUbg_On950_ReturnsAivUrmaChannel)
+{
+    EndpointDesc ep{};
+    ep.protocol = COMM_PROTOCOL_UBG;
+    ep.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+    ep.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    ASSERT_EQ(inet_pton(AF_INET, "10.20.30.43", &ep.commAddr.addr), 1);
+    StubEndpointForChannelFactory stub(ep);
+
+    HcommChannelDesc desc{};
+    desc.remoteEndpoint = ep;
+    Hccl::Socket socket(nullptr, Hccl::IpAddress(), 0, Hccl::IpAddress(), "ut",
+        Hccl::SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
+    desc.socket = &socket;
+
+    DevType deviceType = DevType::DEV_TYPE_950;
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::TpManager::Init).stubs();
+
+    std::shared_ptr<Channel> channel;
+    EXPECT_EQ(Channel::CreateChannel(reinterpret_cast<EndpointHandle>(&stub), COMM_ENGINE_AIV, desc, channel),
+        HCCL_SUCCESS);
+    ASSERT_NE(channel, nullptr);
+    EXPECT_NE(std::dynamic_pointer_cast<AivUrmaChannel>(channel), nullptr);
 }
 
 TEST_F(UtChannelRoceFactory, CreateChannel_CcuUrma_MockInit_Returns_SUCCESS)

@@ -396,6 +396,12 @@ HcclResult AivUrmaChannel::BuildConnection()
                                  Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV),
                 return HCCL_E_PTR);
             break;
+        case Hccl::LinkProtocol::UBG:
+            EXCEPTION_CATCH(ubConn = std::make_unique<Hccl::DevUbUbgConnection>(
+                                 rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode,
+                                 ctx.locAddr, ctx.rmtAddr),
+                return HCCL_E_PTR);
+            break;
         default:
             HCCL_ERROR("%s No LinkProtocol to match", __func__);
             break;

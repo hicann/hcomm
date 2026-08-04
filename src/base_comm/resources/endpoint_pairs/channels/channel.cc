@@ -94,7 +94,14 @@ HcclResult Channel::CreateChannel(
                 (deviceType == DevType::DEV_TYPE_950 || deviceType == DevType::DEV_TYPE_960)) {
                 uniqueChannelPtr = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, engine);
             } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP ||
-                       channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP) {
+                       channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP ||
+                       channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG) {
+                if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG &&
+                    deviceType != DevType::DEV_TYPE_950 && deviceType != DevType::DEV_TYPE_960) {
+                    HCCL_ERROR("[Channel][%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d",
+                        __func__, static_cast<int>(deviceType));
+                    return HCCL_E_NOT_SUPPORT;
+                }
                 uniqueChannelPtr.reset(new (std::nothrow) AivUrmaChannel(endpointHandle, channelDesc));
             } else {
                 uniqueChannelPtr.reset(new (std::nothrow) AivUbMemChannel(endpointHandle, channelDesc));

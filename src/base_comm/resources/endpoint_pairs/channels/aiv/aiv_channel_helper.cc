@@ -41,7 +41,8 @@ HcclResult AivChannelHelper::FillDevEntities(const ChannelHandle *channelList, u
             CHK_RET(roceChannel->FillDevChannelEntity());
         } 
         
-        if (protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP) {
+        if (protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP ||
+            protocol == COMM_PROTOCOL_UBG) {
             auto *aivChannel = static_cast<AivUrmaChannel *>(channelPtr);
             CHK_RET(aivChannel->FillChannelEntityToDevice());
         } 
@@ -85,7 +86,8 @@ HcclResult AivChannelHelper::PreAllocChannels(
             CHK_RET(channel->PreAllocDevChannelEntity(&userChannels[i]));
             HCCL_INFO("[%s] channel[%u] pre-alloc dev entity success, devEntityPtr[%p]", __func__, i,
                 reinterpret_cast<void *>(static_cast<uintptr_t>(userChannels[i])));
-        } else if (protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP) {
+        } else if (protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP ||
+                   protocol == COMM_PROTOCOL_UBG) {
             needD2HMap = true;
             auto *channel = reinterpret_cast<AivUrmaChannel *>(targetChannels[i]);
             CHK_PTR_NULL(channel);

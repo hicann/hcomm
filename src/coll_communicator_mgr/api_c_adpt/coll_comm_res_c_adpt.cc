@@ -289,7 +289,8 @@ static HcclResult BuildAivDeviceChannelEntity(const HcclChannelDesc &channelDesc
     }
 
     if (channelDesc.channelProtocol == COMM_PROTOCOL_UBC_CTP ||
-        channelDesc.channelProtocol == COMM_PROTOCOL_UBC_TP) {
+        channelDesc.channelProtocol == COMM_PROTOCOL_UBC_TP ||
+        channelDesc.channelProtocol == COMM_PROTOCOL_UBG) {
         auto *aivUrmaChannel = dynamic_cast<hcomm::AivUrmaChannel *>(baseChannel);
         CHK_PTR_NULL(aivUrmaChannel);
         HCCL_INFO("[%s] build AIV direct device channel by AIV+URMA flow, protocol[%d], "
@@ -320,7 +321,8 @@ static HcclResult ConvertAivChannelHandlesToDevicePtrs(CommEngine engine, const 
     for (uint32_t idx = 0; idx < channelNum; ++idx) {
         if (channelDescs[idx].channelProtocol != COMM_PROTOCOL_ROCE &&
             channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBC_CTP &&
-            channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBC_TP) {
+            channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBC_TP &&
+            channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBG) {
             continue;
         }
         CHK_RET(BuildAivDeviceChannelEntity(channelDescs[idx], hostChannels[idx], deviceChannels[idx]));

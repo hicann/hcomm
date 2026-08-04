@@ -17,6 +17,8 @@
 #include "hccl/hccl_types.h"
 #include "hccp.h"
 #include "my_rank.h"
+#include "aiv_urma_channel.h"
+#include "channel_process.h"
 
 #define private public
 
@@ -48,6 +50,7 @@ static int StubRaGetHccnCfgRoceQosDscp(struct RaInfo *info, enum HccnCfgKey key,
 static HcclMemHandle g_userMemHandle = reinterpret_cast<HcclMemHandle>(0x1111);
 static HcclMemHandle g_symMemHandle = reinterpret_cast<HcclMemHandle>(0x2222);
 static ChannelHandle g_testChannel = static_cast<ChannelHandle>(0x3333);
+static void *g_testDevChannelEntity = reinterpret_cast<void *>(0x5678);
 // UT stub state, used in single-threaded test execution and reset in SetUp.
 static HcclChannelDesc g_capturedChannelDesc {};
 static std::vector<HcclMemHandle> g_capturedMemHandles;
@@ -65,9 +68,10 @@ HcclResult StubRegisterPendingSymmetricMemHandlesEmpty(std::vector<HcclMemHandle
     return HCCL_SUCCESS;
 }
 
-HcclResult StubCreateChannelsCapture(CommEngine engine, const std::string &commTag,
+HcclResult StubCreateChannelsCapture(MyRank *self, CommEngine engine, const std::string &commTag,
     const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle *channels)
 {
+    (void)self;
     (void)engine;
     (void)commTag;
     if (channelNum > 0) {
@@ -78,6 +82,20 @@ HcclResult StubCreateChannelsCapture(CommEngine engine, const std::string &commT
         }
         channels[0] = g_testChannel;
     }
+    return HCCL_SUCCESS;
+}
+
+HcclResult StubChannelGet(ChannelHandle channelHandle, void **channel)
+{
+    EXPECT_EQ(channelHandle, g_testChannel);
+    *channel = reinterpret_cast<void *>(g_testChannel);
+    return HCCL_SUCCESS;
+}
+
+HcclResult StubBuildChannelEntityToDevice(AivUrmaChannel *self, void **devChannelEntity)
+{
+    EXPECT_EQ(reinterpret_cast<ChannelHandle>(self), g_testChannel);
+    *devChannelEntity = g_testDevChannelEntity;
     return HCCL_SUCCESS;
 }
 
@@ -111,6 +129,7 @@ public:
     {
         g_capturedChannelDesc = {};
         g_capturedMemHandles.clear();
+        g_testChannel = static_cast<ChannelHandle>(0x3333);
         const char *fakeA5SocName = "Ascend950PR_958b";
         MOCKER(aclrtGetSocName).stubs().will(returnValue(fakeA5SocName));
         MOCKER(&HcclCommDfx::ReportKernel).stubs().will(returnValue(HCCL_SUCCESS));
@@ -420,6 +439,36 @@ TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_CpuUrma_NotAppendSymmetri
 
     ret = HcclChannelAcquire(comm, CommEngine::COMM_ENGINE_CPU, channelDesc.data(), 1, channels.data());
     EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_AivUbg_ConvertsHostHandleToDeviceEntity)
+{
+    HcclChannelDesc channelDesc{};
+    ASSERT_EQ(HcclChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteRank = 2;
+    channelDesc.channelProtocol = COMM_PROTOCOL_UBG;
+
+    hcomm::AivUrmaChannel channel(reinterpret_cast<EndpointHandle>(0x1), HcommChannelDesc{});
+    g_testChannel = reinterpret_cast<ChannelHandle>(&channel);
+
+    MOCKER(&hcomm::ClusterMonitor::RegisterToClusterMonitor).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::CreateChannels).stubs().will(invoke(StubCreateChannelsCapture));
+    MOCKER_CPP(&hcomm::ChannelProcess::ChannelGet)
+        .expects(once())
+        .will(invoke(StubChannelGet));
+    MOCKER_CPP(&hcomm::AivUrmaChannel::BuildChannelEntityToDevice,
+        HcclResult(hcomm::AivUrmaChannel::*)(void **))
+        .expects(once())
+        .will(invoke(StubBuildChannelEntityToDevice));
+    MOCKER_CPP(&hcomm::ChannelProcess::RegisterChannelD2HMap)
+        .expects(once())
+        .will(returnValue(HCCL_SUCCESS));
+
+    ChannelHandle outputChannel = 0;
+    ret = HcclChannelAcquire(
+        comm, CommEngine::COMM_ENGINE_AIV, &channelDesc, 1, &outputChannel);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(outputChannel, static_cast<ChannelHandle>(reinterpret_cast<uintptr_t>(g_testDevChannelEntity)));
 }
 
 TEST_F(HcclChannelDescTest, Ut_ProcessRoceChannelDesc_When_HcclQosUnset_UsesRdmaEnvSlTc)
