@@ -88,7 +88,6 @@ static inline HcommResult HcommTeamCreateDescInit(HcommTeamCreateDesc *desc)
     desc->worldMemberIds   = NULL;
     desc->netLayer         = 0;
     desc->protocol         = COMM_PROTOCOL_RESERVED;
-    desc->channelCnt       = 0;
     desc->requirement.signalCount  = 0;
     desc->requirement.counterCount = 0;
     desc->requirement.barrierCount = 0;
