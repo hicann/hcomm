@@ -42,8 +42,8 @@ typedef struct {
     CommEngine engine;             /* COMM_ENGINE_AICPU_TS / CCU 等 */
     uint32_t memberNum;
     uint32_t selfMemberId;
-    ChannelHandle **channels;             // 2维数组，第一维长度是memberNum，第二维长度是每个成员的channel数量channelNumPerMember
-    uint32_t *channelNumPerMember;   //长度为memberNum，表示每个成员的channel数量
+    uint64_t channelsBaseAddr;       /* 连续ChannelEntity数组的基地址，按(sum(channelNumPerMember[0..peer-1]) + channelIdx) * sizeof(ChannelEntity)偏移访问 */
+    uint32_t *channelNumPerMember;   /* 长度为memberNum，表示每个成员的channel数量 */
     uint32_t netLayer;               /* 用户希望使用的网络层，0表示默认选择 */
     uint32_t *worldTeamIds;
     HcommTeamSyncMem syncMem;

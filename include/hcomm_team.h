@@ -32,9 +32,8 @@ typedef struct {
     const uint32_t *worldMemberIds; /*worldMemberIds在创建worldteam的时候是nullptr，创建subteam的时候是subteam的成员在worldteam中的memberId数组，长度是memberNum*/
     uint32_t netLayer;      /* 用户希望使用的网络层，0表示默认选择 */
     CommProtocol protocol;  /* 用户希望使用的通信协议，-1表示保留协议类型, 1个team仅支持一个协议 */
-    uint32_t channelCnt;    /*  用户可以自行指定channel个数 */
     HcommTeamSyncMemRequirement requirement;
-    uint32_t reserved[5];
+    uint32_t reserved[6];
 } HcommTeamCreateDesc;
 
 typedef struct {
