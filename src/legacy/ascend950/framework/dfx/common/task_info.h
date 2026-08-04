@@ -11,6 +11,7 @@
 #define TASK_INFO_H
 #include <string>
 #include <memory>
+#include <functional>
 #include "task_param.h"
 #include "coll_operator.h"
 

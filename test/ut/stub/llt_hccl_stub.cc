@@ -2222,6 +2222,11 @@ aclError aclrtGetPhyDevIdByLogicDevId(int32_t logicDevId, int32_t *const phyDevI
     return ACL_SUCCESS;
 }
 
+aclError aclrtGetPhyDevIdByUserDevId(int32_t userDevId, int32_t *const phyDevId)
+{
+    return aclrtGetPhyDevIdByLogicDevId(userDevId, phyDevId);
+}
+
 rtError_t rtsGetLogicDevIdByPhyDevId(int32_t phyDevId, int32_t *const logicDevId)
 {
     if (gBoardId == 0x2000) {

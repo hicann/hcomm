@@ -30,6 +30,7 @@ set(hccl_llt_stub
     ${HCCL_LLT_ROOT}/stub/llt_next_orion_stub.cc
     ${HCCL_LLT_ROOT}/stub/llt_next_hccp_stub.cc
     ${HCCL_LLT_ROOT}/stub/llt_hccl_stub_rank_graph.cc
+    ${HCCL_LLT_ROOT}/stub/llt_next_rootinfo_stub.cc
 
     ${HCCL_LLT_ROOT}/stub/llt_next_orion_ccu_stub.cc
 
@@ -47,6 +48,9 @@ file(GLOB_RECURSE HCCD_SOURCES "${HCCL_CODE_ROOT}/src/legacy/ascend910/hccd/*.cc
 file(GLOB_RECURSE PLATFORM_SOURCES "${HCCL_CODE_ROOT}/src/legacy/ascend910/platform/*.cc")
 file(GLOB_RECURSE BASE_COMM "${HCCL_CODE_ROOT}/src/base_comm/*.cc")
 file(GLOB_RECURSE COLL_COMMUNICATOR_MGR "${HCCL_CODE_ROOT}/src/coll_communicator_mgr/*.cc")
+list(REMOVE_ITEM COLL_COMMUNICATOR_MGR
+    "${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/detour_service.cc"
+)
 
 set(EXCLUDE_FREAMEWORK_DEVICE_REGEX
     "${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/communicator/impl/hccl_communicator_attrs_device.cc"
@@ -120,8 +124,6 @@ set(orion_list
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/stream/stream.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/task/task.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/interface/rank_graph_interface.cc
-    ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/topo/new_topo_builder/rank_graph/rank_graph.cc
-    ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/topo/new_topo_builder/rank_graph/net_instance.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/topo/virtual_topo.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/env_config/base_config.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/env_config/env_config.cc
@@ -143,6 +145,7 @@ set(hccl_list
     ${ALGORITHM_SOURCES}
     ${PLATFORM_SOURCES}
     ${orion_list}
+    ${HCCL_LLT_ROOT}/stub/llt_detour_service_compat.cc
     ${BASE_COMM}
     ${COLL_COMMUNICATOR_MGR}
 )
@@ -152,6 +155,17 @@ add_library(hccl_llt SHARED  ${hccl_list})
 target_compile_definitions(hccl_llt PRIVATE
     OPEN_BUILD_PROJECT
     ENABLE_EXPERIMENTAL
+)
+
+target_include_directories(hccl_llt BEFORE PRIVATE
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/common
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo_builder
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/topo_info
 )
 
 #头文件搜索路径
@@ -379,6 +393,7 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/pub_inc
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/common
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/
+    ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/env_config
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/service/collective/primitive
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/communicator/aicpu
@@ -403,6 +418,8 @@ target_include_directories(hccl_llt  PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/include/ascendc/
     ${ASCEND_CANN_PACKAGE_PATH}/include/ascendc/highlevel_api/
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/asc/hccl/internal/
+    ${ASCEND_CANN_PACKAGE_PATH}/include/adv_api/hccl/internal/
+    ${ASCEND_CANN_PACKAGE_PATH}/x86_64-linux/asc/include/adv_api/hccl/internal/
 
     #next
     ${HCCL_CODE_ROOT}/src/

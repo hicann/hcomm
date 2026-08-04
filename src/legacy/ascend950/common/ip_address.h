@@ -12,10 +12,9 @@
 #define HCCLV2_IP_ADDRESS_H
 
 #include <arpa/inet.h>
+#include <cstring>
 #include <string>
 #include <vector>
-#include <regex>
-#include <cstring>
 
 #include "hccl/base.h"
 #include "string_util.h"
@@ -213,10 +212,13 @@ public:
         link-local prefix: fe80::
         localhost: ::1
     */
-    static bool IsIPv6(const string& str)
+    static bool IsIPv6(const string &str)
     {
-        regex ipv6Pattern(R"(^([\da-fA-F]{1,4}:){6}((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$|^::([\da-fA-F]{1,4}:){0,4}((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$|^([\da-fA-F]{1,4}:):([\da-fA-F]{1,4}:){0,3}((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$|^([\da-fA-F]{1,4}:){2}:([\da-fA-F]{1,4}:){0,2}((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$|^([\da-fA-F]{1,4}:){3}:([\da-fA-F]{1,4}:){0,1}((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$|^([\da-fA-F]{1,4}:){4}:((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$|^([\da-fA-F]{1,4}:){7}[\da-fA-F]{1,4}$|^:((:[\da-fA-F]{1,4}){1,6}|:)$|^[\da-fA-F]{1,4}:((:[\da-fA-F]{1,4}){1,5}|:)$|^([\da-fA-F]{1,4}:){2}((:[\da-fA-F]{1,4}){1,4}|:)$|^([\da-fA-F]{1,4}:){3}((:[\da-fA-F]{1,4}){1,3}|:)$|^([\da-fA-F]{1,4}:){4}((:[\da-fA-F]{1,4}){1,2}|:)$|^([\da-fA-F]{1,4}:){5}:([\da-fA-F]{1,4})?$|^([\da-fA-F]{1,4}:){6}:$)");
-        return regex_match(str, ipv6Pattern);
+        if (str.find('\0') != string::npos) {
+            return false;
+        }
+        struct in6_addr ipv6Addr {};
+        return inet_pton(AF_INET6, str.c_str(), &ipv6Addr) == 1;
     }
     /*All the five types of IPV4 addresses,ABCDE,can be identified.
         A: 1.0.0.1 - 126.255.255.254
@@ -266,11 +268,19 @@ public:
 
     static bool IsEID(const string& str)
     {
-        if (str.length() == URMA_EID_LEN * URMA_EID_NUM_TWO) {
-            std::regex hexCharsRegex("[0-9a-fA-F]+");
-            return std::regex_match(str, hexCharsRegex);
+        if (str.length() != URMA_EID_LEN * URMA_EID_NUM_TWO) {
+            return false;
         }
-        return false;
+
+        for (char ch : str) {
+            const bool isDigit = ch >= '0' && ch <= '9';
+            const bool isLowerHex = ch >= 'a' && ch <= 'f';
+            const bool isUpperHex = ch >= 'A' && ch <= 'F';
+            if (!isDigit && !isLowerHex && !isUpperHex) {
+                return false;
+            }
+        }
+        return true;
     }
 
     static Eid StrToEID(const string& str)

@@ -11,6 +11,7 @@
 #ifndef HCCL_CCU_JETTY_H
 #define HCCL_CCU_JETTY_H
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 #include "ip_address.h"

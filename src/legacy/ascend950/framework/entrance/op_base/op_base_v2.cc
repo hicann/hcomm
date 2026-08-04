@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <future>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <fstream>
 #include <string>
@@ -28,7 +29,8 @@
 #include "sal.h"
 #include "communicator_callback.h"
 #include "root_handle_v2.h"
-#include "rank_info_detect.h"
+#include "root_info_detect_bridge.h"
+#include "stream.h"
 #include "env_config.h"
 #include "stream_utils.h"
 
@@ -509,39 +511,10 @@ HcclResult HcclTaskUnRegisterV2(HcclComm comm, const char *msgTag)
 
 HcclResult HcclGetRootInfoV2(HcclRootInfo *rootInfo)
 {
-    HCCL_RUN_INFO("Entry-HcclGetRootInfo V950");
-    HcclUs startut = TIME_NOW();
-
-    // 执行root节点作为server端流程, 获得rootHandle
-    HcclRootHandleV2 rootHandle{};
-    std::shared_ptr<RankInfoDetect> rankInfoDetectServer;
-    EXCEPTION_CATCH((rankInfoDetectServer = std::make_shared<RankInfoDetect>()), return HCCL_E_MEMORY);
-    TRY_CATCH_RETURN(rankInfoDetectServer->SetupServer(rootHandle));
-
-    // 先保活 server，避免后续校验失败时局部 shared_ptr 析构 join 卡住调用线程
-    HcclCommInfoV2& opbasedCommInfoV2 = GetCommInfoV2();
-    std::lock_guard<std::mutex> detectServerGuard(opbasedCommInfoV2.detectServerLock);
-    opbasedCommInfoV2.hcclCommRankInfoDetectServer.insert({rootHandle.identifier, rankInfoDetectServer});
-
-    // 校验rootHandle大小是否超过rootInfo->internal大小
-    u32 rootHandleLen = sizeof(HcclRootHandleV2);
-    CHK_PRT_RET(rootHandleLen > HCCL_ROOT_INFO_BYTES,
-        HCCL_ERROR("[%s] hccl root info overflow. max length: %u, actual:%zu, identifier[%s]",
-        __func__, HCCL_ROOT_INFO_BYTES, rootHandleLen, rootHandle.identifier), HCCL_E_INTERNAL);
-
-    // 将rootHandle拷贝到rootInfo出参
-    s32 sRet = memcpy_s(rootInfo->internal, HCCL_ROOT_INFO_BYTES, &rootHandle, rootHandleLen);
-    CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[%s] memcpy root info fail. errorno[%d] params:destMaxSize[%u],"
-        " count[%u]", __func__, sRet, HCCL_ROOT_INFO_BYTES, rootHandleLen), HCCL_E_MEMORY);
-
-    /* 首节点诊断信息记录 */
-    s32 deviceLogicId = HcclGetThreadDeviceId();
-    s32 devPhyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
-    HCCL_RUN_INFO("HcclGetRootInfoV2 success, take time [%lld]us, rootinfo: host ip[%s] port[%u] netMode[%s] "
-                  "identifier[%s], deviceLogicId[%d], devPhyId[%d]",
-                  DURATION_US(TIME_NOW() - startut), rootHandle.ip, rootHandle.listenPort,
-                  rootHandle.netMode.Describe().c_str(), rootHandle.identifier, deviceLogicId, devPhyId);
-    return HCCL_SUCCESS;
+    const RootInfoDetectBridge *bridge = GetRootInfoDetectBridge();
+    CHK_PRT_RET(bridge == nullptr || bridge->getRootInfo == nullptr,
+        HCCL_ERROR("[%s] RootInfoDetect bridge is not registered.", __func__), HCCL_E_INTERNAL);
+    return bridge->getRootInfo(rootInfo);
 }
 
 HcclResult GetDeviceCommV2(uint32_t ndev, const HcclRootInfo &rootHandle, const s32 rank, const s32 logicDeviceId,
@@ -1641,42 +1614,13 @@ HcclResult HcclCommResumeImplV2(HcclComm comm)
     });
 }
 
-HcclResult RootInfoDetect(std::shared_ptr<RankInfoDetect> rankInfoDetectAgent, const u32 nRanks, u32 rank,
-    const HcclRootHandleV2 &rootHandle, RankTableInfo &rankTable)
+HcclResult RootInfoDetect(const u32 nRanks, u32 rank, const HcclRootHandleV2 &rootHandle, RankTableInfo &rankTable,
+    RootInfoDetectBridge::DetectContext &detectContext)
 {
-    s32 deviceLogicId = HcclGetThreadDeviceId();
-    s32 devPhyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
-    HCCL_RUN_INFO("[%s] nRanks[%u], rank[%u] entry flat topo detect, rootinfo: host ip[%s] port[%u] netMode[%s] "
-                  "identifier[%s], deviceLogicId[%d], devPhyId[%d]",
-                  __func__, nRanks, rank, rootHandle.ip, rootHandle.listenPort,
-                  rootHandle.netMode.Describe().c_str(), rootHandle.identifier, deviceLogicId, devPhyId);
-    // client端拓扑探测
-
-    bool hasException = false;
-    EXCEPTION_CATCH(rankInfoDetectAgent->SetupAgent(nRanks, rank, rootHandle), hasException = true);
-
-    // 等server端执行结束
-    EXCEPTION_CATCH(rankInfoDetectAgent->WaitComplete(rootHandle.listenPort, RANKINFO_DETECT_SERVER_STATUS_IDLE), hasException = true);
-
-    // 若探测流程异常返回错误信息
-    CHK_PRT_RET(hasException, HCCL_ERROR("[%s] RankInfoDetect SetupAgent fail, identifier[%s].", __func__, rootHandle.identifier), HCCL_E_INTERNAL);
-
-    // server 探测已结束（或失败），释放 GetRootInfo 保活的 server 对象，析构中 join 子线程
-    HcclCommInfoV2& opbasedCommInfoV2 = GetCommInfoV2();
-    {
-        std::lock_guard<std::mutex> detectServerGuard(opbasedCommInfoV2.detectServerLock);
-        auto iterServer = opbasedCommInfoV2.hcclCommRankInfoDetectServer.find(rootHandle.identifier);
-        if (iterServer != opbasedCommInfoV2.hcclCommRankInfoDetectServer.end()) {
-            opbasedCommInfoV2.hcclCommRankInfoDetectServer.erase(iterServer);
-            HCCL_INFO("[%s] release RankInfoDetect server, identifier[%s]", __func__, rootHandle.identifier);
-        }
-    }
-
-    // 获取ranktable
-    rankInfoDetectAgent->GetRankTable(rankTable);
-
-    HCCL_RUN_INFO("[%s] end.", __func__);
-    return HCCL_SUCCESS;
+    const RootInfoDetectBridge *bridge = GetRootInfoDetectBridge();
+    CHK_PRT_RET(bridge == nullptr || bridge->detectRankTable == nullptr,
+        HCCL_ERROR("[%s] RootInfoDetect bridge is not registered.", __func__), HCCL_E_INTERNAL);
+    return bridge->detectRankTable(nRanks, rank, rootHandle, rankTable, detectContext);
 }
 
 HcclResult CommInitRootInfo(u32 nRanks, u32 rank, const HcclRootHandleV2 &rootHandle,
@@ -1691,9 +1635,9 @@ HcclResult CommInitRootInfo(u32 nRanks, u32 rank, const HcclRootHandleV2 &rootHa
                 HCCL_ERROR_CODE(HCCL_E_PARA), identifier.c_str()), HCCL_E_PARA);
                 
     // rootInfo获取rankTable, 基于rankTable创建通信域
-    std::shared_ptr<RankInfoDetect> rankInfoDetectAgent = std::make_shared<RankInfoDetect>();
+    RootInfoDetectBridge::DetectContext rootInfoDetectContext;
     RankTableInfo rankTable{};
-    HcclResult ret = RootInfoDetect(rankInfoDetectAgent, nRanks, rank, rootHandle, rankTable);
+    HcclResult ret = RootInfoDetect(nRanks, rank, rootHandle, rankTable, rootInfoDetectContext);
     if (ret != HCCL_SUCCESS) {
         RPT_INPUT_ERR(true, "EI0015", std::vector<std::string>({"error_reason"}),
                             std::vector<std::string>({"RootInfoDetect failed"}));
@@ -1821,8 +1765,8 @@ HcclResult HcclCommInitRootInfoConfigV2(uint32_t nRanks, const HcclRootInfo *roo
                 HCCL_ERROR_CODE(HCCL_E_PARA), identifier.c_str()), HCCL_E_PARA);
 
     RankTableInfo rankTable{};
-    std::shared_ptr<RankInfoDetect> rankInfoDetectAgent = std::make_shared<RankInfoDetect>();
-    HcclResult ret = RootInfoDetect(rankInfoDetectAgent, nRanks, rank, rootHandle, rankTable);
+    RootInfoDetectBridge::DetectContext rootInfoDetectContext;
+    HcclResult ret = RootInfoDetect(nRanks, rank, rootHandle, rankTable, rootInfoDetectContext);
     if (ret != HCCL_SUCCESS) {
         RPT_INPUT_ERR(true, "EI0015", std::vector<std::string>({"error_reason"}),
                             std::vector<std::string>({"RootInfoDetect failed"}));

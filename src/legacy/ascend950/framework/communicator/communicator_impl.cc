@@ -43,6 +43,8 @@
 #include "ascend_hal_base.h"
 #include "acl/acl_rt.h"
 #include "types.h"
+#include "json_parser.h"
+#include "rank_graph_builder_bridge.h"
 #include "ccu_jetty_mgr.h"
 #include "comm_topo_desc.h"
 #include "hostdpu/flush_manager.h"
@@ -88,6 +90,37 @@ static void PrintBackTrace(HcclException &e)
     std::for_each(backTraces.begin(), backTraces.end(), [](string item) {
         HCCL_INFO(item.c_str());
     });
+}
+
+static std::shared_ptr<RankGraph> TakeRankGraphOwnership(std::unique_ptr<RankGraph> &rankGraph)
+{
+    CHK_PRT_THROW(rankGraph == nullptr, HCCL_ERROR("[%s] input rankGraph is nullptr.", __func__),
+        NullPtrException, "input rankGraph is nullptr.");
+
+    const RankGraphBuilderBridge *bridge = GetRankGraphBuilderBridge();
+    CHK_PRT_THROW(bridge == nullptr || bridge->adoptRankGraph == nullptr,
+        HCCL_ERROR("[%s] RankGraphBuilder ownership bridge is not registered.", __func__),
+        InternalException, "RankGraphBuilder ownership bridge is not registered.");
+
+    std::shared_ptr<RankGraph> sharedRankGraph;
+    HcclResult ret = bridge->adoptRankGraph(std::move(rankGraph), sharedRankGraph);
+    CHK_PRT_THROW(ret != HCCL_SUCCESS,
+        HCCL_ERROR("[%s] adopt RankGraph failed, errNo[0x%016llx].", __func__, HCCL_ERROR_CODE(ret)),
+        InternalException, "adopt RankGraph failed.");
+    CHK_PRT_THROW(sharedRankGraph == nullptr,
+        HCCL_ERROR("[%s] adopted RankGraph is nullptr.", __func__),
+        InternalException, "adopted RankGraph is nullptr.");
+    return sharedRankGraph;
+}
+
+static void PrepareRankGraphMetadata(const RankTableInfo &inputRankTableInfo, const TopoInfo &inputTopoInfo,
+    std::unique_ptr<RankTableInfo> &outputRankTableInfo, std::shared_ptr<TopoInfo> &outputTopoInfo)
+{
+    auto preparedRankTableInfo = std::make_unique<RankTableInfo>(inputRankTableInfo);
+    auto preparedTopoInfo = std::make_shared<TopoInfo>(inputTopoInfo);
+
+    outputRankTableInfo = std::move(preparedRankTableInfo);
+    outputTopoInfo = std::move(preparedTopoInfo);
 }
 
 HcclResult CommunicatorImpl::Init(const CommParams &commParams, const std::string &ranktableM, 
@@ -1286,10 +1319,20 @@ constexpr u32 localPortId = 0;
 
 void CommunicatorImpl::InitRankGraph(const string &ranktableM)
 {
-    JsonParser    rankTableParser{};
-    RankTableInfo rankTableInfo{};
-    rankTableParser.ParseString(ranktableM, rankTableInfo);
-    InitRankGraph(rankTableInfo);
+    string topoPath = GetTopoFilePath();
+    // legacy 通信域保留调用入口，实际构建通过 bridge 转交给 hcomm 中的 RankGraphBuilder。
+    const RankGraphBuilderBridge *bridge = GetRankGraphBuilderBridge();
+    CHK_PRT_THROW(bridge == nullptr || bridge->buildFromString == nullptr,
+        HCCL_ERROR("[%s] RankGraphBuilder bridge is not registered.", __func__),
+        InternalException, "RankGraphBuilder bridge is not registered.");
+
+    RankGraphBuildResult buildResult{};
+    HcclResult ret = bridge->buildFromString(ranktableM, topoPath, myRank, buildResult);
+    CHK_PRT_THROW(ret != HCCL_SUCCESS,
+        HCCL_ERROR("[%s] build rank graph failed, errNo[0x%016llx].", __func__, HCCL_ERROR_CODE(ret)),
+        InternalException, "Build rank graph failed.");
+    // 三项结果来自同一个 builder，必须一起更新，避免通信域持有不一致的拓扑快照。
+    InitRankGraph(std::move(buildResult.rankGraph), buildResult.rankTableInfo, buildResult.topoInfo);
 }
 
 std::string CommunicatorImpl::GetTopoFilePath()
@@ -1328,31 +1371,59 @@ std::string CommunicatorImpl::GetTopoFilePath()
 void CommunicatorImpl::InitRankGraph(const RankTableInfo &ranktable)
 {
     string topoPath = GetTopoFilePath();
-    RankGraphBuilder rankGraphBuilder;
-    rankGraph = rankGraphBuilder.Build(ranktable, topoPath, myRank);
-    ranktableInfo = rankGraphBuilder.GetRankTableInfo(); // 获取ranktable信息
-    HCCL_RUN_INFO("[CommunicatorImpl::%s] rankTableInfo: %s", __func__, ranktableInfo->Describe().c_str());
-    topoInfo = rankGraphBuilder.GetTopoInfo(); // 获取topo信息
-    HCCL_RUN_INFO("[CommunicatorImpl][InitRankGraph] topoInfo[%s]", topoInfo->Describe().c_str());
-    rankSize = rankGraph->GetRankSize();
-    CheckRankGraph();
-    SaveTopoDesc(id);
-    std::vector<LinkData> fullLinks = GetFullMeshLinks();
-    for (auto link : fullLinks) {
-        HCCL_RUN_INFO("[CommunicatorImpl][InitRankGraph] link[%s]", link.Describe().c_str());
-    }
+    // RootInfoDetect 已产出结构化 RankTableInfo 时，避免再次解析字符串，直接调用对应 provider 回调。
+    const RankGraphBuilderBridge *bridge = GetRankGraphBuilderBridge();
+    CHK_PRT_THROW(bridge == nullptr || bridge->buildFromRankTable == nullptr,
+        HCCL_ERROR("[%s] RankGraphBuilder bridge is not registered.", __func__),
+        InternalException, "RankGraphBuilder bridge is not registered.");
+
+    RankGraphBuildResult buildResult{};
+    HcclResult ret = bridge->buildFromRankTable(ranktable, topoPath, myRank, buildResult);
+    CHK_PRT_THROW(ret != HCCL_SUCCESS,
+        HCCL_ERROR("[%s] build rank graph failed, errNo[0x%016llx].", __func__, HCCL_ERROR_CODE(ret)),
+        InternalException, "Build rank graph failed.");
+    // 同步安装本次构建得到的 RankGraph、RankTableInfo 和 TopoInfo。
+    InitRankGraph(std::move(buildResult.rankGraph), buildResult.rankTableInfo, buildResult.topoInfo);
 }
 
 void CommunicatorImpl::InitRankGraph(std::unique_ptr<RankGraph> &inputRankGraph)
 {
     if (inputRankGraph != nullptr) {
-        rankGraph = std::move(inputRankGraph);
+        // 子通信域等旧路径仍传入 unique_ptr，需要补上 hcomm 侧 deleter 后再由通信域共享持有。
+        rankGraph = TakeRankGraphOwnership(inputRankGraph);
     } else {
         std::string msg = StringFormat("Init RankGraph failed, inputRankGraph is nullptr");
         THROW<NullPtrException>(msg);
     }
     CheckRankGraph();
     SaveTopoDesc(id);
+}
+
+void CommunicatorImpl::InitRankGraph(std::shared_ptr<RankGraph> inputRankGraph,
+    const RankTableInfo &inputRankTableInfo, const TopoInfo &inputTopoInfo)
+{
+    if (inputRankGraph == nullptr) {
+        THROW<NullPtrException>("Init RankGraph failed, inputRankGraph is nullptr");
+    }
+
+    std::unique_ptr<RankTableInfo> preparedRankTableInfo;
+    std::shared_ptr<TopoInfo> preparedTopoInfo;
+    PrepareRankGraphMetadata(inputRankTableInfo, inputTopoInfo, preparedRankTableInfo, preparedTopoInfo);
+
+    const u32 preparedRankSize = inputRankGraph->GetRankSize();
+    // 以下移动赋值均不分配内存，确保三个拓扑对象只在准备完整后一起发布。
+    rankGraph = std::move(inputRankGraph);
+    ranktableInfo = std::move(preparedRankTableInfo);
+    topoInfo = std::move(preparedTopoInfo);
+    rankSize = preparedRankSize;
+    HCCL_RUN_INFO("[CommunicatorImpl::%s] rankTableInfo: %s", __func__, ranktableInfo->Describe().c_str());
+    HCCL_RUN_INFO("[CommunicatorImpl][%s] topoInfo[%s]", __func__, topoInfo->Describe().c_str());
+    CheckRankGraph();
+    SaveTopoDesc(id);
+    std::vector<LinkData> fullLinks = GetFullMeshLinks();
+    for (auto link : fullLinks) {
+        HCCL_RUN_INFO("[CommunicatorImpl][%s] link[%s]", __func__, link.Describe().c_str());
+    }
 }
 
 void CommunicatorImpl::InitDataBufferManager()
@@ -2135,7 +2206,11 @@ HcclResult CommunicatorImpl::RecoverComm(SnapShotComm &snapShotComm, u32 stepPar
             HrtSetDevice(devLogicId);
             InitHccpHdc(); // 选择ccu加速模式依赖hdc通道打开ccu驱动
             RecoverExeCfgData(snapShotComm.opExecuteConfig, snapShotComm.commExecuteConfig, snapShotComm.isLoadOp); // 算子粒度 和 通信域粒度都恢复
-            RecoverRankGraphData(snapShotComm, changeInfo);
+            HcclResult recoverRet = RecoverRankGraphData(snapShotComm, changeInfo);
+            if (recoverRet != HCCL_SUCCESS) {
+                SetCommStatus(CommStatus::COMM_IDLE);
+                return recoverRet;
+            }
             InitNotifyManager();
             InitStreamManager();
             InitSocketManager();
@@ -2299,14 +2374,32 @@ HcclResult CommunicatorImpl::RecoverRankGraphData(SnapShotComm &snapShotComm, co
         THROW<InternalException>("DiffRankUpdater failed");
     }
 
-    RankGraphBuilder rankGraphBuilder;
-    rankGraph = rankGraphBuilder.RecoverBuild(snapShotComm.rankTableInfo, snapShotComm.topoInfo, myRank);
-    ranktableInfo  = rankGraphBuilder.GetRankTableInfo(); // 获取ranktable信息
+    const RankGraphBuilderBridge *bridge = GetRankGraphBuilderBridge();
+    CHK_PRT_RET(bridge == nullptr || bridge->recoverBuild == nullptr,
+        HCCL_ERROR("[%s] RankGraphBuilder bridge is not registered.", __func__), HCCL_E_INTERNAL);
+
+    RankGraphBuildResult buildResult{};
+    // 恢复构建也由 hcomm 完成，并返回同一版本的 graph、rank table 和 topo 快照。
+    ret = bridge->recoverBuild(snapShotComm.rankTableInfo, snapShotComm.topoInfo, myRank, buildResult);
+    CHK_PRT_RET(ret != HCCL_SUCCESS,
+        HCCL_ERROR("[%s] recover rank graph failed, errNo[0x%016llx].", __func__, HCCL_ERROR_CODE(ret)), ret);
+    CHK_PRT_RET(buildResult.rankGraph == nullptr,
+        HCCL_ERROR("[%s] recover rank graph result is invalid.", __func__), HCCL_E_INTERNAL);
+
+    std::unique_ptr<RankTableInfo> preparedRankTableInfo;
+    std::shared_ptr<TopoInfo> preparedTopoInfo;
+    PrepareRankGraphMetadata(
+        buildResult.rankTableInfo, buildResult.topoInfo, preparedRankTableInfo, preparedTopoInfo);
+
+    const u32 preparedRankSize = buildResult.rankGraph->GetRankSize();
+    // 仅在恢复结果和两份元数据准备完整后，用不分配内存的移动赋值整体替换拓扑状态。
+    rankGraph = std::move(buildResult.rankGraph);
+    ranktableInfo = std::move(preparedRankTableInfo);
+    topoInfo = std::move(preparedTopoInfo);
+    rankSize = preparedRankSize;
     HCCL_INFO(
         "[CommunicatorImpl][%s] Recover topo data from snapshot, rank[%d], id[%s], idIndex[%u],  RankTableInfo[%s]", __func__,
         myRank, id.c_str(), idIndex, ranktableInfo->Describe().c_str());
-    topoInfo = rankGraphBuilder.GetTopoInfo(); // 获取topo信息
-    rankSize = rankGraph->GetRankSize();
 
     CheckRankGraph();
     HCCL_INFO("Recover topo data from snapshot success.");

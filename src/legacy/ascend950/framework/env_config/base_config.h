@@ -14,6 +14,7 @@
 #include <vector>
 #include <functional>
 #include <climits>
+#include <regex>
 #include "ip_address.h"
 #include "dma_mode.h"
 #include "env_func.h"

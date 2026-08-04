@@ -12,6 +12,7 @@
 #define HCCL_CCU_JETTY_MGR_H
 
 #include <vector>
+#include <memory>
 #include <unordered_map>
 
 #include "ccu_jetty.h"

@@ -31,7 +31,8 @@
 #include "queue_bcast_post_cnt_notify_manager.h"
 #include "mem_transport_manager.h"
 #include "rank_gph.h"
-#include "rank_graph_builder.h"
+#include "rank_table_info.h"
+#include "topo_info.h"
 #include "snap_shot_parse.h"
 #include "comm_type.h"
 #include "mirror_task_manager.h"
@@ -524,6 +525,8 @@ private:
     void InitCommonData(const CommParams &commParams, const HcclCommConfig &commConfig);
     void InitRankGraph(const string &ranktableM);
     void InitRankGraph(std::unique_ptr<RankGraph> &inputRankGraph);
+    void InitRankGraph(std::shared_ptr<RankGraph> inputRankGraph, const RankTableInfo &inputRankTableInfo,
+        const TopoInfo &inputTopoInfo);
     void InitRankGraph(const RankTableInfo &ranktable);
     void CheckRankGraph() const;
     void CheckRankGraphAddrs() const;

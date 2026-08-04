@@ -67,11 +67,14 @@ TEST_F(IpAddressTest, Ut_IsIPv4_When_InvalidIPv4_Expect_False) {
 TEST_F(IpAddressTest, Ut_IsIPv6_When_ValidIPv6_Expect_True) {
     EXPECT_TRUE(Hccl::IpAddress::IsIPv6("2001:0db8:85a3:0000:0000:8a2e:0370:7334"));
     EXPECT_TRUE(Hccl::IpAddress::IsIPv6("::1"));
+    EXPECT_TRUE(Hccl::IpAddress::IsIPv6("fe80::204:61ff:254.157.241.86"));
 }
 
 TEST_F(IpAddressTest, Ut_IsIPv6_When_InvalidIPv6_Expect_False) {
     EXPECT_FALSE(Hccl::IpAddress::IsIPv6("192.168.1.1"));
     EXPECT_FALSE(Hccl::IpAddress::IsIPv6("2001:0db8:85a3:0000:0000:8a2e:0370:7334:1234"));
+    EXPECT_FALSE(Hccl::IpAddress::IsIPv6("::1 "));
+    EXPECT_FALSE(Hccl::IpAddress::IsIPv6(std::string("::1\0invalid", 11)));
 }
 
 TEST_F(IpAddressTest, Ut_GetIpStr_When_IPv4_Expect_CorrectString) {
@@ -101,12 +104,19 @@ TEST_F(IpAddressTest, Ut_GetEid_When_IPv6_Expect_CorrectEid) {
 TEST_F(IpAddressTest, Ut_IsEID_When_ValidEID_Expect_True) {
     EXPECT_TRUE(Hccl::IpAddress::IsEID("000000000000002000100000dfdf1234"));
     EXPECT_TRUE(Hccl::IpAddress::IsEID("1234567890abcdef1234567890abcdef"));
+    EXPECT_TRUE(Hccl::IpAddress::IsEID("1234567890ABCDEF1234567890ABCDEF"));
+    EXPECT_TRUE(Hccl::IpAddress::IsEID("aBcDeF0123456789AbCdEf0123456789"));
 }
 
 TEST_F(IpAddressTest, Ut_IsEID_When_InvalidEID_Expect_False) {
     EXPECT_FALSE(Hccl::IpAddress::IsEID("000000000000002000100000dfdf123")); // 长度不足
     EXPECT_FALSE(Hccl::IpAddress::IsEID("000000000000002000100000dfdf12345")); // 长度过长
     EXPECT_FALSE(Hccl::IpAddress::IsEID("000000000000002000100000dfdf123G")); // 包含非十六进制字符
+    EXPECT_FALSE(Hccl::IpAddress::IsEID("000000000000002000100000dfdf123g")); // 包含非十六进制字符
+    EXPECT_FALSE(Hccl::IpAddress::IsEID("000000000000002000100000dfdf123:")); // 包含分隔符
+    EXPECT_FALSE(Hccl::IpAddress::IsEID("000000000000002000100000dfdf123 ")); // 包含空格
+    EXPECT_FALSE(Hccl::IpAddress::IsEID("000000000000002000100000dfdf123\t")); // 包含制表符
+    EXPECT_FALSE(Hccl::IpAddress::IsEID("000000000000002000100000dfdf123\n")); // 包含换行符
 }
 
 TEST_F(IpAddressTest, Ut_StrToEID_When_ValidEID_Expect_CorrectEid) {

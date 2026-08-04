@@ -24,7 +24,6 @@
 #include "log.h"
 #include <hccl/hccl_types.h>
 #include "ccu_driver_handle.h"
-#include "rank_info_detect.h"
 
 const u64 RANKTABLE_FILE_MAX_SIZE = 1024ULL * 1024 * 1024;
 constexpr s32 HOST_DEVICE_ID = -1; // device id 无效值
@@ -62,9 +61,6 @@ using HcclCommInfoV2 = struct HcclCommInfoCtxV2 {
     std::shared_ptr<Hccl::HcclCommunicator> pComm{nullptr};
     Hccl::CommParams commParams;
     std::map<std::string, HcclGroupParamsV2> hcclGroupMap;
-    std::mutex detectServerLock; // 操作 hcclCommRankInfoDetectServer 前加锁
-    // GetRootInfo 拉起的 RankInfoDetect server，保活到 Init WaitComplete 后 erase，析构时 join 子线程
-    std::map<std::string, std::shared_ptr<Hccl::RankInfoDetect>> hcclCommRankInfoDetectServer;
     std::mutex groupParamsLock;  // 操作hcclGroupMap前加锁
     bool isUsed{false};
     DeviceStatus status{DeviceStatus::DEVICE_IDLE};  // Deivce状态
@@ -73,10 +69,6 @@ using HcclCommInfoV2 = struct HcclCommInfoCtxV2 {
 
     ~HcclCommInfoCtxV2() {
         hcclGroupMap.clear();
-        {
-            std::lock_guard<std::mutex> lock(detectServerLock);
-            hcclCommRankInfoDetectServer.clear();
-        }
         pComm = nullptr;
     }
 };

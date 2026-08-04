@@ -2,6 +2,9 @@
 target_sources(hccl_v2_utest
         PUBLIC
         ${HCCL_V2_CODE_ROOT}/unified_platform/external_system/orion_adapter_rts.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/rank_graph_builder_bridge.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/rank_graph_builder_provider.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_info_detect/root_info_detect_bridge.cc
 
         ${HCCL_V2_CODE_ROOT}/framework/communicator/communicator_impl.cc
         ${HCCL_V2_CODE_ROOT}/framework/communicator/hccl_communicator.cc
@@ -199,27 +202,28 @@ target_sources(hccl_v2_utest
         ${HCCL_V2_CODE_ROOT}/framework/ccu/ccu_manager/ccu_jetty_mgr.cpp
         ${HCCL_V2_CODE_ROOT}/unified_platform/trace/trace.cc
 
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/phy_topo/phy_topo.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/phy_topo_builder/phy_topo_builder.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_table_info/changed_rank_info.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/common/conn_interface.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo/phy_topo.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo_builder/phy_topo_builder.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/changed_rank_info.cc
         ${HCCL_V2_CODE_ROOT}/framework/communicator/diff_rank_updater.cc
 
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_table_info/new_rank_info.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_table_info/rank_level_info.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_table_info/rank_table_info.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_table_info/control_plane.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_table_info/address_info.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/new_rank_info.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/rank_level_info.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/rank_table_info.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/control_plane.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/address_info.cc
 
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/topo_info/edge_info.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/topo_info/peer_info.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/topo_info/topo_info.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/topo_info/edge_info.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/topo_info/peer_info.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/topo_info/topo_info.cc
         
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_graph/rank_graph.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_graph/net_instance.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_graph_builder/rank_graph_builder.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_graph_builder/detour_service.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_graph_builder/updater_for_64_plus_1.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/new_topo_builder/rank_graph_builder/detour_rules.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph/rank_graph.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph/net_instance.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/rank_graph_builder.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/detour_service.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/updater_for_64_plus_1.cc
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/detour_rules.cc
 
         ${HCCL_V2_CODE_ROOT}/framework/topo/virtual_topo.cc
 
@@ -284,13 +288,7 @@ target_sources(hccl_v2_utest
         ${HCCL_V2_CODE_ROOT}/unified_platform/resource/mem/hccl_mem_v2.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/resource/mem/local_ub_rma_buffer_manager.cc
 
-        ${HCCL_V2_CODE_ROOT}/framework/topo/rank_info_detect/bootstrap_ip.cc
         ${HCCL_V2_CODE_ROOT}/framework/topo/rank_info_detect/preempt_port_manager.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/rank_info_detect/rank_info_detect_client.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/rank_info_detect/rank_info_detect_service.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/rank_info_detect/rank_info_detect.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/rank_info_detect/rank_info_dispatcher.cc
-        ${HCCL_V2_CODE_ROOT}/framework/topo/rank_info_detect/socket_agent.cc
 
         ${HCCL_V2_CODE_ROOT}/framework/topo/topo_addr_info/src/eid_util.c
         ${HCCL_V2_CODE_ROOT}/framework/topo/topo_addr_info/src/hal.c
