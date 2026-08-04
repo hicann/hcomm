@@ -29,7 +29,7 @@ HcclResult ExchangeInfoMgr::BatchExchangeAndCheckConsistency(
     uint32_t channelNum,
     const std::vector<std::pair<u32, u32>> &newChannels,
     CollCommConfigConsistency &collCommConfigConsistency,
-    CommEngine engine)
+    CommEngine engine) const
 {
     std::vector<Hccl::Socket*> sockets;
     std::vector<u32> remoteRanks;

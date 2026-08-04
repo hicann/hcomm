@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 #include "rank_graph_v2.h"
 #include "error_message_v2.h"
 #include "manager_common.h"
+#include "group_schedule_mgr.h"
 #include "include/hccl_communicator.h"
 #include "hccl/hccl_res.h"
 namespace Hccl {

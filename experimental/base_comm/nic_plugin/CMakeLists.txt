@@ -120,6 +120,7 @@ function(hcomm_experimental_plugin_common target_name output_name)
         ${HCOMM_SOURCE_DIR}/src/base_comm/resources/southbound_adpt
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/communicator
+        ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/communicator/group_schedule_mgr
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank/endpoints
         ${HCOMM_SOURCE_DIR}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/engine_ctxs

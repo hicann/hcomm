@@ -18,7 +18,6 @@
 
 #include <cstdint>
 #include <exception>
-#include "group_schedule_mgr.h"
 #include "launch_aicpu.h"
 #include "launch_device.h"
 

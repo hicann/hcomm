@@ -32,7 +32,7 @@ public:
         uint32_t channelNum,
         const std::vector<std::pair<u32, u32>> &newChannels,
         CollCommConfigConsistency &collCommConfigConsistency,
-        CommEngine engine);
+        CommEngine engine) const;
     HcclResult CheckHcommInfo(
         const HcclChannelDesc* channelDescs,
         const std::vector<HcommChannelDesc> &hcommDescs,
