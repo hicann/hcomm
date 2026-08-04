@@ -204,7 +204,6 @@ HcclResult MyRank::TryInitCcuInstanceLegacy()
     }
 
     auto ccuInitRet = HcommCcuInsCreateLegacy(ccuInsType, &ccuInsHandle_);
-
     // ccu驱动拉起失败，直接回退至aicpu ts
     if (ccuInitRet == CcuResult::CCU_E_DRV_BUSY) {
         opExpansionMode_ = AICPU_TS_MODE;
@@ -300,7 +299,6 @@ HcclResult MyRank::TryInitCcuInstanceOnDemand()
     // 拉起ccu驱动
     if (!ccuDrvHandle_) {
         auto ccuInitRet = CcuInitFeature(devLogicId_, ccuDrvHandle_);
-
         // ccu驱动拉起失败，直接回退至aicpu ts
         if (ccuInitRet == CcuResult::CCU_E_DRV_BUSY) {
             opExpansionMode_ = AICPU_TS_MODE;
