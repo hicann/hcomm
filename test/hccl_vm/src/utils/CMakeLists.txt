@@ -11,12 +11,16 @@ add_library(log STATIC sim_log.cc sim_yaml_config.cc sim_common_api.cc)
 
 target_include_directories(log PUBLIC
         ${CMAKE_SOURCE_DIR}/include
+        ${ASCEND_CANN_PACKAGE_PATH}/include
+        ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
         ${CMAKE_SOURCE_DIR}/third_party
         ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json
         ${CMAKE_SOURCE_DIR}/third_party/yaml-cpp/include
 )
 
 target_include_directories(log PRIVATE
+        ${ASCEND_CANN_PACKAGE_PATH}/include
+        ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
         ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
         ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/runtime
         ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/profiling

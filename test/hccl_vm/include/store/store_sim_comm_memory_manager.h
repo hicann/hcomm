@@ -30,7 +30,7 @@ public:
 
     int ReleaseCommMem(const char* name);
 
-    int WriteCommMem(const char* name, const void* dataPtr, size_t size);
+    int64_t WriteCommMem(const char* name, const void* dataPtr, size_t size);
 
     int ReadCommMem(const char* name, void* dataPtr, size_t size);
 

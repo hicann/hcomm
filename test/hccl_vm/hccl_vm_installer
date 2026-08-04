@@ -65,6 +65,7 @@ CANN_SETENV=""              # detect_cann 写入：对应的 set_env.sh 全路�
 CANN_TARGET=""              # 解析出的安装目标目录（决定下载/覆盖时由 resolve_cann_target 赋值）
 CANN_CACHE=""               # 下载缓存目录，apply_defaults 里赋 ${WORKSPACE}/.cann-download
 CANN_RUN_FILE=""            # 实际下载到的 .run 文件全路径（收尾展示用）
+OPS_RUN_FILE=""             # 实际下载到的 ops 包全路径（收尾展示用）
 CANN_CHANNEL="master"       # CANN 镜像下载通道，apply_defaults 按 profile 落定（campus=legacy / main=master）
 HCCL_TEST_RESULT=""         # build_hccl_test 写入：built | skipped | failed:<原因>
 HCCL_TEST_BIN_DIR=""        # build_hccl_test 写入：hccl_test 可执行文件所在目录（原地编译）
@@ -129,6 +130,7 @@ success_summary() {
         *)         : ;;
     esac
     [ -n "${CANN_RUN_FILE}" ] && info "CANN 安装包（已保留）: ${CANN_RUN_FILE}"
+    [ -n "${OPS_RUN_FILE:-}" ] && info "CANN ops 包（已保留）: ${OPS_RUN_FILE}"
     local inst="${CHECKER_PATH}/hccl_vm_install"
     local setenv="${ASCEND_HOME_PATH:-<CANN>/ascend-toolkit}/set_env.sh"
     local mpirun_extra=""
@@ -197,13 +199,13 @@ normalize_arch() {
 # ── Profile 注册表：一个 profile 只映射 hcomm/hccl 分支；首行为默认；新增版本加一行即可 ──
 # 每行格式：hcomm_ref|hccl_ref|说明
 profile_all_names() {
-    printf '%s\n' "campus-2026" "main"
+    printf '%s\n' "main" "campus-2026"
 }
 # 每行格式：hcomm_ref|hccl_ref|说明|是否允许 weekly|CANN 下载通道（master=滚动最新 / legacy=归档）
 profile_row() {
     case "$1" in
-        campus-2026) echo "competition/campus-2026|competition/campus-2026|竞赛固定，CANN 从 build.md 提取|false|legacy" ;;
         main)        echo "master|master|主线最新，随官方更新|true|master" ;;
+        campus-2026) echo "competition/campus-2026|competition/campus-2026|竞赛固定，CANN 从 build.md 提取|false|legacy" ;;
         *) return 1 ;;
     esac
 }
@@ -235,7 +237,7 @@ show_help() {
     echo "  bash hccl_vm_installer [选项]"
     echo ""
     echo "常用选项:"
-    echo "  --profile <名称>       配套方案，默认: campus-2026（竞赛固定）"
+    echo "  --profile <名称>       配套方案，默认: main（主线最新）"
     echo "  --list-profiles        查看所有可选配套方案"
     echo "  --workspace <路径>     工作目录 (默认: 当前目录)"
     echo "  --ascend-path <路径>   指定 CANN 目录：有则复用、没有则装到这里（不指定时探测 <工作目录>/Ascend）"
@@ -837,6 +839,22 @@ pick_toolkit_file() {
     echo "${file}"
 }
 
+# $1=快照号 $2=是否允许 weekly（true=主线 profile；否则只取正式发布版）
+pick_ops_file() {
+    local snap="$1" allow_weekly="${2:-false}" base all file arch
+    arch="$(normalize_arch "$(uname -m)" 2>/dev/null || echo x86_64)"
+    base="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/${CANN_CHANNEL}/${snap}"
+    all="$(curl -fsSL "${base}/" 2>/dev/null | grep -oE "Ascend-cann-950-ops_[^\"< ]*linux-${arch}\\.run" | sort -u)" || true
+    if [ "${allow_weekly}" = true ]; then
+        file="$(printf '%s\n' "${all}" | grep -i weekly | sort -V | tail -1)"
+        [ -n "${file}" ] || file="$(printf '%s\n' "${all}" | sort -V | tail -1)"
+    else
+        file="$(printf '%s\n' "${all}" | grep -E "^Ascend-cann-950-ops_[0-9]+(\\.[0-9]+)*_linux-${arch}\\.run$" | sort -V | tail -1)"
+    fi
+    [ -n "${file}" ] || return 1
+    echo "${file}"
+}
+
 detect_cann() {
     CANN_INSTALLED=""; CANN_SETENV=""
     local cand se
@@ -1111,6 +1129,69 @@ download_and_install_cann() {
     CANN_RUN_FILE="${CANN_CACHE}/${file}"
 }
 
+# $1=安装目标 <target>
+# 下载并安装 CANN ops 算子包（与 toolkit 安装策略一致，失败则退出）
+download_and_install_cann_ops() {
+    local target="$1"
+    # 1. 幂等检查（ops 包已装则跳过）
+    if [ -d "${target}/ascend-toolkit/latest/ops" ] || [ -d "${target}/ops" ]; then
+        info "检测到 ops 包已安装：${target}，跳过下载"
+        return 0
+    fi
+
+    # 2. 选择 ops 包
+    local snap; snap="$(pick_cann_snapshot "" || true)"
+    [ -n "${snap}" ] || { warn "无法确定 CANN 快照。"; print_cann_guidance; exit 1; }
+
+    local aw; aw="$(profile_allow_weekly "${PROFILE}")"
+    local file; file="$(pick_ops_file "${snap}" "${aw}")" || true
+    local _arch_for_msg
+    _arch_for_msg="$(normalize_arch "$(uname -m)" 2>/dev/null || echo x86_64)"
+    [ -n "${file}" ] || { warn "快照目录 ${snap} 未找到可用的 ${_arch_for_msg} ops 包（当前 profile=${PROFILE}$([ "${aw}" = true ] || echo '，仅取正式发布版、不取 weekly')）。"; print_cann_guidance; exit 1; }
+
+    # 3. 下载（缓存逻辑同 toolkit）
+    local base="https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/${CANN_CHANNEL}/${snap}"
+    local url="${base}/${file}" total
+    local dl_log="${LOG_DIR}/ops-download-${RUN_TS}.log"
+    mkdir -p "${CANN_CACHE}" "${LOG_DIR}" || { warn "无法创建缓存/日志目录"; print_cann_guidance; exit 1; }
+    total="$(curl -fsSI "${url}" 2>/dev/null | tr -d '\r' | awk 'tolower($1)=="content-length:"{print $2}' | tail -1)" || true
+
+    if [ -f "${CANN_CACHE}/${file}" ] && [ -n "${total}" ] \
+        && [ "$(stat -c%s "${CANN_CACHE}/${file}" 2>/dev/null || echo 0)" = "${total}" ]; then
+        info "复用已下载的 ops 包（${CANN_CACHE}/${file}，$(( total / 1024 / 1024 ))M），跳过下载"
+    else
+        info "下载 ops 包..."
+        local attempt=1
+        while :; do
+            wget -q -O "${CANN_CACHE}/${file}" "${url}" </dev/null 2>>"${dl_log}" &
+            local dpid=$!
+            spin_on_pid_pct "${dpid}" "下载 ops" "${total:-0}" "${CANN_CACHE}/${file}"
+            if wait "${dpid}" && { [ -z "${total}" ] || [ "$(stat -c%s "${CANN_CACHE}/${file}" 2>/dev/null || echo 0)" = "${total}" ]; }; then
+                break
+            fi
+            rm -f "${CANN_CACHE}/${file}" || true
+            if [ "${attempt}" -ge 2 ]; then
+                warn "ops 包下载失败，末尾日志："; tail -n 20 "${dl_log}" >&2
+                echo "  请检查网络/代理/防火墙；持续失败可带日志到 https://gitcode.com/cann/hcomm/issues 反馈。" >&2
+                print_cann_guidance; exit 1
+            fi
+            warn "ops 包下载失败，3 秒后重试一次……"; attempt=2; sleep 3 || true
+        done
+    fi
+
+    # 4. 安装（安装到同一 target 目录）
+    local inst_log="${LOG_DIR}/ops-install-${RUN_TS}.log"
+    if ! chmod +x "${CANN_CACHE}/${file}"; then warn "无法给安装包加执行权限：${CANN_CACHE}/${file}"; print_cann_guidance; exit 1; fi
+    if ! LANG=C.UTF-8 LC_ALL=C.UTF-8 "${CANN_CACHE}/${file}" --install --install-path="${target}" --quiet </dev/null >>"${inst_log}" 2>&1; then
+        warn "ops 包安装失败，末尾日志："; tail -n 20 "${inst_log}" >&2
+        print_cann_guidance; exit 1
+    fi
+
+    OPS_RUN_FILE="${CANN_CACHE}/${file}"
+    info "ops 包安装完成：${file}"
+    return 0
+}
+
 # 第 5 步：复用第 1 步写好的 CANN_INSTALLED/CANN_SETENV，按四情况处理。$1=build.md 快照（可空）
 resolve_cann() {
     local snapshot="$1"
@@ -1129,11 +1210,13 @@ resolve_cann() {
                     warn "已按 --offline 保留现有 CANN；请自行确认其与所需配套版本一致。" ;;
                 download)
                     resolve_cann_target "${CANN_INSTALLED}"
-                    download_and_install_cann "${CANN_TARGET}" "${snapshot}" ;;
+                    download_and_install_cann "${CANN_TARGET}" "${snapshot}"
+                    download_and_install_cann_ops "${CANN_TARGET}" ;;
                 auto)
                     resolve_cann_target "${CANN_INSTALLED}"
                     if { [ -t 0 ] || [ -e /dev/tty ]; } && prompt_yn "下载配套版并覆盖升级 ${CANN_TARGET} 的现有 CANN? 15 秒内无响应视为保留。[y/N]" N; then
                         download_and_install_cann "${CANN_TARGET}" "${snapshot}"
+                        download_and_install_cann_ops "${CANN_TARGET}"
                     else
                         warn "保留现有 CANN（未覆盖）；如需覆盖请加 --reinstall-cann。"
                     fi ;;
@@ -1142,6 +1225,7 @@ resolve_cann() {
     else
         info "下载 CANN ${snapshot} 并安装到 ${CANN_TARGET}"
         download_and_install_cann "${CANN_TARGET}" "${snapshot}"
+        download_and_install_cann_ops "${CANN_TARGET}"
     fi
     # ASCEND_HOME_PATH 兜底：从 ASCEND_TOOLKIT_HOME 或探测到的 CANN 目录推导
     if [ -z "${ASCEND_HOME_PATH:-}" ]; then
@@ -1209,7 +1293,7 @@ build_hccl_vm() {
     fi
 }
 
-# 编译安装 HCCL/HCOMM 子包（使用 hcomm 仓库自带的 build_pkg.sh）
+# 执行 build_pkg.sh 获得aicpu在device侧的符号（使用 hcomm 仓库自带的 build_pkg.sh）
 # build_pkg.sh 位于 CHECKER_PATH（即 hcomm/test/hccl_vm/）下，步骤 4 已 clone 完成
 # 需要以下环境变量：
 #   ASCEND_HOME_PATH  - CANN 安装目录（source CANN set_env.sh 后导出）
@@ -1217,7 +1301,7 @@ build_hccl_vm() {
 #   HCOMM_CODE_HOME   - hcomm 源码目录（build_hccl_vm 已导出）
 # 通过 --tool_path 传入 checker 安装路径（即 CHECKER_PATH）
 build_hcomm_hccl_pkg() {
-    info "编译安装 HCCL/HCOMM 子包..."
+    info "执行 build_pkg.sh 获得 aicpu 运行在 device 侧的符号..."
     local pkg_script="${CHECKER_PATH}/build_pkg.sh"
     local pkg_log="${LOG_DIR}/build-pkg-${RUN_TS}.log"
 
@@ -1232,22 +1316,22 @@ build_hcomm_hccl_pkg() {
     if [ "${VERBOSE}" = true ]; then
         bash "${pkg_script}" --tool_path "${CHECKER_PATH}" 2>&1 | tee "${pkg_log}" || rc=${PIPESTATUS[0]}
     else
-        info "开始编译子包，预计数分钟。实时日志: tail -f ${pkg_log}"
+        info "开始执行 build_pkg.sh。实时日志: tail -f ${pkg_log}"
         bash "${pkg_script}" --tool_path "${CHECKER_PATH}" > "${pkg_log}" 2>&1 &
         local pkg_pid=$!
         spin_on_pid "${pkg_pid}" "编译子包中"
         wait "${pkg_pid}" || rc=$?
     fi
     if [ "${rc}" -ne 0 ]; then
-        warn "HCCL/HCOMM 子包编译失败，末尾日志："
+        warn "执行 build_pkg.sh 失败，末尾日志："
         tail -n 20 "${pkg_log}" >&2
         echo "  完整日志: ${pkg_log}" >&2
         echo "  若为第三方库下载失败(网络/SSL)：已清理下载缓存，重跑即可重新下载；若为 gcc 超出 build.md 前置依赖范围(7.3.0–13.3.x)请在满足该范围的环境(如 22.04/24.04)运行。" >&2
         echo "  也可手动执行: bash ${pkg_script} --tool_path ${CHECKER_PATH}" >&2
         clean_thirdparty_dl_cache
-        error "子包编译未通过，请检查日志后重试。"
+        error "执行 build_pkg.sh 失败，请检查日志后重试。"
     fi
-    info "HCCL/HCOMM 子包编译安装完成！"
+    info "执行 build_pkg.sh 完成！"
 }
 
 # 按 README §4.7 准备 /etc/hccl_rootinfo.json：HCCL 初始化通信域时从该文件读 topo.json 路径，
@@ -1265,7 +1349,7 @@ setup_hccl_rootinfo() {
     fi
 }
 
-# 第 9 步：编译 hccl_test（增值步骤，失败只 WARN 不阻断）。前提：build_hcomm_hccl_pkg 已把 libhccl 装进 CANN。
+# 第 9 步：编译 hccl_test（增值步骤，失败只 WARN 不阻断）。
 build_hccl_test() {
     if [ "${SKIP_HCCL_TEST}" = true ]; then
         HCCL_TEST_RESULT="skipped"
@@ -1541,7 +1625,7 @@ main() {
     clone_repo "hccl" "https://gitcode.com/cann/hccl.git" "${HCCL_REF}" "${HCCL_PATH}"
     step 7 "${STEP_TOTAL}" "编译 HCCL-VM"
     build_hccl_vm
-    step 8 "${STEP_TOTAL}" "编译安装 HCCL/HCOMM 子包"
+    step 8 "${STEP_TOTAL}" "解析 aicpu_hcxx.tar.gz 得到 device 侧符号"
     build_hcomm_hccl_pkg
     step 9 "${STEP_TOTAL}" "编译 hccl_test"
     build_hccl_test

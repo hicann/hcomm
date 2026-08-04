@@ -23,19 +23,16 @@ set(COMMON_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/third_party/CLI11
     ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
     ${CMAKE_SOURCE_DIR}/third_party
-    $ENV{HCCL_CODE_HOME}/src/ops/op_common/inc
-    $ENV{HCCL_CODE_HOME}/src/common
-    $ENV{HCCL_CODE_HOME}/src/common/hcomm_dlsym
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/include/driver
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/driver
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/runtime
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/toolchain
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/profiling
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/hccl
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/pkg_inc/base
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/include
-    $ENV{ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/include/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/driver
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/driver
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/runtime
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/toolchain
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/profiling
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/base
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/hccl
 
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )

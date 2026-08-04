@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <algorithm>
 
 #include "sim_log.h"
 
@@ -110,37 +111,38 @@ int CommunicationMemoryManager::ReleaseCommMem(const char* name) {
     return 0;
 }
 
-int CommunicationMemoryManager::WriteCommMem(const char* name, const void* dataPtr, size_t size)
+int64_t CommunicationMemoryManager::WriteCommMem(const char* name, const void* dataPtr, size_t size)
 {
     if (!name || !dataPtr || size == 0) {
         HCCL_VM_ERROR("write invalid params, name: {}, dataPtr: {}, size: {}", name, dataPtr, size);
         return -1;
     }
 
-    std::lock_guard<std::mutex> lock(m_mutex);
-    if (m_commMemMap.find(name) == m_commMemMap.end()) {
-        HCCL_VM_ERROR("write comm mem not found, name: {}", name);
-        return -1;
+    void* ptr = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto iter = m_commMemMap.find(name);
+        if (iter == m_commMemMap.end()) {
+            HCCL_VM_ERROR("write comm mem not found, name: {}", name);
+            return -1;
+        }
+        ptr = iter->second;
     }
-    void* ptr = m_commMemMap[name];
     MemoryManager::GetInstance().LockMemByName(name);
 
     CommMemHead* head = (CommMemHead*)ptr;
 
-    if (size + head->bufferSize > RA_SOCKET_BUF_SIZE) {
-        MemoryManager::GetInstance().UnlockMemByName(name);
-        HCCL_VM_ERROR("write size too large, size: {}, max: {}", size, RA_SOCKET_BUF_SIZE);
-        return -1;
-    }
+    int64_t realSend = RA_SOCKET_BUF_SIZE - head->bufferSize;
+    realSend = std::min((int64_t)size, realSend);
 
-    memcpy(head->data + head->bufferSize, dataPtr, size);
-    head->bufferSize += size;
-    head->writeTotalBytes += size;
+    memcpy(head->data + head->bufferSize, dataPtr, realSend);
+    head->bufferSize += realSend;
+    head->writeTotalBytes += realSend;
     uint64_t totalWrite = head->writeTotalBytes;
 
     MemoryManager::GetInstance().UnlockMemByName(name);
-    HCCL_VM_INFO("write name: {}, size: {}, totalWriteBytes: {}", name, size, totalWrite);
-    return 0;
+    HCCL_VM_INFO("write name: {}, size:{} real:{}, totalWriteBytes: {}", name, size, realSend, totalWrite);
+    return realSend;
 }
 
 int CommunicationMemoryManager::ReadCommMem(const char* name, void* dataPtr, size_t size)
@@ -150,12 +152,16 @@ int CommunicationMemoryManager::ReadCommMem(const char* name, void* dataPtr, siz
         return -1;
     }
 
-    std::lock_guard<std::mutex> lock(m_mutex);
-    if (m_commMemMap.find(name) == m_commMemMap.end()) {
-        HCCL_VM_ERROR("read comm mem not found, name: {}", name);
-        return -1;
+    void* ptr = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto iter = m_commMemMap.find(name);
+        if (iter == m_commMemMap.end()) {
+            HCCL_VM_ERROR("read comm mem not found, name: {}", name);
+            return -1;
+        }
+        ptr = iter->second;
     }
-    void* ptr = m_commMemMap[name];
     MemoryManager::GetInstance().LockMemByName(name);
 
     CommMemHead* head = (CommMemHead*)ptr;

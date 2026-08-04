@@ -15,6 +15,7 @@
 #include <string>
 #include <unistd.h>
 #include <climits>
+#include <map>
 
 static std::string GetExePath()
 {
@@ -73,4 +74,45 @@ std::string InstallPath::ResolveToInstallRoot(const std::string& relPath)
         return relPath;
     }
     return GetHcclVmInstallAbsPath() + "/" + relPath;
+}
+
+static std::map<HcclDataType, std::string> g_DataType2Str = {
+    {HcclDataType::HCCL_DATA_TYPE_INT8, "INT8"},
+    {HcclDataType::HCCL_DATA_TYPE_INT16, "INT16"},
+    {HcclDataType::HCCL_DATA_TYPE_INT32, "INT32"},
+    {HcclDataType::HCCL_DATA_TYPE_FP16, "FP16"},
+    {HcclDataType::HCCL_DATA_TYPE_UINT64, "UINT64"},
+    {HcclDataType::HCCL_DATA_TYPE_UINT8, "UINT8"},
+    {HcclDataType::HCCL_DATA_TYPE_UINT16, "UINT16"},
+    {HcclDataType::HCCL_DATA_TYPE_UINT32, "UINT32"},
+    {HcclDataType::HCCL_DATA_TYPE_FP64, "FP64"},
+    {HcclDataType::HCCL_DATA_TYPE_BFP16, "BFP16"},
+    {HcclDataType::HCCL_DATA_TYPE_INT128, "INT128"},
+    {HcclDataType::HCCL_DATA_TYPE_INT64, "INT64"},
+    {HcclDataType::HCCL_DATA_TYPE_HIF8, "HIF8"},
+    {HcclDataType::HCCL_DATA_TYPE_FP8E4M3, "FP8E4M3"},
+    {HcclDataType::HCCL_DATA_TYPE_FP8E5M2, "FP8E5M2"},
+};
+
+static std::map<HcclReduceOp, std::string> g_ReduceOp2Str = {
+    {HcclReduceOp::HCCL_REDUCE_SUM, "SUM"},
+    {HcclReduceOp::HCCL_REDUCE_MIN, "MIN"},
+    {HcclReduceOp::HCCL_REDUCE_MAX, "MAX"},
+    {HcclReduceOp::HCCL_REDUCE_PROD, "PROD"},
+};
+
+std::string GetDataTypeStr(HcclDataType type)
+{
+    if (g_DataType2Str.find(type) == g_DataType2Str.end()) {
+        return "UNKNOWN";
+    }
+    return g_DataType2Str[type];
+}
+
+std::string GetReduceOpStr(HcclReduceOp op)
+{
+    if (g_ReduceOp2Str.find(op) == g_ReduceOp2Str.end()) {
+        return "UNKNOWN";
+    }
+    return g_ReduceOp2Str[op];
 }

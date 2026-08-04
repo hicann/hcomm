@@ -99,7 +99,7 @@ aclError GetDeviceByServerKeyAndPhysicalId(uint64_t serverKey, uint32_t deviceId
     return ACL_SUCCESS;
 }
 
-aclError UpdateDeviceLogicId(uint64_t serverKey, uint32_t phyDevId, uint32_t logicDevId)
+aclError UpdateDeviceLogicId(uint64_t serverKey, uint32_t phyDevId, uint32_t logicDevId, uint32_t userId)
 {
     sim::Device device{};
     auto ret = GetDeviceByServerKeyAndPhysicalId(serverKey, phyDevId, device);
@@ -108,8 +108,9 @@ aclError UpdateDeviceLogicId(uint64_t serverKey, uint32_t phyDevId, uint32_t log
     }
 
     auto deviceKey = device.id;
-    RunnerDB::Update<sim::Device>(deviceKey, [deviceKey, logicDevId](sim::Device &dev) { 
+    RunnerDB::Update<sim::Device>(deviceKey, [deviceKey, logicDevId, userId](sim::Device &dev) { 
         dev.logic_id = logicDevId;
+        dev.user_id = userId;
         dev.status = 1;// 设备状态设置为可用
     });
 
@@ -128,8 +129,10 @@ bool ResetAllDeviceLogicId()
 
     for (auto &device : allDevices) {
         auto deviceKey = device.id;
-        RunnerDB::Update<sim::Device>(deviceKey, [deviceKey](sim::Device &dev) { 
+        RunnerDB::Update<sim::Device>(deviceKey, [deviceKey](sim::Device &dev) {
             dev.logic_id = 0xFFFF;
+            dev.status = 0;  // 重置设备状态，防止残留 status=1 干扰后续 aclrtGetDeviceCount
+            dev.user_id = 0xFFFF;
         });
     }
 

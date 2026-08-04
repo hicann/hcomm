@@ -77,10 +77,6 @@ target_link_libraries(device PRIVATE
 )
 
 target_include_directories(device PRIVATE
-    ${HCCL_CODE_ROOT}/src/ops/op_common/inc
-    ${HCCL_CODE_ROOT}/src/common
-    ${HCCL_CODE_ROOT}/src/common/hcomm_dlsym
-    ${HCCL_CODE_ROOT}/src/common/hcomm_dlsym/ccu
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include

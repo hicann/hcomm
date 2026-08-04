@@ -116,7 +116,7 @@ TEST_F(SimRunnerCommonTest, GetDeviceByPhysicalId_WhenDeviceNotExists_ReturnErro
 
 TEST_F(SimRunnerCommonTest, UpdateDeviceLogicId_WhenValidParams_UpdateSuccessfully)
 {
-    auto ret = sim::UpdateDeviceLogicId(1, 0, 100);
+    auto ret = sim::UpdateDeviceLogicId(1, 0, 100, 0);
 
     EXPECT_EQ(ret, ACL_SUCCESS);
 
@@ -128,14 +128,14 @@ TEST_F(SimRunnerCommonTest, UpdateDeviceLogicId_WhenValidParams_UpdateSuccessful
 
 TEST_F(SimRunnerCommonTest, UpdateDeviceLogicId_WhenServerKeyInvalid_ReturnError)
 {
-    auto ret = sim::UpdateDeviceLogicId(999, 0, 100);
+    auto ret = sim::UpdateDeviceLogicId(999, 0, 100, 0);
 
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
 TEST_F(SimRunnerCommonTest, UpdateDeviceLogicId_WhenPhyDevIdInvalid_ReturnError)
 {
-    auto ret = sim::UpdateDeviceLogicId(1, 999, 100);
+    auto ret = sim::UpdateDeviceLogicId(1, 999, 100, 0);
 
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }

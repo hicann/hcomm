@@ -51,7 +51,6 @@ if(NOT gtest_FOUND)
     ExternalProject_Add(third_party_gtest
         URL ${GTEST_PROJECT_URL}
         URL_HASH SHA256=8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7
-        TLS_VERIFY OFF
         DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/third_party
         DOWNLOAD_NO_PROGRESS TRUE
         CONFIGURE_COMMAND ${CMAKE_COMMAND} ${GTEST_OPTS} <SOURCE_DIR>

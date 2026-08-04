@@ -20,6 +20,7 @@
 #include <nlohmann_json/json.hpp>
 #include <string>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
 
@@ -240,6 +241,14 @@ void init_lock() {
         HCCL_VM_ERROR("Failed to open lock file: {}", strerror(errno));
         exit(1);
     }
+
+    // open() 的创建权限会受 umask 影响，显式恢复为所有用户可读写。
+    if (fchmod(fd, 0666) == -1 && errno != EPERM) {
+        HCCL_VM_ERROR("Failed to set lock file permissions: {}", strerror(errno));
+        close(fd);
+        exit(1);
+    }
+
     if (flock(fd, LOCK_EX | LOCK_NB) == -1) {
         if (errno == EWOULDBLOCK) {
             HCCL_VM_ERROR("Another instance of runner is already running. Exiting.");
@@ -255,9 +264,9 @@ int main(int argc, char* argv[])
 {
     (void) argc;
     (void) argv;
-    init_lock();
     LogConfig config = LoadLogConfig("runner");
     InitLogger(config);
+    init_lock();
     HcclSim::StorageManager& storage = HcclSim::StorageManager::GetInstance();
     storage.SetDataId("runner");
 

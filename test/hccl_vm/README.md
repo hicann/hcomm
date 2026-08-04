@@ -39,7 +39,7 @@ hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测�
 
 ### 3.1 一键安装
 
-一行完成依赖安装、源码拉取、CANN 检测与编译（默认 `campus-2026` 配套方案）。工作目录与手动安装保持一致，用 `/home/workspace`（后文示例路径均以此为准）：
+一行完成依赖安装、源码拉取、CANN 检测与编译（默认 `main` 配套方案）。工作目录与手动安装保持一致，用 `/home/workspace`（后文示例路径均以此为准）：
 
 ```bash
 # 创建并进入工作目录（脚本默认装到当前目录）
@@ -56,7 +56,7 @@ curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test
 **hccl_test**：默认一并编译 OpenMPI 与 hccl_test 性能测试工具，`--skip-hccl-test` 可关闭。
 
 **常用参数**：
-- `--profile <名>`：配套方案（默认 `campus-2026`，`--list-profiles` 列全部）
+- `--profile <名>`：配套方案（默认 `main`，`--list-profiles` 列全部）
 - `--workspace <路径>`：工作目录，源码／编译／产物所在（默认当前目录）
 - `--ascend-path <路径>`：指定 CANN 目录，有则复用、无则装到此处
 - `--reinstall-cann`：重新下载覆盖现有 CANN（版本不匹配时用；默认保留）
@@ -89,6 +89,9 @@ source /home/workspace/Ascend/cann/set_env.sh
 export HCCL_CODE_HOME=/home/workspace/hccl
 export HCOMM_CODE_HOME=/home/workspace/hcomm
 bash ./build.sh --full
+
+# 5.从CANN安装目录拷贝解压aicpu_hcxx.tar.gz
+bash build_pkg.sh
 ```
 
 ### 3.3 使用示例
@@ -142,16 +145,7 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 AICPU展开模式需要将算法展开步骤放到设备侧执行，因此hccl-vm工具需要将HCCL的设备侧的符号编译并模拟执行。由于设备侧符号是ARM架构的，因此在X86环境上编译时需要借助交叉编译器，运行时需要借助QEMU实现AICPU模式的模拟运行。
 
-设备侧符号使用hccl和hcomm的源码编译，为了保证Host与Device通信协议正确，需要同时编译Host侧的安装包并进行替换安装。
-
-1. HCCL设备侧符号编译、安装、拷贝等（若已用 [3.1 一键安装](#31-一键安装)，此步已自动完成，可跳过）。
-
-```bash
-cd /home/workspace/hcomm/test/hccl_vm/
-bash ./build_pkg.sh
-```
-
-2. 环境变量配置。
+1. 环境变量配置。
 
 ```bash
 # 进入工具安装目录
@@ -162,7 +156,7 @@ export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
 export HCCL_OP_EXPANSION_MODE="AI_CPU"
 ```
 
-3. 执行
+2. 执行
 
 ```bash
 # 需要进入到新的bin文件目录下执行hccl-vm
@@ -185,7 +179,7 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 (hvm)$> exit
 ```
 
-4. 验证hccl_test用例运行结果 [Runner结果查看](#491-runner插件结果) [Checker结果查看](#492-checker插件结果)
+3. 验证hccl_test用例运行结果 [Runner结果查看](#491-runner插件结果) [Checker结果查看](#492-checker插件结果)
 
 #### 3.3.4 AIV模式
 
@@ -242,9 +236,10 @@ export HCCL_CODE_HOME=/home/workspace/hccl
 export HCOMM_CODE_HOME=/home/workspace/hcomm
 ```
 
-1. 若您修改了CANN hccl仓代码，请执行bash build_pkg.sh --install hccl。
-2. 若您修改了CANN hcomm仓代码，请执行bash build_pkg.sh --install hcomm。
-3. 参考[使用示例](#33-使用示例)步骤，重新运行用例。
+1. 若您更新/修改了CANN hccl仓代码，请执行`bash build_pkg.sh --install hccl`。
+2. 若您更新/修改了CANN hcomm仓代码，请执行`bash build_pkg.sh --install hcomm`。
+3. 若您同时更新/修改了CANN hccl、hcomm仓代码，请执行`bash build_pkg.sh --full`。
+4. 参考[使用示例](#33-使用示例)步骤，重新运行用例。
 
 ---
 
@@ -803,6 +798,7 @@ data_size(Bytes): | aveg_time(us): | alg_bandwidth(GB/s): | check_result:
 | yaml-cpp      | 0.8.0         | [yaml-cpp-0.8.0.tar.gz](https://raw.gitcode.com/src-openeuler/yaml-cpp/blobs/d1ead4fff417073b9cdbf98b8b55eb0efc00b0ba/yaml-cpp-0.8.0.tar.gz) |
 | sqlite        | 3.51.0        | [sqlite-amalgamation-3510300.zip](https://www.sqlite.org/2026/sqlite-amalgamation-3510300.zip) |
 | googletest    | 1.14.0        | [googletest-1.14.0.tar.gz](https://gitcode.com/cann-src-third-party/googletest/releases/download/v1.14.0/googletest-1.14.0.tar.gz) |
+| cann-cmake    | master-044    | [cmake-master-044.tar.gz](https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-044.tar.gz) |
 
 ### 术语表
 

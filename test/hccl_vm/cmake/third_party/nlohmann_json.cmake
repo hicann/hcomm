@@ -19,7 +19,6 @@ else()
         file(DOWNLOAD
             ${NLOHMANN_JSON_URL}
             ${NLOHMANN_JSON_PKG_PATH}
-            TLS_VERIFY OFF
             STATUS _dl_status
             TIMEOUT 600
         )

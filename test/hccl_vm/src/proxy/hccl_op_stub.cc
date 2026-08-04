@@ -32,7 +32,7 @@
 #include "store_sim_memory_manager.h"
 #include "db_sim_op_db_ops.h"
 #include "db_sim_runner_ops.h"
-
+#include "sim_common_api.h"
 
 extern "C" uint8_t GetOpExpansionMode();
 
@@ -360,8 +360,8 @@ HcclResult HcclAlltoAll(const void *sendBuf, uint64_t sendCount, HcclDataType se
     HCCL_VM_INFO("recvBuf = {:p}", recvBuf);
     HCCL_VM_INFO("sendCount = {}", sendCount);
     HCCL_VM_INFO("recvCount = {}", recvCount);
-    HCCL_VM_INFO("sendType = {}", static_cast<int>(sendType));
-    HCCL_VM_INFO("recvType = {}", static_cast<int>(recvType));
+    HCCL_VM_INFO("sendType = {}", GetDataTypeStr(sendType));
+    HCCL_VM_INFO("recvType = {}", GetDataTypeStr(recvType));
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
  
@@ -370,12 +370,12 @@ HcclResult HcclAlltoAll(const void *sendBuf, uint64_t sendCount, HcclDataType se
     // 注册input、output buffer
     uint32_t inDataSize = 0;
     if (sim::GetDataTypeSize(sendType, inDataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAll send type calc size", static_cast<uint16_t>(sendType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAll send type calc size", GetDataTypeStr(sendType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint32_t outDataSize = 0;
     if (sim::GetDataTypeSize(recvType, outDataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAll recv type calc size", static_cast<uint16_t>(recvType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAll recv type calc size", GetDataTypeStr(recvType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint64_t inputSize = static_cast<uint64_t>(inDataSize) * sendCount * rankSize;
@@ -417,8 +417,8 @@ HcclResult HcclAlltoAllVC(const void *sendBuf, const void *sendCountMatrix, Hccl
     HCCL_VM_INFO("sendBuf = {:p}", sendBuf);
     HCCL_VM_INFO("sendCountMatrix = {:p}", sendCountMatrix);
     HCCL_VM_INFO("recvBuf = {:p}", recvBuf);
-    HCCL_VM_INFO("sendType = {}", static_cast<int>(sendType));
-    HCCL_VM_INFO("recvType = {}", static_cast<int>(recvType));
+    HCCL_VM_INFO("sendType = {}", GetDataTypeStr(sendType));
+    HCCL_VM_INFO("recvType = {}", GetDataTypeStr(recvType));
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
 
@@ -440,12 +440,12 @@ HcclResult HcclAlltoAllVC(const void *sendBuf, const void *sendCountMatrix, Hccl
 
     uint32_t sendDataSize = 0;
     if (sim::GetDataTypeSize(sendType, sendDataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAllVC send type calc size", static_cast<uint16_t>(sendType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAllVC send type calc size", GetDataTypeStr(sendType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint32_t recvDataSize = 0;
     if (sim::GetDataTypeSize(recvType, recvDataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAllVC recv type calc size", static_cast<uint16_t>(recvType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAllVC recv type calc size", GetDataTypeStr(recvType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
 
@@ -483,8 +483,8 @@ HcclResult HcclAlltoAllV(const void *sendBuf, const void *sendCounts, const void
     HCCL_VM_INFO("HcclAlltoAllV called with parameters:");
     HCCL_VM_INFO("sendBuf = {:p}", sendBuf);
     HCCL_VM_INFO("recvBuf = {:p}", recvBuf);
-    HCCL_VM_INFO("sendType = {}", static_cast<int>(sendType));
-    HCCL_VM_INFO("recvType = {}", static_cast<int>(recvType));
+    HCCL_VM_INFO("sendType = {}", GetDataTypeStr(sendType));
+    HCCL_VM_INFO("recvType = {}", GetDataTypeStr(recvType));
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
  
@@ -495,12 +495,12 @@ HcclResult HcclAlltoAllV(const void *sendBuf, const void *sendCounts, const void
     // auto outDataSize = DATA_TYPE_SIZE_MAP.at(recvType);
     uint32_t inDataSize = 0;
     if (sim::GetDataTypeSize(sendType, inDataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAllV send type calc size", static_cast<uint16_t>(sendType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAllV send type calc size", GetDataTypeStr(sendType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint32_t outDataSize = 0;
     if (sim::GetDataTypeSize(recvType, outDataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAllV recv type calc size", static_cast<uint16_t>(recvType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAlltoAllV recv type calc size", GetDataTypeStr(recvType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint64_t inCountTotal = 0;
@@ -566,7 +566,7 @@ HcclResult HcclAllGather(void *sendBuf, void *recvBuf, uint64_t sendCount, HcclD
     HCCL_VM_INFO("sendBuf = {:p}", sendBuf);
     HCCL_VM_INFO("recvBuf = {:p}", recvBuf);
     HCCL_VM_INFO("sendCount = {}", sendCount);
-    HCCL_VM_INFO("dataType = {}", static_cast<int>(dataType));
+    HCCL_VM_INFO("dataType = {}", GetDataTypeStr(dataType));
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
  
@@ -576,7 +576,7 @@ HcclResult HcclAllGather(void *sendBuf, void *recvBuf, uint64_t sendCount, HcclD
     // auto dataSize = DATA_TYPE_SIZE_MAP.at(dataType);
     uint32_t dataSize = 0;
     if (sim::GetDataTypeSize(dataType, dataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAllGather calc size", static_cast<uint16_t>(dataType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAllGather calc size", GetDataTypeStr(dataType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint64_t inputSize = static_cast<uint64_t>(dataSize) * sendCount;
@@ -613,7 +613,7 @@ HcclResult HcclAllGatherV(void *sendBuf, uint64_t sendCount, void *recvBuf,
     HCCL_VM_INFO("recvBuf = {:p}", recvBuf);
     HCCL_VM_INFO("recvCounts = {:p}", recvCounts);
     HCCL_VM_INFO("recvDispls = {:p}", recvDispls);
-    HCCL_VM_INFO("dataType = {}", static_cast<int>(dataType));
+    HCCL_VM_INFO("dataType = {}", GetDataTypeStr(dataType));
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
 
@@ -638,7 +638,7 @@ HcclResult HcclAllGatherV(void *sendBuf, uint64_t sendCount, void *recvBuf,
 
     uint32_t dataSize = 0;
     if (sim::GetDataTypeSize(dataType, dataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAllGatherV calc size", static_cast<uint16_t>(dataType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAllGatherV calc size", GetDataTypeStr(dataType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     const uint64_t inputSize = sendCount * dataSize;
@@ -674,7 +674,7 @@ HcclResult HcclBroadcast(
     HCCL_VM_INFO("HcclBroadcast called with parameters:");
     HCCL_VM_INFO("buf = {:p}", buf);
     HCCL_VM_INFO("count = {}", count);
-    HCCL_VM_INFO("dataType = {}", static_cast<int>(dataType));
+    HCCL_VM_INFO("dataType = {}", GetDataTypeStr(dataType));
     HCCL_VM_INFO("root = {}", root);
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
@@ -685,7 +685,7 @@ HcclResult HcclBroadcast(
     // auto dataSize = DATA_TYPE_SIZE_MAP.at(dataType);
     uint32_t dataSize = 0;
     if (sim::GetDataTypeSize(dataType, dataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclBroadcast calc size", static_cast<uint16_t>(dataType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclBroadcast calc size", GetDataTypeStr(dataType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint64_t size = static_cast<uint64_t>(dataSize) * count;
@@ -716,15 +716,15 @@ HcclResult HcclAllReduce(void *sendBuf, void *recvBuf, uint64_t count, HcclDataT
     HcclComm comm, aclrtStream stream)
 {
     if (CheckDataAndReduceOpType(dataType, op) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} or reduce {} op for HcclAllReduce", static_cast<uint16_t>(dataType), static_cast<uint16_t>(op));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} or reduce {} op for HcclAllReduce", GetDataTypeStr(dataType), GetReduceOpStr(op));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     HCCL_VM_INFO("HcclAllReduce called with parameters:");
     HCCL_VM_INFO("sendBuf = {:p}", sendBuf);
     HCCL_VM_INFO("recvBuf = {:p}", recvBuf);
     HCCL_VM_INFO("count = {}", count);
-    HCCL_VM_INFO("dataType = {}", static_cast<int>(dataType));
-    HCCL_VM_INFO("op = {}", static_cast<int>(op));
+    HCCL_VM_INFO("dataType = {}", GetDataTypeStr(dataType));
+    HCCL_VM_INFO("op = {}", GetReduceOpStr(op));
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
  
@@ -734,7 +734,7 @@ HcclResult HcclAllReduce(void *sendBuf, void *recvBuf, uint64_t count, HcclDataT
     // auto dataSize = DATA_TYPE_SIZE_MAP.at(dataType);
     uint32_t dataSize = 0;
     if (sim::GetDataTypeSize(dataType, dataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAllReduce calc size", static_cast<uint16_t>(dataType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclAllReduce calc size", GetDataTypeStr(dataType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint64_t size = static_cast<uint64_t>(dataSize) * count;
@@ -766,7 +766,7 @@ HcclResult HcclScatter(void *sendBuf, void *recvBuf, uint64_t recvCount, HcclDat
     HCCL_VM_INFO("sendBuf = {:p}", sendBuf);
     HCCL_VM_INFO("recvBuf = {:p}", recvBuf);
     HCCL_VM_INFO("recvCount = {}", recvCount);
-    HCCL_VM_INFO("dataType = {}", static_cast<int>(dataType));
+    HCCL_VM_INFO("dataType = {}", GetDataTypeStr(dataType));
     HCCL_VM_INFO("root = {}", root);
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
@@ -777,7 +777,7 @@ HcclResult HcclScatter(void *sendBuf, void *recvBuf, uint64_t recvCount, HcclDat
     // auto dataSize = DATA_TYPE_SIZE_MAP.at(dataType);
     uint32_t dataSize = 0;
     if (sim::GetDataTypeSize(dataType, dataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclScatter calc size", static_cast<uint16_t>(dataType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclScatter calc size", GetDataTypeStr(dataType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint64_t inputValueSize = 0;
@@ -831,15 +831,15 @@ HcclResult HcclReduce(void *sendBuf, void *recvBuf, uint64_t count, HcclDataType
     uint32_t root, HcclComm comm, aclrtStream stream)
 {
     if (CheckDataAndReduceOpType(dataType, op) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} or reduce {} op for HcclReduce", static_cast<uint16_t>(dataType), static_cast<uint16_t>(op));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} or reduce {} op for HcclReduce", GetDataTypeStr(dataType), GetReduceOpStr(op));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     HCCL_VM_INFO("HcclReduce called with parameters:");
     HCCL_VM_INFO("sendBuf = {:p}", sendBuf);
     HCCL_VM_INFO("recvBuf = {:p}", recvBuf);
     HCCL_VM_INFO("count = {}", count);
-    HCCL_VM_INFO("dataType = {}", static_cast<int>(dataType));
-    HCCL_VM_INFO("reduce op = {}", static_cast<int>(op));
+    HCCL_VM_INFO("dataType = {}", GetDataTypeStr(dataType));
+    HCCL_VM_INFO("reduce op = {}", GetReduceOpStr(op));
     HCCL_VM_INFO("root = {}", root);
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
@@ -850,7 +850,7 @@ HcclResult HcclReduce(void *sendBuf, void *recvBuf, uint64_t count, HcclDataType
     // auto dataSize = DATA_TYPE_SIZE_MAP.at(dataType);
     uint32_t dataSize = 0;
     if (sim::GetDataTypeSize(dataType, dataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclReduce calc size", static_cast<uint16_t>(dataType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclReduce calc size", GetDataTypeStr(dataType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint64_t size = static_cast<uint64_t>(dataSize) * count;
@@ -882,7 +882,7 @@ HcclResult HcclReduceScatter(void *sendBuf, void *recvBuf, uint64_t recvCount, H
     HcclComm comm, aclrtStream stream)
 {
     if (CheckDataAndReduceOpType(dataType, op) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} or reduce {} op for HcclReduceScatter", static_cast<uint16_t>(dataType), static_cast<uint16_t>(op));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} or reduce {} op for HcclReduceScatter", GetDataTypeStr(dataType), GetReduceOpStr(op));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     HCCL_VM_INFO("HcclReduceScatter called with parameters:");
@@ -899,7 +899,7 @@ HcclResult HcclReduceScatter(void *sendBuf, void *recvBuf, uint64_t recvCount, H
     // 注册input、output buffer
     uint32_t dataSize = 0;
     if (sim::GetDataTypeSize(dataType, dataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclReduceScatter calc size", static_cast<uint16_t>(dataType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclReduceScatter calc size", GetDataTypeStr(dataType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     uint64_t inputSize = static_cast<uint64_t>(dataSize) * recvCount * rankSize;
@@ -931,7 +931,7 @@ HcclResult HcclReduceScatterV(void *sendBuf, const void *sendCounts, const void 
     void *recvBuf, uint64_t recvCount, HcclDataType dataType, HcclReduceOp op, HcclComm comm, aclrtStream stream)
 {
     if (CheckDataAndReduceOpType(dataType, op) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} or reduce {} op for HcclReduceScatterV", static_cast<uint16_t>(dataType), static_cast<uint16_t>(op));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} or reduce {} op for HcclReduceScatterV", GetDataTypeStr(dataType), GetReduceOpStr(op));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     HCCL_VM_INFO("HcclReduceScatterV called with parameters:");
@@ -940,8 +940,8 @@ HcclResult HcclReduceScatterV(void *sendBuf, const void *sendCounts, const void 
     HCCL_VM_INFO("sendDispls = {:p}", sendDispls);
     HCCL_VM_INFO("recvBuf = {:p}", recvBuf);
     HCCL_VM_INFO("recvCount = {}", recvCount);
-    HCCL_VM_INFO("dataType = {}", static_cast<int>(dataType));
-    HCCL_VM_INFO("reduce op = {}", static_cast<int>(op));
+    HCCL_VM_INFO("dataType = {}", GetDataTypeStr(dataType));
+    HCCL_VM_INFO("reduce op = {}", GetReduceOpStr(op));
     HCCL_VM_INFO("comm = {:p}", comm);
     HCCL_VM_INFO("stream = {:p}", stream);
 
@@ -966,7 +966,7 @@ HcclResult HcclReduceScatterV(void *sendBuf, const void *sendCounts, const void 
 
     uint32_t dataSize = 0;
     if (sim::GetDataTypeSize(dataType, dataSize) != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclReduceScatterV calc size", static_cast<uint16_t>(dataType));
+        HCCL_VM_ERROR("HCCL_VM not support data type {} for HcclReduceScatterV calc size", GetDataTypeStr(dataType));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
     const uint64_t inputSize = totalSendCount * dataSize;

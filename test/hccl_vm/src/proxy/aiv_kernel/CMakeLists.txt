@@ -30,10 +30,25 @@ message(STATUS "HCCL_CODE_ROOT: ${HCCL_CODE_ROOT}")
 set(AIV_KERNEL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 MESSAGE(STATUS "AIV_KERNEL_DIR: " ${AIV_KERNEL_DIR})
 
+set(HCCL_AIV_DEFINES
+        ${HCCL_CODE_ROOT}/src/ops/op_common/template/aiv/aiv_defines.h)
+if(NOT EXISTS ${HCCL_AIV_DEFINES})
+    message(FATAL_ERROR "HCCL aiv_defines.h not found: ${HCCL_AIV_DEFINES}")
+endif()
+
+set(AIV_SHADOW_DIR ${CMAKE_CURRENT_BINARY_DIR}/hccl_shadow)
+file(MAKE_DIRECTORY ${AIV_SHADOW_DIR})
+file(CREATE_LINK
+        ${HCCL_AIV_DEFINES}
+        ${AIV_SHADOW_DIR}/aiv_defines.h
+        SYMBOLIC)
+message(STATUS "AIV_SHADOW_DIR: ${AIV_SHADOW_DIR}")
+
 set(AIV_KERNEL_STUB_INCLUDE_LIST
         ${AIV_KERNEL_DIR}/aiv_mode_stub
         ${AIV_KERNEL_DIR}/ascendc_stub
         ${AIV_KERNEL_DIR}/hccl_op_stub
+        ${AIV_SHADOW_DIR}
 
         ${HCCL_VM_INCLUDE}
 
@@ -41,6 +56,7 @@ set(AIV_KERNEL_STUB_INCLUDE_LIST
         ${THRID_PARTY_DIR}/nlohmann_json
         ${THRID_PARTY_DIR}/dbg_macro   # for debug
 
+        ${ASCEND_CANN_PACKAGE_PATH}/include
         ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
 )
 

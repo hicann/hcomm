@@ -13,16 +13,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -D_GLIBCXX_USE_CXX11_ABI=0")
 
-add_subdirectory(cmd)
-add_subdirectory(device_arm)
-add_subdirectory(plugin)
-add_subdirectory(proxy)
-add_subdirectory(runnerdb)
-add_subdirectory(store)
-add_subdirectory(src_root)
-add_subdirectory(hccl_plugin_manager)
-add_subdirectory(utils)
-
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/stub_headers
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
@@ -43,6 +33,16 @@ include_directories(
     ${HCOMM_VM_ROOT_PATH}/hccl_host/hccl_cmd
     ${HCOMM_VM_ROOT_PATH}/src/proxy
 )
+
+add_subdirectory(cmd)
+add_subdirectory(device_arm)
+add_subdirectory(plugin)
+add_subdirectory(proxy)
+add_subdirectory(runnerdb)
+add_subdirectory(store)
+add_subdirectory(src_root)
+add_subdirectory(hccl_plugin_manager)
+add_subdirectory(utils)
 
 enable_testing()
 add_test(NAME hccl_host_test COMMAND hccl_host_test)

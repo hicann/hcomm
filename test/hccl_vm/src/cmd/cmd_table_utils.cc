@@ -37,9 +37,9 @@ void CmdTableShow(std::string &tableName)
 {
     if (tableName == "Device") {
         auto tables = RunnerDB::GetByPred<sim::Device>([](auto &&) { return true; });
-        PrintTable<sim::Device>("| id | server_id | logic_id | physical_id | super_device_id | overflow_mode | soc_version | status |",
+        PrintTable<sim::Device>("| id | server_id | user_id | logic_id | physical_id | super_device_id | overflow_mode | soc_version | status |",
                                 tables, [](const sim::Device &d) {
-                                    return "| " + std::to_string(d.id) + " | " + std::to_string(d.server_id) + " | " +
+                                    return "| " + std::to_string(d.id) + " | " + std::to_string(d.server_id) + " | " + std::to_string(d.user_id) + " | " +
                                         std::to_string(d.logic_id) + " | " + std::to_string(d.physical_id) + " | " +
                                         std::to_string(d.super_device_id) + " | " +
                                         std::to_string(d.overflow_mode) + " | " + std::string(d.soc_version) +

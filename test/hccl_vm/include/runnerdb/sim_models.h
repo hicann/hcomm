@@ -50,6 +50,7 @@ typedef struct {
 typedef struct {
     uint64_t id;         // PK
     uint32_t server_id;  // FK
+    uint32_t user_id{0xFFFF};
     uint32_t logic_id{0xFFFF};
     uint32_t physical_id;
     uint32_t super_device_id;

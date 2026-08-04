@@ -21,7 +21,7 @@ namespace sim {
 aclError GetDeviceByLogicId(uint32_t deviceId, sim::Device &device);
 aclError GetDeviceByRankId(uint32_t rankId, sim::Device &device);
 aclError GetDeviceByPhysicalId(uint32_t deviceId, sim::Device &device);
-aclError UpdateDeviceLogicId(uint64_t serverKey, uint32_t phyDevId, uint32_t logicDevId);
+aclError UpdateDeviceLogicId(uint64_t serverKey, uint32_t phyDevId, uint32_t logicDevId, uint32_t userId);
 aclError UpdateSuperDeviceId(uint32_t logicDevId, uint32_t superDeviceId);
 aclError GetCcuFromDeviceByDieId(uint64_t deviceKey, uint8_t dieId, sim::Ccu &ccu);
 aclError GetCcuResourceByCcu(uint64_t ccuKey, sim::CcuResource &ccuRes);

@@ -18,7 +18,6 @@ else()
         file(DOWNLOAD
             ${CLI11_URL}
             ${CLI11_PKG_PATH}
-            TLS_VERIFY OFF
             STATUS _dl_status
             TIMEOUT 600
         )

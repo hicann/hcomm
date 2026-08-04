@@ -446,14 +446,14 @@ int RaSocketSend(const void *fdHandle, const void *data, unsigned long long size
     std::string socketKey;
     GetRaSendSocketkeyByFd(socketFd, socketKey);
 
-    int ret = sim::CommunicationMemoryManager::GetInstance().WriteCommMem(socketKey.data(), data, size);
-    if (ret != 0) {
+    int64_t ret = sim::CommunicationMemoryManager::GetInstance().WriteCommMem(socketKey.data(), data, size);
+    if (ret == -1) {
         HCCL_VM_ERROR(" cannot pair socket:{:d} role:{:d}, key={}", FD_PAIR_ID(socketFd),
                       FD_ROLE(socketFd), socketKey);
         return -1;
     }
 
-    *sentSize = size;
+    *sentSize = ret;
     HCCL_VM_INFO(" pair socket:{:d} role:{:d} key={} Send:{:d}", FD_PAIR_ID(socketFd),
         FD_ROLE(socketFd), socketKey.data(), size);
 
@@ -470,7 +470,6 @@ int RaSocketRecv(const void *fdHandle, void *data, unsigned long long size, unsi
     if (ret == 0) {
         HCCL_VM_WARN(" socket pair:{:d} role:{:d}, key={} read try again",
                         FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
         return SOCK_EAGAIN;
     } else if (ret == -1) {
         HCCL_VM_ERROR(" socket pair:{:d} role:{:d}, key={} recv failed",
@@ -568,7 +567,8 @@ int RaSocketRecvAsync(const void *fdHandle, void *data, unsigned long long size,
     if (ret == 0) {
         HCCL_VM_WARN(" socket pair:{:d} role:{:d} key:{} try again",
                     FD_PAIR_ID(socketFd), FD_ROLE(socketFd), socketKey);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        *receivedSize = 0;
         return 0;
     } else if (ret == -1) {
         HCCL_VM_ERROR(" socket pair:{:d} role:{:d} key:{} recv failed",

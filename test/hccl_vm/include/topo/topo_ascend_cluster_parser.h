@@ -62,7 +62,7 @@ private:
     ~AscendClusterTopoParser() = default;
 private:
     HcclVmResult InitClusterStaticTopoData();
-    HcclVmResult InitDynamicModelData(uint64_t serverKey, uint32_t rankId, uint32_t logicDevId, uint32_t phyDevId);
+    HcclVmResult InitDynamicModelData(const TopoMeta& topoMeta);
     HcclVmResult BuildLevelList(const Server &server, int srcDevPhyId,
                                 const std::set<int> &commDomainLocalIds,
                                 uint32_t spIdx, uint32_t srvIdx,

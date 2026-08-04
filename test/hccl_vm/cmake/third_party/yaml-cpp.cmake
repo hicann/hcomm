@@ -53,7 +53,6 @@ if(NOT yaml_cpp_FOUND)
     include(ExternalProject)
     ExternalProject_Add(third_party_yaml_cpp
         URL ${YAMLCPP_PROJECT_URL}
-        TLS_VERIFY OFF
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}/third_party
         DOWNLOAD_NO_PROGRESS TRUE

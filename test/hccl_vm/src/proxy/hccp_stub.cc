@@ -927,13 +927,13 @@ int RaGetDevBaseAttr(void *ctxHandle, struct DevBaseAttr *attr)
         priorityInfo.tpType.bs.rtp = 1;
     }
 
-    attr->sqMaxDepth = 1024;
-    attr->rqMaxDepth = 1024;
-    attr->sqMaxSge = 8;
-    attr->rqMaxSge = 8;
-    attr->maxReadSize = 1024 * 1024;
-    attr->maxWriteSize = 1024 * 1024;
-    attr->maxMsgSize = 2ULL * 1024 * 1024 * 1024;
+    attr->sqMaxDepth = 8192;                // max_jfs_depth
+    attr->rqMaxDepth = 32768;               // max_jfr_depth
+    attr->sqMaxSge = 13;                    // max_jfs_sge
+    attr->rqMaxSge = 4;                     // max_jfr_sge
+    attr->maxReadSize = 256 * 1024 * 1024;  // max_read_size
+    attr->maxWriteSize = 256 * 1024 * 1024; // max_write_size
+    attr->maxMsgSize = 65536;               // max_msg_size
 
     return 0;
 }

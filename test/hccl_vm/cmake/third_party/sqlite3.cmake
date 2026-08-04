@@ -10,33 +10,28 @@ message(STATUS "[ThirdParty] SQLITE3_VERSION_NUM=${SQLITE3_VERSION_NUM}")
 message(STATUS "[ThirdParty] SQLITE3_URL=${SQLITE3_URL}")
 message(STATUS "[ThirdParty] SQLITE3_TARGET_DIR=${SQLITE3_TARGET_DIR}")
 
-# 缓存命中：源码目录已存在
-if(EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.c" AND EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.h")
-    message(STATUS "[ThirdParty] SQLite3 source already available in ${SQLITE3_TARGET_DIR}")
-    return()
-endif()
-
-# 获取 zip：优先用本地缓存，否则在线下载
-if(NOT EXISTS "${SQLITE3_PKG_PATH}")
-    message(STATUS "[ThirdParty] Downloading SQLite3 from ${SQLITE3_URL}")
-    file(DOWNLOAD
-        ${SQLITE3_URL}
-        ${SQLITE3_PKG_PATH}
-        TLS_VERIFY OFF
-        STATUS _dl_status
-        TIMEOUT 600
-    )
-    list(GET _dl_status 0 _dl_code)
-    if(NOT _dl_code EQUAL 0)
-        message(FATAL_ERROR
-            "[ThirdParty] Failed to download SQLite3 archive (${_dl_status}).\n"
-            "URL: ${SQLITE3_URL}\n"
-            "You can manually download and place the zip at: ${SQLITE3_PKG_PATH}")
+# 缓存命中：源码目录已存在，跳过下载/解压；否则下载并解压
+if(NOT (EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.c" AND EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.h"))
+    # 获取 zip：优先用本地缓存，否则在线下载
+    if(NOT EXISTS "${SQLITE3_PKG_PATH}")
+        message(STATUS "[ThirdParty] Downloading SQLite3 from ${SQLITE3_URL}")
+        file(DOWNLOAD
+            ${SQLITE3_URL}
+            ${SQLITE3_PKG_PATH}
+            STATUS _dl_status
+            TIMEOUT 600
+        )
+        list(GET _dl_status 0 _dl_code)
+        if(NOT _dl_code EQUAL 0)
+            message(FATAL_ERROR
+                "[ThirdParty] Failed to download SQLite3 archive (${_dl_status}).\n"
+                "URL: ${SQLITE3_URL}\n"
+                "You can manually download and place the zip at: ${SQLITE3_PKG_PATH}")
+        endif()
+        message(STATUS "[ThirdParty] SQLite3 archive saved to ${SQLITE3_PKG_PATH}")
+    else()
+        message(STATUS "[ThirdParty] Found local SQLite3 package: ${SQLITE3_PKG_PATH}")
     endif()
-    message(STATUS "[ThirdParty] SQLite3 archive saved to ${SQLITE3_PKG_PATH}")
-else()
-    message(STATUS "[ThirdParty] Found local SQLite3 package: ${SQLITE3_PKG_PATH}")
-endif()
 
 # 解压
 set(_sqlite3_extract_dir "${CMAKE_BINARY_DIR}/_sqlite3_tmp")
@@ -62,3 +57,4 @@ if(NOT EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.c" OR NOT EXISTS "${SQLITE3_TARGET_
         "Missing sqlite3.c or sqlite3.h in ${SQLITE3_TARGET_DIR}")
 endif()
 message(STATUS "[ThirdParty] SQLite3 source extracted to ${SQLITE3_TARGET_DIR}")
+endif()

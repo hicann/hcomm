@@ -18,6 +18,9 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/third_party
     ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json
     ${CMAKE_SOURCE_DIR}/third_party/yaml-cpp/include
+    ${CMAKE_SOURCE_DIR}/third_party/spdlog
+    ${ASCEND_CANN_PACKAGE_PATH}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
 )
 
 link_libraries(

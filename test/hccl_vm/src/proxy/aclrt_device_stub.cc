@@ -80,7 +80,24 @@ aclError aclrtSetDevice(int32_t deviceId)
         uint64_t servId = 0;
         if (!sim::GetRankIdByMPI(rankId, servId)) {
             HCCL_VM_ERROR("get rankId by MPI fail servId:{:d}", servId);
-            return 0;
+            return ACL_ERROR_INVALID_PARAM;
+        }
+
+        // 查询 Rank 表，获取该 rankId 期望的 device
+        auto rankEntry = RunnerDB::GetOneByPred<sim::Rank>([rankId](const sim::Rank &r) {
+            return r.rank_id == rankId;
+        });
+        if (rankEntry.second) {
+            auto rankDevice = RunnerDB::GetById<sim::Device>(rankEntry.first.device_id);
+            if (rankDevice.has_value() && rankDevice->logic_id != (uint32_t)deviceId) {
+                HCCL_VM_ERROR(
+                    "Rank-to-device mismatch detected! rank {} expected logicId={}, "
+                    "but application called aclrtSetDevice({}). "
+                    "This may indicate the MPI scheduling strategy has changed. "
+                    "Please verify your MPI launch configuration (e.g., hostfile order, "
+                    "scheduling policy) matches the round-robin convention assumed by ranktable.json.",
+                    rankId, rankDevice->logic_id, deviceId);
+            }
         }
 
         sim::Device device{};
@@ -92,7 +109,6 @@ aclError aclrtSetDevice(int32_t deviceId)
  	             return ACL_ERROR_INVALID_PARAM;
         }
         device = ret.first;
-        HCCL_VM_DEBUG("logicId:{:d} serverId:{:d} key:{:d}", device.logic_id, serverId, device.id);
 
         uint64_t deviceKey = device.id;
         SetDevIdPayload payload{};
@@ -873,6 +889,12 @@ struct rtDevResInfo;
 rtError_t rtReleaseDevResAddress(rtDevResInfo * const resInfo)
 {
     (void) resInfo;
+    return ACL_SUCCESS;
+}
+
+aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevid, int32_t *const logicDevId)
+{
+    *logicDevId = userDevid;
     return ACL_SUCCESS;
 }
 

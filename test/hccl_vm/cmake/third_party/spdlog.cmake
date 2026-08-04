@@ -19,7 +19,6 @@ if(NOT EXISTS "${SPDLOG_PKG_PATH}")
     file(DOWNLOAD
         ${SPDLOG_URL}
         ${SPDLOG_PKG_PATH}
-        TLS_VERIFY OFF
         STATUS _dl_status
         TIMEOUT 600
     )

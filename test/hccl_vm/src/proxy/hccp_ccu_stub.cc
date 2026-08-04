@@ -522,6 +522,14 @@ int RaGetDevEidInfoList(struct RaInfo info, struct HccpDevEidInfo infoList[], un
         infoList[idx].chipId = info.phyId; // todo: 单server, logic id与rank id相等，但多server此处有问题。
         infoList[idx].dieId = endPoints[idx].die_id;
         memcpy(infoList[idx].eid.raw, endPoints[idx].eid, sizeof(endPoints[idx].eid));
+
+        Eid eid{};
+        for (uint32_t i = 0; i < URMA_EID_LEN; i++) {
+            eid.raw[i] = endPoints[idx].eid[i];
+        }
+        IpAddress addr(eid);
+        auto ipAddr = addr.GetIpStr().substr(2);
+        HCCL_VM_INFO("ipAddr: {}, phyId: {}, serverKey=: {}", ipAddr, info.phyId, g_cur_server_key);
     }
 
     return 0;

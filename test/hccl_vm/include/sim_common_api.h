@@ -12,6 +12,7 @@
 #define SIM_COMMON_API_H
 
 #include <string>
+#include "hccl/hccl_types.h"
 
 class InstallPath {
 public:
@@ -25,5 +26,9 @@ public:
     //        - 空字符串原样返回
     static std::string ResolveToInstallRoot(const std::string& relPath);
 };
+
+std::string GetDataTypeStr(HcclDataType type);
+
+std::string GetReduceOpStr(HcclReduceOp op);
 
 #endif // SIM_COMMON_API_H

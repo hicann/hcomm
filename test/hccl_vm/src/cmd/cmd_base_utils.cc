@@ -1047,9 +1047,13 @@ HcclVmResult ClearDbTables()
     return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD; 
 } 
 
+extern uint64_t g_cur_server_key;
+
 HcclVmResult HcclVmResetCommDomain() 
 { 
     AscendClusterTopoParser::GetInstance().SetClusterStatus(HvmClusterStatus::COMM_DOMAIN_UNINIT); 
+    // 重置 Host 进程中缓存的 server key，防止跨用例残留
+    g_cur_server_key = 0;
     // 重置device的逻辑ID 
     auto ret2 = sim::ResetAllDeviceLogicId(); 
     if (!ret2) { 

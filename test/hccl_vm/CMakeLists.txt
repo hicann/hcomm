@@ -91,6 +91,7 @@ include(cmake/third_party/nlohmann_json.cmake)
 include(cmake/third_party/cli11.cmake)
 include(cmake/third_party/spdlog.cmake)
 include(cmake/third_party/sqlite3.cmake)
+include(cmake/third_party/cann_cmake.cmake)
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json

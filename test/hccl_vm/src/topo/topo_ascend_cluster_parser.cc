@@ -162,19 +162,28 @@ HcclVmResult AscendClusterTopoParser::InitCommunicationDomain(const TopoMeta& to
 {
     HCCL_VM_DEBUG("Enter InitCommunicationDomain");
 
-    uint32_t rankId = 0;
+    // 第一步：初始化所有 server 上的 Device（logic_id = physical_id，保持不变）
     for (uint32_t superPodIdx = 0; superPodIdx < topoMeta.size(); ++superPodIdx) {
         auto superPod = topoMeta[superPodIdx];
         for (uint32_t serverIdx = 0; serverIdx < superPod.size(); ++serverIdx) {
             auto server = superPod[serverIdx];
-            auto logicDevId = 0;
             auto serverKey = sim::GetServerKeyById(superPodIdx, serverIdx);
             for (uint32_t deviceIdx = 0; deviceIdx < server.size(); ++deviceIdx) {
-                if (InitDynamicModelData(serverKey, rankId++, logicDevId++, server[deviceIdx]) != HcclVmResult::HCCL_SIM_SUCCESS) {
+                // logic_id = physical_id = deviceIdx，按顺序递增
+                // todo: 暂时不考虑容器场景，userId == logicDevId
+                auto userId = deviceIdx;
+                if (sim::UpdateDeviceLogicId(serverKey, deviceIdx, deviceIdx, userId) != ACL_SUCCESS) {
+                    HCCL_VM_ERROR("update device logic id by serverKey {:d} failed", serverKey);
                     return HcclVmResult::HCCL_SIM_E_INTERNAL;
                 }
             }
         }
+    }
+
+    // 第二步：按 rankId % deviceCount 的逻辑创建 Rank 表
+    if (InitDynamicModelData(topoMeta) != HcclVmResult::HCCL_SIM_SUCCESS) {
+        HCCL_VM_ERROR("init dynamic model data failed");
+        return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
 
     // 通信域未初始化，则需创建ranktable.json文件
@@ -190,45 +199,56 @@ HcclVmResult AscendClusterTopoParser::InitCommunicationDomain(const TopoMeta& to
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult AscendClusterTopoParser::InitDynamicModelData(uint64_t serverKey, uint32_t rankId, uint32_t logicDevId, uint32_t phyDevId)
+HcclVmResult AscendClusterTopoParser::InitDynamicModelData(const TopoMeta& topoMeta)
 {
-    HCCL_VM_DEBUG("Enter InitDynamicModelData: {}, {}, {}, {}", serverKey, rankId, logicDevId, phyDevId);
+    // 应用通过 aclrtSetDevice(rank % deviceCount) 选择 device，Rank 表需与之匹配
+    uint32_t rankId = 0;
+    for (uint32_t superPodIdx = 0; superPodIdx < topoMeta.size(); ++superPodIdx) {
+        auto superPod = topoMeta[superPodIdx];
+        for (uint32_t serverIdx = 0; serverIdx < superPod.size(); ++serverIdx) {
+            auto server = superPod[serverIdx];
+            auto serverKey = sim::GetServerKeyById(superPodIdx, serverIdx);
+            uint32_t deviceCount = server.size();
+            for (uint32_t deviceIdx = 0; deviceIdx < deviceCount; ++deviceIdx) {
+                // rankId % deviceCount 是应用实际选择的 logicDevId
+                uint32_t targetLogicDevId = rankId % deviceCount;
+                // 查找该 server 上 logic_id == targetLogicDevId 的 Device
+                auto devRet = RunnerDB::GetOneByPred<sim::Device>(
+                    [serverKey, targetLogicDevId](const sim::Device &d) {
+                        return d.server_id == serverKey && d.logic_id == targetLogicDevId;
+                    });
+                if (!devRet.second) {
+                    HCCL_VM_ERROR("device not found: serverKey={}, logicDevId={}", serverKey, targetLogicDevId);
+                    return HcclVmResult::HCCL_SIM_E_INTERNAL;
+                }
+                auto deviceKey = devRet.first.id;
 
-    auto ret = RunnerDB::GetOneByPred<sim::Device>([phyDevId, serverKey](const sim::Device &d) {
-        return d.physical_id == phyDevId && d.server_id == serverKey;
-    });
-    if (!ret.second) {
-        HCCL_VM_ERROR("cannot find device by physical id {:d}", phyDevId);
-        return HCCL_SIM_E_NOT_FOUND;
-    }
-    auto deviceKey = ret.first.id;
+                // 创建 Rank 表记录
+                sim::Rank rank;
+                rank.rank_id = rankId;
+                rank.device_id = deviceKey;
+                rank.state = 1;
+                RunnerDB::Add<sim::Rank>(rank);
+                HCCL_VM_DEBUG("Init Rank: rankId={}, deviceKey={}, logicDevId={}, phyDevId={}",
+                    rankId, deviceKey, devRet.first.logic_id, devRet.first.physical_id);
 
-    // 查找serverKey
-    HCCL_VM_DEBUG("Update one Device: {}, serverKey= {}, logicDevId= {}, phyDevId= {}", deviceKey, serverKey, logicDevId, phyDevId);
-    if (sim::UpdateDeviceLogicId(serverKey, phyDevId, logicDevId) != ACL_SUCCESS) {
-        HCCL_VM_ERROR("update device logic id by serverKey {:d} failed", serverKey);
-        return HcclVmResult::HCCL_SIM_E_INTERNAL;
-    }
-    // 初始化Rank表
-    sim::Rank rank;
-    rank.rank_id = rankId;
-    rank.device_id = deviceKey;
-    rank.state = 1; // 已初始化
-    RunnerDB::Add<sim::Rank>(rank);
+                // 初始化该 device 关联的 CCU 资源
+                auto deviceAllCcu = RunnerDB::GetByPred<sim::Ccu>([deviceKey](const sim::Ccu& d) {
+                    return d.device_id == deviceKey;
+                });
+                if (deviceAllCcu.empty()) { 
+                    HCCL_VM_ERROR("get device all ccu failed"); 
+                    return HcclVmResult::HCCL_SIM_E_INTERNAL; 
+                }
+                for (const auto& ccu : deviceAllCcu) {
+                    InitCcuResource(ccu.id);
+                }
 
-    // 初始化ccu资源表（按照用到的device初始化）
-    auto deviceAllCcu = RunnerDB::GetByPred<sim::Ccu>([deviceKey](const sim::Ccu& d) {
-        return d.device_id == deviceKey;
-    });
-    if (deviceAllCcu.empty()) {
-        HCCL_VM_ERROR("get device all ccu failed");
-        return HcclVmResult::HCCL_SIM_E_INTERNAL;
+                rankId++;
+            }
+        }
     }
 
-    for (const auto& ccu : deviceAllCcu) {
-        auto ccuKey = ccu.id;
-        InitCcuResource(ccuKey);
-    }
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
@@ -409,7 +429,9 @@ HcclVmResult AscendClusterTopoParser::CreateRankTableFile(const TopoMeta &topoMe
 
             std::set<int> commDomainLocalIds(serverMeta.begin(), serverMeta.end());
 
-            for (PhyDeviceId phyDevId : serverMeta) {
+            for (uint32_t deviceIdx = 0; deviceIdx < serverMeta.size(); ++deviceIdx) {
+                uint32_t logicDevId = rankId % serverMeta.size();
+                PhyDeviceId phyDevId = serverMeta[logicDevId];
                 rankTable["rank_list"].push_back(
                     BuildRankEntry(server, phyDevId, commDomainLocalIds, spIdx, srvIdx, rankId));
                 rankId++;
