@@ -1664,7 +1664,7 @@ HcclResult TransportManager::IsInterServer(const u32 dstRank, bool& isInterServe
             rankInfoList_[dstRank].superDeviceId, remoteRankServerId, ret), HCCL_E_RUNTIME);
         isInterServer = (userRankServerId != remoteRankServerId) || (rankInfoList_[userRank_].superPodId != rankInfoList_[dstRank].superPodId);
         HCCL_INFO("[IsInterServer]localSDID[0x%08x], localdevicePhyId[%d], localServerId[%s], localServerIdBySDID[%d], localSuperPodId[%s], " \
-            "remoteSDID[0x%08x], remotedevicePhyId[%d], remoteRankServerId[%d], remoteServerIdBySDID[%d], remoteSuperPodId[%s], " \
+            "remoteSDID[0x%08x], remotedevicePhyId[%d], remoteRankServerId[%s], remoteServerIdBySDID[%d], remoteSuperPodId[%s], " \
             "isInterServer[%s]",
             rankInfoList_[userRank_].superDeviceId, rankInfoList_[userRank_].devicePhyId, rankInfoList_[userRank_].serverId.c_str(),
             userRankServerId, rankInfoList_[userRank_].superPodId.c_str(), rankInfoList_[dstRank].superDeviceId,
