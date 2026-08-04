@@ -280,6 +280,7 @@ int RaHdcCtxQpImportAsync(struct RaCtxHandle *ctxHandle, struct QpImportInfoT *i
     remQpHandle->devIndex = ctxHandle->devIndex;
     remQpHandle->phyId = ctxHandle->attr.phyId;
     remQpHandle->protocol = ctxHandle->protocol;
+    remQpHandle->qpKey = info->in.key;
     reqHandleTmp->privHandle = (void *)remQpHandle;
 
     ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_IMPORT, phyId, (char *)&asyncData,
@@ -322,7 +323,7 @@ int RaHdcCtxQpUnimportAsync(struct RaCtxRemQpHandle *remQpHandle, void **reqHand
 
     asyncData.txData.phyId = phyId;
     asyncData.txData.devIndex = remQpHandle->devIndex;
-    asyncData.txData.remJettyId = remQpHandle->id;
+    (void)memcpy_s(asyncData.txData.rawRemJettyId, REM_JETTY_ID_SIZE, remQpHandle->qpKey.value, REM_JETTY_ID_SIZE);
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     CHK_PRT_RETURN(reqHandleTmp == NULL,

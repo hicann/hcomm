@@ -108,7 +108,7 @@ int RsCtxQpImport(struct RaRsDevInfo *devInfo, struct RsJettyImportAttr *importA
     return 0;
 }
 
-int RsCtxQpUnimport(struct RaRsDevInfo *devInfo, unsigned int remJettyId)
+int RsCtxQpUnimport(struct RaRsDevInfo *devInfo, unsigned char rawRemJettyId[], unsigned int size)
 {
     return 0;
 }

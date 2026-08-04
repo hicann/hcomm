@@ -496,7 +496,7 @@ int RaPeerCtxQpUnimport(struct RaCtxRemQpHandle *remQpHandle)
 
     RaPeerMutexLock(phyId);
     RsSetCtx(phyId);
-    ret = RsCtxQpUnimport(&devInfo, remQpHandle->id);
+    ret = RsCtxQpUnimport(&devInfo, remQpHandle->qpKey.value, REM_JETTY_ID_SIZE);
     RaPeerMutexUnlock(phyId);
     CHK_PRT_RETURN(ret != 0, hccp_err("[deinit][ra_peer_qp]rs_ctx_qp_unimport failed, ret[%d] phyId[%u]", ret, phyId),
         ret);

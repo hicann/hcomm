@@ -48,7 +48,7 @@ struct RsCtxOps {
     int (*ctxQpDestroyBatch)(struct RaRsDevInfo *devInfo, unsigned int ids[], unsigned int *num);
     int (*ctxQpImport)(struct RaRsDevInfo *devInfo, struct RsJettyImportAttr *importAttr,
         struct RsJettyImportInfo *importInfo);
-    int (*ctxQpUnimport)(struct RaRsDevInfo *devInfo, unsigned int remJettyId);
+    int (*ctxQpUnimport)(struct RaRsDevInfo *devInfo, unsigned char rawRemJettyId[], unsigned int size);
     int (*ctxQpBind)(struct RaRsDevInfo *devInfo, struct RsCtxQpInfo *localQpInfo,
         struct RsCtxQpInfo *remoteQpInfo);
     int (*ctxQpUnbind)(struct RaRsDevInfo *devInfo, unsigned int qpId);
@@ -90,6 +90,7 @@ int RaRsCtxQpDestroy(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
 int RaRsCtxQpDestroyBatch(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsCtxQpImport(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsCtxQpUnimport(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
+int RaRsCtxQpUnimportDeprecated(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsCtxQpBind(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsCtxQpUnbind(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);
 int RaRsCtxUpdateCi(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);

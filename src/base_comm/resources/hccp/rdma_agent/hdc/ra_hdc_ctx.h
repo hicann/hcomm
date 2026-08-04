@@ -282,8 +282,8 @@ union OpCtxQpUnimportData {
     struct {
         unsigned int phyId;
         unsigned int devIndex;
-        unsigned int remJettyId;
-        unsigned int rsvd[RA_RSVD_NUM_6];
+        unsigned char rawRemJettyId[REM_JETTY_ID_SIZE]; // refer to urma_jetty_id_t in struct QpKey
+        unsigned int rsvd;
     } txData;
 
     struct {
