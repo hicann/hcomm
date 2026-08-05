@@ -1741,7 +1741,8 @@ HcclResult HcclCommInitRootInfoConfigV2(uint32_t nRanks, const HcclRootInfo *roo
     HcclUs startut = TIME_NOW();
     CHK_PTR_NULL(rootInfo);
     CHK_PTR_NULL(config);
-    HCCL_RUN_INFO("Entry-HcclCommInitRootInfoConfig V950: nRanks[%u], rank[%u], commEngine[%u]", nRanks, rank, config->hcclOpExpansionMode);
+    HCCL_RUN_INFO("Entry-HcclCommInitRootInfoConfig V950: nRanks[%u], rank[%u], commEngine[%s]", nRanks, rank,
+        HcclAccelerator(static_cast<HcclAccelerator::Value>(config->hcclOpExpansionMode)).Describe().c_str());
     // 获取rootHandle
     HcclRootHandleV2 rootHandle{};
     s32 sRet = memcpy_s(&rootHandle, sizeof(rootHandle), rootInfo->internal, sizeof(rootHandle));
