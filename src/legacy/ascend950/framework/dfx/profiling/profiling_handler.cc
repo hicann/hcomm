@@ -100,7 +100,7 @@ void ProfilingHandler::ReportHostApi(OpType opType, uint64_t beginTime, uint64_t
     }
     uint64_t          cmdItemId  = DlProfFunction::GetInstance().dlMsprofStr2Id(profName.c_str(), profName.length());
     if (enableHostApi_) {
-        ReportAclApi(opType, beginTime, endTime, cmdItemId, threadId);
+        ReportAclApi(opType, beginTime, endTime, cmdItemId, threadId, cachedReq);
     }
     ReportNodeApi(beginTime, endTime, cmdItemId, threadId, cachedReq);
     ReportNodeBasicInfo(endTime, cmdItemId, threadId, cachedReq);
@@ -822,7 +822,7 @@ void ProfilingHandler::GetCcuWaitSignalInfo(const TaskInfo &taskInfo, const CcuP
     ReportAdditionInfo(reporterData);
 }
 
-void ProfilingHandler::ReportAclApi(uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId) const
+void ProfilingHandler::ReportAclApi(uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
 {
     MsprofApi reporterData{};
     reporterData.level = MSPROF_REPORT_ACL_LEVEL;
@@ -831,6 +831,12 @@ void ProfilingHandler::ReportAclApi(uint32_t cmdType, uint64_t beginTime, uint64
     reporterData.beginTime = beginTime;
     reporterData.endTime = endTime;
     reporterData.itemId = cmdItemId;
+
+    if(cachedReq) {
+        std::lock_guard<std::mutex> lock(cachedAclApiInfoMutex_);
+        HCCL_INFO("ReportAclApi MSPROF_REPORT_ACL_LEVEL type[%d] beginTime[%llu]", reporterData.type, reporterData.beginTime);
+        cachedAclApiInfo_.push(reporterData);
+    }
 
     s32 ret = DlProfFunction::GetInstance().dlMsprofReportApi(1, &reporterData);
     HCCL_INFO("[ProfilingHandler][ReportAclApi], reporterData data is: level[%u], type[%u], threadId[%u], "
@@ -1013,6 +1019,7 @@ void ProfilingHandler::StartHostApiSubscribe()
     CallProfRegHostApi();
     ReportStoragedCompactInfo();
     ReportMc2AdditionInfo();
+    ReportStoragedAclApi();
     HCCL_RUN_INFO("SetHostApiSubscribe:[%d]", enableHostApi_);
 }
 
@@ -1137,6 +1144,23 @@ void ProfilingHandler::ReportStoragedTaskApi()
         while (!tempTaskApi.empty()) {
             MsprofApi reportData = tempTaskApi.front();
             tempTaskApi.pop();
+            s32 ret = DlProfFunction::GetInstance().dlMsprofReportApi(0, &reportData);
+            if (ret != 0) {
+                THROW<InternalException>("Call dlMsprofReportApi failed, return[%d]", ret);
+            }
+        }
+    }
+}
+
+void ProfilingHandler::ReportStoragedAclApi()
+{
+    std::lock_guard<std::mutex> lock(cachedAclApiInfoMutex_);
+    HCCL_INFO("[ReportStoragedAclApi] aclApiQueueSize is [%u]", cachedAclApiInfo_.size());
+    if (!cachedAclApiInfo_.empty()) {
+        std::queue<MsprofApi> tempAclApi = cachedAclApiInfo_;
+        while (!tempAclApi.empty()) {
+            MsprofApi reportData = tempAclApi.front();
+            tempAclApi.pop();
             s32 ret = DlProfFunction::GetInstance().dlMsprofReportApi(0, &reportData);
             if (ret != 0) {
                 THROW<InternalException>("Call dlMsprofReportApi failed, return[%d]", ret);

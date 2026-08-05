@@ -35,7 +35,7 @@ public:
     void ReportAllTasks(bool cachedReq = false) const;
     
     // 上报算子信息
-    void ReportOp(uint64_t beginTime, bool cachedReq, bool opbased);
+    void ReportOp(uint64_t beginTime, bool cachedReq, bool isOpBase);
     
     // 上报MC2通信信息
     void ReportMc2CommInfo(const Mc2CommInfo& mc2CommInfo);

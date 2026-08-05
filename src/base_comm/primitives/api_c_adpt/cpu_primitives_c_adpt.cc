@@ -961,10 +961,13 @@ HcclResult HcclDfxRegOpInfoByCommId(char* commId, void* hcclDfxOpInfo)
     CHK_PTR_NULL(hcclCommDfx);
     CHK_RET(hcclCommDfx->UpdateProfStat());
     CHK_RET(hcclCommDfx->SetCurrDfxOpInfo(dfxOpInfoOnce));
-    bool isOpBase = dfxOpInfoOnce->op_.opMode == Hccl::OpMode::OPBASE;
-    Hccl::ProfilingHandler::GetInstance().SetIsOpbase(isOpBase);
-    HCCL_INFO("[%s] Register DfxOpInfo success, commId[%s], opMode[%d], isOpBase[%d].", __func__, collComm->GetCommId().c_str(), dfxOpInfoOnce->op_.opMode, isOpBase);
-    HCCL_INFO("[%s]success, DfxOpInfo: %s", __func__, dfxOpInfoOnce->Describe().c_str());
+    bool isOpBase = dfxOpInfoOnce->op_.opMode == Hccl::OpMode::OPBASE
+ 	              || dfxOpInfoOnce->op_.opMode == Hccl::OpMode::ACLGRAPH;
+ 	bool isCached = dfxOpInfoOnce->op_.opMode == Hccl::OpMode::OFFLOAD
+ 	              || dfxOpInfoOnce->op_.opMode == Hccl::OpMode::ACLGRAPH;
+ 	Hccl::ProfilingHandler::GetInstance().SetOpModeFlags(isOpBase, isCached);
+    HCCL_INFO("[%s] Register DfxOpInfo success, opMode[%d], isOpBase[%d], isCached[%d], DfxOpInfo: %s",
+        __func__, dfxOpInfoOnce->op_.opMode, isOpBase, isCached, dfxOpInfoOnce->Describe().c_str());
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;
 }
@@ -997,10 +1000,11 @@ HcclResult HcclProfilingReportOp(HcclComm comm, uint64_t beginTime)
         return HCCL_SUCCESS;
     }
     //单算子模式暂时默认true
-    bool isBaseOpMode = false;
-    CHK_RET(hcclCommDfx->IsOpBase(isBaseOpMode));
-    CHK_RET(hcclCommDfx->ReportAllTasks(!isBaseOpMode));
-    CHK_RET(hcclCommDfx->ReportOp(beginTime, !isBaseOpMode, isBaseOpMode));
+    bool isOpBaseMode = false;
+    bool isCached = false;
+    CHK_RET(hcclCommDfx->GetOpModeFlags(isOpBaseMode, isCached));
+    CHK_RET(hcclCommDfx->ReportAllTasks(isCached));
+    CHK_RET(hcclCommDfx->ReportOp(beginTime, isCached, isOpBaseMode));
     HCCL_INFO("[%s] SUCCESS.", __func__);
     return HCCL_SUCCESS;
 }
@@ -1030,9 +1034,10 @@ HcclResult HcclReportAicpuKernel(HcclComm comm, uint64_t beginTime, char* kernel
 
     std::string kernelNameStr(kernelName);
     uint32_t threadId = SalGetTid();
-    bool isBaseOpMode = false;
-    CHK_RET(hcclCommDfx->IsOpBase(isBaseOpMode));
-    CHK_RET(hcclCommDfx->ReportKernel(beginTime, collComm->GetCommId(), kernelNameStr, threadId, !isBaseOpMode));
+    bool isOpBaseMode = false;
+    bool isCached = false;
+    CHK_RET(hcclCommDfx->GetOpModeFlags(isOpBaseMode, isCached));
+    CHK_RET(hcclCommDfx->ReportKernel(beginTime, collComm->GetCommId(), kernelNameStr, threadId, isCached));
 
     Hccl::TaskParam taskParam{};
     taskParam.beginTime = beginTime;

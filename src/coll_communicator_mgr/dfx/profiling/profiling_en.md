@@ -120,7 +120,7 @@ sequenceDiagram
     Note right of HCD: Update switch status
     HCD->>MTM: SetCurrDfxOpInfo
     Note right of MTM: Store current operator info for later reporting
-    HCD->>PH: SetIsOpbase
+    HCD->>PH: SetOpModeFlags
     Note right of PH: Set operator mode flag
 ```
 
@@ -139,7 +139,7 @@ sequenceDiagram
     alt currDfxOpInfo is empty
         Note right of HCD: Skip reporting, return success
     else currDfxOpInfo is not empty
-        HCD->>HCD: IsOpBase
+        HCD->>HCD: GetOpModeFlags
         HCD->>HCP: ReportAllTasks
         HCP->>PR: ReportAllTasks
         Note right of PR: Traverse the task queue in MirrorTaskManager

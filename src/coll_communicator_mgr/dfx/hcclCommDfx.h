@@ -40,8 +40,8 @@ public:
     HcclResult SetCurrDfxOpInfo(std::shared_ptr<Hccl::DfxOpInfo> dfxOpInfo);
 
     HcclResult ReportAllTasks(bool cachedReq);
-    HcclResult ReportOp(u64 beginTime, bool cachedReq, bool opbased);
-    HcclResult ReporCcuTaskInfo(u64 beginTime, u64 endTime, bool cachedReq, bool opbased);
+    HcclResult ReportOp(uint64_t beginTime, bool cachedReq, bool isOpBase);
+    HcclResult ReporCcuTaskInfo(u64 beginTime, u64 endTime, bool cachedReq, bool isOpBase);
     void ReportMc2CommInfo(const Mc2CommInfo& mc2CommInfo);
     HcclResult UpdateProfStat();
 
@@ -55,7 +55,7 @@ public:
         return setAddDpuTaskCallback_;
     }
     HcclResult ReportKernel(uint64_t beginTime, const std::string& commTag, const std::string& kernelName, uint32_t threadId, bool cachedReq);
-    HcclResult IsOpBase(bool &isOpBase);
+    HcclResult GetOpModeFlags(bool &isOpBase, bool &isCached);
 
     void SetDpuStreamId(u32 dpuStreamId);
     void SetAicpuTaskIdAndStreamId(u32 taskId, u32 streamId) {

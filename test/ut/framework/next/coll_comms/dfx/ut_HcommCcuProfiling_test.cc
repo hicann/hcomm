@@ -274,9 +274,9 @@ TEST_F(Ccukernel_ReportProfilingTest, Ut_HcclReportAicpuKernel_Normal)
     MOCKER_CPP(&HcclCommDfx::ReportKernel)
         .stubs()
         .will(returnValue(HCCL_SUCCESS));  
-    MOCKER_CPP(&HcclCommDfx::IsOpBase)
+    MOCKER_CPP(&HcclCommDfx::GetOpModeFlags)
         .stubs()
-        .with(outBound(false))
+        .with(outBound(false), outBound(false))
         .will(returnValue(HCCL_SUCCESS));
 
     void* commV2 = (void*)0x2000;

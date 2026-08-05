@@ -149,8 +149,12 @@ public:
     bool GetHcclNodeState() const;
     bool GetHcclL0State() const;
     bool GetHcclL1State() const;
-    inline void SetIsOpbase(bool val) { isOpbase_ = val; }
-    inline bool GetIsOpbase() const { return isOpbase_; }
+    inline void SetOpModeFlags(bool isOpBase, bool isCached) {
+        isOpbase_ = isOpBase;
+        isCached_ = isCached;
+    }
+    inline bool GetOpBaseFlag() const { return isOpbase_; }
+    inline bool GetCachedFlag() const { return isCached_; }
     int32_t CommandHandle(uint32_t rtType, void *data, uint32_t len) const;
     HcclResult Init();
     void ReportHcclMC2CommInfo(const Stream &kfcStream, const Stream &stream, const std::vector<Stream *> &aicpuStreams,
@@ -165,7 +169,7 @@ private:
     explicit ProfilingHandler();
 
     void ReportAclApi(uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId,
-                            uint32_t threadId) const;
+                            uint32_t threadId, bool cachedReq);
 
     void ReportHcclOpInfo(uint64_t timeStamp, const DfxOpInfo &opInfo, uint32_t threadId, bool cachedReq);
     void ReportAdditionInfo(MsprofAdditionalInfo& reporterData) const;
@@ -184,6 +188,7 @@ private:
 
     void CallProfRegTaskTypeApi() const;
     void ReportStoragedTaskApi();
+    void ReportStoragedAclApi();
 
     void CallProfRegHcclOpApi() const;
 
@@ -233,9 +238,11 @@ private:
     bool                    enableHcclL0_{false};
     bool                    enableHcclL1_{false};
     bool                    isOpbase_{false};
+    bool                    isCached_{false};
 
     std::vector<TaskInfo>           cacheTaskInfos_{};
     std::queue<MsprofApi>           cachedTaskApiInfo_{};
+    std::queue<MsprofApi>           cachedAclApiInfo_{};
     std::queue<MsprofCompactInfo>   cacheHcclOpInfo_{};
     std::queue<MsprofAdditionalInfo>  cacheHcclAdditionInfo_{};
     std::unordered_map<std::string, uint64_t> str2HashId_{};
@@ -243,6 +250,7 @@ private:
     std::map<uint32_t, uint64_t> cachedNewCclTag_{};
     mutable std::mutex cacheTaskInfosMutex_;
     std::mutex cachedTaskApiInfoMutex_;
+    std::mutex cachedAclApiInfoMutex_;
     std::mutex cacheHcclOpInfoMutex_;
     std::mutex cacheHcclAdditionInfoMutex_;
 };

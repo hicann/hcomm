@@ -53,11 +53,12 @@ HcclResult HcclCommDfx::Init(u32 deviceId, const std::string& comTag, u32 myRank
     return HCCL_SUCCESS; // 初始化成功返回成功码
 }
 
-HcclResult HcclCommDfx::IsOpBase(bool &isOpBase) {
+HcclResult HcclCommDfx::GetOpModeFlags(bool &isOpBase, bool &isCached) {
     auto currDfxOpInfo = mirrorTaskManager_->GetCurrDfxOpInfo();
     CHK_SMART_PTR_NULL(currDfxOpInfo);
-    isOpBase = currDfxOpInfo->op_.opMode == Hccl::OpMode::OPBASE;
-    HCCL_INFO("[%s] IsOpBase: %d", __func__, isOpBase);
+    isOpBase = currDfxOpInfo->op_.opMode == Hccl::OpMode::OPBASE || currDfxOpInfo->op_.opMode == Hccl::OpMode::ACLGRAPH;
+    isCached = currDfxOpInfo->op_.opMode == Hccl::OpMode::OFFLOAD || currDfxOpInfo->op_.opMode == Hccl::OpMode::ACLGRAPH;
+    HCCL_INFO("[%s] GetOpModeFlags: isOpBase %d, isCached %d", __func__, isOpBase, isCached);
     return HCCL_SUCCESS;
 }
 
@@ -144,8 +145,8 @@ HcclResult HcclCommDfx::ReportAllTasks(bool cachedReq) {
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommDfx::ReportOp(u64 beginTime, bool cachedReq, bool opbased) {
-    EXCEPTION_CATCH(profiling_->ReportOp(beginTime, cachedReq, opbased), return HCCL_E_PTR);
+HcclResult HcclCommDfx::ReportOp(uint64_t beginTime, bool cachedReq, bool isOpBase) {
+    EXCEPTION_CATCH(profiling_->ReportOp(beginTime, cachedReq, isOpBase), return HCCL_E_PTR);
     return HCCL_SUCCESS;
 }
 
@@ -189,7 +190,7 @@ HcclResult HcclCommDfx::GetChannelRemoteRankId(const std::string& commTag, u64 h
 
 HcclResult HcclCommDfx::ReportKernel(uint64_t beginTime, const std::string& commTag, const std::string& kernelName, uint32_t threadId, bool cachedReq) {
     CHK_RET(profiling_->ReportKernel(beginTime, commTag, kernelName, threadId, cachedReq));
-    return HCCL_SUCCESS; 
+    return HCCL_SUCCESS;
 }
 
 u32 HcclCommDfx::GetTaskId(u32 streamId)

@@ -43,8 +43,8 @@ void HcclCommProfiling::ReportAllTasks(bool cachedReq) const {
 }
 
 // HcclCommProfiling::ReportOp实现
-void HcclCommProfiling::ReportOp(uint64_t beginTime, bool cachedReq, bool opbased) {
-    profilingReporter_->ReportOp(beginTime, cachedReq, opbased);
+void HcclCommProfiling::ReportOp(uint64_t beginTime, bool cachedReq, bool isOpBase) {
+    profilingReporter_->ReportOp(beginTime, cachedReq, isOpBase);
 }
 
 void HcclCommProfiling::ReportMc2CommInfo(const Mc2CommInfo& mc2CommInfo) {

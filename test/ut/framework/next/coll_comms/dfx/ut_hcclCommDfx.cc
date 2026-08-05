@@ -204,8 +204,8 @@ TEST_F(HcclCommDfxTest, Ut_Add_Get_ChannelRemoteRankId)
     EXPECT_EQ(dfxLite_->GetChannelRemoteRankId(0x123), INVALID_UINT);
 }
 
-// 测试 IsOpBase - OFFLOAD 模式返回 false
-TEST_F(HcclCommDfxTest, Ut_IsOpBase_When_OpModeIsOffload_Expect_ReturnFalse)
+// 测试 GetOpModeFlags - OFFLOAD 模式返回 false
+TEST_F(HcclCommDfxTest, Ut_GetOpModeFlags_When_OpModeIsOffload_Expect_ReturnFalse)
 {
     auto opInfo = std::make_shared<Hccl::DfxOpInfo>();
     opInfo->op_.opMode = Hccl::OpMode::OFFLOAD;
@@ -215,9 +215,28 @@ TEST_F(HcclCommDfxTest, Ut_IsOpBase_When_OpModeIsOffload_Expect_ReturnFalse)
         .will(returnValue(opInfo));
 
     bool isOpBase = true;
-    HcclResult ret = dfx_->IsOpBase(isOpBase);
+    bool isCached = false;
+    HcclResult ret = dfx_->GetOpModeFlags(isOpBase, isCached);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_FALSE(isOpBase);
+    EXPECT_TRUE(isCached);
+}
+
+TEST_F(HcclCommDfxTest, Ut_GetOpModeFlags_When_OpModeIsAclgraph_Expect_BothTrue)
+{
+    auto opInfo = std::make_shared<Hccl::DfxOpInfo>();
+    opInfo->op_.opMode = Hccl::OpMode::ACLGRAPH;
+    MOCKER_CPP(&Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
+        std::shared_ptr<Hccl::DfxOpInfo>(Hccl::MirrorTaskManager::*)() const)
+        .stubs()
+        .will(returnValue(opInfo));
+
+    bool isOpBase = false;
+    bool isCached = false;
+    HcclResult ret = dfx_->GetOpModeFlags(isOpBase, isCached);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_TRUE(isOpBase);
+    EXPECT_TRUE(isCached);
 }
 
 // 测试 GetChannelRemoteRankId（非Lite版）- 正常查找命中 shared_lock 读路径

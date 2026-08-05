@@ -340,7 +340,7 @@ TEST_F(ProfilingHandlerTest, ReportAclApi_test){
     uint64_t endTime = 1;
     uint64_t cmdItemId = 0;
     uint32_t threadId = 0;
-    handler.ReportAclApi(cmdType, beginTime, endTime, cmdItemId, threadId);
+    handler.ReportAclApi(cmdType, beginTime, endTime, cmdItemId, threadId, false);
 }
 
 TEST_F(ProfilingHandlerTest, ReportNodeApi_test){

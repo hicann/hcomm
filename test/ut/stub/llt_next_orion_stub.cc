@@ -1322,8 +1322,9 @@ void ProfilingHandler::DumpCcuGroupInfo(const MsprofCcuGroupInfo& ccuGroupInfo) 
 void ProfilingHandler::GetCcuWaitSignalInfo(const TaskInfo& taskInfo, const CcuProfilingInfo& info) const {}
 
 void ProfilingHandler::ReportAclApi(
-    uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId) const
-{}
+    uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
+{
+}
 
 void ProfilingHandler::ReportNodeApi(
     uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)

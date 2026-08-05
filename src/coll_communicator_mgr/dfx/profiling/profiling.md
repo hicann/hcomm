@@ -120,7 +120,7 @@ sequenceDiagram
     Note right of HCD: 更新开关状态
     HCD->>MTM: SetCurrDfxOpInfo
     Note right of MTM: 存储当前算子信息，供后续上报使用
-    HCD->>PH: SetIsOpbase
+    HCD->>PH: SetOpModeFlags
     Note right of PH: 设置算子模式标记
 ```
 
@@ -139,7 +139,7 @@ sequenceDiagram
     alt currDfxOpInfo为空
         Note right of HCD: 跳过上报，返回成功
     else currDfxOpInfo非空
-        HCD->>HCD: IsOpBase
+        HCD->>HCD: GetOpModeFlags
         HCD->>HCP: ReportAllTasks
         HCP->>PR: ReportAllTasks
         Note right of PR: 遍历MirrorTaskManager中的任务队列
