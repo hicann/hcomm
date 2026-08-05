@@ -436,6 +436,75 @@ static HcclResult LaunchKernel(const HcclChannelUrmaRes &channelParam, aclrtBinH
     return LaunchKernelDeviceParam(channelParam, binHandle, kernelName);
 }
 
+static HcclResult PackAicpuTsChannelH2DRes(ChannelHandle hostChannelHandle, std::vector<char> &hostPackBuffer)
+{
+    CHK_PRT_RET(hostChannelHandle == 0,
+        HCCL_ERROR("[%s] hostChannelHandle is null.", __func__), HCCL_E_PARA);
+    Channel *channel = reinterpret_cast<Channel *>(hostChannelHandle);
+    switch (channel->GetChannelKind()) {
+        case HcommChannelKind::AICPU_TS_URMA:
+            return reinterpret_cast<AicpuTsUrmaChannel *>(hostChannelHandle)->H2DResPack(hostPackBuffer);
+        case HcommChannelKind::AICPU_TS_UBOE:
+            return reinterpret_cast<AicpuTsUboeChannel *>(hostChannelHandle)->H2DResPack(hostPackBuffer);
+        case HcommChannelKind::AICPU_TS_UBG:
+            return reinterpret_cast<AicpuTsUbgChannel *>(hostChannelHandle)->H2DResPack(hostPackBuffer);
+        case HcommChannelKind::AICPU_TS_ROCE_V2:
+            return reinterpret_cast<AicpuTsRoceChannelV2 *>(hostChannelHandle)->H2DResPack(hostPackBuffer);
+        default:
+            HCCL_ERROR("[%s] unsupported channel kind[%s].", __func__,
+                HcommChannelKindToString(channel->GetChannelKind()));
+            return HCCL_E_NOT_SUPPORT;
+    }
+}
+
+HcclResult ChannelProcess::CopyUpdateKernelPackResToDevice(const std::vector<std::vector<char>> &hostPackBuffers,
+    const std::vector<u32> &channelSizeVec, uint32_t totalListNum, hccl::DeviceMem &channelSizeAddr,
+    hccl::DeviceMem &devicePackBuf)
+{
+    channelSizeAddr = hccl::DeviceMem::alloc(channelSizeVec.size() * sizeof(u32));
+    CHK_PTR_NULL(channelSizeAddr.ptr());
+    CHK_RET(hrtMemSyncCopy(channelSizeAddr.ptr(), channelSizeVec.size() * sizeof(u32), channelSizeVec.data(),
+        channelSizeVec.size() * sizeof(u32), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+
+    hccl::HostMem hostPackBuf = hccl::HostMem::alloc(totalListNum);
+    CHK_PTR_NULL(hostPackBuf.ptr());
+    u8 *dstPtr = static_cast<u8 *>(hostPackBuf.ptr());
+    const u64 dstMax = static_cast<u64>(totalListNum);
+    u64 copiedSize = 0;
+    for (const auto &mem : hostPackBuffers) {
+        const u64 memSize = static_cast<u64>(mem.size());
+        CHK_PRT_RET(copiedSize > dstMax,
+            HCCL_ERROR("[%s] copiedSize[%llu] is bigger than dstMax[%llu]", __func__, copiedSize, dstMax),
+            HCCL_E_PARA);
+        const u64 remainingSize = dstMax - copiedSize;
+        CHK_PRT_RET(memSize > remainingSize,
+            HCCL_ERROR("[%s] memSize[%llu] is bigger than remainingSize[%llu]", __func__, memSize, remainingSize),
+            HCCL_E_PARA);
+        CHK_SAFETY_FUNC_RET(memcpy_s(dstPtr, remainingSize, mem.data(), mem.size()));
+        dstPtr += mem.size();
+        copiedSize += memSize;
+    }
+    CHK_PRT_RET(copiedSize != dstMax,
+        HCCL_ERROR("[%s] copiedSize[%llu] is not equal to dstMax[%llu]", __func__, copiedSize, dstMax),
+        HCCL_E_PARA);
+
+    devicePackBuf = hccl::DeviceMem::alloc(totalListNum);
+    CHK_PTR_NULL(devicePackBuf.ptr());
+    CHK_RET(hrtMemSyncCopy(devicePackBuf.ptr(), totalListNum, hostPackBuf.ptr(), totalListNum,
+        HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+    return HCCL_SUCCESS;
+}
+
+static HcclResult CopyUpdateKernelChannelListToDevice(ChannelHandle *deviceChannelHandles, uint32_t listNum,
+    hccl::DeviceMem &deviceChannelList)
+{
+    deviceChannelList = hccl::DeviceMem::alloc(listNum * sizeof(ChannelHandle));
+    CHK_PTR_NULL(deviceChannelList.ptr());
+    CHK_RET(hrtMemSyncCopy(deviceChannelList.ptr(), listNum * sizeof(ChannelHandle), deviceChannelHandles,
+        listNum * sizeof(ChannelHandle), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+    return HCCL_SUCCESS;
+}
+
 HcclResult ChannelProcess::LaunchChannelKernelCommon(ChannelHandle *channelHandles, ChannelHandle *hostChannelHandles,
     HcommChannelDesc* hcommDesc, uint32_t listNum, const std::string &commTag, aclrtBinHandle binHandle,
     const std::string &kernelName, bool needProfiling)
@@ -929,37 +998,25 @@ HcclResult ChannelProcess::ChannelUpdateKernelLaunch(ChannelHandle* deviceChanne
     uint32_t totalListNum = 0;
     std::vector<u32> channelSizeVec{};
     for (uint32_t index = 0; index < listNum; index++) {
+        Channel *channel = reinterpret_cast<Channel *>(hostChannelHandles[index]);
+        if (channel->GetChannelKind() != HcommChannelKind::AICPU_TS_URMA) {
+            CHK_RET(PackAicpuTsChannelH2DRes(hostChannelHandles[index], hostPackBuffers[index]));
+            totalListNum += hostPackBuffers[index].size();
+            channelSizeVec.push_back(hostPackBuffers[index].size());
+            continue;
+        }
         auto aicpuTsUrmaChannel = reinterpret_cast<AicpuTsUrmaChannel *>(hostChannelHandles[index]);
-        CHK_PRT(aicpuTsUrmaChannel->H2DResPack(hostPackBuffers[index]));   // todo:后续只打包connction
+        CHK_RET(aicpuTsUrmaChannel->H2DResPack(hostPackBuffers[index]));   // todo:后续只打包connction
         totalListNum += hostPackBuffers[index].size();
         channelSizeVec.push_back(hostPackBuffers[index].size());
     }
     HCCL_INFO("[%s] totalListNum[%llu]", __func__, totalListNum);
 
-    hccl::DeviceMem channelSizeAddr = hccl::DeviceMem::alloc(channelSizeVec.size() * sizeof(u32));
-    CHK_PTR_NULL(channelSizeAddr.ptr());
+    hccl::DeviceMem channelSizeAddr;
+    hccl::DeviceMem devicePackBuf;
+    CHK_RET(CopyUpdateKernelPackResToDevice(hostPackBuffers, channelSizeVec, totalListNum, channelSizeAddr,
+        devicePackBuf));
 
-    CHK_RET(hrtMemSyncCopy(channelSizeAddr.ptr(),
-    channelSizeVec.size() * sizeof(u32),
-    channelSizeVec.data(),
-    channelSizeVec.size() * sizeof(u32),
-    HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
-
-    // 分配连续的host内存，将序列化的地址放入其中
-    hccl::HostMem hostPackBuf = hccl::HostMem::alloc(totalListNum);
-    CHK_PTR_NULL(hostPackBuf.ptr());
-    CHK_RET(CombineHostMemory(hostPackBuffers, hostPackBuf));
-    hccl::DeviceMem devicePackBuf = hccl::DeviceMem::alloc(totalListNum);
-    CHK_PTR_NULL(devicePackBuf.ptr());
-
-    // 将host侧序列化内容拷贝到device侧内存中
-    CHK_RET(hrtMemSyncCopy(devicePackBuf.ptr(),
-        totalListNum,
-        hostPackBuf.ptr(),
-        totalListNum,
-        HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
-
-    // 填充channelParam参数
     s32 sRet = strncpy_s(channelParam.hcomId, HCOMID_MAX_LENGTH, commTag.c_str(), HCOMID_MAX_LENGTH - 1);
     CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[%s] str copy fail. return[%d]", __func__, sRet), HCCL_E_INTERNAL);
     channelParam.listNum = listNum;
@@ -968,16 +1025,10 @@ HcclResult ChannelProcess::ChannelUpdateKernelLaunch(ChannelHandle* deviceChanne
     channelParam.channelSizeAddr = static_cast<void *>(channelSizeAddr.ptr());
 
     // 将 host 侧的 channel handles 拷贝到 device 内存，供内核使用
-    hccl::DeviceMem deviceChannelList = hccl::DeviceMem::alloc(listNum * sizeof(ChannelHandle));
-    CHK_PTR_NULL(deviceChannelList.ptr());
-    CHK_RET(hrtMemSyncCopy(deviceChannelList.ptr(),
-        listNum * sizeof(ChannelHandle),
-        deviceChannelHandles,
-        listNum * sizeof(ChannelHandle),
-        HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+    hccl::DeviceMem deviceChannelList;
+    CHK_RET(CopyUpdateKernelChannelListToDevice(deviceChannelHandles, listNum, deviceChannelList));
     channelParam.channelList = static_cast<void *>(deviceChannelList.ptr());
 
-    // 调用抽离的通用内核启动函数
     std::string kernelName = "RunAicpuIndOpChannelUpdateV2";
     CHK_RET(LaunchKernel(channelParam, binHandle, kernelName));
 

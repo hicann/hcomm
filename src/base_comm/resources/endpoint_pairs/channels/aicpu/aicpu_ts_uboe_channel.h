@@ -21,6 +21,8 @@ public:
 
     HcclResult Init() override;
     ChannelStatus GetStatus() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
 
     HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum) override;
 

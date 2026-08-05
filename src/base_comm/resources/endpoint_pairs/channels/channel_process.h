@@ -21,6 +21,10 @@
 #include <unordered_map>
 #include <vector>
 
+namespace hccl {
+class DeviceMem;
+}
+
 namespace hcomm {
 
 // HcommChannelGetStatus 出参状态码
@@ -88,6 +92,9 @@ private:
 
     static HcclResult CombineHostMemory(const std::vector<std::vector<char>> &hostPackBuffers, 
         hccl::HostMem &hostPackBuf);
+    static HcclResult CopyUpdateKernelPackResToDevice(const std::vector<std::vector<char>> &hostPackBuffers,
+        const std::vector<u32> &channelSizeVec, uint32_t totalListNum, hccl::DeviceMem &channelSizeAddr,
+        hccl::DeviceMem &devicePackBuf);
     static HcclResult LaunchChannelKernelCommon(ChannelHandle *channelHandles, ChannelHandle *hostChannelHandles,
         HcommChannelDesc* hcommDesc, uint32_t listNum, const std::string &commTag, aclrtBinHandle binHandle,
         const std::string &kernelName, bool needProfiling);

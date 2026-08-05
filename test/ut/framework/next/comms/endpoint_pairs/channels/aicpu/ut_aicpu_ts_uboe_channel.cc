@@ -22,6 +22,7 @@
 
 #define private public
 #define protected public
+#include "aicpu/aicpu_ts_uboe_channel.h"
 using namespace hcomm;
 
 class AicpuTsUboeChannelTest : public testing::Test {
@@ -188,7 +189,60 @@ TEST_F(AicpuTsUboeChannelTest, Ut_Clean_WithoutInit_Returns_SUCCESS) {
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(AicpuTsUboeChannelTest, UT_Init_When_DependenciesAreValid_Expect_ReturnHCCL_SUCCESS) {
+TEST_F(AicpuTsUboeChannelTest, Ut_CleanThenResume_When_ChannelHasCachedResource_Expect_ResetStateAndClearResource)
+{
+    FakeEndpoint fe;
+    HcommChannelDesc desc{};
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(&fe);
+    AicpuTsUboeChannel ch(ep, desc);
+
+    ch.commonRes_.connVec.push_back(nullptr);
+    ch.rmtNotifyVec_.push_back(std::make_unique<Hccl::RemoteUbRmaBuffer>(fe.GetRdmaHandle()));
+    ch.locBufferVec_.push_back(nullptr);
+    ch.recvData_.push_back('r');
+    ch.recvFinishMsg_.push_back('f');
+    ch.recvEidData_.push_back('e');
+    ch.sendData_.push_back('s');
+    ch.sendFinishMsg_.push_back('d');
+    ch.sendEidData_.push_back('i');
+    ch.bufferNum_ = 1;
+    ch.connNum_ = 1;
+    ch.recvDataSize_ = 1;
+    ch.rmtBufferVec_.push_back(std::make_unique<Hccl::RemoteUbRmaBuffer>(fe.GetRdmaHandle()));
+    ch.cacheValid_ = true;
+    ch.remoteUserMems_.push_back(CommMem{});
+    ch.memInfoCopies_.push_back("user_mem");
+    ch.memInfoPointers_.push_back(const_cast<char *>(ch.memInfoCopies_.front().c_str()));
+    ch.channelStatus = ChannelStatus::READY;
+    ch.uboeStatus = AicpuTsUboeChannel::UboeStatus::READY;
+
+    HcclResult cleanRet = ch.Clean();
+    HcclResult resumeRet = ch.Resume();
+
+    EXPECT_EQ(cleanRet, HCCL_SUCCESS);
+    EXPECT_EQ(resumeRet, HCCL_SUCCESS);
+    EXPECT_TRUE(ch.commonRes_.connVec.empty());
+    EXPECT_TRUE(ch.rmtNotifyVec_.empty());
+    EXPECT_TRUE(ch.locBufferVec_.empty());
+    EXPECT_TRUE(ch.recvData_.empty());
+    EXPECT_TRUE(ch.recvFinishMsg_.empty());
+    EXPECT_TRUE(ch.recvEidData_.empty());
+    EXPECT_TRUE(ch.sendData_.empty());
+    EXPECT_TRUE(ch.sendFinishMsg_.empty());
+    EXPECT_TRUE(ch.sendEidData_.empty());
+    EXPECT_EQ(ch.bufferNum_, 0U);
+    EXPECT_EQ(ch.connNum_, 0U);
+    EXPECT_EQ(ch.recvDataSize_, 0U);
+    EXPECT_TRUE(ch.rmtBufferVec_.empty());
+    EXPECT_FALSE(ch.cacheValid_);
+    EXPECT_TRUE(ch.remoteUserMems_.empty());
+    EXPECT_TRUE(ch.memInfoCopies_.empty());
+    EXPECT_TRUE(ch.memInfoPointers_.empty());
+    EXPECT_EQ(ch.channelStatus, ChannelStatus::INIT);
+    EXPECT_EQ(ch.uboeStatus, AicpuTsUboeChannel::UboeStatus::INIT);
+}
+
+TEST_F(AicpuTsUboeChannelTest, Ut_Init_MockedHelpers_Returns_SUCCESS) {
     // Do not mock internal methods. Inject fake endpoint and fake socket so Init() exercises real code paths.
     FakeEndpoint fe;
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(&fe);

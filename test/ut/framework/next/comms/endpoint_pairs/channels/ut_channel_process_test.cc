@@ -14,6 +14,7 @@
 #include "aicpu_ts_roce_channel_v2.h"
 #include "aicpu_ts_channel_helper.h"
 #include "aiv_channel_helper.h"
+#include "mem_device_pub.h"
 
 class TestChannelProcess : public TestHcommCAdptBase {
 public:
@@ -30,6 +31,39 @@ public:
         }
         TestHcommCAdptBase::TearDown();
     }
+};
+
+class FakeChannelForProcess : public hcomm::Channel {
+public:
+    explicit FakeChannelForProcess(hcomm::HcommChannelKind kind) : kind_(kind) {}
+
+    hcomm::HcommChannelKind GetChannelKind() const override
+    {
+        return kind_;
+    }
+    HcclResult Init() override { return HCCL_SUCCESS; }
+    HcclResult GetNotifyNum(uint32_t *) const override { return HCCL_SUCCESS; }
+    HcclResult GetRemoteMems(uint32_t *, CommMem **, char ***) override { return HCCL_SUCCESS; }
+    hcomm::ChannelStatus GetStatus() override { return hcomm::ChannelStatus::READY; }
+    const HcommChannelDesc &GetChannelDesc() const override
+    {
+        static HcommChannelDesc defaultDesc{};
+        return defaultDesc;
+    }
+    HcclResult Clean() override { return HCCL_SUCCESS; }
+    HcclResult Resume() override { return HCCL_SUCCESS; }
+    HcclResult NotifyRecord(const uint32_t) override { return HCCL_SUCCESS; }
+    HcclResult NotifyWait(const uint32_t, const uint32_t) override { return HCCL_SUCCESS; }
+    HcclResult WriteWithNotify(void *, const void *, const uint64_t, uint32_t) override
+    {
+        return HCCL_SUCCESS;
+    }
+    HcclResult Write(void *, const void *, uint64_t) override { return HCCL_SUCCESS; }
+    HcclResult Read(void *, const void *, uint64_t) override { return HCCL_SUCCESS; }
+    HcclResult ChannelFence() override { return HCCL_SUCCESS; }
+
+private:
+    hcomm::HcommChannelKind kind_;
 };
 
 // CreateChannelsLoop 空指针测试
@@ -157,68 +191,7 @@ TEST_F(TestChannelProcess, Ut_LaunchChannelKernel_When_ChannelKindIsUBOE_CallsCh
     HcommChannelDesc hcommDescs[1] = {};
     ChannelHandle deviceHandles[1] = {};
 
-    class FakeUboeChannel : public hcomm::Channel {
-    public:
-        hcomm::HcommChannelKind GetChannelKind() const override
-        {
-            return hcomm::HcommChannelKind::AICPU_TS_UBOE;
-        }
-        HcclResult Init() override
-        {
-            return HCCL_SUCCESS;
-        }
-        HcclResult GetNotifyNum(uint32_t *notifyNum) const override
-        {
-            return HCCL_SUCCESS;
-        }
-        HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override
-        {
-            return HCCL_SUCCESS;
-        }
-        hcomm::ChannelStatus GetStatus() override
-        {
-            return hcomm::ChannelStatus::READY;
-        }
-        const HcommChannelDesc &GetChannelDesc() const override
-        {
-            static HcommChannelDesc defaultDesc{};
-            return defaultDesc;
-        }
-        HcclResult Clean() override
-        {
-            return HCCL_SUCCESS;
-        }
-        HcclResult Resume() override
-        {
-            return HCCL_SUCCESS;
-        }
-        HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override
-        {
-            return HCCL_SUCCESS;
-        }
-        HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override
-        {
-            return HCCL_SUCCESS;
-        }
-        HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override
-        {
-            return HCCL_SUCCESS;
-        }
-        HcclResult Write(void *dst, const void *src, uint64_t len) override
-        {
-            return HCCL_SUCCESS;
-        }
-        HcclResult Read(void *dst, const void *src, uint64_t len) override
-        {
-            return HCCL_SUCCESS;
-        }
-        HcclResult ChannelFence() override
-        {
-            return HCCL_SUCCESS;
-        }
-    };
-
-    FakeUboeChannel fakeChannel;
+    FakeChannelForProcess fakeChannel(hcomm::HcommChannelKind::AICPU_TS_UBOE);
     ChannelHandle hostHandles[1] = {reinterpret_cast<ChannelHandle>(&fakeChannel)};
 
     MOCKER_CPP(&hcomm::ChannelProcess::LaunchChannelKernelCommon,
@@ -231,6 +204,30 @@ TEST_F(TestChannelProcess, Ut_LaunchChannelKernel_When_ChannelKindIsUBOE_CallsCh
 
     auto ret = hcomm::ChannelProcess::LaunchChannelKernel(deviceHandles, hostHandles, hcommDescs, 1, nullptr);
     EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(TestChannelProcess, Ut_ChannelUpdateKernelLaunch_When_ChannelKindUnsupported_Expect_NotSupport)
+{
+    FakeChannelForProcess unsupportedChannel(hcomm::HcommChannelKind::INVALID);
+    ChannelHandle deviceHandles[1] = {static_cast<ChannelHandle>(0x1234)};
+    ChannelHandle hostHandles[1] = {reinterpret_cast<ChannelHandle>(&unsupportedChannel)};
+
+    HcclResult ret =
+        hcomm::ChannelProcess::ChannelUpdateKernelLaunch(deviceHandles, hostHandles, 1, "test_tag", nullptr);
+    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+}
+
+TEST_F(TestChannelProcess, Ut_CopyUpdateKernelPackResToDevice_When_TotalSizeTooSmall_Expect_Para)
+{
+    std::vector<std::vector<char>> hostPackBuffers{{'a', 'b'}, {'c', 'd'}};
+    std::vector<u32> channelSizeVec{2U, 2U};
+    hccl::DeviceMem channelSizeAddr;
+    hccl::DeviceMem devicePackBuf;
+    MOCKER(memcpy_s).stubs().will(returnValue(EOK));
+
+    HcclResult ret = hcomm::ChannelProcess::CopyUpdateKernelPackResToDevice(
+        hostPackBuffers, channelSizeVec, 3U, channelSizeAddr, devicePackBuf);
+    EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
 // ===================== 非阻塞建链 UT =====================

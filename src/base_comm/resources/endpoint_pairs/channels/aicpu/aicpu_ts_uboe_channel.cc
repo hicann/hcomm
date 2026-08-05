@@ -264,6 +264,49 @@ HcclResult AicpuTsUboeChannel::UpdateMemInfo(HcommMemHandle *memHandles, uint32_
     return HCCL_SUCCESS;
 }
 
+HcclResult AicpuTsUboeChannel::Clean()
+{
+    memTransport_.reset();
+
+    commonRes_.connVec.clear();
+    connections_.clear();
+
+    rmtNotifyVec_.clear();
+    locBufferVec_.clear();
+
+    recvData_.clear();
+    recvFinishMsg_.clear();
+    recvEidData_.clear();
+    sendData_.clear();
+    sendFinishMsg_.clear();
+    sendEidData_.clear();
+
+    bufferNum_ = 0;
+    connNum_ = 0;
+    recvDataSize_ = 0;
+    locAddr_ = Hccl::IpAddress();
+    rmtAddr_ = Hccl::IpAddress();
+
+    {
+        std::lock_guard<std::mutex> lock(remoteMemsMutex_);
+        rmtBufferVec_.clear();
+        cacheValid_ = false;
+        remoteUserMems_.clear();
+        memInfoCopies_.clear();
+        memInfoPointers_.clear();
+    }
+
+    return HCCL_SUCCESS;
+}
+
+HcclResult AicpuTsUboeChannel::Resume()
+{
+    channelStatus = ChannelStatus::INIT;
+    uboeStatus = UboeStatus::INIT;
+    HCCL_INFO("[AicpuTsUboeChannel][%s] reset uboe state machine to rebuild connection.", __func__);
+    return HCCL_SUCCESS;
+}
+
 ChannelStatus AicpuTsUboeChannel::GetStatus()
 {
     if (channelStatus == ChannelStatus::READY) {
