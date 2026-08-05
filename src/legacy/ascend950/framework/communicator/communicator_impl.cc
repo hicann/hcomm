@@ -2474,6 +2474,13 @@ MirrorTaskManager &CommunicatorImpl::GetMirrorTaskManager() const
 
 CommunicatorImpl::~CommunicatorImpl()
 {
+    DECTOR_TRY_CATCH("CommunicatorImpl",
+        DestroyImpl();
+    )
+}
+
+void CommunicatorImpl::DestroyImpl()
+{
     HCCL_INFO("[~CommunicatorImpl] start CommunicatorImpl destroy, commId[%s]", id.c_str());
     (void)DestroyDpuKernelResource();
     (void)DestroyDpuTaskexpShmemInDevice();

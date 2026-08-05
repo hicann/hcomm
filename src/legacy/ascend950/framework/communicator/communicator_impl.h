@@ -566,6 +566,7 @@ private:
     HcclResult PrepareDpuKernelResource(aclrtFuncHandle &funcHandle);
     HcclResult DestroyDpuKernelResource();
     HcclResult WaitDpuKernelThreadTerminate();
+    void DestroyImpl();
     HcclResult InitAndLaunchDpuKernel();
     HcclResult InitAndLaunchAicpuKernel(); // 保存dpu taskexception共享内存到aicpu全局map中
     HcclResult DestroyDpuTaskexpShmemInDevice();
