@@ -2094,6 +2094,9 @@ TEST_F(HcommCcuInstanceDeviceRefreshTest,
     EXPECT_NE(InsMgr(TEST_DEVICE_LOGIC_ID).Get(existingHandle), nullptr);
     EXPECT_EQ(g_deviceRefreshCalls, 5U);
 }
+
+CCU_FUNC_KERNEL_TEST(Ut_HcommCcuKernelLocalCopy_When_AllFine_Expect_ReturnCcuSUCCESS, CcuLocalCopyKernel, true)
+
 // ============================================================================================
 // HcommCcuGetTaskArgsNum 单元测试
 // 对应业务代码：src/base_comm/primitives/api_c_adpt/ccu/ccu_launch.cc

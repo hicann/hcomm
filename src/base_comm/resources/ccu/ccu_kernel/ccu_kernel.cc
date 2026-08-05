@@ -413,9 +413,9 @@ CcuResult CcuKernel::GetVariableByHandle(CcuVariableHandle varHandle, CcuRep::Va
 CcuResult CcuKernel::VariableAlloc(CcuVariableHandle *varHandle)
 {
     PLF_CONFIG_INFO(PLF_DATA_OP, "[VariableAlloc]");
-    const auto &var = CreateResAssist(res_.continuousVariable);
+    const auto& var = CreateBlockResAssist(1, res_.continuousVariable);
     CcuVariableHandle handle = ccuVarMap_.size();
-    ccuVarMap_.emplace(handle, var);
+    ccuVarMap_.emplace(handle, var[0]);
 
     *varHandle = handle;
     return CcuResult::CCU_SUCCESS;
@@ -441,9 +441,9 @@ CcuResult CcuKernel::EventAlloc(CcuEventHandle *eventHandle)
 CcuResult CcuKernel::BufferAlloc(CcuBufferHandle *bufHandle)
 {
     PLF_CONFIG_INFO(PLF_DATA_OP, "[BufferAlloc]");
-    const auto &buf = CreateResAssist(res_.blockCcubufs);
+    const auto& buffer = CreateBlockResAssist(1, res_.blockCcubufs);
     CcuBufferHandle handle = ccuBufferMap_.size();
-    ccuBufferMap_.emplace(handle, buf);
+    ccuBufferMap_.emplace(handle, buffer[0]);
     *bufHandle = handle;
     return CcuResult::CCU_SUCCESS;
 }
@@ -2630,7 +2630,8 @@ void CcuKernel::SetCcuInstrInfo(const CcuRep::CcuInstrInfo &instrInfo)
 
 CcuRep::Variable CcuKernel::CreateVariable()
 {
-    return CreateResAssist(res_.continuousVariable);
+    const auto& var = CreateBlockResAssist(1, res_.continuousVariable);
+    return var[0];
 }
 
 CcuRep::Variable CcuKernel::CreateExpectVar()
@@ -2665,7 +2666,8 @@ CcuRep::CompletedEvent CcuKernel::CreateCompletedEvent()
 
 CcuRep::CcuBuf CcuKernel::CreateCcuBuf()
 {
-    return CreateResAssist(res_.blockCcubufs);
+    const auto& buffer = CreateBlockResAssist(1, res_.blockCcubufs);
+    return buffer[0];
 }
 
 CcuRep::Executor CcuKernel::CreateExecutor()
