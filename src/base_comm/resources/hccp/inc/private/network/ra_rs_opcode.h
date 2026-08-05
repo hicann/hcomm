@@ -78,7 +78,7 @@ enum OpType {
     RA_RS_CTX_QP_CREATE = 60,
     RA_RS_CTX_QP_DESTROY = 61,
     RA_RS_CTX_QP_IMPORT = 62,
-    RA_RS_CTX_QP_UNIMPORT = 63,
+    RA_RS_CTX_QP_UNIMPORT_DEPRECATED = 63,
     RA_RS_CTX_QP_BIND = 64,
     RA_RS_CTX_QP_UNBIND = 65,
     RA_RS_CTX_BATCH_SEND_WR = 66,
@@ -135,6 +135,7 @@ enum OpType {
     RA_RS_GET_LITE_QP_ATTR = 117,
     RA_RS_GET_NET_API_VERSION = 118,
     RA_RS_TLV_REQUEST_V2 = 119,
+    RA_RS_CTX_QP_UNIMPORT = 120,
     RA_RS_EXTER_OP_MAX_NUM,
 
     // 上面opcode是对部opcode,下面是内部opcode

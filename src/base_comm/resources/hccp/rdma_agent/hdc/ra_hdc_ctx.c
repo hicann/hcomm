@@ -529,7 +529,7 @@ int RaHdcCtxQpUnimport(struct RaCtxRemQpHandle *remQpHandle)
 
     opData.txData.phyId = phyId;
     opData.txData.devIndex = remQpHandle->devIndex;
-    opData.txData.remJettyId = remQpHandle->id;
+    (void)memcpy_s(opData.txData.rawRemJettyId, REM_JETTY_ID_SIZE, remQpHandle->qpKey.value, REM_JETTY_ID_SIZE);
     ret = RaHdcProcessMsg(RA_RS_CTX_QP_UNIMPORT, phyId, (char *)&opData, sizeof(union OpCtxQpUnimportData));
     CHK_PRT_RETURN(ret, hccp_err("[deinit][ra_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
         ret, phyId, remQpHandle->devIndex), ret);

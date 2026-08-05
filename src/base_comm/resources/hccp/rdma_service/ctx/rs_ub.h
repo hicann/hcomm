@@ -72,7 +72,7 @@ int RsUbCtxJettyDestroy(struct RsUbDevCb *devCb, unsigned int jettyId);
 int RsUbCtxJettyDestroyBatch(struct RsUbDevCb *devCb, unsigned int jettyIds[], unsigned int *num);
 int RsUbCtxJettyImport(struct RsUbDevCb *devCb, struct RsJettyImportAttr *importAttr,
     struct RsJettyImportInfo *importInfo);
-int RsUbCtxJettyUnimport(struct RsUbDevCb *devCb, unsigned int remJettyId);
+int RsUbCtxJettyUnimport(struct RsUbDevCb *devCb, unsigned char rawRemJettyId[], unsigned int size);
 int RsUbCtxJettyBind(struct RsUbDevCb *devCb, struct RsCtxQpInfo *jettyInfo,
     struct RsCtxQpInfo *rjettyInfo);
 int RsUbCtxJettyUnbind(struct RsUbDevCb *devCb, unsigned int jettyId);

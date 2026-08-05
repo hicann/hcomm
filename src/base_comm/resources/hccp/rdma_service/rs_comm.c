@@ -121,6 +121,7 @@ struct OpcodeInterfaceInfo gInterfaceInfoList[] = {
     {RA_RS_CTX_QP_CREATE, 1},
     {RA_RS_CTX_QP_DESTROY, 1},
     {RA_RS_CTX_QP_IMPORT, 1},
+    {RA_RS_CTX_QP_UNIMPORT_DEPRECATED, 1},
     {RA_RS_CTX_QP_UNIMPORT, 1},
     {RA_RS_CTX_QP_BIND, 1},
     {RA_RS_CTX_QP_UNBIND, 1},

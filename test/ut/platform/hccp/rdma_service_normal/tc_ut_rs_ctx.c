@@ -340,7 +340,7 @@ void TcRsCtxQpUnimport()
     mocker_invoke(RsGetRsCb, StubRsGetRsCb, 1);
     mocker(RsUbGetDevCb, 1, 0);
     mocker(RsUbCtxJettyUnimport, 1, 0);
-    ret = RsCtxQpUnimport(&devInfo, 0);
+    ret = RsCtxQpUnimport(&devInfo, NULL, 0);
     EXPECT_INT_EQ(ret, 0);
     mocker_clean();
 }

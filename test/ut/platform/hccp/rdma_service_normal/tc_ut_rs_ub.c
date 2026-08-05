@@ -725,7 +725,7 @@ void TcRsUbCtxJettyImport()
     ret = RsUbCtxJettyImport(devCb, &importAttr, &importData);
     EXPECT_INT_EQ(0, ret);
 
-    ret = RsUbCtxJettyUnimport(devCb, importData.remJettyId);
+    ret = RsUbCtxJettyUnimport(devCb, importAttr.key.value, REM_JETTY_ID_DEPRECATED_SIZE);
     EXPECT_INT_EQ(0, ret);
 
     ret = RsUbCtxJettyDestroy(devCb, qpInfo.ub.id);
@@ -781,7 +781,7 @@ void TcRsUbCtxJettyBind()
     ret = RsUbCtxJettyUnbind(devCb, rsQpInfo.id);
     EXPECT_INT_EQ(0, ret);
 
-    ret = RsUbCtxJettyUnimport(devCb, importData.remJettyId);
+    ret = RsUbCtxJettyUnimport(devCb, importAttr.key.value, REM_JETTY_ID_DEPRECATED_SIZE);
     EXPECT_INT_EQ(0, ret);
 
     ret = RsUbCtxJettyDestroy(devCb, qpInfo.ub.id);
@@ -815,7 +815,7 @@ void TcRsUbCtxJettyBind()
     ret = RsUbCtxJettyImport(devCb, &importAttr, &importData);
     EXPECT_INT_EQ(0, ret);
 
-    ret = RsUbCtxJettyUnimport(devCb, importData.remJettyId);
+    ret = RsUbCtxJettyUnimport(devCb, importAttr.key.value, REM_JETTY_ID_DEPRECATED_SIZE);
     EXPECT_INT_EQ(0, ret);
 
     ret = RsUbCtxJfcDestroy(devCb, cqInfo.addr);
@@ -932,7 +932,7 @@ void TcRsUbCtxBatchSendWr()
     ret = RsUbCtxJettyUnbind(devCb, rsQpInfo.id);
     EXPECT_INT_EQ(0, ret);
 
-    ret = RsUbCtxJettyUnimport(devCb, importData.remJettyId);
+    ret = RsUbCtxJettyUnimport(devCb, importAttr.key.value, REM_JETTY_ID_DEPRECATED_SIZE);
     EXPECT_INT_EQ(0, ret);
 
     ret = RsUbCtxJettyDestroy(devCb, qpInfo.ub.id);
