@@ -511,3 +511,44 @@ TEST_F(RankGraphTest, ut_AddGroupLinks_When_1pNormal_Expect_SUCCESS) {
     std::unique_ptr<RankGraph> subRankGraph = rankGraph->CreateSubRankGraph(subRankIds);
     EXPECT_EQ(1, subRankGraph->GetLocalInstSize(0));
 }
+
+TEST_F(RankGraphTest, ut_GetNetInstanceByNetInstId_When_NotExisted_Expect_ReturnNullptr) {
+    RankGraph rankGraph(myRank);
+    auto result = rankGraph.GetNetInstanceByNetInstId(0, "not_existed");
+    EXPECT_EQ(nullptr, result);
+
+    s32 netLayer = 0;
+    string netInstId = "test";
+    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
+    EXPECT_NO_THROW(rankGraph.AddNetInstance(netInstance));
+    auto result2 = rankGraph.GetNetInstanceByNetInstId(99, "test");
+    EXPECT_EQ(nullptr, result2);
+    auto result3 = rankGraph.GetNetInstanceByNetInstId(0, "not_existed");
+    EXPECT_EQ(nullptr, result3);
+}
+
+TEST_F(RankGraphTest, ut_GetNetInstanceByNetInstId_When_NotExisted_ConstVersion_Expect_ReturnNullptr) {
+    RankGraph rankGraph(myRank);
+    const RankGraph &constRankGraph = rankGraph;
+    auto result = constRankGraph.GetNetInstanceByNetInstId(0, "not_existed");
+    EXPECT_EQ(nullptr, result);
+
+    s32 netLayer = 0;
+    string netInstId = "test";
+    auto netInstance = std::make_shared<InnerNetInstance>(netLayer, netInstId);
+    EXPECT_NO_THROW(rankGraph.AddNetInstance(netInstance));
+    auto result2 = constRankGraph.GetNetInstanceByNetInstId(99, "test");
+    EXPECT_EQ(nullptr, result2);
+    auto result3 = constRankGraph.GetNetInstanceByNetInstId(0, "not_existed");
+    EXPECT_EQ(nullptr, result3);
+}
+
+TEST_F(RankGraphTest, ut_NeedUpdateTopoInstForSubGraph_When_TopoInstIsNull_Expect_ReturnFalse) {
+    u32 level = 0;
+    std::string netInstId = "test";
+    InnerNetInstance netInstance(level, netInstId);
+    u32 topoInstId = 0;
+    netInstance.topoInsts_.emplace(topoInstId, nullptr);
+
+    EXPECT_EQ(false, NeedUpdateTopoInstForSubGraph(&netInstance, topoInstId, myRank));
+}

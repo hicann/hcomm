@@ -110,7 +110,7 @@ HcclResult BroadcastRing::RunAsync(const u32 rank, const u32 rankSize,
             CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[BroadcastRing][RunAsync]rank[%u] rx data from offset[%llu] "\
                 "with localmem[%p] failed", rank, dstOffset, localSrc.ptr()),
                 ret);
-            HCCL_DEBUG("last rank[%u]  rx_sync from  range[%llu] with localmem[%p] size:[%llu] ", rank, \
+            HCCL_DEBUG("last rank[%u] rx_sync from range[%llu] with localmem[%p] size:[%llu] ", rank, \
                        dstOffset, localSrc.ptr(), sizePerRound);
 
             // 给前一节点发送同步
@@ -133,7 +133,7 @@ HcclResult BroadcastRing::RunAsync(const u32 rank, const u32 rankSize,
             CHK_PRT_RET(ret != HCCL_SUCCESS, \
                 HCCL_ERROR("[BroadcastRing][RunAsync]rank[%u] left link rx sync from offset[%llu] with "\
                 "localmem[%p] failed", rank, dstOffset, localSrc.ptr()), ret);
-            HCCL_DEBUG("rank[%u] rx_sync from  range[%u] with localmem[%p] size[%llu] ", rank, \
+            HCCL_DEBUG("rank[%u] rx_sync from range[%u] with localmem[%p] size[%llu] ", rank, \
                 dstOffset, localSrc.ptr(), sizePerRound);
 
             // 给前一节点发送同步

@@ -116,8 +116,8 @@ HcclResult AllgatherMeshDirect::RunAsync(const u32 rank, const u32 rankSize, con
     }
 
     for (u32 i = 0; i < interRankSize_; i++) {
-        HCCL_DEBUG("[AllGatherMeshDirect][Slice]: rank[%u], outputslice: size[%llu] offset[%llu]   "
-            "inputslice: size[%llu]  offset[%llu]",
+        HCCL_DEBUG("[AllGatherMeshDirect][Slice]: rank[%u], outputslice: size[%llu] offset[%llu] "
+            "inputslice: size[%llu] offset[%llu]",
             i, slices_[i].size, slices_[i].offset, inputSlices[i].size, inputSlices[i].offset);
     }
 

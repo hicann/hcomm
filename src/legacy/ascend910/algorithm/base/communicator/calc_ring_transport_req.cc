@@ -80,7 +80,7 @@ HcclResult CalcRingTransportReq::CalcTransportRequest(const std::string &tag, Tr
 HcclResult CalcRingTransportReq::CalcDstRanks(const u32 rank, const std::vector<u32> commGroups, std::set<u32> &dstRanks)
 {
     CHK_PRT_RET(rank >= commGroups.size(),
-        HCCL_ERROR("[CalcRingTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u]  error", 
+        HCCL_ERROR("[CalcRingTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u] error", 
         rank, commGroups.size() ), HCCL_E_INTERNAL);
     
     // 正方向下一个节点的rank号

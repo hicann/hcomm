@@ -145,7 +145,7 @@ void CommManager::PrintChannelInfo()
     for (u32 dieId = 0; dieId < MAX_CCU_IODIE_NUM; dieId++) {
         auto ret = CcuGetChannelSpecNum(logicDevId, dieId, channelNum);
         if (ret != HCCL_SUCCESS) {
-            HCCL_WARNING("[CommManager][PrintChannelInfo]Get channel num  failed, devId[%d], dieId[%u]",
+            HCCL_WARNING("[CommManager][PrintChannelInfo]Get channel num failed, devId[%d], dieId[%u]",
                          logicDevId, dieId);
             return;
         }

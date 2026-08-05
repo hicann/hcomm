@@ -192,7 +192,7 @@ void EndpointMonitor::PrintUbAsyncEventsContext(void *epHandle, u32 seq, const s
     HCCL_ERROR("deviceId[%d] epHandle[%p] seq[%u] resId[%u] eventType[%u] contextLen[%u]",
         deviceLogicId_, epHandle, seq, event.resId, event.eventType, event.len);
     if (contextLen != 0) {
-        HCCL_ERROR("  bytes   order  : high -> low");
+        HCCL_ERROR("bytes order: high -> low");
     }
     constexpr u32 bytesPerLine = 4;
     for (u32 i = 0; i < contextLen; i += bytesPerLine) {

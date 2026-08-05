@@ -1405,8 +1405,8 @@ HcclResult HcomNormalInit(const char *rankTableM, const char *identify)
 
         hcomInfo.pComm.reset(new (std::nothrow) hccl::hcclComm(0, 0, HCCL_WORLD_GROUP));
 
-        CHK_PRT_RET(hcomInfo.pComm == nullptr, HCCL_ERROR("[Init][Result]hcomInfo.pComm is null,\
-            create failed"), HCCL_E_PTR);
+        CHK_PRT_RET(hcomInfo.pComm == nullptr, HCCL_ERROR("[Init][Result]hcomInfo.pComm is null, "
+            "create failed"), HCCL_E_PTR);
         CommConfig commConfig(identify);
         ret = hcomInfo.pComm->init(hcomInfo.params, commConfig, hcomInfo.rankTable);
         CHK_PRT_BREAK(ret != HCCL_SUCCESS,

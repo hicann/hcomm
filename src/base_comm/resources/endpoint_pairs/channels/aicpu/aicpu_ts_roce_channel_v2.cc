@@ -607,7 +607,7 @@ HcclResult AicpuTsRoceChannelV2::NotifyVecUnpack(Hccl::BinaryStream &binaryStrea
         binaryStream >> pos;
         Hccl::ExchangeRdmaBufferDto dto;
         dto.Deserialize(binaryStream);
-        HCCL_INFO("unpack  pos=%u, dto %s", pos, dto.Describe().c_str());
+        HCCL_INFO("unpack pos=%u, dto %s", pos, dto.Describe().c_str());
         remoteNotifies_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>(rdmaHandle_, dto));
         HCCL_INFO("unpack notify pos=%u, rmtRmaBuffer=%s", pos, remoteNotifies_.back()->Describe().c_str());
     }

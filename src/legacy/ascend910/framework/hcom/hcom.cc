@@ -123,8 +123,8 @@ HcclResult HcomInit(const char *rankTableM, const char *identify, WorkMode commW
         hcomInfo.pComm.reset(new (std::nothrow) hccl::hcclComm(0, 0, HCCL_WORLD_GROUP));
 
         CHK_PRT_RET(hcomInfo.pComm == nullptr,
-            HCCL_ERROR("[Init][Result]hcomInfo.pComm is null,\
-                create failed"),
+            HCCL_ERROR("[Init][Result]hcomInfo.pComm is null, "
+                "create failed"),
             HCCL_E_PTR);
         CommConfig commConfig(HCCL_WORLD_GROUP);
         ret = hcomInfo.pComm->init(hcomInfo.params, commConfig, hcomInfo.rankTable);
@@ -3273,8 +3273,8 @@ HcclResult GetClusterInfoAndDeviceNum(const std::string rankTableString, RankTab
     CHK_RET(myTopoRanktable.Init());
     CHK_RET(myTopoRanktable.GetClusterInfo(clusterInfo));
     CHK_RET(myTopoRanktable.GetDeviceNumPerServer(deviceNum));
-    CHK_PRT_RET(deviceNum == 0, HCCL_ERROR("[GetStremNumOfflineByDev]cur device num per server is 0,\
-        maybe ranktable is incomplete"), HCCL_E_PARA);
+    CHK_PRT_RET(deviceNum == 0, HCCL_ERROR("[GetStremNumOfflineByDev]cur device num per server is 0, "
+        "maybe ranktable is incomplete"), HCCL_E_PARA);
     return HCCL_SUCCESS;
 }
 

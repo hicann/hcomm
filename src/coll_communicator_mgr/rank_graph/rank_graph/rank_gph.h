@@ -111,6 +111,8 @@ void AddNewLink(u32 layer, const NetInstance::Link &oldLink, RankId srcNewRankId
 void AddGroupLinks(const vector<RankId> &rankIds, const NetInstance *oldNetInstance, shared_ptr<NetInstance> &newNetInstance,
                    RankId2PeerMap &tmpPeers, RankId parentMyRank);
 
+bool NeedUpdateTopoInstForSubGraph(const NetInstance *oldNetInstance, u32 topoInstId, RankId parentMyRank);
+
 HcclResult GetCommAddr(CommAddr &commAddr, const IpAddress &ipAddr);
 
 EndpointLocType AddrPositionToEndpointLoc(AddrPosition pos);

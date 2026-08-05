@@ -59,7 +59,7 @@ s32 hrtGetgrpId(int &groupId, int &devId)
             return ret;
         }
 
-        HCCL_DEBUG("g_grpIdCallback is not nullptr, g_grpIdCallback(0) event.grp_id[%d],  devId[%d]", groupId, devId);
+        HCCL_DEBUG("g_grpIdCallback is not nullptr, g_grpIdCallback(0) event.grp_id[%d], devId[%d]", groupId, devId);
     }
 
     return 0;

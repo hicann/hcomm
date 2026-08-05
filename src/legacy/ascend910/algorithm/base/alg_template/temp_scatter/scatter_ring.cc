@@ -114,7 +114,7 @@ HcclResult ScatterRing::RunScatterOnMidRank()
         if (i != 1) {
             // 给前一节点发送同步，以便前一rank进行下一轮的操作
             ret = linkLeft_->TxAck(stream_);
-            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Run][ScatterOnMidRank]rank[%u] round[%u] tx ack  failed",
+            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Run][ScatterOnMidRank]rank[%u] round[%u] tx ack failed",
                 interRank_, i), ret);
             // 从后一rank接收同步信号
             ret = linkRight_->RxAck(stream_);
@@ -130,7 +130,7 @@ HcclResult ScatterRing::RunScatterOnMidRank()
         } else { // 最后一轮接收数据，拷贝到自己的outputmem
             // 给前一节点发送同步，以便前一rank进行下一轮的操作
             ret = linkLeft_->TxAck(stream_);
-            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Run][ScatterOnMidRank]rank[%u] round[%u]  tx ack  failed",
+            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Run][ScatterOnMidRank]rank[%u] round[%u] tx ack failed",
                 interRank_, i), ret);
         }
         HCCL_DEBUG("rank[%u] round[%u] rcv with rank[%u]'s offset[%llu] size[%llu]", \

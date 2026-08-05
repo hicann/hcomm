@@ -115,3 +115,9 @@ TEST_F(OpBaseV2Test, Ut_HcclGetDpuSteamIdV2_When_GetStreamIdFails_Expect_ErrorCo
     // 这里只检查函数能正常调用
     Ut_Comm_Destroy(comm);
 }
+
+TEST_F(OpBaseV2Test, Ut_HcclCheckTaskServiceExist_When_CommIdNotFound_Expect_ReturnIsHCCL_E_NOT_FOUND)
+{
+    HcclResult ret = HcclCheckTaskServiceExist("non_existent_comm_id", 0);
+    EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
+}

@@ -1505,3 +1505,35 @@ TEST_F(SymmetricMemoryTest, ut_UpdateRemoteMemByTag_When_TagMatched_Expect_Updat
     ret = symmetricMemory.DeregisterUrmaSymmetricMem(win);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
+
+TEST_F(SymmetricMemoryTest, ut_GetMemoryInfo_When_PtrExceedsBlock_Expect_ReturnHCCL_E_PARA)
+{
+    std::vector<RankInfo> rankInfoList(2);
+    HcclIpAddress localVnicIp;
+    std::shared_ptr<SymmetricMemoryAgent> symmetricMemoryAgent_ = std::make_shared<SymmetricMemoryAgent>(nullptr, 0,
+        0, localVnicIp, rankInfoList, 0, true, "1");
+    SymmetricMemory symmetricMemory(0, 2, TWO_M, symmetricMemoryAgent_);
+    symmetricMemory.granularity_ = 4096;
+
+    void* ptr = reinterpret_cast<void*>(0x1000000);
+    size_t size = TWO_M;
+    void* baseUserVaVal = reinterpret_cast<void*>(0x1000000);
+    size_t baseVaSizeVal = 4096;
+    void* handleVal = reinterpret_cast<void*>(0x3000000);
+
+    MOCKER_CPP(aclrtMemGetAddressRange)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&baseUserVaVal, sizeof(baseUserVaVal)),
+              outBoundP(&baseVaSizeVal, sizeof(baseVaSizeVal)))
+        .will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(aclrtMemRetainAllocationHandle)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&handleVal, sizeof(handleVal)))
+        .will(returnValue(ACL_SUCCESS));
+
+    void* baseUserVa = nullptr;
+    size_t baseVaSize = 0;
+    aclrtDrvMemHandle paHandle = nullptr;
+    HcclResult ret = symmetricMemory.GetMemoryInfo(ptr, size, &baseUserVa, &baseVaSize, &paHandle);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}

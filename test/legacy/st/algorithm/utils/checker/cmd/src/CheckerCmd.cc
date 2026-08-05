@@ -181,7 +181,7 @@ int CheckerCmd::CheckCmdLine()
     }
 
     if (rankNum < 0) {
-        printf("Error: [-r,--rankNum] is invalid,  Use [-h,--help] to check the correct input parameter.\n");
+        printf("Error: [-r,--rankNum] is invalid, Use [-h,--help] to check the correct input parameter.\n");
         return EXIT_FAILURE;
     }
 

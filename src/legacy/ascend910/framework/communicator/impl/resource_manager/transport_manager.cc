@@ -1383,7 +1383,7 @@ HcclResult TransportManager::SetMachinePara(const std::string &tag, MachineType 
         CHK_RET(hrtGetPairDevicePhyId(rankInfoList_[dstRank].devicePhyId, remoteDevBackUpPhyId));
         machinePara.remoteDeviceId = static_cast<s32>(remoteDevBackUpPhyId);
         HCCL_DEBUG("[%s]isBackup[%d], machinePara.localIpAddr[%s], machinePara.remoteIpAddr[%s], "
-            "machinePara.localDeviceId[%d],  machinePara.remoteDeviceId[%d].", __func__,
+            "machinePara.localDeviceId[%d], machinePara.remoteDeviceId[%d].", __func__,
             isBackup, machinePara.localIpAddr.GetReadableIP(), machinePara.remoteIpAddr.GetReadableIP(),
             machinePara.localDeviceId, machinePara.remoteDeviceId);
     } else {
@@ -1392,7 +1392,7 @@ HcclResult TransportManager::SetMachinePara(const std::string &tag, MachineType 
         machinePara.localDeviceId = rankInfoList_[userRank_].devicePhyId;
         machinePara.remoteDeviceId = rankInfoList_[dstRank].devicePhyId;
         HCCL_DEBUG("[%s]isBackup[%d], machinePara.localIpAddr[%s], machinePara.remoteIpAddr[%s], "
-            "machinePara.localDeviceId[%d],  machinePara.remoteDeviceId[%d].", __func__,
+            "machinePara.localDeviceId[%d], machinePara.remoteDeviceId[%d].", __func__,
             isBackup, machinePara.localIpAddr.GetReadableIP(), machinePara.remoteIpAddr.GetReadableIP(),
             machinePara.localDeviceId, machinePara.remoteDeviceId);
     }

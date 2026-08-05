@@ -76,7 +76,7 @@ void ChannelLogger::PrintDescInfoRow(uint32_t idx, const HcclChannelDesc& channe
 void ChannelLogger::PrintErrorTableHeader(uint32_t localRank)
 {
     HCCL_ERROR("   ________________________________________________CHANNEL_CONNECT_ERROR_INFO________________________________________________");
-    HCCL_ERROR("   |  comm error, localRank[%u]", localRank);
+    HCCL_ERROR("   | comm error, localRank[%u]", localRank);
     HCCL_ERROR("   |  idx  | localRank |              localAddr               | remoteRank |             remoteAddr             | chHandle  |            Status            |    TlsStatus    | Proto | elapsed |");
     HCCL_ERROR("   |-------|-----------|-------------------------------------|------------|-------------------------------------|-----------|----------------------------|-----------------|-------|---------|");
 }

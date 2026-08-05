@@ -669,7 +669,7 @@ namespace hccl
         // 非多server不同卡模式下，判断实际设备数目和userRank_table中的记录一致
         if (multiServerDiffDeviceNumMode == false && rankTable.deviceNum != devNum * servRankInfo.size())
         {
-            HCCL_WARNING("[Check][RankTable]errNo[0x%016llx] devnum  isn't same, number in rankTable:[%u], actual:[%llu]",
+            HCCL_WARNING("[Check][RankTable]errNo[0x%016llx] devnum isn't same, number in rankTable:[%u], actual:[%llu]",
                          HCCL_ERROR_CODE(HCCL_E_PARA), rankTable.deviceNum, devNum * servRankInfo.size());
             return HCCL_E_PARA;
         }

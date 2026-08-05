@@ -183,7 +183,7 @@ HcclResult CollScatterExecutor::ReorderSlice(std::vector<Slice> &dataSlice, std:
     std::vector<Slice> tempDataSegsSlice(dataSlice.size());
     for (size_t i = 0; i < dataSlice.size(); i++) {
         CHK_PRT_RET(order[i] >= dataSlice.size(),
-            HCCL_ERROR("[ReorderSlice] order value [%u] >=  dataSlice size [%zu]", order[i], dataSlice.size()),
+            HCCL_ERROR("[ReorderSlice] order value [%u] >= dataSlice size [%zu]", order[i], dataSlice.size()),
             HCCL_E_INTERNAL);
         tempDataSegsSlice[i] = dataSlice[order[i]];
     }

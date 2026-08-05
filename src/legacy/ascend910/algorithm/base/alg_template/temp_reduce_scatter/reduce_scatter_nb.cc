@@ -64,8 +64,8 @@ HcclResult ReduceScatterNB::RunAsync(const u32 rank, const u32 rankSize, const s
 
             outputSlices[i].size = sliceSize;
             outputSlices[i].offset = (inputMem_.size() > outputMem_.size()) ? 0 : (i * sliceSize);
-            HCCL_DEBUG("rank[%u], slices[%u].offset=[%llu], slices[%u].size=[%llu] outputSlices[%u].offset=[%llu], \
-                outputSlices[%u].size=[%llu] count_[%llu] unitSize[%llu]",
+            HCCL_DEBUG("rank[%u], slices[%u].offset=[%llu], slices[%u].size=[%llu] outputSlices[%u].offset=[%llu], "
+                "outputSlices[%u].size=[%llu] count_[%llu] unitSize[%llu]",
                 rank, i, slices_[i].offset, i, slices_[i].size, i, outputSlices[i].offset, i, outputSlices[i].size,
                 count_, unitSize);
         }

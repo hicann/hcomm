@@ -477,8 +477,8 @@ HcclResult ClusterMonitor::SendFrame(
             HCCL_DEBUG("[Heartbeat][SendFrame] Send Success, from [%s] to [%s] about [%s] by [%s] status[%d]",
                 GetUID(myRankUID_).c_str(), GetUID(dst).c_str(), GetUID(crimer).c_str(), GetUID(informer).c_str(), status);
         } else {
-            HCCL_DEBUG("[Heartbeat][SendFrame] Send Not Complete, from [%s] to [%s] about [%s] by [%s] status[%d], \
-                expectSize[%llu], compSize[%llu]",
+            HCCL_DEBUG("[Heartbeat][SendFrame] Send Not Complete, from [%s] to [%s] about [%s] by [%s] status[%d], "
+                "expectSize[%llu], compSize[%llu]",
                 GetUID(myRankUID_).c_str(), GetUID(dst).c_str(), GetUID(crimer).c_str(), GetUID(informer).c_str(), status,
                 expectSize, compSize);
             uid2SocketRefMap_[dst].restSize = expectSize - compSize;

@@ -145,7 +145,7 @@ HcclResult ScatterMesh::RunRecvScatter(const u32 srcRank, const Slice &slice, co
         return HCCL_E_INTERNAL;
     }
     dst = outputMem_.range(slice.offset, slice.size);
-    HCCL_DEBUG("rank[%u]  will rcv with output's offset[%llu], size[%llu] ", interRank_, slice.offset, slice.size);
+    HCCL_DEBUG("rank[%u] will rcv with output's offset[%llu], size[%llu] ", interRank_, slice.offset, slice.size);
 
     // 向root节点发送tx同步,rxmem可用
     HcclResult ret = links[srcRank]->TxAck(stream_);

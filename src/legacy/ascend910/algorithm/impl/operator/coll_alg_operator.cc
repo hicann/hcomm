@@ -1006,7 +1006,7 @@ HcclResult CollAlgOperator::AHCAlgOptionSelect(const AlgTypeLevel1 &algType, std
     AHCConcOpType ahcConcOpType;
     //一层组间拼接时，分组数大于设定阈值则修改默认算法为NHR
     if(globalSubGroups[0].size() <= AHC_LEVEL0_GROUP_SIZE_THRESHOLD ) {
-        HCCL_DEBUG("[AHCAlgSelect]  conc inter select type RING ");
+        HCCL_DEBUG("[AHCAlgSelect] conc inter select type RING ");
         ahcConcOpType = {AHCLevel::AHC_LEVEL_0, ConcType::CONC_INTER, AHCOpType::AHC_OP_TYPE_REDUCE_SCATTER};
         ahcAlgOption[ahcConcOpType] = TemplateType::TEMPLATE_REDUCESCATTER_RING;
 
@@ -1016,7 +1016,7 @@ HcclResult CollAlgOperator::AHCAlgOptionSelect(const AlgTypeLevel1 &algType, std
         ahcConcOpType = {AHCLevel::AHC_LEVEL_0, ConcType::CONC_INTER, AHCOpType::AHC_OP_TYPE_ALLGATHER};
         ahcAlgOption[ahcConcOpType] = TemplateType::TEMPLATE_ALL_GATHER_RING;              
     } else {
-        HCCL_DEBUG("[AHCAlgSelect]  conc inter select type NHR ");
+        HCCL_DEBUG("[AHCAlgSelect] conc inter select type NHR ");
         ahcConcOpType = {AHCLevel::AHC_LEVEL_0, ConcType::CONC_INTER, AHCOpType::AHC_OP_TYPE_REDUCE_SCATTER};
         ahcAlgOption[ahcConcOpType] = TemplateType::TEMPLATE_REDUCESCATTER_NHR;
 

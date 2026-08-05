@@ -292,7 +292,7 @@ HcclResult TopoinfoRanktableStandard::GetCloudHcomInfo(hccl::HcclCommParams &par
         CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<u32>(deviceLogicId), devicePhyId));
 
         for (u32 index = 0; index < rankTable.rankList.size(); index++) {
-            HCCL_INFO(" rank: %u  phyId:%u identify:%s podName:%s", rank, devicePhyId, identify.c_str(),
+            HCCL_INFO(" rank: %u phyId:%u identify:%s podName:%s", rank, devicePhyId, identify.c_str(),
                 rankTable.rankList[index].podName.c_str());
             if ((rankTable.rankList[index].podName == identify) &&
                     (rankTable.rankList[index].deviceInfo.devicePhyId == static_cast<s32>(devicePhyId))) {

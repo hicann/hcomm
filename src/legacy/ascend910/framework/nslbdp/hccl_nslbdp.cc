@@ -1273,7 +1273,7 @@ HcclResult hcclNslbDp::SendRankTable(NslbDpCommConfigInfo tab_f)
     HCCL_INFO("[NSLB-DP] SendRankTable tlvData.len:[%u] success.", datlen);
 
     if(nslbdp_handle_ == nullptr) {
-        HCCL_INFO("[NSLB-DP] ndlbdp  nslbdp_handle_ error SendRankTable.");
+        HCCL_INFO("[NSLB-DP] ndlbdp nslbdp_handle_ error SendRankTable.");
         return HCCL_SUCCESS;
     }
 

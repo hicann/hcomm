@@ -1986,7 +1986,7 @@ namespace hccl
         GetAivTag(algDesc.aivTagNum, false, aivSuperKernelArgs.tag); // workflowmode为图模式
         aivSuperKernelArgs.numBlocks = numBlocks;
 
-        HCCL_INFO("SPK, Tag %llu  aivCoreLimit %u, numBlocks %llu.", aivSuperKernelArgs.tag,
+        HCCL_INFO("SPK, Tag %llu aivCoreLimit %u, numBlocks %llu.", aivSuperKernelArgs.tag,
                   aivCoreLimit, aivSuperKernelArgs.numBlocks);
         // clearenable
         //  拷贝到Device
@@ -2090,7 +2090,7 @@ namespace hccl
 
         for (u32 index = 0; index < ranksInfo.size(); ++index) {
             if (index != ranksInfo[index].userRank) {
-                HCCL_ERROR("[Get][GroupRanksInfo]errNo[0x%016llx] index[%u] !=  user rank[%u]",
+                HCCL_ERROR("[Get][GroupRanksInfo]errNo[0x%016llx] index[%u] != user rank[%u]",
                            HCCL_ERROR_CODE(HCCL_E_PARA), index, ranksInfo[index].userRank);
                 return HCCL_E_PARA;
             }
@@ -3086,7 +3086,7 @@ namespace hccl
             if (userRankSize_ >= RANK_SIZE_TWO && Is310P3Common(isHaveCpuRank_, deviceType_)) {
                 HcclResult ret = AllReduceAicpuUnfold(tag, inputPtr, outputPtr, count, dataType, op, stream);
                 CHK_PRT_RET((ret != HCCL_SUCCESS),
-                            HCCL_ERROR("[HcclCommunicator][AllReduce]errNo[0x%016llx]  tag[%s], AllReduce aicpu unfold failed",
+                            HCCL_ERROR("[HcclCommunicator][AllReduce]errNo[0x%016llx] tag[%s], AllReduce aicpu unfold failed",
                                        HCCL_ERROR_CODE(ret), tag.c_str()),
                             ret);
 
@@ -5608,7 +5608,7 @@ namespace hccl
             opResPara_.topoInfo.serverAndsuperPodRank = reinterpret_cast<u64>(serverAndsuperPodToRankDevice_.ptr());
             opResPara_.topoInfo.serverAndsuperPodRankLength = tlvLen;
             HCCL_DEBUG("[HcclCommunicator][BuildServerAndsuperPodRank] server and super pod ranks tlv length[%lu], ptr[%p], "
-                       "group[%s],  local user rankId[%u] ",
+                       "group[%s], local user rankId[%u] ",
                        tlvLen, serverAndsuperPodToRankDevice_.ptr(),
                        identifier_.c_str(), userRank_);
         }
@@ -5646,7 +5646,7 @@ namespace hccl
             opResPara_.hierarchicalAlgInfo.commplaneSubGroupRank = reinterpret_cast<u64>(commplaneSubGroupRankDevice_.ptr());
             opResPara_.hierarchicalAlgInfo.commplaneSubGroupRankLength = tlvLen;
             HCCL_DEBUG("[HcclCommunicator][BuildCommPlaneSubGroupRank] comm plane subGroups ranks tlv length[%lu], ptr[%p], "
-                       "group[%s],  local user rankId[%u] ",
+                       "group[%s], local user rankId[%u] ",
                        tlvLen, commplaneSubGroupRankDevice_.ptr(),
                        identifier_.c_str(), userRank_);
         }
@@ -5660,7 +5660,7 @@ namespace hccl
         ahcConfInfo[TOP_HIERARCHICAL_CONF_lENGTH_INDEX] = hierarchicalAlgOption.size();
 
         if (hierarchicalAlgOption.size() >= (TOP_HIERARCHICAL_CONF_SIZE-1)) {
-            HCCL_ERROR("[HcclCommunicator][BuildHierarchicalAlgOption] host hierarchicalAlgOption size[%u]  exceed maxsize[%u]",
+            HCCL_ERROR("[HcclCommunicator][BuildHierarchicalAlgOption] host hierarchicalAlgOption size[%u] exceed maxsize[%u]",
                 hierarchicalAlgOption.size(), (TOP_HIERARCHICAL_CONF_SIZE-1));
             return HCCL_E_INTERNAL;
         }

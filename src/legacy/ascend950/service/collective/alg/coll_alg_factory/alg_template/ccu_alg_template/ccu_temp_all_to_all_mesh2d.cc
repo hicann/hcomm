@@ -165,8 +165,8 @@ HcclResult CcuTempAlltoAllMesh2D::Run(const TempFuncs &tempFuncs, const RankSlic
 
     uint64_t token;
     CHK_RET(GetToken(op_, token));
-    HCCL_INFO("[CcuTempAlltoAllMesh2D] Rank[%d], input[%llu], output[%llu], scratch[%llu], sendStride[%llu], \
-        recvStride[%llu].",
+    HCCL_INFO("[CcuTempAlltoAllMesh2D] Rank[%d], input[%llu], output[%llu], scratch[%llu], sendStride[%llu], "
+        "recvStride[%llu].",
         myRank_, op_.inputMem->GetAddr(), op_.outputMem->GetAddr(), op_.scratchMem->GetAddr(), 0, 0);
 
     if (tempInsQues.size() == 0) {

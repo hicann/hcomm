@@ -382,8 +382,8 @@ HcclResult TransportDirectNpu::ConstructExchangeForSend()
     CHK_RET(ConstructExchangeDataForSend(exchangeDataPtr, exchangeDataBlankSize));
 
     if (exchangeDataBlankSize != 0) {
-        HCCL_ERROR("[TransportDirectNpu][ConstructExchangeForSend] failed to construct exchange Data \
-            exchangeDataBlankSize[%llu]",
+        HCCL_ERROR("[TransportDirectNpu][ConstructExchangeForSend] failed to construct exchange Data "
+            "exchangeDataBlankSize[%llu]",
             exchangeDataBlankSize);
         return HCCL_E_INTERNAL;
     }
@@ -419,8 +419,8 @@ HcclResult TransportDirectNpu::ParseReceivedExchangeData()
     CHK_RET(ParseExchangeData(exchangeDataPtr, exchangeDataBlankSize));
 
     if (exchangeDataBlankSize != 0) {
-        HCCL_ERROR("[TransportDirectNpu][ParseReceivedExchangeData] failed to Parse exchange Data \
-            exchangeDataBlankSize[%llu]", exchangeDataBlankSize);
+        HCCL_ERROR("[TransportDirectNpu][ParseReceivedExchangeData] failed to Parse exchange Data "
+            "exchangeDataBlankSize[%llu]", exchangeDataBlankSize);
         return HCCL_E_INTERNAL;
     }
     HCCL_DEBUG("Parse Received ExchangeData success!");

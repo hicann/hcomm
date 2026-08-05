@@ -460,7 +460,7 @@ HcclResult TopoInfoRanktableParser::CheckUniquePara(const JsonUniqueInfoType &ty
     auto it = JsonInfoTypeNameMap.find(type);
     CHK_PRT_RET(it == JsonInfoTypeNameMap.end(),
         HCCL_ERROR("[Get][JsonArrayMemberProperty][Check][UniquePara]errNo[0x%016llx] jsonUniqueInfoType[%d] "\
-        " is not in JsonInfoTypeNameMap", HCOM_ERROR_CODE(HCCL_E_PARA), type), HCCL_E_PARA);
+        "is not in JsonInfoTypeNameMap", HCOM_ERROR_CODE(HCCL_E_PARA), type), HCCL_E_PARA);
     strType = it->second;
     switch (type) {
         case JsonUniqueInfoType::UNIQUE_INFO_TYPE_DEVICE_IP:

@@ -166,3 +166,21 @@ TEST_F(OpCounterTest, ut_clear_opCounter)
     ResetInitState();
     GlobalMockObject::verify();
 }
+
+TEST_F(OpCounterTest, ut_clear_opCounter_mem_nullptr)
+{
+    ResetInitState();
+    setenv("HCCL_OP_COUNTER_ENABLE", "1", 1);
+    InitExternalInput();
+
+    OpExeCounter::GetInstance(0).isNeedOpCounter_ = true;
+    OpExeCounter::GetInstance(0).headCountMem_ = nullptr;
+    OpExeCounter::GetInstance(0).tailCountMem_ = nullptr;
+
+    HcclResult ret = OpExeCounter::GetInstance(0).ClearOpCounterMem();
+    EXPECT_EQ(ret, HCCL_E_PTR);
+
+    unsetenv("HCCL_OP_COUNTER_ENABLE");
+    ResetInitState();
+    GlobalMockObject::verify();
+}

@@ -121,7 +121,7 @@ HcclResult GatherRing::RunGatherOnOtherRank()
         CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Run][GatherOnOtherRank]TxWaitDone failed"), ret);
 
         ret = linkLeft_->TxAck(stream_);
-        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Run][GatherOnOtherRank]rank[%u] round[%u] tx ack  failed",
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Run][GatherOnOtherRank]rank[%u] round[%u] tx ack failed",
             interRank_, i), ret);
 
         // 从后一rank接收同步信号

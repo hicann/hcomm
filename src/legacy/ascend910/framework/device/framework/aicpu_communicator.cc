@@ -1001,7 +1001,7 @@ HcclResult HcclCommAicpu::InitLocalTagRes(const ListCommon &head, bool reAllocFl
             std::unordered_set<u64> tmpTagRes;
             tmpTagRes.insert(tagRes->Scratchmem);
             localTagResToObj_[tag] = tmpTagRes;
-            HCCL_DEBUG("[HcclCommAicpu][InitLocalTagRes] parse remote resource, tag[%s],  Scratchmem[%p], "
+            HCCL_DEBUG("[HcclCommAicpu][InitLocalTagRes] parse remote resource, tag[%s], Scratchmem[%p], "
                 "ScratchmemSize[%lu]", tag.c_str(), tagRes->Scratchmem, tagRes->ScratchmemSize);
         }
         curList = reinterpret_cast<ListCommon *>(curList->nextDevice);
@@ -4756,7 +4756,7 @@ HcclResult HcclCommAicpu::ParseHierarchicalAlgOption(u32 *ahcConfInfo)
 {
     u32  algOptionSize= ahcConfInfo[TOP_HIERARCHICAL_CONF_lENGTH_INDEX];
     if (algOptionSize >= (TOP_HIERARCHICAL_CONF_SIZE-1)) {
-        HCCL_ERROR("[HcclCommAicpu][ParseHierarchicalAlgOption] hierarchicalAlgOption size[%lu]  exceed maxsize[%lu]",
+        HCCL_ERROR("[HcclCommAicpu][ParseHierarchicalAlgOption] hierarchicalAlgOption size[%lu] exceed maxsize[%lu]",
             algOptionSize, (TOP_HIERARCHICAL_CONF_SIZE-1));
         return HCCL_E_INTERNAL;
     }

@@ -148,7 +148,7 @@ const NetInstance *RankGraph::GetNetInstanceByNetInstId(u32 netLayer, const stri
 {
     // 不存在netInst, 则返回空
     if (netLayer >= netInsts_.size() || netInsts_.at(netLayer).count(netInstId) == 0) {
-        HCCL_WARNING("[RankGraph][GetNetInstance] NetInstance netLayer[%u] netInstId[%s]  is not existed.", netLayer,
+        HCCL_WARNING("[RankGraph][GetNetInstance] NetInstance netLayer[%u] netInstId[%s] is not existed.", netLayer,
                      netInstId.c_str());
         return nullptr;
     }
@@ -159,7 +159,7 @@ NetInstance *RankGraph::GetNetInstanceByNetInstId(u32 netLayer, const std::strin
 {
     // 不存在netInst, 则返回空
     if (netLayer >= netInsts_.size() || netInsts_.at(netLayer).count(netInstId) == 0) {
-        HCCL_WARNING("[RankGraph][GetNetInstance] NetInstance netLayer[%u] netInstId[%s]  is not existed.", netLayer,
+        HCCL_WARNING("[RankGraph][GetNetInstance] NetInstance netLayer[%u] netInstId[%s] is not existed.", netLayer,
                      netInstId.c_str());
         return nullptr;
     }
@@ -565,7 +565,7 @@ void GetNewNodeInfo(u32 layer, RankId newRankId, const NetInstance::Link &oldLin
     } else {
         THROW<NotSupportException>(
             StringFormat("[CreateSubNetInstances][GetNewNodeInfo] newRankId[%d] oldLink Node isSource[%d] type[%s] "
-                         " is not supported.",
+                         "is not supported.",
                          newRankId, isSource, type.Describe().c_str()));
     }
 }

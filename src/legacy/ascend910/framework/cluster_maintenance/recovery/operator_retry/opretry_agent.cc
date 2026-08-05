@@ -278,7 +278,7 @@ HcclResult OpRetryAgentRunning::ParseRdmaErr(RetryContext* retryCtx, RetryState 
     } else if (isSendRecv) {
         auto detRank = retryCtx->localRetryInfo_.rankId == retryCtx->localRetryInfo_.opInfo.opId.detRank ?
             retryCtx->localRetryInfo_.opInfo.opId.srcRank : retryCtx->localRetryInfo_.opInfo.opId.detRank;
-        HCCL_INFO("[OpRetry][Agent][Rdma]now in isSendRecv branch  (isSendRecv[%d])", isSendRecv);
+        HCCL_INFO("[OpRetry][Agent][Rdma]now in isSendRecv branch (isSendRecv[%d])", isSendRecv);
         bool isFindDstRank = false;
         for (auto &info : infoSet) {
             u32 remoteRank = std::get<0>(info);
@@ -1039,7 +1039,7 @@ HcclResult ResumeAgentChangeLink::WaitResumeCmdResumeTransport(RetryContext *ret
         HcclResult ret = WaitCommandWithOpId(retryCtx->agentSocket_, commandInfo);
         if (ret == HCCL_SUCCESS) {
             if (commandInfo.command == RETRY_CMD_RESUME_TRANSPORT) {
-                HCCL_RUN_INFO("[OpRetry][Agent][Resume]WaitResumeCmdChangeLink, recv command[%s],  group[%s], rankId[%u]",
+                HCCL_RUN_INFO("[OpRetry][Agent][Resume]WaitResumeCmdChangeLink, recv command[%s], group[%s], rankId[%u]",
                      GetReadableCmd(commandInfo.command), retryCtx->group_.c_str(), retryCtx->rankId_);
                 break;
             }

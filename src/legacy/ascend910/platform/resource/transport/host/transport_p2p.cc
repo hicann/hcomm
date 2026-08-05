@@ -398,8 +398,8 @@ HcclResult TransportP2p::ConstructExchangeForSend()
         }
     }
     if (exchangeDataBlankSize != 0) {
-        HCCL_ERROR("[TransportP2p][ConstructExchangeForSend] failed to construct exchange Data \
-            exchangeDataBlankSize[%llu]", exchangeDataBlankSize);
+        HCCL_ERROR("[TransportP2p][ConstructExchangeForSend] failed to construct exchange Data "
+            "exchangeDataBlankSize[%llu]", exchangeDataBlankSize);
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;  // this function should not be called in normal process
@@ -830,8 +830,8 @@ HcclResult TransportP2p::ParseReceivedExchangeData()
     }
 
     if (exchangeDataBlankSize != 0) {
-        HCCL_ERROR("[TransportP2p][ParseReceivedExchangeData] failed to Parse exchange Data \
-            exchangeDataBlankSize[%llu]", exchangeDataBlankSize);
+        HCCL_ERROR("[TransportP2p][ParseReceivedExchangeData] failed to Parse exchange Data "
+            "exchangeDataBlankSize[%llu]", exchangeDataBlankSize);
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;  // this function should not be called in normal process

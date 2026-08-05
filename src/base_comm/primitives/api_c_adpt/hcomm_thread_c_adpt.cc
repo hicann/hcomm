@@ -154,7 +154,7 @@ HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uin
     *thread = reinterpret_cast<ThreadHandle>(handle.get());
     hcomm::g_ThreadMap.emplace(*thread, handle);
 
-    HCCL_INFO("[ThreadMgr]  ThreadAcquireWithStream done: engine[%s] stream[%p],"
+    HCCL_INFO("[ThreadMgr] ThreadAcquireWithStream done: engine[%s] stream[%p], "
               "notifyNum[%u]",
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), stream, notifyNum);
     return HCCL_SUCCESS;

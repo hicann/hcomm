@@ -80,8 +80,8 @@ public:
             portGroupSize = static_cast<u8>(srcConnIface->GetPorts().size());
             auto tgtPortGroupSize = static_cast<u8>(targetConnIface->GetPorts().size());
             if (portGroupSize != tgtPortGroupSize) {
-                HCCL_WARNING("[LinkData][Constructor]srcConnIface.portGroupSize[%u] \
-                is not euqal to targetConnIface.portGroupSize[%u]",static_cast<u32>(portGroupSize), 
+                HCCL_WARNING("[LinkData][Constructor]srcConnIface.portGroupSize[%u] "
+                "is not euqal to targetConnIface.portGroupSize[%u]",static_cast<u32>(portGroupSize), 
                 static_cast<u32>(tgtPortGroupSize));
             }
             fullmesh = false;  // 多链路场景，非fullmesh

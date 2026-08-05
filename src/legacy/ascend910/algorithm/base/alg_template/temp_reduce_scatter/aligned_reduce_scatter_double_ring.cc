@@ -252,7 +252,7 @@ HcclResult AlignedReduceScatterDoubleRing::PrepareInitSlices(const u32 rankSize,
             userRank_, srcInitSlice1.offset, srcInitSlice1.size, dstInitSlice1.offset, dstInitSlice1.size);
     }
     HCCL_DEBUG("Memcpy operation: step[-1] stream[sub] src rank[%u] starts to copy(rcv) offset[%llu], "
-        " size[%llu] on userMemInput to offset[%llu], size[%llu] on CCL",
+        "size[%llu] on userMemInput to offset[%llu], size[%llu] on CCL",
         userRank_, srcInitSlice0.offset, srcInitSlice0.size, dstInitSlice0.offset, dstInitSlice0.size);
     return HCCL_SUCCESS;
 }

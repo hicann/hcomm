@@ -840,7 +840,7 @@ DfsConfig CastDfsConfig(const std::string &dfsConfigEnv)
         if (itemPair.size() != ITEM_SIZE
             || std::find(dfsItemName.begin(), dfsItemName.end(), itemPair[0]) == dfsItemName.end()) {
             THROW<InvalidParamsException>(
-                StringFormat("env[HCCL_DFS_CONFIG] value[%s] is invalid,  please check, example [task_exception:on]", dfsConfigEnv.c_str()));
+                StringFormat("env[HCCL_DFS_CONFIG] value[%s] is invalid, please check, example [task_exception:on]", dfsConfigEnv.c_str()));
         }
         if (itemPair[0] == dfsItemName[0]) {
             CastDfsConfigParseTaskExceptionEnable(taskExceptionEnable, itemPair[1]);

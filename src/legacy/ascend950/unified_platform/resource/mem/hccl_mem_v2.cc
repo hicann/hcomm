@@ -124,7 +124,7 @@ HcclResult HcclMemImportV2(const char *description, uint64_t descLen, bool isRem
         return HCCL_E_PTR;
     }
     (void)(isRemote);
-    HCCL_INFO("[%s] Begin,  descLen[%llu]", __func__, descLen);
+    HCCL_INFO("[%s] Begin, descLen[%llu]", __func__, descLen);
     // 仅支持UB类型
     HcclNetDevice *hcclNetDevice = static_cast<HcclNetDevice *>(netDev);
     if (!hcclNetDevice->IsUB()) {

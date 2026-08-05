@@ -149,8 +149,8 @@ HcclResult ReduceScatterHalvingDoubling::RunAsync(const u32 rank, const u32 rank
         return HCCL_E_PTR;
     }
 
-    HCCL_INFO("ReduceScatterHalvingDoubling run: rank[%u] totalrank[%u] \
-        inputMem[%p] outputMem[%p] count[%llu]", \
+    HCCL_INFO("ReduceScatterHalvingDoubling run: rank[%u] totalrank[%u] "
+        "inputMem[%p] outputMem[%p] count[%llu]", \
         rank, rankSize, inputMem_.ptr(), outputMem_.ptr(), count_);
     HcclResult ret = HCCL_SUCCESS;
 

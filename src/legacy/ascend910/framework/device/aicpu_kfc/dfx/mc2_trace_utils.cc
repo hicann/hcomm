@@ -668,7 +668,7 @@ HcclResult MC2TraceUtils::SubmitBatchSqeInfo()
     CHK_PTR_NULL(context->buffPtr);
     for (uint32_t streamId = 0U; streamId < AC_MAX_RANK_NUM; streamId++) {
         auto &buff = context->buffPtr[streamId];
-        HCCL_INFO("sqTail: %u, sqHead: %u,  sqeCnt: %u, tailSqeTaskId: %u, tailSqeIdx: %u",
+        HCCL_INFO("sqTail: %u, sqHead: %u, sqeCnt: %u, tailSqeTaskId: %u, tailSqeIdx: %u",
             buff.sqTail, buff.sqHead, buff.sqeCnt, buff.tailSqeTaskId, buff.tailSqeIdx);
         auto submitNum = std::min<uint32_t>(buff.tailSqeIdx - buff.sqeCnt, MAX_SQE_SUBMIT_NUM);
         for (uint32_t i = 0U; i <= submitNum / MAX_SQE_BATCH_SIZE; i++) {

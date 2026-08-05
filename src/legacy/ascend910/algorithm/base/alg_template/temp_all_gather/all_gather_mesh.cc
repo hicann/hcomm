@@ -35,7 +35,7 @@ HcclResult AllGatherMesh::Tx(const LINK &link, const Slice &txSlice, const Slice
 {
     DeviceMem srcMem = outputMem_.range(txSlice.offset, txSlice.size);
 
-    HCCL_DEBUG("rank[%u] tx srcMem[%p] output's offset[%llu] size[%llu]  to dstrank's offset[%llu]", interRank_,
+    HCCL_DEBUG("rank[%u] tx srcMem[%p] output's offset[%llu] size[%llu] to dstrank's offset[%llu]", interRank_,
         srcMem.ptr(), txSlice.offset, txSlice.size, dstSlice.offset);
     HcclResult ret =
         link->TxAsync(UserMemType::OUTPUT_MEM, baseOffset_ + dstSlice.offset, srcMem.ptr(), txSlice.size, stream);
@@ -173,7 +173,7 @@ HcclResult AllGatherMesh::RunAsync(const u32 rank, const u32 rankSize, const std
     }
 
     for (u32 i = 0; i < interRankSize_; i++) {
-        HCCL_DEBUG("[AllGatherMesh][Outputslice]: size[%llu] offset[%llu]   inputslice: size[%llu]  offset[%llu]",
+        HCCL_DEBUG("[AllGatherMesh][Outputslice]: size[%llu] offset[%llu] inputslice: size[%llu] offset[%llu]",
             slices_[i].size, slices_[i].offset, inputSlices[i].size, inputSlices[i].offset);
     }
 

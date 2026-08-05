@@ -246,7 +246,7 @@ HcclResult HcclThreadAcquireWithStreamDfx(hccl::CollComm* collComm, const std::s
     auto hcclCommDfxCallback = collComm->GetDfxCallback();
     int ret = HcommThreadRegisterDfx(thread, hcclCommDfxCallback);
     if (ret != 0) {
-        HCCL_ERROR("[HcclThreadAcquire] HcclThreadAcquire  HcommThreadRegisterDfx failed, ret:[%d]", ret);
+        HCCL_ERROR("[HcclThreadAcquire] HcclThreadAcquire HcommThreadRegisterDfx failed, ret:[%d]", ret);
         return HCCL_E_INTERNAL;
     }
     if (engine == CommEngine::COMM_ENGINE_AICPU) {

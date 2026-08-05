@@ -1214,7 +1214,7 @@ HcclResult CollCommExecutor::MultiRingReduceScatterConcurrent(const std::string 
                 reductionOp, LEVEL0_BRIDGE_RANK_ID, singleRingSliceZero, baseOffset, ringNics[ringIndex % halfRingSize]);
             CHK_PRT_RET(ret != HCCL_SUCCESS,
                 HCCL_ERROR("[CollCommExecutor][MultiRingReduceScatterConcurrent]stream[%u],ReduceScatter(ring) "\
-                " prepare failed,return[%d]", ringIndex, ret), ret);
+                "prepare failed,return[%d]", ringIndex, ret), ret);
 
             ret = tempAlg->RegisterProfiler(
                 ((ringIndexOp + 1) << PROF_RINGINDEX_OFFSET_OF_PLANEID) +

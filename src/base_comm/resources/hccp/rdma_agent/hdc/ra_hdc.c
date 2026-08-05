@@ -509,7 +509,7 @@ int RaHdcProcessMsg(unsigned int opcode, unsigned int phyId, char *data, unsigne
     }
 
     if (memcpy_s(data, dataSize, sendRcvBuf + sizeof(struct MsgHead), dataSize)) {
-        hccp_err("[process][ra_hdc_msg]memcpy_s failed. dest size(%d) ret(%d)  phyId(%u)", dataSize, ret, phyId);
+        hccp_err("[process][ra_hdc_msg]memcpy_s failed. dest size(%d) ret(%d) phyId(%u)", dataSize, ret, phyId);
         ret = -ESAFEFUNC;
     }
 out:

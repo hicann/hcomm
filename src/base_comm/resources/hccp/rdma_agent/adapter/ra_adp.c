@@ -1670,8 +1670,8 @@ STATIC int RaCheckParam(char *recvBuf, int rcvBufLen, char **sendBuf, int *sndBu
     if (((recvMsgHead->msgDataLen + sizeof(struct MsgHead)) != (unsigned int)rcvBufLen) ||
         (recvMsgHead->opcode >= RA_RS_OP_MAX_NUM ||
         ((recvMsgHead->opcode < RA_RS_HDC_SESSION_CLOSE) && (recvMsgHead->opcode >= RA_RS_EXTER_OP_MAX_NUM)))) {
-        hccp_err("rcv data incomplete, because rcvBufLen[%d] != msg_head_len[%u] + msgDataLen[%u] \
-            or opcode[%u] is wrong, RA_RS_OP_MAX_NUM:[%d], RA_RS_EXTER_OP_MAX_NUM:[%d]",
+        hccp_err("rcv data incomplete, because rcvBufLen[%d] != msg_head_len[%u] + msgDataLen[%u] "
+            "or opcode[%u] is wrong, RA_RS_OP_MAX_NUM:[%d], RA_RS_EXTER_OP_MAX_NUM:[%d]",
             rcvBufLen, sizeof(struct MsgHead), recvMsgHead->msgDataLen, recvMsgHead->opcode,
             RA_RS_OP_MAX_NUM, RA_RS_EXTER_OP_MAX_NUM);
         ret = OpMsgErr(sendBuf, recvMsgHead, sndBufLen, HAVE_OP_RIGHT);

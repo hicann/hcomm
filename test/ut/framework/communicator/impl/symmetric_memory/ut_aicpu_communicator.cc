@@ -169,3 +169,13 @@ TEST_F(AicpuCommunicatorTest, Ut_ClearOpResource_TagNotFound)
     EXPECT_EQ(ret, HCCL_SUCCESS);
     delete hcclCommAicpu;
 }
+
+TEST_F(AicpuCommunicatorTest, Ut_ParseHierarchicalAlgOption_When_SizeExceedMax_Expect_ReturnHCCL_E_INTERNAL)
+{
+    HcclCommAicpu *hcclCommAicpu = new HcclCommAicpu;
+    u32 ahcConfInfo[TOP_HIERARCHICAL_CONF_SIZE] = {0};
+    ahcConfInfo[TOP_HIERARCHICAL_CONF_lENGTH_INDEX] = TOP_HIERARCHICAL_CONF_SIZE - 1;
+    HcclResult ret = hcclCommAicpu->ParseHierarchicalAlgOption(ahcConfInfo);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+    delete hcclCommAicpu;
+}

@@ -376,7 +376,7 @@ HcclResult CommRemoteAccess::CreateInterServerLinks()
                 linkInfo.isLinked = false;
                 linkInfo.remoteIp = (iter->second)[idx];
                 linkInfo.localIp = rankInfo_[rank_][idx];
-                HCCL_DEBUG("CLIENT rank[%u]  LocalIp[%s]  RemoteIp[%s]",
+                HCCL_DEBUG("CLIENT rank[%u] LocalIp[%s] RemoteIp[%s]",
                     rank_, linkInfo.localIp.GetReadableAddress(), linkInfo.remoteIp.GetReadableAddress());
                 serverLinkStatus_.insert(std::make_pair(iter->second[idx], linkInfo));
                 connLoop++;
@@ -479,7 +479,7 @@ HcclResult CommRemoteAccess::CreateInterClientLinks()
             for (u32 idx = 0; idx < (iter->second).size(); idx++) {
                 linkInfo.remoteIp = (iter->second)[idx];
                 linkInfo.localIp = rankInfo_[rank_][idx];
-                HCCL_DEBUG("CreateInterClientLinks SERVER rank[%u]  LocalIp[%s]  RemoteIp[%s]",
+                HCCL_DEBUG("CreateInterClientLinks SERVER rank[%u] LocalIp[%s] RemoteIp[%s]",
                     rank_, linkInfo.localIp.GetReadableAddress(), linkInfo.remoteIp.GetReadableAddress());
                 clientLinkStatus_.insert(std::make_pair((iter->second)[idx], linkInfo));
             }
@@ -496,7 +496,7 @@ void CommRemoteAccess::PrintErrorConnection(const u32 role, const u32 num)
 
     HCCL_ERROR("Some NPUs get socket timeout, the details are as follows:");
     HCCL_ERROR("   _________________________LINK_ERROR_INFO___________________________");
-    HCCL_ERROR("   |  comm error, device[%d] num[%u] ", deviceLogicId_, num);
+    HCCL_ERROR("   | comm error, device[%d] num[%u] ", deviceLogicId_, num);
     HCCL_ERROR("   |  dest_ip(user_rank)  |   dest_port   |  src_ip(user_rank)   |   src_port   |   MyRole   "
         "|   Status   |");
     HCCL_ERROR("   |--------------------|--------------------|----------|------------|-----------------"

@@ -428,8 +428,8 @@ HcclResult TransportIbverbs::ConstructExchangeForSend()
     }
 
     if (exchangeDataBlankSize != 0) {
-        HCCL_ERROR("[TransportIbverbs][ConstructExchangeForSend] failed to construct exchange Data \
-            exchangeDataBlankSize[%llu]",
+        HCCL_ERROR("[TransportIbverbs][ConstructExchangeForSend] failed to construct exchange Data "
+            "exchangeDataBlankSize[%llu]",
             exchangeDataBlankSize);
         return HCCL_E_INTERNAL;
     }
@@ -537,8 +537,8 @@ HcclResult TransportIbverbs::ParseReceivedExchangeData()
     }
 
     if (exchangeDataBlankSize != 0) {
-        HCCL_ERROR("[TransportIbverbs][ParseReceivedExchangeData] failed to Parse exchange Data \
-            exchangeDataBlankSize[%llu]", exchangeDataBlankSize);
+        HCCL_ERROR("[TransportIbverbs][ParseReceivedExchangeData] failed to Parse exchange Data "
+            "exchangeDataBlankSize[%llu]", exchangeDataBlankSize);
         return HCCL_E_INTERNAL;
     }
     HCCL_DEBUG("Parse Received ExchangeData success!");

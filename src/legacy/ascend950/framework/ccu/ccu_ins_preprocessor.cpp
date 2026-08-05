@@ -417,7 +417,7 @@ HcclResult CcuInsPreprocessor::RecoverCcuTransportConfirm()
     ccuComm.GetCcuTransportGrpMgr()->Confirm();
     ccuComm.GetCcuJettyMgr()->Confirm();
 
-    HCCL_INFO("[CcuInsPreprocessor::%s] confirm  resource end.", __func__);
+    HCCL_INFO("[CcuInsPreprocessor::%s] confirm resource end.", __func__);
     return HCCL_SUCCESS;
 }
 

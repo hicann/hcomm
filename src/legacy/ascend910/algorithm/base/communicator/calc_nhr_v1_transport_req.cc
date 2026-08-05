@@ -94,8 +94,8 @@ HcclResult CalcNHRV1TransportReq::CalcTransportRequest(const std::string &tag, T
                 tmpTransport.remoteUserRank = subCommPlaneVector_[ringIndex][dstRank];
                 tmpTransport.inputMemType = inputMemType;
                 tmpTransport.outputMemType = outputMemType;
-                HCCL_INFO("[CommFactory][CalcNHRV1CommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], \
-                    remoteRank[%u], inputMemType[%d], outputMemType[%d]", tag.c_str(), ringIndex, userRank_,
+                HCCL_INFO("[CommFactory][CalcNHRV1CommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], "
+                    "remoteRank[%u], inputMemType[%d], outputMemType[%d]", tag.c_str(), ringIndex, userRank_,
                     tmpTransport.remoteUserRank, inputMemType, outputMemType);
             }
         }

@@ -131,7 +131,7 @@ void AivTaskQueueStub::PrintAivTask()
         for (auto& blockPair : rankPair.second) {
             printf("\tBlockID %d\n", blockPair.first);
             for (auto blockPos = 0; blockPos < blockPair.second.size(); blockPos++) {
-                printf("\t    RankPos %d\n", blockPos);
+                printf("\t RankPos %d\n", blockPos);
                 auto taskQueues = blockPair.second[blockPos]->taskQueues;
                 for (int i = 0; i < taskQueues.size(); i++) {
                     printf("\t\t");

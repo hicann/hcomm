@@ -1201,3 +1201,63 @@ TEST_F(InsToSqeRuleV82Test, Interpret_write_with_fin_extend_err)
     insWriteWithFinExtend.localBuffer_.size = 0;
     Interpret(insWriteWithFinExtend, stream, &mockResMgrFetcher);
 }
+
+TEST_F(InsToSqeRuleV82Test, Interpret_read_size_is_0)
+{
+    RankId remoteRank = 1;
+
+    DataSlice localSlice(BufferType::SCRATCH, 0, 0);
+    DataSlice remoteSlice(BufferType::SCRATCH, 0, 0);
+    InsRead insRead(remoteRank, link, localSlice, remoteSlice);
+
+    std::vector<char> streamLite1{fakeStreamId, fakeSqId};
+    StreamLite stream(streamLite1);
+    StubResMgrFetcher mockResMgrFetcher;
+
+    Interpret(insRead, stream, &mockResMgrFetcher);
+}
+
+TEST_F(InsToSqeRuleV82Test, Interpret_read_reduce_size_is_0)
+{
+    RankId remoteRank = 1;
+
+    DataSlice localSlice(BufferType::SCRATCH, 0, 0);
+    DataSlice remoteSlice(BufferType::SCRATCH, 0, 0);
+    InsReadReduce insReadReduce(remoteRank, link, localSlice, remoteSlice, DataType::FP32, ReduceOp::SUM);
+
+    std::vector<char> streamLite1{fakeStreamId, fakeSqId};
+    StreamLite stream(streamLite1);
+    StubResMgrFetcher mockResMgrFetcher;
+
+    Interpret(insReadReduce, stream, &mockResMgrFetcher);
+}
+
+TEST_F(InsToSqeRuleV82Test, Interpret_write_size_is_0)
+{
+    RankId remoteRank = 1;
+
+    DataSlice localSlice(BufferType::SCRATCH, 0, 0);
+    DataSlice remoteSlice(BufferType::SCRATCH, 0, 0);
+    InsWrite insWrite(remoteRank, link, localSlice, remoteSlice);
+
+    std::vector<char> streamLite1{fakeStreamId, fakeSqId};
+    StreamLite stream(streamLite1);
+    StubResMgrFetcher mockResMgrFetcher;
+
+    Interpret(insWrite, stream, &mockResMgrFetcher);
+}
+
+TEST_F(InsToSqeRuleV82Test, Interpret_write_reduce_size_is_0)
+{
+    RankId remoteRank = 1;
+
+    DataSlice localSlice(BufferType::SCRATCH, 0, 0);
+    DataSlice remoteSlice(BufferType::SCRATCH, 0, 0);
+    InsWriteReduce insWriteReduce(remoteRank, link, localSlice, remoteSlice, DataType::FP32, ReduceOp::SUM);
+
+    std::vector<char> streamLite1{fakeStreamId, fakeSqId};
+    StreamLite stream(streamLite1);
+    StubResMgrFetcher mockResMgrFetcher;
+
+    Interpret(insWriteReduce, stream, &mockResMgrFetcher);
+}

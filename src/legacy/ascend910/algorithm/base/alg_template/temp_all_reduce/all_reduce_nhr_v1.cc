@@ -40,7 +40,7 @@ HcclResult AllReduceNHRV1::RunAsync(const u32 rank, const u32 rankSize,
 
     ret = RunReduceScatterOnHorizontal(rank, links, info);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceNHRV1][RunAsync]rank[%u] count[%llu] failed in "\
-        "RunReduceScatterOnHorizontal  step", rank, count_), ret);
+        "RunReduceScatterOnHorizontal step", rank, count_), ret);
 
     // 垂直方向做allreduce ring
     ret = RunAllReduceOnVertical(rank, links, info);
@@ -77,7 +77,7 @@ HcclResult AllReduceNHRV1::RunAsyncStaged(const u32 rank, const u32 rankSize, co
             // 水平方向做broken reducescatter ring
             ret = RunReduceScatterOnHorizontal(rank, links, info);
             CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceNHRV1][RunAsync]rank[%u] count[%llu] failed in "\
-                "RunReduceScatterOnHorizontal  step", rank, count_), ret);
+                "RunReduceScatterOnHorizontal step", rank, count_), ret);
             break;
         case RunStage::RUN_ALLREDUCE:
             // 垂直方向做allreduce ring

@@ -286,11 +286,11 @@ void HcclUBMemcpySqe::Config(u16 streamId, u16 taskId, RtDataType rtDataType, Rt
         static_cast<uint32_t>((static_cast<uint64_t>(*dst) & 0xffffffff00000000U) >> UINT32_BIT_NUM);
     sqe->mapamPartId = partId;
 
-    HCCL_INFO("[SQE]HcclUBMemcpySqe dataType=%u,rtReduceOp =%u, count=%llu, src=%p, dst=%p, partId=%u, streamId=%u, \
-               taskId=%u", rtDataType, rtReduceOp, count, src, dst, partId, streamId, taskId);
-    HCCL_INFO("[SQE]HcclUBMemcpySqe sqe->opcode=%u sqe->u.strideMode0.srcAddrLow=0x%x, \
-               sqe->u.strideMode0.srcAddrHigh=0x%x,sqe->u.strideMode0.dstAddrLow=0x%x, \
-               sqe->u.strideMode0.dstAddrHigh=0x%x", sqe->opcode,
+    HCCL_INFO("[SQE]HcclUBMemcpySqe dataType=%u,rtReduceOp =%u, count=%llu, src=%p, dst=%p, partId=%u, streamId=%u, "
+               "taskId=%u", rtDataType, rtReduceOp, count, src, dst, partId, streamId, taskId);
+    HCCL_INFO("[SQE]HcclUBMemcpySqe sqe->opcode=%u sqe->u.strideMode0.srcAddrLow=0x%x, "
+               "sqe->u.strideMode0.srcAddrHigh=0x%x,sqe->u.strideMode0.dstAddrLow=0x%x, "
+               "sqe->u.strideMode0.dstAddrHigh=0x%x", sqe->opcode,
                sqe->u.strideMode0.srcAddrLow, sqe->u.strideMode0.srcAddrHigh,
                sqe->u.strideMode0.dstAddrLow, sqe->u.strideMode0.dstAddrHigh);
 }

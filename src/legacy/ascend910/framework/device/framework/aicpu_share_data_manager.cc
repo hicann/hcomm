@@ -40,7 +40,7 @@ HcclResult AicpuShareDataManager::RecordOpInfo(const std::string &newTag, OpPara
     CHK_SAFETY_FUNC_RET(strcpy_s(aicpuOpInfo[opRingBufferIdx].tagBuff, HCCL_TAG_SIZE, newTag.c_str()));
     aicpuOpInfo[opRingBufferIdx].opIndex = opParam.index;
     aicpuOpInfo[opRingBufferIdx].opExecIndex = opExecIndex;
-    HCCL_DEBUG("%s tag[%s] opRingBufferIdx[%u] opIndex[%u] rootId[%u] opType[%u] srcAddr[0x%x]  dstAddr[0x%x]",
+    HCCL_DEBUG("%s tag[%s] opRingBufferIdx[%u] opIndex[%u] rootId[%u] opType[%u] srcAddr[0x%x] dstAddr[0x%x]",
         __func__, aicpuOpInfo[opRingBufferIdx].tagBuff, opRingBufferIdx,
         aicpuOpInfo[opRingBufferIdx].opIndex, opParam.root, opParam.opType, opParam.inputPtr, opParam.outputPtr);
     if (opParam.opType == HcclCMDType::HCCL_CMD_INVALID) {

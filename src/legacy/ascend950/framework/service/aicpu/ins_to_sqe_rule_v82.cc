@@ -376,7 +376,7 @@ void Interpret(const InsWaitFinAck &ins, const StreamLite &stream, ResMgrFetcher
 void Interpret(const InsRead &ins, const StreamLite &stream, ResMgrFetcher *resMgrFetcher)
 {
     if (UNLIKELY(ins.GetLocalSlice().GetSize() == 0 && ins.GetRemoteSlice().GetSize() == 0)) {
-        HCCL_WARNING("%s InsRead localSlice size is 0 and  remoteSlice size is 0, return", __func__);
+        HCCL_WARNING("%s InsRead localSlice size is 0 and remoteSlice size is 0, return", __func__);
         return;
     } else if (UNLIKELY(ins.GetLocalSlice().GetSize() != ins.GetRemoteSlice().GetSize())) {
         THROW<InvalidParamsException>(StringFormat("%s InsRead either localSlice size or remoteSlice size is not zero",
@@ -390,7 +390,7 @@ void Interpret(const InsRead &ins, const StreamLite &stream, ResMgrFetcher *resM
 void Interpret(const InsReadReduce &ins, const StreamLite &stream, ResMgrFetcher *resMgrFetcher)
 {
     if (UNLIKELY(ins.GetLocalSlice().GetSize() == 0 && ins.GetRemoteSlice().GetSize() == 0)) {
-        HCCL_WARNING("%s InsReadReduce localSlice size is 0 and  remoteSlice size is 0, return", __func__);
+        HCCL_WARNING("%s InsReadReduce localSlice size is 0 and remoteSlice size is 0, return", __func__);
         return;
     } else if (UNLIKELY(ins.GetLocalSlice().GetSize() != ins.GetRemoteSlice().GetSize())) {
         THROW<InvalidParamsException>(StringFormat("%s InsReadReduce either localSlice size or remoteSlice size "
@@ -416,7 +416,7 @@ void Interpret(const InsBatchRead &ins, const StreamLite &stream, ResMgrFetcher 
         if (iter->GetType() == InstructionType::READ) {
             const InsRead &insRead = dynamic_cast<const InsRead &>(*iter);
             if (UNLIKELY(insRead.GetLocalSlice().GetSize() == 0 && insRead.GetRemoteSlice().GetSize() == 0)) {
-                HCCL_WARNING("%s InsRead in InsBatchRead localSlice size is 0 and  remoteSlice size is 0, return",
+                HCCL_WARNING("%s InsRead in InsBatchRead localSlice size is 0 and remoteSlice size is 0, return",
                     __func__);
                 continue;
             } else if (UNLIKELY(insRead.GetLocalSlice().GetSize() != insRead.GetRemoteSlice().GetSize())) {
@@ -429,7 +429,7 @@ void Interpret(const InsBatchRead &ins, const StreamLite &stream, ResMgrFetcher 
         } else if (iter->GetType() == InstructionType::READ_REDUCE) {
             const InsReadReduce &insReadReduce = dynamic_cast<const InsReadReduce &>(*iter);
             if (UNLIKELY(insReadReduce.GetLocalSlice().GetSize() == 0 && insReadReduce.GetRemoteSlice().GetSize() == 0)) {
-                HCCL_WARNING("%s InsReadReduce in InsBatchRead localSlice size is 0 and  remoteSlice size is 0, return",
+                HCCL_WARNING("%s InsReadReduce in InsBatchRead localSlice size is 0 and remoteSlice size is 0, return",
                     __func__);
                 continue;
             } else if (UNLIKELY(insReadReduce.GetLocalSlice().GetSize() != insReadReduce.GetRemoteSlice().GetSize())) {
@@ -472,7 +472,7 @@ void Interpret(const InsReadExtend &ins, const StreamLite &stream, ResMgrFetcher
 void Interpret(const InsWrite &ins, const StreamLite &stream, ResMgrFetcher *resMgrFetcher)
 {
     if (UNLIKELY(ins.GetLocalSlice().GetSize() == 0 && ins.GetRemoteSlice().GetSize() == 0)) {
-        HCCL_WARNING("%s InsWrite localSlice size is 0 and  remoteSlice size is 0, return", __func__);
+        HCCL_WARNING("%s InsWrite localSlice size is 0 and remoteSlice size is 0, return", __func__);
         return;
     } else if (UNLIKELY(ins.GetLocalSlice().GetSize() != ins.GetRemoteSlice().GetSize())) {
         THROW<InvalidParamsException>(StringFormat("%s InsWrite either localSlice size or remoteSlice size is not zero",
@@ -497,7 +497,7 @@ void Interpret(const InsBatchWrite &ins, const StreamLite &stream, ResMgrFetcher
         if (iter->GetType() == InstructionType::WRITE) {
             const InsWrite &insWrite = dynamic_cast<const InsWrite &>(*iter);
             if (UNLIKELY(insWrite.GetLocalSlice().GetSize() == 0 && insWrite.GetRemoteSlice().GetSize() == 0)) {
-                HCCL_WARNING("%s InsWrite in InsBatchWrite localSlice size is 0 and  remoteSlice size is 0, return",
+                HCCL_WARNING("%s InsWrite in InsBatchWrite localSlice size is 0 and remoteSlice size is 0, return",
                     __func__);
                 continue;
             } else if (UNLIKELY(insWrite.GetLocalSlice().GetSize() != insWrite.GetRemoteSlice().GetSize())) {
@@ -510,7 +510,7 @@ void Interpret(const InsBatchWrite &ins, const StreamLite &stream, ResMgrFetcher
         } else if (iter->GetType() == InstructionType::WRITE_REDUCE) {
             const InsWriteReduce &insWriteReduce = dynamic_cast<const InsWriteReduce &>(*iter);
             if (UNLIKELY(insWriteReduce.GetLocalSlice().GetSize() == 0 && insWriteReduce.GetRemoteSlice().GetSize() == 0)) {
-                HCCL_WARNING("%s InsWriteReduce in InsBatchWrite localSlice size is 0 and  remoteSlice size is 0, "
+                HCCL_WARNING("%s InsWriteReduce in InsBatchWrite localSlice size is 0 and remoteSlice size is 0, "
                     "return", __func__);
                 continue;
             } else if (UNLIKELY(insWriteReduce.GetLocalSlice().GetSize() != insWriteReduce.GetRemoteSlice().GetSize())) {
@@ -591,7 +591,7 @@ void Interpret(const InsWriteWithFinExtend &ins, const StreamLite &stream, ResMg
 void Interpret(const InsWriteReduce &ins, const StreamLite &stream, ResMgrFetcher *resMgrFetcher)
 {
     if (UNLIKELY(ins.GetLocalSlice().GetSize() == 0 && ins.GetRemoteSlice().GetSize() == 0)) {
-        HCCL_WARNING("%s InsWriteReduce localSlice size is 0 and  remoteSlice size is 0, return", __func__);
+        HCCL_WARNING("%s InsWriteReduce localSlice size is 0 and remoteSlice size is 0, return", __func__);
         return;
     } else if (UNLIKELY(ins.GetLocalSlice().GetSize() != ins.GetRemoteSlice().GetSize())) {
         THROW<InvalidParamsException>(StringFormat("%s InsWriteReduce either localSlice size or remoteSlice size "

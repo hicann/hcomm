@@ -552,6 +552,72 @@ TEST_F(CollAlgOperatorTest, ut_HcclCommunicator_IsHcclOpInplace)
     GlobalMockObject::verify();
 }
 
+TEST_F(CollAlgOperatorTest, ut_AHCAlgOptionSelect_When_SubGroupSizeSmall_Expect_SelectRing)
+{
+    HcclResult ret = HCCL_SUCCESS;
+    HcclCommParams params;
+    RankTable_t rankTable;
+    TestConstructParam(params, rankTable);
+    std::unique_ptr<HcclCommunicator> implBase(new (std::nothrow) HcclCommunicator());
+
+    MOCKER_CPP(&HcclCommunicator::InitRaResource)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    ret = implBase->Init(params, rankTable);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    std::shared_ptr<AlgConfigurator> algConfigurator = implBase->implAlg_->algConfigurator_;
+    CCLBufferManager &cclBufferManager = implBase->implAlg_->cclBufferManager_;
+    const HcclDispatcher dispatcher = implBase->implAlg_->dispatcher_;
+    std::unique_ptr<TopoMatcher> &topoMatcher = implBase->implAlg_->topoMatcher_;
+    std::unique_ptr<CollAlgOperator> algOperator(new (std::nothrow)
+        CollAlgOperator(algConfigurator.get(), cclBufferManager, dispatcher, topoMatcher, HcclCMDType::HCCL_CMD_ALLREDUCE));
+
+    AlgTypeLevel1 algType{};
+    std::vector<std::vector<std::vector<u32>>> globalSubGroups;
+    globalSubGroups.resize(1);
+    globalSubGroups[0].resize(1);
+    std::map<AHCConcOpType, TemplateType> ahcAlgOption;
+    AHCAlgSelectParam ahcAlgSelectParam{};
+    ret = algOperator->AHCAlgOptionSelect(algType, globalSubGroups, ahcAlgOption, ahcAlgSelectParam);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CollAlgOperatorTest, ut_AHCAlgOptionSelect_When_SubGroupSizeLarge_Expect_SelectNhr)
+{
+    HcclResult ret = HCCL_SUCCESS;
+    HcclCommParams params;
+    RankTable_t rankTable;
+    TestConstructParam(params, rankTable);
+    std::unique_ptr<HcclCommunicator> implBase(new (std::nothrow) HcclCommunicator());
+
+    MOCKER_CPP(&HcclCommunicator::InitRaResource)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    ret = implBase->Init(params, rankTable);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    std::shared_ptr<AlgConfigurator> algConfigurator = implBase->implAlg_->algConfigurator_;
+    CCLBufferManager &cclBufferManager = implBase->implAlg_->cclBufferManager_;
+    const HcclDispatcher dispatcher = implBase->implAlg_->dispatcher_;
+    std::unique_ptr<TopoMatcher> &topoMatcher = implBase->implAlg_->topoMatcher_;
+    std::unique_ptr<CollAlgOperator> algOperator(new (std::nothrow)
+        CollAlgOperator(algConfigurator.get(), cclBufferManager, dispatcher, topoMatcher, HcclCMDType::HCCL_CMD_ALLREDUCE));
+
+    AlgTypeLevel1 algType{};
+    std::vector<std::vector<std::vector<u32>>> globalSubGroups;
+    globalSubGroups.resize(1);
+    globalSubGroups[0].resize(4);
+    std::map<AHCConcOpType, TemplateType> ahcAlgOption;
+    AHCAlgSelectParam ahcAlgSelectParam{};
+    ret = algOperator->AHCAlgOptionSelect(algType, globalSubGroups, ahcAlgOption, ahcAlgSelectParam);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    GlobalMockObject::verify();
+}
+
 TEST_F(CollAlgOperatorTest, ut_HcclCommunicator_IsHcclOpInplace_alltoall)
 {
     HcclResult ret = HCCL_SUCCESS;

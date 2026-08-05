@@ -456,7 +456,7 @@ void ProfilingHandler::GetHCCLReportData(const TaskInfo &taskInfo, HCCLReportDat
     } else {
         CommunicatorImpl *commImp = static_cast<CommunicatorImpl *>(taskInfo.dfxOpInfo_->comm_);
         if (commImp == nullptr) {
-            HCCL_ERROR("[ProfilingHandler]commImp is  nullptr");
+            HCCL_ERROR("[ProfilingHandler]commImp is nullptr");
             return;
         }
         hcclReportData.profInfo.groupName = groupName;
@@ -644,7 +644,7 @@ void ProfilingHandler::LogCcuGroupInfo(const CcuProfilingInfo &info, const TaskI
     for (auto i = 0; i < CCU_MAX_CHANNEL_NUM; i++) {
         if (info.channelId[i] != INVALID_VALUE_CHANNELID
             && info.remoteRankId[i] != INVALID_VALUE_RANKID) {
-            HCCL_INFO("[ProfilingHandler]GetCcuGroupInfo, ccuGroupInfo data is: channelId[%d] =  %u, "
+            HCCL_INFO("[ProfilingHandler]GetCcuGroupInfo, ccuGroupInfo data is: channelId[%d] = %u, "
                       "remoteRankId[%d] = %u",
                       i, info.channelId[i], i, info.remoteRankId[i]);
         }

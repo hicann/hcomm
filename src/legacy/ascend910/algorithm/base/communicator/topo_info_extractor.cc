@@ -1323,8 +1323,8 @@ HcclResult TopoInfoExtractor::AHCSubGroupInit(CommPlane algLevel, std::vector<st
  
     u32 splitDivisor = minSubGroupSize;
  
-    HCCL_DEBUG("[TopoInfoExtractor][AHCSubGroupInit] begin groupSplit algLevel = %u minSubGroupSize = %u maxSubGroupSize = %u SubGroupSizeGCD = %u \
-        splitDivisor = %u", algLevel, minSubGroupSize, maxSubGroupSize, subGroupSizeGCD, splitDivisor);
+    HCCL_DEBUG("[TopoInfoExtractor][AHCSubGroupInit] begin groupSplit algLevel = %u minSubGroupSize = %u maxSubGroupSize = %u SubGroupSizeGCD = %u "
+        "splitDivisor = %u", algLevel, minSubGroupSize, maxSubGroupSize, subGroupSizeGCD, splitDivisor);
 
     // 切分分组逻辑, 满足整数倍切分，满足最大偏差大于等于最小分组数时切分
     if ((subGroupSizeGCD == minSubGroupSize) || (maxSubGroupSize / splitDivisor > 1)) {
@@ -1349,8 +1349,8 @@ HcclResult TopoInfoExtractor::AHCSubGroupInit(CommPlane algLevel, std::vector<st
         }
     }
 
-    HCCL_DEBUG("[TopoInfoExtractor][AHCSubGroupInit] after groupSplit algLevel = %u minSubGroupSize = %u maxSubGroupSize = %u SubGroupSizeGCD = %u \
-        splitDivisor = %u", algLevel, minSubGroupSize, maxSubGroupSize, subGroupSizeGCD, splitDivisor);
+    HCCL_DEBUG("[TopoInfoExtractor][AHCSubGroupInit] after groupSplit algLevel = %u minSubGroupSize = %u maxSubGroupSize = %u SubGroupSizeGCD = %u "
+        "splitDivisor = %u", algLevel, minSubGroupSize, maxSubGroupSize, subGroupSizeGCD, splitDivisor);
 
     CHK_RET(CommAHCBaseInfo::CheckGlobalGroups(globalSubGroups));
 

@@ -75,11 +75,11 @@ HcclResult AicpuSqeContext::GetNextSqeBufferAddr(uint32_t streamId, uint8_t *&sq
     auto &buff = context->buffPtr[streamId];
     if (buff.tailSqeIdx >= AC_SQE_MAX_CNT) {
         HCCL_WARNING("Sqe cnt is overflow, need revise buff content, current streamid: %u", streamId);
-        HCCL_INFO("buffer modify before ==> sqTail: %u, sqHead: %u,  sqeCnt: %u, tailSqeTaskId: %u, tailSqeIdx: %u",
+        HCCL_INFO("buffer modify before ==> sqTail: %u, sqHead: %u, sqeCnt: %u, tailSqeTaskId: %u, tailSqeIdx: %u",
             buff.sqTail, buff.sqHead, buff.sqeCnt, buff.tailSqeTaskId, buff.tailSqeIdx);
         CHK_RET(AicpuKfcUtils::TraceProfSubmit());
         CHK_RET(AicpuSqeContext::ModifyBuffer(streamId));
-        HCCL_INFO("buffer modify after ==> sqTail: %u, sqHead: %u,  sqeCnt: %u, tailSqeTaskId: %u, tailSqeIdx: %u",
+        HCCL_INFO("buffer modify after ==> sqTail: %u, sqHead: %u, sqeCnt: %u, tailSqeTaskId: %u, tailSqeIdx: %u",
             buff.sqTail, buff.sqHead, buff.sqeCnt, buff.tailSqeTaskId, buff.tailSqeIdx);
     }
     // nextTaskId=0的时候下发PlaceHolder

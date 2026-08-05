@@ -203,7 +203,7 @@ HcclResult CollReduceScatterMeshOpbaseSmallCountDeterministicExecutor::RunAlgLev
     } else if (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NB) {
         level1TempAlg
             = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_REDUCESCATTER_NB, dispatcher_);
-        HCCL_INFO("ReduceScatter smallcount deterministic:  using nonuniform-bruck algo inter-server.");
+        HCCL_INFO("ReduceScatter smallcount deterministic: using nonuniform-bruck algo inter-server.");
         CHK_SMART_PTR_NULL(level1TempAlg);
         CHK_RET(level1TempAlg->Prepare(reduceAttr));
         u64 ringSize = execMem.inputMem.size() / level1CommInfo.localRankSize;

@@ -84,7 +84,7 @@ HcclResult CalcAHCTransportReqBase::CalcTransportRequest(const std::string &tag,
         // 建链
         for (u32 dstRank : dstRanks) {
             CHK_PRT_RET(dstRank >= rankSize,
-                HCCL_ERROR("[CalcAHCTransportReqBase][CalcTransportRequest] dstRank [%u] exceed rankSize [%u]  error", 
+                HCCL_ERROR("[CalcAHCTransportReqBase][CalcTransportRequest] dstRank [%u] exceed rankSize [%u] error", 
                 dstRank, rankSize ), HCCL_E_INTERNAL);
 
             if (dstRank != rank) {

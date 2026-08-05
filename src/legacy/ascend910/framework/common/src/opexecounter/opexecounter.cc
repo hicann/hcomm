@@ -147,7 +147,7 @@ HcclResult OpExeCounter::ClearOpCounterMem()
         return HCCL_SUCCESS;
     }
     if (headCountMem_ == nullptr || tailCountMem_ == nullptr) {
-        HCCL_ERROR("[OpExeCounter][ClearOpCounterMem] headCountMem or tailCountMem  is nullptr");
+        HCCL_ERROR("[OpExeCounter][ClearOpCounterMem] headCountMem or tailCountMem is nullptr");
         return HCCL_E_PTR;
     }
     CHK_RET(hrtMemSet(headCountMem_, memSize_, memSize_));

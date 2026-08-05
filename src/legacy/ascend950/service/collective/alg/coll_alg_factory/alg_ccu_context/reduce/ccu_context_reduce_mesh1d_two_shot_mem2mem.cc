@@ -442,7 +442,7 @@ std::vector<uint64_t> CcuContextReduceMeshTwoShotMem2Mem1D::GeneArgs(const CcuTa
     }
 
     HCCL_INFO("[CcuContextAllReduce1DMesh] TaskArgs: inputAddr[%llu], outputAddr[%llu], scratchAddr[%llu], "
-              " normalSliceSize[%llu], lastSliceSize[%llu], mySliceSize[%llu]",
+              "normalSliceSize[%llu], lastSliceSize[%llu], mySliceSize[%llu]",
               inputAddr, outputAddr, scratchAddr, normalSliceSize, lastSliceSize, mySliceSize);
     return taskArgs;
 }

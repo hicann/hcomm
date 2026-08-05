@@ -452,7 +452,7 @@ HcclResult HcclCheckTaskServiceExist(const std::string &commId, s32 deviceId)
 {
     auto outerIt = g_taskServiceMap.find(commId);
     if (outerIt == g_taskServiceMap.end()) {
-        HCCL_ERROR("[CheckTaskServiceExist] TaskService of CommId[%s] deviceId[%d],CommId  Not Found", commId.c_str(), deviceId);
+        HCCL_ERROR("[CheckTaskServiceExist] TaskService of CommId[%s] deviceId[%d],CommId Not Found", commId.c_str(), deviceId);
         return HCCL_E_NOT_FOUND;
     }
     auto innerIt = outerIt->second.find(deviceId);

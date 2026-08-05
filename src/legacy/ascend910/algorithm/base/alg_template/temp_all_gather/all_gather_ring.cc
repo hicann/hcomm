@@ -158,7 +158,7 @@ HcclResult AllGatherRing::RunAllGather(u32 rank, u32 rankSize, const std::vector
     u32 txSliceIndex = rank;
     HCCL_DEBUG("[AllGatherRing][RunAllGather]sliceSize is %u, rxSliceIndex is %u", sliceSize, rxSliceIndex);
     for (u32 i = 0; i < rankSize - 1; i++) {
-        HCCL_DEBUG("rank[%u] round[%u] will tx_ack  outputslice[%u].offset is[%llu] size[%llu]",
+        HCCL_DEBUG("rank[%u] round[%u] will tx_ack outputslice[%u].offset is[%llu] size[%llu]",
             rank, i, rxSliceIndex, outputSlices[rxSliceIndex].offset, outputSlices[rxSliceIndex].size);
         CHK_RET(linkLeft_->TxAck(stream_));
 
@@ -179,11 +179,11 @@ HcclResult AllGatherRing::RunAllGather(u32 rank, u32 rankSize, const std::vector
                 "Failed", rank, i, txSliceIndex), ret);
 
         // reduce源操作
-        HCCL_DEBUG("rank[%u]  round[%u] rx data outputSlices[%u] offset[%llu] size[%llu]", \
+        HCCL_DEBUG("rank[%u] round[%u] rx data outputSlices[%u] offset[%llu] size[%llu]",
             rank, i, rxSliceIndex, outputSlices[rxSliceIndex].offset, outputSlices[rxSliceIndex].size);
         ret = RxVector(linkLeft_, rxSegsSlice);
         CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[Run][AllGather]rank[%u] round[%u]  Left Link rx outputSlices[%u] "\
+            HCCL_ERROR("[Run][AllGather]rank[%u] round[%u] Left Link rx outputSlices[%u] "
                 "Failed", rank, i, rxSliceIndex), ret);
 
         // 末尾传输, 只接收一次, 不用再次发送

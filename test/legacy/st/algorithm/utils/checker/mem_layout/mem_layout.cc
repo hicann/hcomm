@@ -353,7 +353,7 @@ HcclResult MemLayout::SetBufferAddrAndLen(BufferType bufferType, char_t* addr, u
     if(bufferType == BufferType::USERBUF_AIV){
         u64 tailAddr = (u64)addr - ((u64)addr & AIV_MASKER);
         if (tailAddr + len >= AIV_MEM_SIZE) {
-            HCCL_ERROR("invalid addr[%p] and  len[%lld]", addr, len);
+            HCCL_ERROR("invalid addr[%p] and len[%lld]", addr, len);
             return HcclResult::HCCL_E_PARA;
         }
         u32 blockId = GetBlockIdByAddr(addr);
@@ -365,7 +365,7 @@ HcclResult MemLayout::SetBufferAddrAndLen(BufferType bufferType, char_t* addr, u
 
     u64 tailAddr = (u64)addr - ((u64)addr & CHECKER_MEM_MASKER);
     if (tailAddr + len >= CHECKER_MEM_BLOCK_SIZE) {
-        HCCL_ERROR("invalid addr[%p] and  len[%lld]", addr, len);
+        HCCL_ERROR("invalid addr[%p] and len[%lld]", addr, len);
         return HcclResult::HCCL_E_PARA;
     }
 
@@ -377,10 +377,10 @@ HcclResult MemLayout::SetBufferAddrAndLen(BufferType bufferType, char_t* addr, u
 
 HcclResult MemLayout::SetGlobalBuffer(char_t* addr, u64 len)
 {
-    HCCL_DEBUG("SetGlobalBuffer input addr[%llx] and  len[%lld]", addr, len);
+    HCCL_DEBUG("SetGlobalBuffer input addr[%llx] and len[%lld]", addr, len);
     u64 tailAddr = (u64)addr - ((u64)addr & CHECKER_MEM_MASKER);
     if (tailAddr + len >= CHECKER_MEM_BLOCK_SIZE) {
-        HCCL_ERROR("invalid addr[%p] and  len[%lld]", addr, len);
+        HCCL_ERROR("invalid addr[%p] and len[%lld]", addr, len);
         return HcclResult::HCCL_E_PARA;
     }
 

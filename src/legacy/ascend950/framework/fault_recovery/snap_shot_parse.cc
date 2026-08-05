@@ -380,7 +380,7 @@ HcclResult SnapShotParser::DeserializeCommConfigInfo(BinaryStream &binaryStream,
 
 HcclResult SnapShotParser::DeserializeParamsInfo(BinaryStream& binaryStream, Hccl::CommParams& commParams) const
 {
-    HCCL_INFO("[%s]Snapshot recovering:  Start to deserialize params info.", __func__);
+    HCCL_INFO("[%s]Snapshot recovering: Start to deserialize params info.", __func__);
     binaryStream >> commParams.commId;
     binaryStream >> commParams.myRank;
     binaryStream >> commParams.rankSize;
@@ -473,7 +473,7 @@ HcclResult SnapShotParser::DeserializeSubCommConfigInfo(BinaryStream& binaryStre
 HcclResult SnapShotParser::DeserializeSubCommParamsInfo(BinaryStream &binaryStream, Hccl::CommParams &subCommParam) const
 {
     u32 dev = 0;
-    HCCL_INFO("[%s]Snapshot recovering:  Start to deserialize sub params info.", __func__);
+    HCCL_INFO("[%s]Snapshot recovering: Start to deserialize sub params info.", __func__);
     binaryStream >> subCommParam.commId >> subCommParam.myRank >> subCommParam.rankSize >> subCommParam.rankInParentComm
         >> dev >> subCommParam.devUsed;
     subCommParam.devType = static_cast<DevType::Value>(dev);

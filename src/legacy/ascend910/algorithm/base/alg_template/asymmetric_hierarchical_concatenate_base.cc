@@ -233,7 +233,7 @@ HcclResult CommAHCBaseInfo::TrasLogicSliceToPhysical(std::vector<Slice> &slices,
             
             if (isContinusSlice_ && startOffsetInRange) { //连续silie，检查逻辑slice起始边界在物理slice范围,则正常翻译
                 translateSuccess = true;
-                HCCL_DEBUG("[CommAHCBaseInfo][TrasLogicSliceToPhysical] translate  to continuous slice offset[%llu] size[%llu] in physical slice offset[%llu] size[%llu]",
+                HCCL_DEBUG("[CommAHCBaseInfo][TrasLogicSliceToPhysical] translate to continuous slice offset[%llu] size[%llu] in physical slice offset[%llu] size[%llu]",
                     slices[i].offset, slices[i].size, physicalSlices[j].offset, physicalSlices[j].size);
                 break;
             } else if (startOffsetInRange && endOffsetInRange ) { //非连续slice，检查逻辑slice起始和结束边界在物理slice范围,则正常翻译
@@ -243,8 +243,8 @@ HcclResult CommAHCBaseInfo::TrasLogicSliceToPhysical(std::vector<Slice> &slices,
                     slices[i].offset, slices[i].size, physicalSlices[j].offset, physicalSlices[j].size);
                 break;
             } else if (!isContinusSlice_ && startOffsetInRange && !endOffsetInRange && slices[i].size != 0) {//逻辑slice跨越非连续物理slice边界，异常退出
-                HCCL_ERROR("[CommAHCBaseInfo][TrasLogicSliceToPhysical] logic slice index[%u] offset[%llu] size[%llu],\
-                    physical index[%u] start offset[%llu] end offset[%llu]", i, slices[i].offset, slices[i].size, j, logicOffset,
+                HCCL_ERROR("[CommAHCBaseInfo][TrasLogicSliceToPhysical] logic slice index[%u] offset[%llu] size[%llu], "
+                    "physical index[%u] start offset[%llu] end offset[%llu]", i, slices[i].offset, slices[i].size, j, logicOffset,
                     (logicOffset + physicalSlices[j].size));
                 return HCCL_E_PARA;
             }
@@ -922,7 +922,7 @@ HcclResult CommAHCAlignInfo::InitSliceInfo()
     }
 
     CHK_PRT_RET(logicCardSliceSize_.size() !=(logicCardSliceOffset_.size() - 1),
-        HCCL_ERROR("[CommAHCAlignInfo][InitSliceInfo] cardOffset size [%u]  cardSize size [%u] check error", 
+        HCCL_ERROR("[CommAHCAlignInfo][InitSliceInfo] cardOffset size [%u] cardSize size [%u] check error", 
         logicCardSliceSize_.size(),logicCardSliceOffset_.size() ), HCCL_E_INTERNAL);
 
     return HCCL_SUCCESS;
@@ -1230,7 +1230,7 @@ HcclResult CommAHCAlignInfo::CalcInterSlicesAndLinksForRS(const u32 rank, const 
         interSlicesVector.push_back(interSlices);
         interLinksVector.push_back(interLinks);
     }
-    HCCL_DEBUG("[CommAHCAlignInfo][CalcInterSlicesAndLinksForRS]  calc inter slices and links rank[%u] end", rank);
+    HCCL_DEBUG("[CommAHCAlignInfo][CalcInterSlicesAndLinksForRS] calc inter slices and links rank[%u] end", rank);
     return HCCL_SUCCESS;
 }
 

@@ -323,7 +323,7 @@ static void HRaSocketBatchClose(struct SocketCloseInfoT conn[], u32 num)
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout) {
-                MACRO_THROW(NetworkApiException, StringFormat("[BatchClose][RaSocket]errNo[0x%016llx]  ra socket batch close, timeout[%d s], return[%d], params: num[%u]", 
+                MACRO_THROW(NetworkApiException, StringFormat("[BatchClose][RaSocket]errNo[0x%016llx] ra socket batch close, timeout[%d s], return[%d], params: num[%u]", 
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), timeout, ret, num));
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -435,7 +435,7 @@ static void HRaSocketListenStop(struct SocketListenInfoT conn[], u32 num)
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout) {
-                MACRO_THROW(NetworkApiException, StringFormat("[ListenStop][RaSocket]errNo[0x%016llx]  ra socket listen stop fail, timeout[%d s], return[%d], params: num[%u]", 
+                MACRO_THROW(NetworkApiException, StringFormat("[ListenStop][RaSocket]errNo[0x%016llx] ra socket listen stop fail, timeout[%d s], return[%d], params: num[%u]", 
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), timeout, ret, num));
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -775,7 +775,7 @@ void HrtRaSocketWhiteListAdd(SocketHandle socketHandle, vector<RaSocketWhitelist
 
             int sret = strcpy_s(wlistInfo.tag, sizeof(wlistInfo.tag), wlists[idx].tag.c_str());
             if (sret != EOK) {
-                MACRO_THROW(InternalException, StringFormat("[Add][RaSocketWhiteList]errNo[0x%016llx]errName[HCCL_E_MEMORY] memory copy failed. params: socketHandle[%p], return: ret[%d], wlistInfo.tag size=%zu,  wlists[%zu].tag size=%zu",
+                MACRO_THROW(InternalException, StringFormat("[Add][RaSocketWhiteList]errNo[0x%016llx]errName[HCCL_E_MEMORY] memory copy failed. params: socketHandle[%p], return: ret[%d], wlistInfo.tag size=%zu, wlists[%zu].tag size=%zu",
                     HCOM_ERROR_CODE(HcclResult::HCCL_E_MEMORY), socketHandle, sret, sizeof(wlistInfo.tag), idx, sizeof(wlists[idx].tag.c_str())));
             }
             HCCL_INFO("add whitelistInfo tag=[%s], remoteIp[%s]",

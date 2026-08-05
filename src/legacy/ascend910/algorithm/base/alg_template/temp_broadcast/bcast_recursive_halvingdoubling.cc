@@ -260,7 +260,7 @@ HcclResult BcastRecursiveHalvingDoubling::OddNumberRankProcess(const u32 rank,
 {
     HcclResult ret;
     if (root_ % 2 == 0 || root_ >= part1Size_) {  // 模2是否为0判断rank_奇偶性
-        HCCL_DEBUG("rank[%u]  stream[%p] receive memsize[%llu] from rank[%u]",  \
+        HCCL_DEBUG("rank[%u] stream[%p] receive memsize[%llu] from rank[%u]",  \
             rank, stream_.ptr(), DataUnitSize(dataType_)*count_, rank - 1);
 
         // root是偶数节点，rank从前面邻接的偶数节点接收数据

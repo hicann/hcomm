@@ -18,7 +18,7 @@ HcclResult CommAHCBaseInfo::GetNBNslbDstRanks(const u32 rank, const std::vector<
     std::vector<u32> &dstRanks)
 {
     CHK_PRT_RET(rank >= commGroups.size(),
-        HCCL_ERROR("[CalcNBTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u]  error", 
+        HCCL_ERROR("[CalcNBTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u] error", 
         rank, commGroups.size() ), HCCL_E_INTERNAL);
 
     for (auto i = 0; static_cast<u32>(1 << i) < commGroups.size(); ++i) {
@@ -41,7 +41,7 @@ HcclResult CommAHCBaseInfo::GetNHRNslbDstRanks(const u32 rank, const std::vector
     std::vector<u32> &dstRanks)
 {
     CHK_PRT_RET(rank >= commGroups.size(),
-        HCCL_ERROR("[CalcNHRTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u]  error", 
+        HCCL_ERROR("[CalcNHRTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u] error", 
         rank, commGroups.size() ), HCCL_E_INTERNAL);
     
     for (auto i = 0; static_cast<u32>(1 << i) < commGroups.size(); ++i) {
@@ -63,7 +63,7 @@ HcclResult CommAHCBaseInfo::GetNHRNslbDstRanks(const u32 rank, const std::vector
 HcclResult CommAHCBaseInfo::GetRingNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32> &dstRanks)
 {
     CHK_PRT_RET(rank >= commGroups.size(),
-        HCCL_ERROR("[CalcRingTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u]  error", 
+        HCCL_ERROR("[CalcRingTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u] error", 
         rank, commGroups.size() ), HCCL_E_INTERNAL);
     
     // 正方向下一个节点的rank号

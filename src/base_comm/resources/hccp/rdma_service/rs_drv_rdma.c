@@ -109,7 +109,7 @@ int RsDrvGetCqeErrInfo(struct CqeErrInfo *info)
     hccp_run_info("status=[%u]", tempInfo->status);
     ret = memcpy_s(info, sizeof(struct CqeErrInfo), &errInfo->info, sizeof(struct CqeErrInfo));
     if (ret) {
-        hccp_err("memcpy_s  failed");
+        hccp_err("memcpy_s failed");
         RS_PTHREAD_MUTEX_ULOCK(&errInfo->mutex);
         return -ESAFEFUNC;
     }

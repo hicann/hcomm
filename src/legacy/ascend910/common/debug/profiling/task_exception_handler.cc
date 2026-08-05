@@ -1187,7 +1187,7 @@ HcclResult TaskExceptionHandler::PrintCommAivInfo()
 
     // 如果遍历发现，存在通信域内执行过aiv算子，则提示有可能有卡死风险；大于0则提示，因为MC2也有可能有aiv算子。
     if (groupHasAivCount != 0) {
-        HCCL_ERROR("[TaskExceptionHandler][PrintCommAivInfo] multi groups include aiv alg, may cause execution stuck. "
+        HCCL_ERROR("[TaskExceptionHandler][PrintCommAivInfo] multi groups include aiv alg, may cause execution stuck."
             " has aiv group count[%u]", groupHasAivCount);
         HCCL_ERROR("groups has aiv list[groupName]:");
         splitAndPrintErrStr(groupHasAivInfo.str());

@@ -96,7 +96,7 @@ HcclResult HcclCommConn::Bind(HcclAddr &bindAddr)
     CHK_RET(SetAddr(bindAddr, INIT_LOCAL_IP));
 
     u32 &localIpv4Addr = localAddr_.info.tcp.ipv4Addr;
-    HCCL_RUN_INFO("HcclCommConn Bind localIpv4Addr[%s],  port[%u]",
+    HCCL_RUN_INFO("HcclCommConn Bind localIpv4Addr[%s], port[%u]",
         HcclIpAddress(localIpv4Addr).GetReadableIP(), localAddr_.info.tcp.port);
 
     struct rdev nicRdevInfo{};
@@ -142,7 +142,7 @@ HcclResult HcclCommConn::Listen(int backLog)
     struct SocketListenInfoT serverInfo;
     serverInfo.socketHandle = socketHandle_;
     serverInfo.port = localAddr_.info.tcp.port;
-    HCCL_RUN_INFO("HcclCommConn Listen localIpv4Addr[%s],  port[%u]",
+    HCCL_RUN_INFO("HcclCommConn Listen localIpv4Addr[%s], port[%u]",
         HcclIpAddress(localAddr_.info.tcp.ipv4Addr).GetReadableIP(), localAddr_.info.tcp.port);
     HcclResult ret = hrtRaSocketNonBlockListenStart(&serverInfo, 1);
     std::string errormessage = "The IP address " + std::string(HcclIpAddress(localAddr_.info.tcp.ipv4Addr).GetReadableIP()) +
@@ -162,7 +162,7 @@ HcclResult HcclCommConn::StopListen()
     serverInfo.port = localAddr_.info.tcp.port;
     CHK_RET(hrtRaSocketListenStop(&serverInfo, 1));
     isListen_ = false;
-    HCCL_RUN_INFO("HcclCommConn ip[%s] port[%u]  StopListen success.",
+    HCCL_RUN_INFO("HcclCommConn ip[%s] port[%u] StopListen success.",
         HcclIpAddress(localAddr_.info.tcp.ipv4Addr).GetReadableIP(), localAddr_.info.tcp.port);
     return HCCL_SUCCESS;
 }
@@ -214,7 +214,7 @@ HcclResult HcclCommConn::Accept(HcclAddr &acceptAddr, HcclCommConn *&acceptConn)
             acceptAddr = acceptConn->GetRemoteAddr();
             isNeedCreditAdd = true;
             creditNum++;
-            HCCL_RUN_INFO("Server Got new socket finally, ipv4Addr[%s],  port[%u]",
+            HCCL_RUN_INFO("Server Got new socket finally, ipv4Addr[%s], port[%u]",
                 HcclIpAddress(acceptAddr.info.tcp.ipv4Addr).GetReadableIP(), acceptAddr.info.tcp.port);
             break;
         } else if (ret != HCCL_E_AGAIN) {
@@ -431,7 +431,7 @@ HcclResult HcclCommConn::InitTransport(u32 role, HcclAddr &localAddr, SocketInfo
     HcclIpAddress selfIp(localAddr_.info.tcp.ipv4Addr);
     HcclIpAddress peerIp(remoteAddr_.info.tcp.ipv4Addr);
 
-     HCCL_RUN_INFO("role[%u], local ipv4[%s], port[%u], remote ipv4[%s], port[%u]  init TransportRoce", role_,
+     HCCL_RUN_INFO("role[%u], local ipv4[%s], port[%u], remote ipv4[%s], port[%u] init TransportRoce", role_,
         HcclIpAddress(localAddr_.info.tcp.ipv4Addr).GetReadableIP(), localAddr_.info.tcp.port,
         HcclIpAddress(remoteAddr_.info.tcp.ipv4Addr).GetReadableIP(), remoteAddr_.info.tcp.port);
 

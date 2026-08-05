@@ -307,7 +307,7 @@ HcclResult TransportHeterogRawRoce::TypicalQpModify(QpHandle &qpHandle, struct T
     } else if (ret != HCCL_E_AGAIN) {
         HCCL_ERROR("hrtRaTypicalQpModify fail qpHandle[%p] completed[%u]"
             "local: qpn[%u] psn[%u] gidIdx[%u] gid[%p] tc[%u] sl[%u] retryCnt[%u] retryTime[%u]"
-            "remote: qpn[%u] psn[%u] gidIdx[%u] gid[%p] tc[%u] sl[%u]  retryCnt[%u] retryTime[%u] ",
+            "remote: qpn[%u] psn[%u] gidIdx[%u] gid[%p] tc[%u] sl[%u] retryCnt[%u] retryTime[%u] ",
             qpHandle, completed, localQpInfo->qpn, localQpInfo->psn, localQpInfo->gidIdx, localQpInfo->gid,
             localQpInfo->tc, localQpInfo->sl, localQpInfo->retryCnt, localQpInfo->retryTime,
             remoteQpInfo->qpn, remoteQpInfo->psn, remoteQpInfo->gidIdx, remoteQpInfo->gid, remoteQpInfo->tc,

@@ -38,7 +38,7 @@ HcclResult GetStreamCaptureInfo(rtStream_t stream, rtModel_t &rtModel, bool &isC
         HCCL_WARNING("[%s]Stream capture not support.", __func__);
         return HCCL_SUCCESS;
     } else {
-        CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[%s]rtStreamGetCaptureInfo fail.  return[%d].", __func__, ret),
+        CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[%s]rtStreamGetCaptureInfo fail. return[%d].", __func__, ret),
             HCCL_E_RUNTIME);
     }
     auto it = captureStatusHandlers.find(captureStatus);

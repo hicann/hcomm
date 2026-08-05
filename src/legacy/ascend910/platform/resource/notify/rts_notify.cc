@@ -112,8 +112,8 @@ HcclResult RtsNotify::SetIpc()
     SecIpcName_t ipcName;
     HcclResult ret = hrtIpcSetNotifyName(notifyPtr, reinterpret_cast<u8 *>(ipcName.ipcName),
         sizeof(ipcName.ipcName));
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[SetIpc][hrtIpcSetNotifyName]errNo[0x%016llx]  "\
-        " IPC set notify name fail. return[%d] name len=[%zu].", HCCL_ERROR_CODE(HCCL_E_RUNTIME),\
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[SetIpc][hrtIpcSetNotifyName]errNo[0x%016llx] "\
+        "IPC set notify name fail. return[%d] name len=[%zu].", HCCL_ERROR_CODE(HCCL_E_RUNTIME),\
         ret, sizeof(ipcName.ipcName)), HCCL_E_RUNTIME);
     if (memcpy_s(notifyInfo_.ipcNotify.ipcName, HCCL_IPC_MEM_NAME_LEN,
         reinterpret_cast<char *>(ipcName.ipcName), sizeof(ipcName.ipcName)) != EOK) {

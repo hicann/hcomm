@@ -73,7 +73,7 @@ public:
     virtual void ReadReduce(ReduceIn reduceIn, const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt,
                             const StreamLite &stream, const SqeConfigLite &cfg, ConnLiteOperationOut &out)
     {
-        HCCL_INFO("RmaConnLite ReadReduce start.  dataType = %u, reduceOp %u, loc.addr = %llx, "
+        HCCL_INFO("RmaConnLite ReadReduce start. dataType = %u, reduceOp %u, loc.addr = %llx, "
                   "rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u",
                   reduceIn.dataType, reduceIn.reduceOp, loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi);
     }
@@ -113,7 +113,7 @@ public:
                                        const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg, const StreamLite &stream,
                                        ConnLiteOperationOut &out, const RmtRmaBufSliceLite &notify, u64 notifyData)
     {
-        HCCL_INFO("RmaConnLite WriteReduceWithNotify start.  dataType = %d, , reduceOp %d, loc.addr = %llx, "
+        HCCL_INFO("RmaConnLite WriteReduceWithNotify start. dataType = %d, , reduceOp %d, loc.addr = %llx, "
                   "rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u, notify.addr = %llx, notifyData = %llu",
                   dataType, reduceOp, loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi, notify.GetAddr(), notifyData);
     }

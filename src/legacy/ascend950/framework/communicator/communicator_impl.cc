@@ -2398,7 +2398,7 @@ HcclResult CommunicatorImpl::RecoverRankGraphData(SnapShotComm &snapShotComm, co
     topoInfo = std::move(preparedTopoInfo);
     rankSize = preparedRankSize;
     HCCL_INFO(
-        "[CommunicatorImpl][%s] Recover topo data from snapshot, rank[%d], id[%s], idIndex[%u],  RankTableInfo[%s]", __func__,
+        "[CommunicatorImpl][%s] Recover topo data from snapshot, rank[%d], id[%s], idIndex[%u], RankTableInfo[%s]", __func__,
         myRank, id.c_str(), idIndex, ranktableInfo->Describe().c_str());
 
     CheckRankGraph();
@@ -2600,7 +2600,7 @@ HcclResult CommunicatorImpl::DestroyDpuTaskexpShmemInDevice()
     uint8_t flag = 1;
     errno_t ret = memcpy_s(hostPtr, sizeof(flag), &flag, sizeof(flag)); // taskexception首字节作为是否停止标志位；
     if (ret != EOK) {
-        HCCL_ERROR("DestroyDpuTaskexpShmemInDevice  Fail, return[%d]", ret);
+        HCCL_ERROR("DestroyDpuTaskexpShmemInDevice Fail, return[%d]", ret);
         return HCCL_E_INTERNAL;
     }
     auto timeout   = std::chrono::milliseconds(WAIT_CMD_TIMEOUT);

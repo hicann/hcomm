@@ -28,7 +28,7 @@ HcclResult AllReduceMultiDeterPipeline::GetRemoteCclbufferDeviceMem(u32 inputSli
     u8 *intraSrcAddr = beginAddrU8 + offset;
     remoteMem = DeviceMem::create(intraSrcAddr, size);
     if (remoteMem.ptr() == nullptr) {
-        HCCL_ERROR("[%s] offset +  size = [%llu] > cclBufferSize[%llu] > cclBufferSize", __func__,
+        HCCL_ERROR("[%s] offset + size = [%llu] > cclBufferSize[%llu] > cclBufferSize", __func__,
             offset + size, outCclBuffer_.size());
         return HCCL_E_MEMORY;
     }
@@ -45,7 +45,7 @@ HcclResult AllReduceMultiDeterPipeline::GetLocalInCclbufferDeviceMem(u32 rankIdI
     u64 offset = slices_[rankIdInAllRanks].offset;
     localMem = inCclBuffer_.range(offset, size);
     if (localMem.ptr() == nullptr) {
-        HCCL_ERROR("[%s] get localMem failed, offset + size  = [%llu] > cclBufferSize[%llu]", __func__, offset + size,
+        HCCL_ERROR("[%s] get localMem failed, offset + size = [%llu] > cclBufferSize[%llu]", __func__, offset + size,
             inCclBuffer_.size());
         return HCCL_E_MEMORY;
     }
@@ -64,7 +64,7 @@ HcclResult AllReduceMultiDeterPipeline::GetLocalOutCclbufferDeviceMem(u32 rankId
     u64 offset = slices_[rankIdInAllRanks].offset;
     localMem = outCclBuffer_.range(offset, size);
     if (localMem.ptr() == nullptr) {
-        HCCL_ERROR("[%s] get localMem failed, offset + size  = [%llu] > cclBufferSize[%llu]", __func__, offset + size,
+        HCCL_ERROR("[%s] get localMem failed, offset + size = [%llu] > cclBufferSize[%llu]", __func__, offset + size,
             outCclBuffer_.size());
         return HCCL_E_MEMORY;
     }
@@ -81,7 +81,7 @@ HcclResult AllReduceMultiDeterPipeline::GetLocalUserDeviceMem(u32 rankIdInAllRan
     u8 *intraSrcAddr = beginAddrU8 + offset; // 不用 + offset_，因为usrInMem_已经加过了
     localMem = DeviceMem::create(intraSrcAddr, size);
     if (localMem.ptr() == nullptr) {
-        HCCL_ERROR("[%s] get localMem failed, offset + size  = [%llu] > cclBufferSize[%llu]", __func__, offset + size,
+        HCCL_ERROR("[%s] get localMem failed, offset + size = [%llu] > cclBufferSize[%llu]", __func__, offset + size,
             outCclBuffer_.size());
         return HCCL_E_MEMORY;
     }
@@ -115,7 +115,7 @@ HcclResult AllReduceMultiDeterPipeline::RunLocalCopy()
     CHK_RET(GetLocalOutCclbufferDeviceMem(userRank_, cclbuffer, false));
     // 使用主流搬迁卡内数据
     CHK_RET(HcclD2DMemcpyAsync(dispatcher_, cclbuffer, userIn, mainStream_));
-    HCCL_DEBUG("[%s] intra-card copy data from userInMem to number[%u] cclbuffer[%p]  size[%llu]",
+    HCCL_DEBUG("[%s] intra-card copy data from userInMem to number[%u] cclbuffer[%p] size[%llu]",
         __func__, userRank_, cclbuffer.ptr(), curSize_);
     return HCCL_SUCCESS;
 }

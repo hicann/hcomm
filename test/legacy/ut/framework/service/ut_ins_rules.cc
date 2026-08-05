@@ -977,6 +977,20 @@ TEST_F(InsRulesTest, Interpret_local_reduce_not_support_now)
     Interpret(insLocalReduce, fakeComm, stream, taskConfig);
 }
 
+TEST_F(InsRulesTest, Interpret_local_reduce_int64_not_support)
+{
+    StubCommunicatorImpl fakeComm;
+
+    DataSlice      srcSlice(BufferType::INPUT, 0, 100);
+    DataSlice      dstSlice(BufferType::OUTPUT, 0, 100);
+    InsLocalReduce insLocalReduce(srcSlice, dstSlice, DataType::INT64, ReduceOp::SUM);
+
+    MOCKER(HrtGetStreamId).stubs().with(mockcpp::any()).will(returnValue(0));
+    Stream       stream;
+    OpTaskConfig taskConfig{};
+    EXPECT_THROW(Interpret(insLocalReduce, fakeComm, stream, taskConfig), InvalidParamsException);
+}
+
 TEST_F(InsRulesTest, Interpret_write_p2p)
 {
     StubCommunicatorImpl fakeComm;

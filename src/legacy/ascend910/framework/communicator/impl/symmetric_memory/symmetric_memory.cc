@@ -574,12 +574,12 @@ HcclResult SymmetricMemory::GetMemoryInfo(void* ptr, size_t size, void** baseUse
     CHK_PTR_NULL(*paHandle);
 
     if (reinterpret_cast<uintptr_t>(ptr) + size > reinterpret_cast<uintptr_t>(*baseUserVa) +  *baseVaSize) {
-        HCCL_ERROR("[SymmetricMemory][GetMemoryInfo] ptr=%p size=%zu exceeds  block [baseUserVa=%p, size=%zu]", 
+        HCCL_ERROR("[SymmetricMemory][GetMemoryInfo] ptr=%p size=%zu exceeds block [baseUserVa=%p, size=%zu]", 
            ptr, size, *baseUserVa, *baseVaSize);
         return HCCL_E_PARA;
     }
 
-    HCCL_INFO("[SymmetricMemory][GetMemoryInfo] Retained paHandle[%p] for baseUserVa[%p],  baseVaSize[%zu]. Total Stride: %zu",
+    HCCL_INFO("[SymmetricMemory][GetMemoryInfo] Retained paHandle[%p] for baseUserVa[%p], baseVaSize[%zu]. Total Stride: %zu",
         *paHandle, *baseUserVa,  *baseVaSize, stride_);
 
     return HCCL_SUCCESS;

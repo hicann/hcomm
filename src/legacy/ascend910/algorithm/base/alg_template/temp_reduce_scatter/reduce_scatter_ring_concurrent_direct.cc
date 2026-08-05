@@ -233,7 +233,7 @@ HcclResult ReduceScatterRingConcurrentDirect::RunInitStep(const u32 rank, const 
         }
         CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, stream_));
         HCCL_DEBUG("Memcpy operation: step[-1] stream[sub] src rank[%u] starts to copy(rcv) offset[%llu], "
-            " size[%llu] on userMemInput to offset[%llu], size[%llu] on CCL",
+            "size[%llu] on userMemInput to offset[%llu], size[%llu] on CCL",
             userRank_, srcInitSlice0.offset, srcInitSlice0.size, dstInitSlice0.offset, dstInitSlice0.size);
         CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstSubInit, srcSubInit, subStreams_[0]));
         CHK_RET(SubRecordMain()); // 从流通知主流通信完成
@@ -388,7 +388,7 @@ HcclResult ReduceScatterRingConcurrentDirect::RunMainStreamTx(const u32 step,
         DeviceMem srcMemTemp = scratchMem_.range(rxSliceVector[sliceIdx].offset, rxSliceVector[sliceIdx].size);
         DeviceMem srcMem     = inputMem_.range(txSliceVector[sliceIdx].offset, txSliceVector[sliceIdx].size);
         HCCL_DEBUG("Reduce operation: step[%u] stream[main], senderInfo_ rank[%u] starts to rcv offset[%llu], "
-            " size[%llu]",
+            "size[%llu]",
             step, rightLink_->GetRemoteRank(), txSliceVector[sliceIdx].offset, txSliceVector[sliceIdx].size);
         rxReduceMems.emplace_back(ReducerMemoryInfo{baseOffset_ + rxSliceVector[sliceIdx].offset,
             dst, dst, srcMemTemp});

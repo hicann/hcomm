@@ -214,7 +214,7 @@ TEST(ST_SocketListenStop, st_HrtRaUbPostSend_ok)
 
 TEST(LogTest, st_sal_log_printf_log2)
 {
-    MODULE_DEBUG("\r\r\r\r \r\r\r\r  log 2.0  test"); /*提高覆盖率*/
+    MODULE_DEBUG("\r\r\r\r \r\r\r\r log 2.0 test"); /*提高覆盖率*/
     MODULE_INFO("log 2.0 test");
     MODULE_WARNING("log 2.0 test");
     MODULE_ERROR("log 2.0 test");

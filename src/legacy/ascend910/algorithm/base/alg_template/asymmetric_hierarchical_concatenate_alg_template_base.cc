@@ -108,7 +108,7 @@ HcclResult AHCAlgTemplateBase::GetNslbAdjInfoPro(const u32 rank, const u32 rankS
     HCCL_DEBUG("[NSLB-AHC] try to GetNslbDstRanks, rank = %u, ranksize = %u", rank, rankSize);
     CHK_RET(commAHCBaseInfo_->GetNslbDstRanks(rank, dstRanks));
     if (dstRanks.size() == 0 || dstRanks.size() > NSLBDP_MAX_PHASE) {
-        HCCL_DEBUG("[NSLB-AHC]  dstRanks size not support");
+        HCCL_DEBUG("[NSLB-AHC] dstRanks size not support");
         return HCCL_SUCCESS;
     }
     for (u32 nextRank : dstRanks) {
@@ -258,7 +258,7 @@ HcclResult ReduceScatterAHCBase::RunAsync(const u32 rank, const u32 rankSize,
     // 做组内 reduce-scatter
     ret = RunIntraReduceScatter(rank, links, commAHCBaseInfo_);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[ReduceScatterAHCBase][RunAsync]rank[%u] count[%llu] failed in "\
-        "RunIntraReduceScatter  step", rank, count_), ret);
+        "RunIntraReduceScatter step", rank, count_), ret);
  
     HCCL_DEBUG("[ReduceScatterAHCBase][RunAsync] rank[%u] end intra rs begin inter", rank);
  
@@ -368,7 +368,7 @@ HcclResult AllGatherAHCBase::RunAsync(const u32 rank, const u32 rankSize,
     // 做组内 allgather
     ret = RunIntraAllGather(rank, links, commAHCBaseInfo_);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllGatherAHCBase][RunAsync]rank[%u] count[%llu] failed in "\
-        "RunIntraAllGather  step", rank, count_), ret);
+        "RunIntraAllGather step", rank, count_), ret);
  
     HCCL_DEBUG("[AllGatherAHCBase][RunAsync] rank[%u] end intra ag begin inter", rank);
  
@@ -446,7 +446,7 @@ HcclResult AllReduceAHCBase::RunAsync(const u32 rank, const u32 rankSize,
  
     ret = RunIntraReduceScatter(rank, links, commAHCBaseInfo_);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceAHCBase][RunAsync]rank[%u] count[%llu] failed in "\
-        "RunIntraReduceScatter  step", rank, count_), ret);
+        "RunIntraReduceScatter step", rank, count_), ret);
  
     HCCL_DEBUG("[AllReduceAHCBase][RunAsync] rank[%u] end intra rs begin inter", rank);
  

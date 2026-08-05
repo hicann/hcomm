@@ -168,7 +168,7 @@ HcclResult AllGatherSlimRing::RunAllGather(u32 rank, u32 rankSize, const std::ve
         // reduce源操作
         ret = RxVector(linkLeft_, rxSegsSlice);
         CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[Run][AllGather]rank[%u] round[%u]  Left Link rx outputSlices[%u] "\
+            HCCL_ERROR("[Run][AllGather]rank[%u] round[%u] Left Link rx outputSlices[%u] "\
                 "Failed", rank, i, rxSliceIndex), ret);
 
         // 末尾传输, 只接收一次, 不用再次发送

@@ -330,7 +330,7 @@ HcclResult hrtCtxDestroy(aclrtContext destroyCtx)
     aclError ret = funcPtr(destroyCtx);
 #endif
     CHK_PRT_RET(ret != ACL_SUCCESS && ret != ACL_ERROR_RT_CONTEXT_NULL, HCCL_ERROR(
-        "[Get][Device]errNo[0x%016llx] aclrtDestroyContext fail,  return[%d]",
+        "[Get][Device]errNo[0x%016llx] aclrtDestroyContext fail, return[%d]",
         HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;

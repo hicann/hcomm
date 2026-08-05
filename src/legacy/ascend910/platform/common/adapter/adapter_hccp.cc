@@ -1132,7 +1132,7 @@ HcclResult hrtRaSocketListenStart(struct SocketListenInfoT conn[], u32 num)
             RPT_CALL_ERR(bTimeout, "ra socket listen failed. timeout[%d s], return[%d], num[%u]",
                 GetExternalInputHcclLinkTimeOut(), ret, num);
 
-            CHK_PRT_RET(bTimeout, HCCL_ERROR("[ListenStart][RaSocket]errNo[0x%016llx]  ra socket listen start "
+            CHK_PRT_RET(bTimeout, HCCL_ERROR("[ListenStart][RaSocket]errNo[0x%016llx] ra socket listen start "
                 "timeout[%d s]. return[%d]", HCCL_ERROR_CODE(HCCL_E_TIMEOUT),
                 GetExternalInputHcclLinkTimeOut(), ret), HCCL_E_TIMEOUT);
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -2120,7 +2120,7 @@ HcclResult ConstructQpAttrs(s32 qpMode, struct QpExtAttrs &attrs, const QueueDep
 
 HcclResult CreateQp(RdmaHandle rdmaHandle, int& flag, s32& qpMode, QpInfo& qp, bool isESMode)
 {
-    HCCL_INFO("CreateQp  qpMode[%d], isESMode[%d].", qpMode, isESMode);
+    HCCL_INFO("CreateQp qpMode[%d], isESMode[%d].", qpMode, isESMode);
     if (isESMode && (qpMode == OFFLINE_QP_MODE_EXT || qpMode == OPBASE_QP_MODE_EXT)) {
         struct QpExtAttrs attrs{};
         QueueDepthAttr qpDepth{};
@@ -3247,8 +3247,8 @@ HcclResult HrtRaGetHccnCfg(s32 networkMode, u32 devicePhyId, enum HccnCfgKeyT ke
         HCCL_WARNING("[HrtRaGetHccnCfg] device networkMode[%d] with phyId[%u], "
                      "get hccn config key[%d] info is empty. Possible reasons: "
                      "1. Device not need to use multi_qp/nslb-dp settings. "
-                     "  2. In this package, hccn_tool not support multi_qp/nslb-dp settings. "
-                     "  3. The right key not exist in device's config file or key's value is empty.",
+                     "2. In this package, hccn_tool not support multi_qp/nslb-dp settings. "
+                     "3. The right key not exist in device's config file or key's value is empty.",
             networkMode,
             devicePhyId,
             key);
