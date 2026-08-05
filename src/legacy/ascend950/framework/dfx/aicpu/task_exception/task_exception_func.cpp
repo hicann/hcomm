@@ -17,7 +17,7 @@
 #include <string>
 
 namespace Hccl {
-TaskExceptionFunc &TaskExceptionFunc::GetInstance()
+TaskExceptionFunc& TaskExceptionFunc::GetInstance()
 {
     static TaskExceptionFunc instance;
     return instance;
@@ -33,35 +33,23 @@ void TaskExceptionFunc::SetEnable(bool isEnable)
     }
 }
 
-void TaskExceptionFunc::SetDevId(uint32_t devId)
-{
-    devId_ = devId;
-}
+void TaskExceptionFunc::SetDevId(uint32_t devId) { devId_ = devId; }
 
-void TaskExceptionFunc::RegisterCallback(const Callback &callback)
-{
-    callback_ = callback;
-}
+void TaskExceptionFunc::RegisterCallback(const Callback& callback) { callback_ = callback; }
 
-void TaskExceptionFunc::Register(StreamLite *streamLite)
-{
-    streamLiteMap_[streamLite->GetSqId()] = streamLite;
-}
+void TaskExceptionFunc::Register(StreamLite* streamLite) { streamLiteMap_[streamLite->GetSqId()] = streamLite; }
 
-void TaskExceptionFunc::UnRegister(StreamLite *streamLite)
-{
-    streamLiteMap_.erase(streamLite->GetSqId());
-}
+void TaskExceptionFunc::UnRegister(StreamLite* streamLite) { streamLiteMap_.erase(streamLite->GetSqId()); }
 
 std::string TaskExceptionFunc::ErrorType2Str(uint8_t errorType) const
 {
     static const std::map<uint8_t, std::string> errorType2Str{
-        {0b1, "exception"},                 // bit0:代表是否有exception
-        {0b11, "bus error"},                // bit1:代表是否为bus_error
-        {0b101, "rsv"},                     // bit2:代表为rsv域段（该域段硬件值可能为0或1）
-        {0b1001, "sqe error"},              // bit3:代表是否为sqe_error
-        {0b10001, "res conflict error"},    // bit4:代表是否为res_conflict_error
-        {0b100001, "pre_p/post_p error"},   // bit5:表示软件在pre_p或post_p过程中发生了错误，写入了sq_sw_status
+        {0b1, "exception"},              // bit0:代表是否有exception
+        {0b11, "bus error"},             // bit1:代表是否为bus_error
+        {0b101, "rsv"},                  // bit2:代表为rsv域段（该域段硬件值可能为0或1）
+        {0b1001, "sqe error"},           // bit3:代表是否为sqe_error
+        {0b10001, "res conflict error"}, // bit4:代表是否为res_conflict_error
+        {0b100001, "pre_p/post_p error"}, // bit5:表示软件在pre_p或post_p过程中发生了错误，写入了sq_sw_status
     };
     const auto res = errorType2Str.find(errorType);
     return res == errorType2Str.end() ? "" : res->second;
@@ -69,7 +57,7 @@ std::string TaskExceptionFunc::ErrorType2Str(uint8_t errorType) const
 
 std::string TaskExceptionFunc::CqeStatus2Str(uint32_t errorCode) const
 {
-    uint8_t status = errorCode & 0xFF;  // errorCode低8bit是UB CQE的status
+    uint8_t status = errorCode & 0xFF; // errorCode低8bit是UB CQE的status
     static const std::map<uint8_t, std::string> code2Str{
         {0x00, "OK"},
         {0x01, "Unsupported OpCode"},
@@ -83,7 +71,7 @@ std::string TaskExceptionFunc::CqeStatus2Str(uint32_t errorCode) const
     return res == code2Str.end() ? "Reserved" : res->second;
 }
 
-std::string TaskExceptionFunc::StringLogicCqReportInfo(const rtLogicCqReport_t &reportOfOne) const
+std::string TaskExceptionFunc::StringLogicCqReportInfo(const rtLogicCqReport_t& reportOfOne) const
 {
     std::stringstream ss;
     ss << "streamId :" << reportOfOne.streamId;
@@ -123,7 +111,7 @@ unsigned int TaskExceptionFunc::GetTrailingZeros(uint8_t num) const
 
 constexpr uint8_t RT_STARS_EXIST_ERROR = 0x3FU;
 
-bool TaskExceptionFunc::IsExceptionCqe(const rtLogicCqReport_t &reportOfOne) const
+bool TaskExceptionFunc::IsExceptionCqe(const rtLogicCqReport_t& reportOfOne) const
 {
     if ((reportOfOne.errorType & RT_STARS_EXIST_ERROR) == 0U) { // 取低6位
         HCCL_INFO("ReportOfOne info [%s]", StringLogicCqReportInfo(reportOfOne).c_str());
@@ -133,7 +121,7 @@ bool TaskExceptionFunc::IsExceptionCqe(const rtLogicCqReport_t &reportOfOne) con
     return true;
 }
 
-constexpr uint32_t MAX_REPORT_CNT     = 256U;
+constexpr uint32_t MAX_REPORT_CNT = 256U;
 constexpr uint32_t AC_SQE_REV_MAX_CNT = 32U;
 enum class CqeStatus : int64_t {
     kDefault = 0,
@@ -143,23 +131,25 @@ enum class CqeStatus : int64_t {
     kCqeUnknown,
 };
 
-uint32_t TaskExceptionFunc::GetReporterInfo(const StreamLite *curStream, std::shared_ptr<halReportRecvInfo> recvInfo)
+uint32_t TaskExceptionFunc::GetReporterInfo(const StreamLite* curStream, std::shared_ptr<halReportRecvInfo> recvInfo)
 {
     recvInfo->type = static_cast<drvSqCqType_t>(DRV_LOGIC_TYPE);
     recvInfo->tsId = 0;
     recvInfo->report_cqe_num = 0;
-    recvInfo->timeout = 0;               // 不设置超时时间，非阻塞
-    recvInfo->task_id = 0xFFFF;          // 接收所有类型
-    recvInfo->cqe_num = MAX_REPORT_CNT;  // 单次接收的最大cqe数量
+    recvInfo->timeout = 0;              // 不设置超时时间，非阻塞
+    recvInfo->task_id = 0xFFFF;         // 接收所有类型
+    recvInfo->cqe_num = MAX_REPORT_CNT; // 单次接收的最大cqe数量
     recvInfo->stream_id = curStream->GetId();
     recvInfo->cqId = curStream->GetCqId();
-    auto exceptionInfo = reinterpret_cast<rtLogicCqReport_t *>(recvInfo->cqe_addr);
+    auto exceptionInfo = reinterpret_cast<rtLogicCqReport_t*>(recvInfo->cqe_addr);
 
     // 接收错误信息
     drvError_t ret = halCqReportRecv(devId_, recvInfo.get());
     if (recvInfo->report_cqe_num != 0) {
-        HCCL_INFO("[TaskExceptionFunc]after exceptionInfo deviceId[%u], streamId[%u], taskId[%u], recvInfo->report_cqe_num[%u].",
-                    devId_, exceptionInfo->streamId, exceptionInfo->taskId, recvInfo->report_cqe_num);
+        HCCL_INFO(
+            "[TaskExceptionFunc]after exceptionInfo deviceId[%u], streamId[%u], taskId[%u], "
+            "recvInfo->report_cqe_num[%u].",
+            devId_, exceptionInfo->streamId, exceptionInfo->taskId, recvInfo->report_cqe_num);
     }
 
     if (ret == DRV_ERROR_WAIT_TIMEOUT) {
@@ -170,28 +160,27 @@ uint32_t TaskExceptionFunc::GetReporterInfo(const StreamLite *curStream, std::sh
         HCCL_WARNING("[TaskExceptionFunc]halCqReportRecv failed, ret:%d", ret);
         return 1;
     }
-    if (recvInfo->type != DRV_LOGIC_TYPE) {  // 非DRV_LOGIC_TYPE不支持解析
-        HCCL_WARNING("[TaskExceptionFunc]halCqReportRecv type is not %d, recvInfo->type:%d", DRV_LOGIC_TYPE, recvInfo->type);
+    if (recvInfo->type != DRV_LOGIC_TYPE) { // 非DRV_LOGIC_TYPE不支持解析
+        HCCL_WARNING(
+            "[TaskExceptionFunc]halCqReportRecv type is not %d, recvInfo->type:%d", DRV_LOGIC_TYPE, recvInfo->type);
         return 1;
     }
     return 0;
 }
 
 void TaskExceptionFunc::Call()
-{   
+{
     TRY_CATCH_PRINT_ERROR(
-        if (!isEnable_) {
-            return;
-        }
-        auto recvInfo = std::make_shared<halReportRecvInfo>();
+        if (!isEnable_) { return; } auto recvInfo = std::make_shared<halReportRecvInfo>();
         constexpr uint32_t cqeSize = MAX_REPORT_CNT * sizeof(rtLogicCqReport_t);
-        uint8_t tmpAddr[cqeSize] = {};     // cqe byte size
+        uint8_t tmpAddr[cqeSize] = {}; // cqe byte size
         recvInfo->cqe_addr = tmpAddr;  // 外部保证是有效的地址
 
-        std::vector<CommunicatorImplLite *> aicpuComms = CommunicatorImplLiteMgr::GetInstance().GetAll();
-        for (auto aicpuComm : aicpuComms) {
-            std::vector<StreamLite *> aicpuStreams = aicpuComm-> GetStreamLiteMgr()->GetAllStreams();
-            for (auto &aicpuStream : aicpuStreams) {
+        std::vector<CommunicatorImplLite*> aicpuComms = CommunicatorImplLiteMgr::GetInstance().GetAll();
+        for (auto aicpuComm
+             : aicpuComms) {
+            std::vector<StreamLite*> aicpuStreams = aicpuComm->GetStreamLiteMgr()->GetAllStreams();
+            for (auto& aicpuStream : aicpuStreams) {
                 if (aicpuStream == nullptr) {
                     HCCL_ERROR("[TaskExceptionFunc]stream of in aicpuComm[%s] is nullptr", aicpuComm->GetId().c_str());
                     continue;
@@ -201,18 +190,18 @@ void TaskExceptionFunc::Call()
                 }
                 uint32_t reportNum = recvInfo->report_cqe_num;
                 if (reportNum > MAX_REPORT_CNT) {
-                    HCCL_ERROR("[TaskExceptionFunc]report cqe num %u should not big than %u", reportNum, MAX_REPORT_CNT);
+                    HCCL_ERROR(
+                        "[TaskExceptionFunc]report cqe num %u should not big than %u", reportNum, MAX_REPORT_CNT);
                     continue;
                 }
                 for (uint32_t idx = 0U; idx < reportNum; ++idx) {
-                    auto &reportOfOne
-                        = *((reinterpret_cast<rtLogicCqReport_t *>(recvInfo->cqe_addr)) + idx); // 外部保证是有效的地址
+                    auto& reportOfOne
+                        = *((reinterpret_cast<rtLogicCqReport_t*>(recvInfo->cqe_addr)) + idx); // 外部保证是有效的地址
                     if (IsExceptionCqe(reportOfOne)) {
                         callback_(aicpuComm, &reportOfOne);
                     }
                 }
             }
-        }
-    );
+        });
 }
 } // namespace Hccl

@@ -245,6 +245,7 @@ elseif(BUILD_OPEN_PROJECT)
         pkg_inc/hcomm/hcomm_primitives_expt.h
         pkg_inc/hcomm/hcomm_res_entity_defs.h
         pkg_inc/hcomm/hcomm_team_entity_defs.h
+        pkg_inc/hcomm/hcomm_exception.h
     )
     install(FILES
         ${HCOMM_PKG_HEAD}

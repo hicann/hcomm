@@ -49,6 +49,7 @@ if(TARGET ccl_kernel)
         aicpu_ts_sync_data_c_adpt.cc
         aicpu_ts_diag_c_adapt.cc
         plf_debug_config_aicpu.cc
+        hcomm_exception_mgr_c_adpt.cc
     )
     target_include_directories(ccl_kernel PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}

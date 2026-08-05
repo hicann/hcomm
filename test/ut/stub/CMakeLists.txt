@@ -371,6 +371,7 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/base_comm
     ${HCCL_CODE_ROOT}/src/base_comm/common/
     ${HCCL_CODE_ROOT}/src/base_comm/common/device
+    ${HCCL_CODE_ROOT}/src/base_comm/dfx/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels/aicpu
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels/aiv

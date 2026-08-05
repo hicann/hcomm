@@ -77,6 +77,7 @@ target_include_directories(hccl_v2_utest PRIVATE
         ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/
         ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/
         ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/topo_info/
+        ${HCCL_CODE_ROOT}/src/base_comm/dfx/
 
         ${HCCL_LLT_ROOT}/common/virtual_topo_stub/
         ${HCCL_LLT_ROOT}/ut/framework/topo/ranktable/

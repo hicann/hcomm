@@ -10,6 +10,7 @@
 add_subdirectory(common)
 add_subdirectory(primitives)
 add_subdirectory(resources)
+add_subdirectory(dfx)
 
 set(src_list
     hcomm_res_mgr.cc

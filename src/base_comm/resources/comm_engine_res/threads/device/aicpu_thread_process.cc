@@ -10,13 +10,18 @@
 
 #include "aicpu_thread_process.h"
 #include <iomanip>
+#include "exception_handle.h"
+#include "stream_lite.h"
 
 using namespace hccl;
 
-std::mutex AicpuThreadProcess::mutex_;
+std::shared_mutex AicpuThreadProcess::mutex_;
 std::vector<std::shared_ptr<hccl::Thread>> AicpuThreadProcess::threads_;
+std::mutex AicpuThreadProcess::bgThreadMutex_;
+bool AicpuThreadProcess::daemonFuncRegistered_ = false;
+Hccl::CommandToBackGroud AicpuThreadProcess::commandToBackGroud_ = Hccl::CommandToBackGroud::Default;
 
-HcclResult AicpuThreadProcess::InitThreads(ThreadMgrAicpuParam *param)
+HcclResult AicpuThreadProcess::InitThreads(ThreadMgrAicpuParam* param)
 {
     CHK_PTR_NULL(param);
     u32 threadNum = param->threadNum;
@@ -25,66 +30,136 @@ HcclResult AicpuThreadProcess::InitThreads(ThreadMgrAicpuParam *param)
     std::string hcomId(param->hcomId);
     CHK_RET(AicpuThreadProcess::ResumeThread(param, outThreads, false));
 
-    ThreadHandle *threadArray = static_cast<ThreadHandle*>(param->deviceHandle);
+    ThreadHandle* threadArray = static_cast<ThreadHandle*>(param->deviceHandle);
     // 空指针校验
     CHK_PTR_NULL(threadArray);
     for (size_t i = 0; i < threadNum; ++i) {
-        threadArray[i] = reinterpret_cast<ThreadHandle>(outThreads[i].get());  // 拷贝裸指针
-        HCCL_INFO("[HcclCommAicpu][%s] threadArray[%zu] = [%lu]", __func__, i, threadArray[i]);
+        threadArray[i] = reinterpret_cast<ThreadHandle>(outThreads[i].get()); // 拷贝裸指针
+        HCCL_INFO("[AicpuThreadProcess][%s] threadArray[%zu] = [%lu]", __func__, i, threadArray[i]);
     }
-    threads_.insert(threads_.end(), std::make_move_iterator(outThreads.begin()),
-        std::make_move_iterator(outThreads.end()));
-    HCCL_INFO("[HcclCommAicpu][%s] comm identifier[%s], init threads num[%u] success",
-        __func__, hcomId.c_str(), threadNum);
+    threads_.insert(
+        threads_.end(), std::make_move_iterator(outThreads.begin()), std::make_move_iterator(outThreads.end()));
+    HCCL_INFO(
+        "[AicpuThreadProcess][%s] comm identifier[%s], init threads num[%u] success", __func__, hcomId.c_str(),
+        threadNum);
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuThreadProcess::AicpuThreadInit(ThreadMgrAicpuParam *param)
+const std::vector<std::shared_ptr<hccl::Thread>>& AicpuThreadProcess::GetThreads() { return threads_; }
+
+std::shared_mutex& AicpuThreadProcess::GetMutex() { return mutex_; }
+
+HcclResult AicpuThreadProcess::AicpuThreadInit(ThreadMgrAicpuParam* param)
 {
     CHK_RET(hrtSetWorkModeAicpu(true));
     CHK_RET(hrtSetlocalDevice(param->deviceLogicId));
     CHK_RET(hrtSetlocalDeviceType(static_cast<DevType>(param->deviceType)));
-    std::lock_guard<std::mutex> addLock(mutex_);
-    HcclResult ret = InitThreads(param);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[AicpuThreadProcess][AicpuIndOpThreadInit]errNo[0x%016llx] Failed to init threads",
-        HCCL_ERROR_CODE(ret)), ret);
+    {
+        std::unique_lock<std::shared_mutex> rwlock(mutex_);
+        HcclResult ret = InitThreads(param);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[AicpuThreadProcess][AicpuThreadInit]errNo[0x%016llx] Failed to init threads", HCCL_ERROR_CODE(ret)),
+            ret);
+    }
+
+    if (static_cast<DevType>(param->deviceType) == DevType::DEV_TYPE_950
+        || static_cast<DevType>(param->deviceType) == DevType::DEV_TYPE_960) {
+        InitBackGroundThread();
+    }
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuThreadProcess::AicpuThreadDestroy(ThreadMgrAicpuParam *param)
+HcclResult AicpuThreadProcess::AicpuThreadDestroy(ThreadMgrAicpuParam* param)
 {
     HCCL_INFO("[AicpuThreadProcess][%s] threadNum[%u]", __func__, param->threadNum);
-    std::lock_guard<std::mutex> addLock(mutex_);
-    ThreadHandle *threadArray = static_cast<ThreadHandle*>(param->deviceHandle);
-    CHK_PTR_NULL(threadArray);
 
-    for (u32 i = 0; i < param->threadNum; ++i) {
-        ThreadHandle handle = threadArray[i];
-        auto it = std::find_if(threads_.begin(), threads_.end(),
-            [handle](const std::shared_ptr<Thread> &ptr) {
+    bool needStopBgThread = false;
+    {
+        std::unique_lock<std::shared_mutex> rwlock(mutex_);
+        ThreadHandle* threadArray = static_cast<ThreadHandle*>(param->deviceHandle);
+        if (threadArray == nullptr) {
+            HCCL_ERROR("[AicpuThreadProcess][%s] threadArray is nullptr", __func__);
+            return HCCL_E_PTR;
+        }
+
+        for (u32 i = 0; i < param->threadNum; ++i) {
+            ThreadHandle handle = threadArray[i];
+            auto it = std::find_if(threads_.begin(), threads_.end(), [handle](const std::shared_ptr<Thread>& ptr) {
                 return reinterpret_cast<ThreadHandle>(ptr.get()) == handle;
             });
-        if (it == threads_.end()) {
-            HCCL_WARNING("[AicpuThreadProcess][%s] thread handle[0x%llx] not found in threads_", __func__, handle);
-            continue; // 继续处理其他线程
+            if (it == threads_.end()) {
+                HCCL_WARNING("[AicpuThreadProcess][%s] thread handle[0x%llx] not found in threads_", __func__, handle);
+                continue;
+            }
+            Hccl::StreamLite* streamLite = static_cast<Hccl::StreamLite*>((*it)->GetStreamLitePtr());
+            if (streamLite != nullptr) {
+                hcomm::ExceptionHandle::GetInstance().ClearStreamState(streamLite->GetSqId());
+            }
+            threads_.erase(it);
+            HCCL_DEBUG("[AicpuThreadProcess][%s] destroyed thread handle[0x%llx]", __func__, handle);
         }
-        // 从容器中移除，shared_ptr 自动释放对象
-        threads_.erase(it);
-        HCCL_DEBUG("[AicpuThreadProcess][%s] destroyed thread handle[0x%llx]", __func__, handle);
+
+        if (threads_.empty()) {
+            needStopBgThread = true;
+        }
+    }
+
+    if (needStopBgThread) {
+        StopBackGroundThread();
     }
 
     HCCL_INFO("[AicpuThreadProcess][%s] success", __func__);
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuThreadProcess::ResumeThread(ThreadMgrAicpuParam *param,
-    std::vector<std::shared_ptr<Thread>> &outThreads, bool isSupplementNotify)
+void AicpuThreadProcess::InitBackGroundThread()
+{
+    std::lock_guard<std::mutex> lock(bgThreadMutex_);
+    if (daemonFuncRegistered_) {
+        HCCL_INFO("[AicpuThreadProcess][%s] background thread already started, skip.", __func__);
+        return;
+    }
+    // 注册守护进程函数
+    Hccl::AicpuDaemonService::GetInstance().Register(&hcomm::ExceptionHandle::GetInstance());
+    daemonFuncRegistered_ = true;
+
+    static auto daemonServiceRun = [](void* info) {
+        Hccl::AicpuDaemonService::GetInstance().ServiceRun(info);
+    };
+    static auto daemonServiceStop = [](void* info) {
+        Hccl::AicpuDaemonService::GetInstance().ServiceStop(info);
+    };
+
+    commandToBackGroud_ = Hccl::CommandToBackGroud::Default;
+
+    // 启动背景线程，背景线程在runtime实现有保护，背景线程已经启动后会直接返回。
+    if (Hccl::StartMC2MaintenanceThread != nullptr) {
+        Hccl::StartMC2MaintenanceThread(
+            daemonServiceRun, &commandToBackGroud_, daemonServiceStop, &commandToBackGroud_);
+        HCCL_RUN_INFO("[%s]start BackGround thread success.", __func__);
+    } else {
+        HCCL_WARNING("[%s]StartMC2MaintenanceThread func is nullptr", __func__);
+    }
+}
+
+void AicpuThreadProcess::StopBackGroundThread()
+{
+    std::lock_guard<std::mutex> lock(bgThreadMutex_);
+    // 背景线程是同集合通信共用，这里不停止背景线程，只是将守护函数注销
+    Hccl::AicpuDaemonService::GetInstance().Unregister(&hcomm::ExceptionHandle::GetInstance());
+    daemonFuncRegistered_ = false;
+    HCCL_INFO("[AicpuThreadProcess][%s] success", __func__);
+}
+
+HcclResult AicpuThreadProcess::ResumeThread(
+    ThreadMgrAicpuParam* param, std::vector<std::shared_ptr<Thread>>& outThreads, bool isSupplementNotify)
 {
     CHK_PTR_NULL(param);
     u32 threadNum = param->threadNum;
     std::string hcomId(param->hcomId);
-    ThreadHandle *threadArray = static_cast<ThreadHandle*>(param->deviceHandle);
+    ThreadHandle* threadArray = static_cast<ThreadHandle*>(param->deviceHandle);
     for (u32 i = 0; i < threadNum; ++i) {
         std::string thdUniqueId(param->threadParam[i], THREAD_UNIQUE_ID_MAX_SIZE);
         if (UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
@@ -95,7 +170,7 @@ HcclResult AicpuThreadProcess::ResumeThread(ThreadMgrAicpuParam *param,
                 oss << std::hex << std::setw(HEX_WIDTH) << std::setfill('0')
                     << static_cast<unsigned int>(static_cast<unsigned char>(param->threadParam[i][j])) << " ";
             }
-            HCCL_INFO("[HcclCommAicpu][%s] %s", __func__, oss.str().c_str());
+            HCCL_INFO("[AicpuThreadProcess][%s] %s", __func__, oss.str().c_str());
         }
         std::shared_ptr<AicpuTsThread> thread;
         EXCEPTION_CATCH((thread = std::make_shared<AicpuTsThread>(thdUniqueId)), return HCCL_E_PTR);
@@ -103,16 +178,18 @@ HcclResult AicpuThreadProcess::ResumeThread(ThreadMgrAicpuParam *param,
         std::string notifyDesc;
         CHK_RET(thread->GetNotifyByUniqueId(notifyNum, notifyDesc));
         if (isSupplementNotify) {
-            AicpuTsThread *threadPtr = reinterpret_cast<AicpuTsThread*>(threadArray[i]);
+            AicpuTsThread* threadPtr = reinterpret_cast<AicpuTsThread*>(threadArray[i]);
             CHK_PTR_NULL(threadPtr);
-            HCCL_INFO("[%s]threadIdx[%u], threadHandle[%llu], notifyNum[%u], newNotifyNum[%u]", __func__, i,
-                threadArray[i], threadPtr->GetNotifyNum(), notifyNum);
+            HCCL_INFO(
+                "[%s]threadIdx[%u], threadHandle[%llu], notifyNum[%u], newNotifyNum[%u]", __func__, i, threadArray[i],
+                threadPtr->GetNotifyNum(), notifyNum);
             CHK_RET(threadPtr->SupplementNotify(notifyNum, notifyDesc));
         } else {
             HcclResult ret = thread->Init();
             if (ret != HCCL_SUCCESS) {
-                HCCL_ERROR("[HcclCommAicpu][%s] comm identifier[%s], init threads num[%u] failed at index %u",
-                    __func__, hcomId.c_str(), param->threadNum, i);
+                HCCL_ERROR(
+                    "[AicpuThreadProcess][%s] comm identifier[%s], init threads num[%u] failed at index %u", __func__,
+                    hcomId.c_str(), param->threadNum, i);
                 return ret;
             }
             outThreads.emplace_back(thread);
@@ -121,7 +198,7 @@ HcclResult AicpuThreadProcess::ResumeThread(ThreadMgrAicpuParam *param,
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuThreadProcess::AicpuThreadSupplementNotify(ThreadMgrAicpuParam *param)
+HcclResult AicpuThreadProcess::AicpuThreadSupplementNotify(ThreadMgrAicpuParam* param)
 {
     CHK_PTR_NULL(param);
     u32 threadNum = param->threadNum;
@@ -129,7 +206,8 @@ HcclResult AicpuThreadProcess::AicpuThreadSupplementNotify(ThreadMgrAicpuParam *
     std::vector<std::shared_ptr<Thread>> outThreads;
     CHK_RET(AicpuThreadProcess::ResumeThread(param, outThreads, true));
 
-    HCCL_INFO("[HcclCommAicpu][%s] comm identifier[%s], init threads num[%u] success",
-        __func__, hcomId.c_str(), threadNum);
+    HCCL_INFO(
+        "[AicpuThreadProcess][%s] comm identifier[%s], init threads num[%u] success", __func__, hcomId.c_str(),
+        threadNum);
     return HCCL_SUCCESS;
 }
