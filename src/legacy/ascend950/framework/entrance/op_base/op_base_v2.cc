@@ -667,7 +667,7 @@ HcclResult HcclCommDestroyV2(HcclComm comm)
 
     s32 deviceLogicId = HcclGetThreadDeviceId();
     s32 devPhyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
-    HCCL_RUN_INFO("HcclCommDestroy V950 comm[%s] success, take time [%lld]us, deviceLogicId[%d], devPhyId[%d].", commId.c_str(),
+    HCCL_RUN_INFO("Entry-HcclCommDestroy V950 comm[%s] success, take time [%lld]us, deviceLogicId[%d], devPhyId[%d].", commId.c_str(),
                   DURATION_US(TIME_NOW() - startut), deviceLogicId, devPhyId);
     return HCCL_SUCCESS;
 }
@@ -2766,7 +2766,6 @@ HcclResult HcclGetTopoDescV2()
 
 HcclResult HcclGetCommAsyncErrorV2()
 {
-    HCCL_WARNING("HcclGetCommAsyncErrorV2 is not support!");
     return HCCL_SUCCESS;
 }
 

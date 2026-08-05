@@ -577,6 +577,8 @@ HcclResult TpManager::FindAndGetTpAttr(const TpHandle tpHandle, TpAttrInfo &tpAt
     if (attrIter != tpAttrCtxMap.end()) {
         attrIter->second.useCnt += 1;
         tpAttrInfo = attrIter->second.tpAttrInfo;
+        HCCL_INFO("[TpManager][%s] cache hit, tpHandle[0x%llx] useCnt[%u].",
+            __func__, static_cast<unsigned long long>(tpHandle), attrIter->second.useCnt);
         return HcclResult::HCCL_SUCCESS;
     }
 
@@ -668,14 +670,22 @@ HcclResult TpManager::ReleaseTpInfo(const RaUbGetTpInfoParam &param, const TpInf
 
     // 未入缓存的并发 GetTpInfo 结果：与缓存 tpHandle 不一致，无需操作缓存。
     if (tpInfo.tpHandle != qit->second.tpInfo.tpHandle) {
+        HCCL_INFO("[TpManager][%s] skip, tpHandle mismatch, local[%llu] cached[%llu] param[%s].",
+            __func__, static_cast<unsigned long long>(tpInfo.tpHandle),
+            static_cast<unsigned long long>(qit->second.tpInfo.tpHandle), param.Describe().c_str());
         return HcclResult::HCCL_SUCCESS;
     }
 
     if (qit->second.useCnt > 1) {
         qit->second.useCnt -= 1;
+        HCCL_INFO("[TpManager][%s] ref decrement, useCnt[%u -> %u] tpHandle[%llu] param[%s].",
+            __func__, qit->second.useCnt + 1U, qit->second.useCnt,
+            static_cast<unsigned long long>(tpInfo.tpHandle), param.Describe().c_str());
         return HcclResult::HCCL_SUCCESS;
     }
 
+    HCCL_INFO("[TpManager][%s] last ref, erase cache entry, useCnt[%u] tpHandle[%llu] param[%s].",
+        __func__, qit->second.useCnt, static_cast<unsigned long long>(tpInfo.tpHandle), param.Describe().c_str());
     rit->second.erase(qit);
     if (rit->second.empty()) {
         lit->second.erase(rit);
@@ -699,9 +709,14 @@ HcclResult TpManager::ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo &t
 
     if (attrIter->second.useCnt > 1) {
         attrIter->second.useCnt -= 1;
+        HCCL_INFO("[TpManager][%s] ref decrement, useCnt[%u -> %u] tpHandle[0x%llx].",
+            __func__, attrIter->second.useCnt + 1U, attrIter->second.useCnt,
+            static_cast<unsigned long long>(tpHandle));
         return HcclResult::HCCL_SUCCESS;
     }
 
+    HCCL_INFO("[TpManager][%s] last ref, erase cache entry, useCnt[%u] tpHandle[0x%llx].",
+        __func__, attrIter->second.useCnt, static_cast<unsigned long long>(tpHandle));
     tpAttrCtxMap.erase(attrIter);
     return HcclResult::HCCL_SUCCESS;
 }
@@ -797,6 +812,10 @@ HcclResult TpManager::FindAndGetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &
     // 复用缓存：useCnt 仅在此处（命中）递增，与 StoreTpInfoResult 写入路径分离。
     qit->second.useCnt += 1;
     tpInfo = qit->second.tpInfo;
+    HCCL_INFO("[TpManager][%s] cache hit, tpHandle[%llu] mappedJettyPriority[%u] hasMappedJettyPriority[%d] "
+              "useCnt[%u] param[%s].",
+        __func__, static_cast<unsigned long long>(tpInfo.tpHandle), tpInfo.mappedJettyPriority,
+        static_cast<int>(tpInfo.hasMappedJettyPriority), qit->second.useCnt, param.Describe().c_str());
     return HcclResult::HCCL_SUCCESS;
 }
 

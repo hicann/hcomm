@@ -454,7 +454,8 @@ void DevUbConnection::SetJettyInfo()
     jettyHandle                 = reinterpret_cast<JettyHandle>(jettyHandlePtr);
     keySize                     = info->key.size;
     sqBuffVa                    = info->ub.sqBuffVa; // hccp提供
-    HCCL_INFO("[DevUbConnection][%s] Get sqBuffVa is %llx.", __func__, sqBuffVa);
+    HCCL_RUN_INFO("[DevUbConnection][%s] Get sqBuffVa is %llx. jettyId[%u], jettyHandle[%llx], dieId[%u], funcId[%u]",
+        __func__, sqBuffVa, jettyId, jettyHandle, dieId, funcId);
 
     s32 ret = memcpy_s(localQpKey, HRT_UB_QP_KEY_MAX_LEN, info->key.value, info->key.size);
     if (ret != 0) {

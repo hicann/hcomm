@@ -361,15 +361,16 @@ void RtsqA5::UbDbSend(const UbJettyLiteId &jettyLiteId, u16 piValue)
 {
     // piValue需要使用u16数据类型，保证自然增长，用于判断是否翻转
     BuildA5SqeUbDbSend(streamId_, taskId_, jettyLiteId, piValue, GetCurrSqeBuffer());
-    HCCL_INFO("RtsqA5::UbDbSend: piValue(UbPi):%u, SqTail(Rtsq Pi):%u", piValue, sqTail_);
+    HCCL_INFO("RtsqA5::UbDbSend: streamId %u, taskId %u, piValue(UbPi):%u, SqTail(Rtsq Pi):%u",
+        streamId_, taskId_, piValue, sqTail_);
     RefreshInfo();
 }
 
 void RtsqA5::RdmaDbSend(const uint64_t &dbAddr, const uint64_t &dbValue)
 {
     BuildA5SqeRdmaDbSend(streamId_, taskId_, dbAddr, dbValue, GetCurrSqeBuffer());
-    HCCL_INFO("RtsqA5::RdmaDbSend: RdmaDbSend Sqe: %s, dbAddr:0x%llx, dbValue:0x%llx, SqTail(Rtsq Pi):%u",
-        Bytes2hex(GetCurrSqeBuffer(), RTSQ_SQE_SIZE).c_str(), dbAddr, dbValue, sqTail_);
+    HCCL_INFO("RtsqA5::RdmaDbSend: RdmaDbSend streamId %u, taskId %u, Sqe: %s, dbAddr:0x%llx, dbValue:0x%llx, SqTail(Rtsq Pi):%u",
+        streamId_, taskId_, Bytes2hex(GetCurrSqeBuffer(), RTSQ_SQE_SIZE).c_str(), dbAddr, dbValue, sqTail_);
     RefreshInfo();
 }
 

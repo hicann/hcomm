@@ -3311,6 +3311,8 @@ HcclResult HcclCommDestroy(HcclComm comm)
                 HCCL_ERROR("[HcclCommDestroy] comm is not exist, comm=%p, group=%s, deviceLogicId=%d", comm, group.c_str(), deviceLogicId);
                 return HCCL_E_PARA;
             }
+            HCCL_RUN_INFO("Entry-HcclCommDestroy V2 group[%s] destroy success, deviceLogicId[%d], comm[%p]",
+                group.c_str(), deviceLogicId, comm);
             return HCCL_SUCCESS;
         }());
 #endif
@@ -3371,7 +3373,7 @@ HcclResult HcclCommDestroy(HcclComm comm)
     HCCL_PROFILER_DEL_GROUP_UDI(group);
 
     /* 关键状态记录 */
-    HCCL_RUN_INFO("op_base comm destroy complete, take time [%lld]us, group[%s], deviceLogicId[%d].",
+    HCCL_RUN_INFO("Entry-HcclCommDestroy op_base comm destroy complete, take time [%lld]us, group[%s], deviceLogicId[%d].",
         DURATION_US(endut - startut), group.c_str(), deviceLogicId);
 
     return HCCL_SUCCESS;

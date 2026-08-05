@@ -2161,7 +2161,8 @@ RequestHandle RaUbLocalMemRegAsync(RdmaHandle handle, const HrtRaUbLocMemRegPara
             __func__, ret, raReqHandle, in.addr, in.size));
     }
     info->in.ub.tokenValue = 0;
-    HCCL_INFO("[%s] ok, get handle[%llu].", __func__, reinterpret_cast<RequestHandle>(raReqHandle));
+    HCCL_INFO("[%s] RaCtxLmemRegisterAsync success, reqHandle[%llu] addr[0x%llx] size[0x%llx].",
+        __func__, reinterpret_cast<RequestHandle>(raReqHandle), in.addr, in.size);
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
 
@@ -2178,7 +2179,8 @@ RequestHandle RaUbLocalMemUnregAsync(RdmaHandle rdmaHandle, LocMemHandle lmemHan
             rdmaHandle, lmemHandle));
     }
 
-    HCCL_INFO("[%s] ok, get handle[%llu]", __func__, reinterpret_cast<RequestHandle>(raReqHandle));
+    HCCL_INFO("[%s] RaCtxLmemUnregisterAsync success, reqHandle[%llu] lmemHandle[0x%llx].",
+        __func__, reinterpret_cast<RequestHandle>(raReqHandle), lmemHandle);
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
 
@@ -2196,7 +2198,8 @@ RequestHandle RaUbCreateJettyAsync(const RdmaHandle handle, const HrtRaUbCreateJ
             "rdmaHanlde[%p].", __func__, ret, raReqHandle, handle));
     }
     attr.ub.tokenValue = 0;
-    HCCL_INFO("[%s] ok, get handle[%llu].", __func__, reinterpret_cast<RequestHandle>(raReqHandle));
+    HCCL_INFO("[%s] RaCtxQpCreateAsync success, reqHandle[%llu] jettyHandle[%p].",
+        __func__, reinterpret_cast<RequestHandle>(raReqHandle), jettyHandle);
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
 
@@ -2211,7 +2214,8 @@ RequestHandle RaUbDestroyJettyAsync(void *jettyHandle)
             "jettyHandle[%p].", __func__, ret, raReqHandle, jettyHandle));
     }
 
-    HCCL_INFO("[%s] ok, get handle[%llu].", __func__, reinterpret_cast<RequestHandle>(raReqHandle));
+    HCCL_INFO("[%s] RaCtxQpDestroyAsync success, reqHandle[%llu] jettyHandle[%p].",
+        __func__, reinterpret_cast<RequestHandle>(raReqHandle), jettyHandle);
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
 
@@ -2261,7 +2265,9 @@ RequestHandle RaUbGetTpInfoAsync(const RdmaHandle rdmaHandle, const RaUbGetTpInf
             locAddr.Describe().c_str(), rmtAddr.Describe().c_str()));
     }
 
-    HCCL_INFO("[%s] ok, get handle[%llu].", __func__, reinterpret_cast<RequestHandle>(raReqHandle));
+    HCCL_INFO("[%s] RaGetTpInfoListAsync success, reqHandle[%llu] locAddr[%s] rmtAddr[%s] tpNum[%u].",
+        __func__, reinterpret_cast<RequestHandle>(raReqHandle),
+        locAddr.Describe().c_str(), rmtAddr.Describe().c_str(), num);
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
 
@@ -2295,7 +2301,8 @@ void RaUbGetTpInfo(const RdmaHandle rdmaHandle, const RaUbGetTpInfoParam &param,
             locAddr.Describe().c_str(), rmtAddr.Describe().c_str()));
     }
 
-    HCCL_INFO("[%s] ok, get handle[%llu].", __func__);
+    HCCL_INFO("[%s] RaCtxGetTpInfoList success, locAddr[%s] rmtAddr[%s] tpNum[%u].",
+        __func__, locAddr.Describe().c_str(), rmtAddr.Describe().c_str(), num);
 }
 
 static RequestHandle ImportJettyAsync(RdmaHandle rdmaHandle, const HrtRaUbJettyImportedInParam &in,
@@ -2343,7 +2350,8 @@ static RequestHandle ImportJettyAsync(RdmaHandle rdmaHandle, const HrtRaUbJettyI
             "rdmaHandle[%p].", __func__, ret, raReqHandle, rdmaHandle));
     }
     info->in.ub.tokenValue = 0;
-    HCCL_INFO("[%s] ok, get handle[%llu]", __func__, reinterpret_cast<RequestHandle>(raReqHandle));
+    HCCL_INFO("[%s] RaCtxQpImportAsync success, reqHandle[%llu] remQpHandle[%p].",
+        __func__, reinterpret_cast<RequestHandle>(raReqHandle), remQpHandle);
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
 
@@ -2379,7 +2387,8 @@ RequestHandle RaUbUnimportJettyAsync(void *targetJettyHandle)
             "targetJettyHandle[%p].", __func__, ret, raReqHandle, targetJettyHandle));
     }
 
-    HCCL_INFO("[%s] ok, get handle[%llu].", __func__, reinterpret_cast<RequestHandle>(raReqHandle));
+    HCCL_INFO("[%s] RaCtxQpUnimportAsync success, reqHandle[%llu] targetJettyHandle[%p].",
+        __func__, reinterpret_cast<RequestHandle>(raReqHandle), targetJettyHandle);
     return reinterpret_cast<RequestHandle>(raReqHandle);
 }
 
