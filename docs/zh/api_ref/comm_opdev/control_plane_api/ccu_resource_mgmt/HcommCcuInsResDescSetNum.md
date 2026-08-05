@@ -24,11 +24,8 @@
 
 ## 函数原型
 
-// ccu_res.h
-
 ```c
-CcuResult HcommCcuInsResDescSetNum(HcommCcuResDescHandle resDesc,
-    HcommCcuResType resType, uint32_t resNum);
+CcuResult HcommCcuInsResDescSetNum(HcommCcuResDescHandle resDesc, HcommCcuResType resType, uint32_t resNum)
 ```
 
 ## 参数说明

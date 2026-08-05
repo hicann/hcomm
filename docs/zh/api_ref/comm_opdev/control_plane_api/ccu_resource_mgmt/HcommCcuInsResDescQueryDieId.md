@@ -24,10 +24,8 @@
 
 ## 函数原型
 
-// ccu_res.h
-
 ```c
-CcuResult HcommCcuInsResDescQueryDieId(HcommCcuResDescHandle resDesc, uint32_t *dieId);
+CcuResult HcommCcuInsResDescQueryDieId(HcommCcuResDescHandle resDesc, uint32_t *dieId)
 ```
 
 ## 参数说明

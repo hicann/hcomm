@@ -26,11 +26,9 @@
 
 ## 函数原型
 
-// ccu_res.h
-
 ```c
 CcuResult HcommCcuKernelQueryResReq(const void *kernelFunc,
-    const void **kernelArgs, uint32_t argNum, HcommCcuResDescHandle resDesc);
+    const void **kernelArgs, uint32_t argNum, HcommCcuResDescHandle resDesc)
 ```
 
 ## 参数说明

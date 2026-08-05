@@ -26,11 +26,8 @@
 
 ## 函数原型
 
-// ccu_res.h
-
 ```c
-CcuResult HcommCcuInsCreateDefault(const uint32_t *dieIds,
-    uint32_t dieNum, CcuInsHandle *ccuInsHandle);
+CcuResult HcommCcuInsCreateDefault(const uint32_t *dieIds, uint32_t dieNum, CcuInsHandle *ccuInsHandle)
 ```
 
 ## 参数说明

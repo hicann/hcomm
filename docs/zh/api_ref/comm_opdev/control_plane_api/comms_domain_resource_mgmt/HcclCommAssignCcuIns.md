@@ -26,10 +26,8 @@
 
 ## 函数原型
 
-// hccl_ccu_res.h
-
 ```c
-HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle);
+HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle)
 ```
 
 ## 参数说明

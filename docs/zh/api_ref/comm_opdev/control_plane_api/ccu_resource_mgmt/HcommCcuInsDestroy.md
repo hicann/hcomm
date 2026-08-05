@@ -24,10 +24,8 @@
 
 ## 函数原型
 
-// ccu_res.h
-
 ```c
-CcuResult HcommCcuInsDestroy(CcuInsHandle ccuInsHandle);
+CcuResult HcommCcuInsDestroy(CcuInsHandle ccuInsHandle)
 ```
 
 ## 参数说明

@@ -24,10 +24,8 @@
 
 ## 函数原型
 
-//ccu_launch.h
-
 ```c
-CcuResult HcommCcuKernelRegisterEnd(CcuInsHandle insHandle);
+CcuResult HcommCcuKernelRegisterEnd(CcuInsHandle insHandle)
 ```
 
 ## 参数说明

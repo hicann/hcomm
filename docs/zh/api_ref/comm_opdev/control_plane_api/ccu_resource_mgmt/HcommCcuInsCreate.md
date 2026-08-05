@@ -30,11 +30,8 @@
 
 ## 函数原型
 
-// ccu_res.h
-
 ```c
-CcuResult HcommCcuInsCreate(const HcommCcuResDescHandle *resDescs,
-    uint32_t resDescNum, CcuInsHandle *ccuInsHandle);
+CcuResult HcommCcuInsCreate(const HcommCcuResDescHandle *resDescs, uint32_t resDescNum, CcuInsHandle *ccuInsHandle)
 ```
 
 ## 参数说明

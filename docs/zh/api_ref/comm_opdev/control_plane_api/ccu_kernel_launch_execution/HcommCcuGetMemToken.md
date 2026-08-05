@@ -26,10 +26,8 @@
 
 ## 函数原型
 
-//ccu_res.h
-
 ```c
-CcuResult HcommCcuGetMemToken(uint64_t srcVa, uint64_t size, uint64_t *tokenInfo);
+CcuResult HcommCcuGetMemToken(uint64_t srcVa, uint64_t size, uint64_t *tokenInfo)
 ```
 
 ## 参数说明

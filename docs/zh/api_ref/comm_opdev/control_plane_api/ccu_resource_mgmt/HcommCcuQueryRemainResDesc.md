@@ -26,10 +26,8 @@
 
 ## 函数原型
 
-// ccu_res.h
-
 ```c
-CcuResult HcommCcuQueryRemainResDesc(HcommCcuResDescHandle resDesc);
+CcuResult HcommCcuQueryRemainResDesc(HcommCcuResDescHandle resDesc)
 ```
 
 ## 参数说明

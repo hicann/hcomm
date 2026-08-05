@@ -26,12 +26,10 @@
 
 ## 函数原型
 
-//ccu_launch.h
-
 ```c
 CcuResult HcommCcuKernelRegister(CcuInsHandle insHandle, uint32_t dieId,
     const char *kernelFuncName, const void *kernelFunc,
-    const void **kernelArgs, uint32_t argNum, CcuKernelHandle *kernelHandle);
+    const void **kernelArgs, uint32_t argNum, CcuKernelHandle *kernelHandle)
 ```
 
 ## 参数说明
