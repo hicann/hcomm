@@ -724,7 +724,7 @@ HcclResult OpRetryBase::RecvActiveSwitchInfo(std::shared_ptr<HcclSocket> socket,
         std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(curTime - startTime);
         CHK_PRT_RET(elapsed > timeout,
-            HCCL_ERROR("[SwitchNic][Server] timeout in recv agent ActiveSwitchInfo, waitime[%u>%u]",
+            HCCL_ERROR("[SwitchNic][Server] timeout in recv agent ActiveSwitchInfo, waitime[%u s>%u s]",
             elapsed, timeout), HCCL_E_TIMEOUT);
         ret = WaitActiveSwitchInfo(socket, switchInfo);
         if (ret == HCCL_SUCCESS) {

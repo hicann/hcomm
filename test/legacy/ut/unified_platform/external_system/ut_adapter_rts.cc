@@ -709,6 +709,15 @@ TEST_F(AdapterRtsTest, HrtNotifyWaitWithTimeOut_return_nok)
     EXPECT_THROW(HrtNotifyWaitWithTimeOut(nullptr, nullptr, 1), RuntimeApiException);
 }
 
+TEST_F(AdapterRtsTest, HrtNotifyWaitWithTimeOut_return_ok)
+{
+    // Given
+    MOCKER(aclrtWaitAndResetNotify).stubs().will(returnValue(ACL_SUCCESS));
+
+    // then
+    EXPECT_NO_THROW(HrtNotifyWaitWithTimeOut(nullptr, nullptr, 100));
+}
+
 TEST_F(AdapterRtsTest, HrtNotifyRecord_return_nok)
 {
     // Given
@@ -1172,6 +1181,19 @@ TEST_F(AdapterRtsTest, HrtGetP2PStatus_return_ok)
     uint32_t status;
 
     EXPECT_EQ(rtGetP2PStatus(deviceLogicId, devicePhyId, &status), HCCL_SUCCESS);
+}
+
+TEST_F(AdapterRtsTest, HrtCntNotifyWaitWithTimeOut_return_ok)
+{
+    MOCKER(aclrtCntNotifyWaitWithTimeout).stubs().will(returnValue(ACL_SUCCESS));
+    EXPECT_NO_THROW(HrtCntNotifyWaitWithTimeOut(nullptr, nullptr, HrtCntNotifyWaitMode::EQUAL, 1, 100, true));
+}
+
+TEST_F(AdapterRtsTest, HrtCntNotifyWaitWithTimeOut_return_nok)
+{
+    MOCKER(aclrtCntNotifyWaitWithTimeout).stubs().will(returnValue(1));
+    EXPECT_THROW(HrtCntNotifyWaitWithTimeOut(nullptr, nullptr, HrtCntNotifyWaitMode::EQUAL, 1, 100, true),
+                 RuntimeApiException);
 }
 
 TEST_F(AdapterRtsTest, HrtGetDeviceType_950_return_ok)

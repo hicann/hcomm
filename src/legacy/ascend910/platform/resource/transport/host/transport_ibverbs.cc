@@ -839,7 +839,7 @@ HcclResult TransportIbverbs::ConnectSingleQp(std::function<bool()> needStop)
             CHK_PRT_RET(needStop(), HCCL_ERROR("Terminating operation due to external request"), HCCL_E_INTERNAL);
 
             if ((std::chrono::steady_clock::now() - startTime) >= timeout_) {
-                HCCL_ERROR("[Connect][Qp]get qp status timeout_=%lld, qp_status=%d", timeout_, qpStatus);
+                HCCL_ERROR("[Connect][Qp]get qp status timeout_=[%lld ms], qp_status=[%d]", timeout_, qpStatus);
                 return HCCL_E_TIMEOUT;
             }
             raRet = hrtGetRaQpStatus(combineQpHandles_[i].qpHandle, &qpStatus);
@@ -880,7 +880,7 @@ HcclResult TransportIbverbs::ConnectMultiQp(u32 qpsPerConnection, std::function<
             (i + 1), multiCombineQpHandles_.size(), aicpu.c_str());
         while (true) {
             if ((std::chrono::steady_clock::now() - startTime) >= timeout_) {
-                HCCL_ERROR("[Connect][Qp]get qp status timeout_=%lld, qp_status=%d, index[%u]",
+                HCCL_ERROR("[Connect][Qp]get qp status timeout_=[%lld ms], qp_status=[%d], index[%u]",
                     timeout_, qpStatus, i);
                 return HCCL_E_TIMEOUT;
             }

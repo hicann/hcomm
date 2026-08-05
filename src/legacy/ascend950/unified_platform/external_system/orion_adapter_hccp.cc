@@ -215,7 +215,7 @@ void HrtRaInit(HRaInitConfig &cfg)
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout) {
-                MACRO_THROW(NetworkApiException, StringFormat("[Init][Ra]errNo[0x%016llx], ra init timeout[%lld], phy_id=%u, nic_position=%u, ret=%d",
+                MACRO_THROW(NetworkApiException, StringFormat("[Init][Ra]errNo[0x%016llx], ra init timeout[%lld s], phy_id=%u, nic_position=%u, ret=%d",
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), timeout, config.phyId, config.nicPosition, ret));
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -248,7 +248,7 @@ void HrtRaDeInit(HRaInitConfig &cfg)
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout) {
-                MACRO_THROW(NetworkApiException, StringFormat("[DeInit][Ra]errNo[0x%016llx] ra deinit timeout[%lld], phy_id=%u, nic_position=%u, ret=%d",
+                MACRO_THROW(NetworkApiException, StringFormat("[DeInit][Ra]errNo[0x%016llx] ra deinit timeout[%lld s], phy_id=%u, nic_position=%u, ret=%d",
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), timeout, config.phyId, config.nicPosition, ret));
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -275,7 +275,7 @@ static void SocketBatchConnect(SocketConnectInfoT conn[], u32 num)
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout) {
-                MACRO_THROW(NetworkApiException, StringFormat("[BatchConnect][RaSocket]errNo[0x%016llx] ra socket batch connect, timeout[%lld]. return[%d], params: num[%u]", 
+                MACRO_THROW(NetworkApiException, StringFormat("[BatchConnect][RaSocket]errNo[0x%016llx] ra socket batch connect, timeout[%lld s]. return[%d], params: num[%u]", 
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), timeout, ret, num));
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -323,7 +323,7 @@ static void HRaSocketBatchClose(struct SocketCloseInfoT conn[], u32 num)
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout) {
-                MACRO_THROW(NetworkApiException, StringFormat("[BatchClose][RaSocket]errNo[0x%016llx]  ra socket batch close, timeout[%d], return[%d], params: num[%u]", 
+                MACRO_THROW(NetworkApiException, StringFormat("[BatchClose][RaSocket]errNo[0x%016llx]  ra socket batch close, timeout[%d s], return[%d], params: num[%u]", 
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), timeout, ret, num));
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -374,7 +374,7 @@ static void HRaSocketListenStart(struct SocketListenInfoT conn[], u32 num, const
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout) {
-                MACRO_THROW(NetworkApiException, StringFormat("[ListenStart][RaSocket]errNo[0x%016llx] ra socket listen start, timeout[%d], return[%d], params: num[%u]", 
+                MACRO_THROW(NetworkApiException, StringFormat("[ListenStart][RaSocket]errNo[0x%016llx] ra socket listen start, timeout[%d s], return[%d], params: num[%u]", 
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), EnvLinkTimeoutGet(), ret, num));
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -435,7 +435,7 @@ static void HRaSocketListenStop(struct SocketListenInfoT conn[], u32 num)
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout) {
-                MACRO_THROW(NetworkApiException, StringFormat("[ListenStop][RaSocket]errNo[0x%016llx]  ra socket listen stop fail, timeout[%d], return[%d], params: num[%u]", 
+                MACRO_THROW(NetworkApiException, StringFormat("[ListenStop][RaSocket]errNo[0x%016llx]  ra socket listen stop fail, timeout[%d s], return[%d], params: num[%u]", 
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_TCP_CONNECT), timeout, ret, num));
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -515,7 +515,7 @@ void RaBlockGetSockets(u32 role, SocketInfoT conn[], u32 num, u32 timeoutSec) //
 
 RaSocketFdHandleParam HrtRaBlockGetOneSocket(u32 role, RaSocketGetParam &param, u32 timeout)
 {
-    HCCL_INFO("[GetOneSocket][RaSocket] Input params: role=%u,socketHandle=%p, fdHandle=%p, remoteIp=%s, timeout=%u",
+    HCCL_INFO("[GetOneSocket][RaSocket] Input params: role=[%u],socketHandle=[%p], fdHandle=[%p], remoteIp=[%s], timeout=[%u s]",
         role, param.socketHandle, param.fdHandle, param.remoteIp.Describe().c_str(), timeout);
     struct SocketInfoT socketInfo {};
 
@@ -1059,7 +1059,7 @@ void HrtRaQpDestroy(QpHandle qpHandle)
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout != 0) {
-                MACRO_THROW(NetworkApiException, StringFormat("[Destroy][RaQp]errNo[0x%016llx] ra qp destroy timeout[%d]. "
+                MACRO_THROW(NetworkApiException, StringFormat("[Destroy][RaQp]errNo[0x%016llx] ra qp destroy timeout[%d s]. "
                             "qpHandle[%p], return[%d].",
                             HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), timeout, qpHandle, ret));
             }
@@ -1159,7 +1159,7 @@ static void HrtRaSendWr(QpHandle qpHandle, struct SendWr *wr, struct SendWrRsp *
         } else if (ret == SOCK_ENOENT || ret == SOCK_EAGAIN) {
             bool bTimeout = ((std::chrono::steady_clock::now() - startTime) >= timeout);
             if (bTimeout) {
-                HCCL_ERROR("[Send][RaWr]errNo[0x%016llx] ra get send async timeout[%d]. "
+                HCCL_ERROR("[Send][RaWr]errNo[0x%016llx] ra get send async timeout[%d s]. "
                            "return[%d], params: qpHandle[%p], send_wrAddr[%p], opRspAddr[%p]",
                            HCCL_ERROR_CODE(HcclResult::HCCL_E_ROCE_TRANSFER), timeout, ret, qpHandle, wr, opRsp);
                 SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -2395,7 +2395,7 @@ RequestHandle RaUbUnimportJettyAsync(void *targetJettyHandle)
 HcclResult HrtRaWaitEventHandle(int event_handle, std::vector<SocketEventInfo> &event_infos, int timeout,
     unsigned int maxevents, u32 &events_num)
 {
-    HCCL_INFO("[HrtRaWaitEventHandle] Input params: event_handle=%d, timeout=%d, maxevents=%u, events_num=%u", event_handle, timeout, maxevents, events_num);
+    HCCL_INFO("[HrtRaWaitEventHandle] Input params: event_handle=[%d], timeout=[%d ms], maxevents=[%u], events_num=[%u]", event_handle, timeout, maxevents, events_num);
     std::vector<struct SocketEventInfoT> raEventInfos(maxevents);
     s32 ret = RaWaitEventHandle(event_handle, raEventInfos.data(), timeout, maxevents, &events_num);
     CHK_PRT_RET(ret != 0, HCCL_ERROR("[%s] failed, call RaWaitEventHandle error ret[%d].", __func__, ret), HCCL_E_NETWORK);

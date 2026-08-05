@@ -1181,7 +1181,7 @@ HcclResult PingMesh::HccnRpingBatchPingStart(u32 deviceId, u32 pktNum, u32 inter
 {
     // 判断当前状态
     CHK_RET(RpingstateCheck(rpingState_, RpingState::RUN));
-    HCCL_INFO("[HCCN][HccnRpingBatchPingStart]deviceId %u, pktNum %u, interval %u, timeout %u.", deviceId, pktNum,
+    HCCL_INFO("[HCCN][HccnRpingBatchPingStart] deviceId[%u], pktNum[%u], interval[%u s], timeout[%u s].", deviceId, pktNum,
         interval, timeout);
     // 调用hccp接口发起ping请求
     if (pingHandle_ == nullptr) {

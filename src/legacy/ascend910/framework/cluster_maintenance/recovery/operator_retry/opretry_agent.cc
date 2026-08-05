@@ -822,7 +822,7 @@ HcclResult SwitchNicAgentWaitCmd::ProcessEvent(RetryContext* retryCtx)
         std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(curTime - startTime);
         CHK_PRT_RET(elapsed > timeout,
-            HCCL_ERROR("[SwitchNic][Agent] timeout in getting cmd from server, waitime[%u>%u]",
+            HCCL_ERROR("[SwitchNic][Agent] timeout in getting cmd from server, waitime[%u s>%u s]",
             elapsed, timeout), HCCL_E_TIMEOUT);
 
         HcclResult ret = WaitCommand(retryCtx->agentSocket_, command);

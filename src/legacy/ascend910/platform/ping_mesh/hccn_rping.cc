@@ -430,7 +430,7 @@ HccnResult HccnRpingBatchPingStart(HccnRpingCtx rpingCtx, uint32_t pktNum, uint3
 {
     // 校验指针，并将其转换为pingmesh指针
     CHK_PRT_RET(rpingCtx == nullptr, HCCL_ERROR("[HccnRpingBatchPingStart]rpingCtx is null.", rpingCtx), HCCN_E_PARA);
-    HCCL_DEBUG("[HccnRpingBatchPingStart]pktNum:%u, interval:%u, timeout:%u", pktNum, interval, timeout);
+    HCCL_DEBUG("[HccnRpingBatchPingStart]pktNum:[%u], interval:[%u s], timeout:[%u s]", pktNum, interval, timeout);
     PingMesh *rping = static_cast<PingMesh*>(rpingCtx);
     // 获取device id
     s32 devLogicId = 0;
@@ -446,10 +446,10 @@ HccnResult HccnRpingBatchPingStart(HccnRpingCtx rpingCtx, uint32_t pktNum, uint3
 
     ret = rping->HccnRpingBatchPingStart(static_cast<u32>(devLogicId), pktNum, interval, timeout);
     CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[HccnRpingBatchPingStart]task start failed, devLogicId[%d], ret[%d], pktNum:%u, interval:%u, timeout:%u.",
+        HCCL_ERROR("[HccnRpingBatchPingStart]task start failed, devLogicId[%d], ret[%d], pktNum:[%u], interval:[%u s], timeout:[%u s].",
         devLogicId, ret, pktNum, interval, timeout), HCCN_E_FAIL);
 
-    HCCL_RUN_INFO("[HccnRpingBatchPingStart]task start success, devLogicId:%d, pktNum:%u, interval:%u, timeout:%u.",
+    HCCL_RUN_INFO("[HccnRpingBatchPingStart]task start success, devLogicId:[%d], pktNum:[%u], interval:[%u s], timeout:[%u s].",
         devLogicId, pktNum, interval, timeout);
     return HCCN_SUCCESS;
 }

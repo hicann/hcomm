@@ -1559,7 +1559,7 @@ HcclResult HostCpuRoceChannel::ConnectSingleQpHybrid(std::function<bool()> needS
         CHK_PRT_RET(needStop(), HCCL_ERROR("Terminating operation due to external request"), HCCL_E_INTERNAL);
 
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
-            HCCL_ERROR("[Connect][Qp]get qp status timeout_=%lld, qp_status=%d", timeout, qpStatus);
+            HCCL_ERROR("[Connect][Qp]get qp status timeout_=[%lld s], qp_status=[%d]", timeout, qpStatus);
             if (!hasSocket) {
                 SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
             }

@@ -72,3 +72,12 @@ TEST_F(CollCommAicpuTest, Ut_CheckIndOpExecStatus_Return_HCCL_E_SUSPENDING) {
     auto ret = coll.CheckIndOpExecStatus(0);
     EXPECT_EQ(ret, HCCL_E_SUSPENDING);
 }
+
+TEST_F(CollCommAicpuTest, Ut_InitIndopEnv_Expect_Success) {
+    CollCommAicpu coll;
+    CommAicpuParam param{};
+    param.commConfig.taskExceptionEnable = true;
+    param.commConfig.notifyWaitTimeout = 1836;
+    param.commConfig.plfDebugConfig = 0;
+    coll.InitIndopEnv(&param);
+}

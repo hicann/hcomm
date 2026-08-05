@@ -96,7 +96,7 @@ void CollCommAicpu::InitIndopEnv(CommAicpuParam *commAicpuParam)
 {
     hcomm::SetTaskExceptionEnable(commAicpuParam->commConfig.taskExceptionEnable);
     Hccl::SetPlfDebugConfigValue(commAicpuParam->commConfig.plfDebugConfig);
-    HCCL_RUN_INFO("[%s]Env: taskExceptionEnable[%d], notifyWaitTimeout[%u], plfDebugConfig[0x%llx]",
+    HCCL_RUN_INFO("[%s]Env: taskExceptionEnable[%d], notifyWaitTimeout[%u s], plfDebugConfig[0x%llx]",
         __func__, commAicpuParam->commConfig.taskExceptionEnable, commAicpuParam->commConfig.notifyWaitTimeout,
         commAicpuParam->commConfig.plfDebugConfig);
 }

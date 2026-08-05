@@ -137,7 +137,7 @@ HcclResult HcclExchangeMemDescV2(
     CHK_RET(service->ExchangeMemDesc(remoteRank, *local, *remote, *actualNum));
     HCCL_INFO("HcclRegisterMemV2 ExchangeMemDesc end");
 
-    HCCL_RUN_INFO("%s success:commPtr[%p], remoteRank[%u], localMemDescPtr[%p], timeout[%d], remoteMemDescPtr[%p], "
+    HCCL_RUN_INFO("%s success:commPtr[%p], remoteRank[%u], localMemDescPtr[%p], timeout[%d s], remoteMemDescPtr[%p], "
                   "actualNum[%u]",
         __func__,
         comm,

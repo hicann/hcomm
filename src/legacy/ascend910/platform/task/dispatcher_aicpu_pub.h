@@ -106,8 +106,8 @@ public:
     {
         if (timeOut > notifyMaxWaitTime_) {
             dfxTimeOutConfig_.sqeTimeOutTimeOut = notifyMaxWaitTime_;
-            HCCL_WARNING("[SetSqeTimeOut] timeOut[%llu] exceeds the maximum allowed value "
-                "for notifyMaxWaitTime[%u].", timeOut, notifyMaxWaitTime_);
+            HCCL_WARNING("[SetSqeTimeOut] timeOut[%llu s] exceeds the maximum allowed value "
+                "for notifyMaxWaitTime[%u s].", timeOut, notifyMaxWaitTime_);
         } else {
             dfxTimeOutConfig_.sqeTimeOutTimeOut = timeOut;
         }

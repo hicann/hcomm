@@ -172,7 +172,7 @@ void InsExecutor::ExecuteAllQueues950(const InsQueue &insQueue, StreamLiteMgr *s
             lastPrintTime = std::chrono::steady_clock::now();
         }
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
-            auto msg = StringFormat("[ExecuteAllQueues950]All Rtsq Queues full, timeout %u", timeoutValue);
+            auto msg = StringFormat("[ExecuteAllQueues950]All Rtsq Queues full, timeout[%u s]", timeoutValue);
             HCCL_ERROR("%s", msg.c_str());
             THROW<InternalException>(msg);
         }

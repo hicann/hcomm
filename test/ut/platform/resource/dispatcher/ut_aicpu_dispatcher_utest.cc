@@ -757,3 +757,22 @@ TEST_F(DispatcherAiCpu_UT, ut_WaitRtsq_NonBlockReturn)
 
     GlobalMockObject::verify();
 }
+
+TEST_F(DispatcherAiCpu_UT, ut_SetSqeTimeOut_ExceedsMax_Expect_ClampedToMax)
+{
+    u64 largeTimeout = dispatcherAiCpu->notifyMaxWaitTime_ + 1;
+    dispatcherAiCpu->SetSqeTimeOut(largeTimeout);
+    EXPECT_EQ(dispatcherAiCpu->dfxTimeOutConfig_.sqeTimeOutTimeOut, dispatcherAiCpu->notifyMaxWaitTime_);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DispatcherAiCpu_UT, ut_SetSqeTimeOut_WithinMax_Expect_SetToInput)
+{
+    u64 normalTimeout = 100;
+    if (normalTimeout > dispatcherAiCpu->notifyMaxWaitTime_) {
+        normalTimeout = dispatcherAiCpu->notifyMaxWaitTime_ > 0 ? dispatcherAiCpu->notifyMaxWaitTime_ - 1 : 0;
+    }
+    dispatcherAiCpu->SetSqeTimeOut(normalTimeout);
+    EXPECT_EQ(dispatcherAiCpu->dfxTimeOutConfig_.sqeTimeOutTimeOut, normalTimeout);
+    GlobalMockObject::verify();
+}

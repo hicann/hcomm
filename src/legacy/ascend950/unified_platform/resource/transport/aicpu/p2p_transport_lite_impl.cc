@@ -385,7 +385,7 @@ void P2PTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite &stream, 
     auto notifyId = locNotifyVec[index]->GetId();
     stream.GetRtsq()->NotifyWait(notifyId, timeout);
 
-    HCCL_INFO("P2PTransportLiteImpl::WaitWithTimeout notifyId[%u], taskId[%u], timeout[%u]", notifyId, taskId, timeout);
+    HCCL_INFO("P2PTransportLiteImpl::WaitWithTimeout notifyId[%u], taskId[%u], timeout[%u ms]", notifyId, taskId, timeout);
     if (callback_ || newCallback_) {
         TaskParam taskParam{};
         taskParam.taskType                 = TaskParamType::TASK_NOTIFY_WAIT;

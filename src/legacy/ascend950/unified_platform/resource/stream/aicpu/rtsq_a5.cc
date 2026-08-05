@@ -103,7 +103,7 @@ void RtsqA5::CheckLaunchTaskStatus(const std::chrono::steady_clock::time_point &
     bool isTimeout = (sqFullTimeout_ == 0) ? false : ((curTime - startTime) >= std::chrono::seconds(sqFullTimeout_));
     // step1 检测是否launch超时，如果超时打印rtsq full的ERROR日志
     if (UNLIKELY(isTimeout)) {
-        HCCL_ERROR("Rtsq full, sqFullTimeout_:%u. sqId:%u, sqHead:%u, sqTail:%u, pendingSqeCnt:%u",
+        HCCL_ERROR("Rtsq full, sqFullTimeout_:[%u s]. sqId:[%u], sqHead:[%u], sqTail:[%u], pendingSqeCnt:[%u]",
             sqFullTimeout_, sqId_, sqHead_, sqTail_, pendingSqeCnt);
     }
 

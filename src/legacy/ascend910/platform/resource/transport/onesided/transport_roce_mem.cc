@@ -581,7 +581,7 @@ HcclResult TransportRoceMem::WaitOpFence(const rtStream_t &stream)
     HcclResult ret = LocalIpcNotify::Wait(hcclStream, dispatcher, remoteIsendDoneSignal_, INVALID_VALUE_STAGE,
         timeOut, localRankId_, remoteRankId_);
     CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[WaitOpFence] timeout[%u], local addr[%p], remote addr[%p], remoteRankId[%u], streamId[%u]",
+        HCCL_ERROR("[WaitOpFence] timeout[%u s], local addr[%p], remote addr[%p], remoteRankId[%u], streamId[%u]",
             timeOut, rdmaSignal_[0].addr, notifyMemMsg_[opType].addr, remoteRankId_, hcclStream.id()), ret);
     HCCL_DEBUG("[WaitOpFence] local addr[%p], remote addr[%p], remoteRankId[%u], streamId[%u]", rdmaSignal_[0].addr,
         notifyMemMsg_[opType].addr, remoteRankId_, hcclStream.id());

@@ -586,7 +586,7 @@ bool TopoMatcher::GetAicpuUnfoldConfig() const
 
 HcclResult TopoMatcher::SetExecTimeOutConfig(const s32 execTimeOut)
 {
-    HCCL_INFO("[SetExecTimeOutConfig]execTimeOut is set to [%d]", execTimeOut);
+    HCCL_INFO("[SetExecTimeOutConfig]execTimeOut is set to [%d s]", execTimeOut);
     externalEnable_.execTimeOut = execTimeOut;
     return HCCL_SUCCESS;
 }

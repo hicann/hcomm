@@ -26,6 +26,7 @@
 #define private public
 #define protected public
 #include "comm_config_pub.h"
+#include "comm_configer.h"
 #include "hccl_communicator.h"
 #include "coll_comm_config.h"
 #undef protected
@@ -748,5 +749,91 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_QosNotSetWithHighVersion_ReturnSucces
     uint32_t opExpansionMode = 0;
     HcclResult ret = ApplyHcclCommConfig(&config, commConfig, opExpansionMode);
     EXPECT_EQ(ret, HCCL_SUCCESS);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, SetConfigExecTimeout_NotSet_Expect_UseEnvDefault)
+{
+    MOCKER(GetExternalInputCCLBuffSize)
+    .stubs()
+    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+
+    MOCKER(GetExternalInputHcclDeterministic)
+    .stubs()
+    .will(returnValue(false));
+
+    CommConfig commConfig("comm_ID");
+    CommConfigHandle config;
+    config.execTimeOut = COMM_EXECTIMEOUT_CONFIG_NOT_SET;
+
+    HcclResult ret = commConfig.SetConfigExecTimeout(config);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(commConfig.execTimeOutSetByConfig_, false);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryHoldTime_EmptyIdentifier_Expect_Default)
+{
+    auto &configer = CommConfiger::GetInstance();
+    u32 result = configer.GetCommConfigRetryHoldTime("");
+    u32 expected = GetExternalInputRetryHoldTime();
+    EXPECT_EQ(result, expected);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryHoldTime_NotFoundIdentifier_Expect_Default)
+{
+    auto &configer = CommConfiger::GetInstance();
+    u32 result = configer.GetCommConfigRetryHoldTime("nonexistent_identifier_test");
+    u32 expected = GetExternalInputRetryHoldTime();
+    EXPECT_EQ(result, expected);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryHoldTime_ValidIdentifier_Expect_ConfigValue)
+{
+    auto &configer = CommConfiger::GetInstance();
+    const std::string identifier = "test_retry_hold_time_identifier";
+    CommConfig config("test_comm");
+    configer.SetCommConfig(config, identifier);
+
+    u32 result = configer.GetCommConfigRetryHoldTime(identifier);
+    u32 expected = config.GetConfigRetryHoldTime();
+    EXPECT_EQ(result, expected);
+
+    configer.UnRegisterToCommConfiger(identifier);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryIntervalTime_EmptyIdentifier_Expect_Default)
+{
+    auto &configer = CommConfiger::GetInstance();
+    u32 result = configer.GetCommConfigRetryIntervalTime("");
+    u32 expected = GetExternalInputRetryIntervalTime();
+    EXPECT_EQ(result, expected);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryIntervalTime_NotFoundIdentifier_Expect_Default)
+{
+    auto &configer = CommConfiger::GetInstance();
+    u32 result = configer.GetCommConfigRetryIntervalTime("nonexistent_identifier_test");
+    u32 expected = GetExternalInputRetryIntervalTime();
+    EXPECT_EQ(result, expected);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryIntervalTime_ValidIdentifier_Expect_ConfigValue)
+{
+    auto &configer = CommConfiger::GetInstance();
+    const std::string identifier = "test_retry_interval_identifier";
+    CommConfig config("test_comm");
+    configer.SetCommConfig(config, identifier);
+
+    u32 result = configer.GetCommConfigRetryIntervalTime(identifier);
+    u32 expected = config.GetConfigRetryIntervalTime();
+    EXPECT_EQ(result, expected);
+
+    configer.UnRegisterToCommConfiger(identifier);
     GlobalMockObject::verify();
 }

@@ -21,6 +21,7 @@
 #include "socket.h"
 #include "hccl_socket.h"
 #include "opretry_manager.h"
+#include "externalinput_pub.h"
 #undef private
 #undef protected
 
@@ -76,6 +77,14 @@ public:
     HcclResult TestWaitCommandWithOpId(std::shared_ptr<HcclSocket> socket, RetryCommandInfo &commandInfo) {
         return WaitCommandWithOpId(socket, commandInfo);
     }
+
+    HcclResult TestRecvActiveSwitchInfo(std::shared_ptr<HcclSocket> socket, const u32 rankId, ActiveSwitchInfo &switchInfo) {
+        return RecvActiveSwitchInfo(socket, rankId, switchInfo);
+    }
+
+    HcclResult TestWaitActiveSwitchInfo(std::shared_ptr<HcclSocket> socket, ActiveSwitchInfo &switchInfo) {
+        return WaitActiveSwitchInfo(socket, switchInfo);
+    }
 };
 
 TEST_F(RetryBaseTest, WaitResponse_Success_Expect_HcclSuccess)
@@ -124,4 +133,36 @@ TEST_F(RetryBaseTest, WaitCommandWithOpId_Success_Expect_HcclSuccess)
     RetryCommandInfo commandInfo;
     HcclResult ret = retryBase.TestWaitCommandWithOpId(socket, commandInfo);
     EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(RetryBaseTest, RecvActiveSwitchInfo_Success_Expect_HcclSuccess)
+{
+    RetryBaseSon retryBase;
+    HcclIpAddress localIp("127.0.0.1");
+    std::shared_ptr<HcclSocket> socket = std::make_shared<HcclSocket>("TestRecvActiveSwitchInfo",
+        nullptr, localIp, 16666, HcclSocketRole::SOCKET_ROLE_CLIENT);
+
+    MOCKER_CPP(&OpRetryBase::Recv)
+    .stubs()
+    .will(returnValue(HCCL_SUCCESS));
+
+    ActiveSwitchInfo switchInfo;
+    HcclResult ret = retryBase.TestRecvActiveSwitchInfo(socket, 0, switchInfo);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(RetryBaseTest, RecvActiveSwitchInfo_RecvFail_Expect_Error)
+{
+    RetryBaseSon retryBase;
+    HcclIpAddress localIp("127.0.0.1");
+    std::shared_ptr<HcclSocket> socket = std::make_shared<HcclSocket>("TestRecvActiveSwitchInfoFail",
+        nullptr, localIp, 16666, HcclSocketRole::SOCKET_ROLE_CLIENT);
+
+    MOCKER_CPP(&OpRetryBase::Recv)
+    .stubs()
+    .will(returnValue(HCCL_E_INTERNAL));
+
+    ActiveSwitchInfo switchInfo;
+    HcclResult ret = retryBase.TestRecvActiveSwitchInfo(socket, 0, switchInfo);
+    EXPECT_NE(ret, HCCL_SUCCESS);
 }

@@ -1401,3 +1401,31 @@ TEST_F(AdapterHccpTest, ut_HrtRaNdaCqCreate_When_DefaultMode_Expect_XscdvDepth)
     HcclResult ret = HrtRaNdaCqCreate(rdmaHandle, &ndaOps, QBUF_DMA_MODE_DEFAULT, &cqInfo, &cqHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
+
+TEST_F(AdapterHccpTest, HrtRaBlockGetOneSocket_return_ok)
+{
+    u32 connectedNum = 1;
+    MOCKER(RaGetSockets).stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&connectedNum))
+        .will(returnValue(0));
+
+    SocketHandle socketHandle = nullptr;
+    IpAddress ipAddr = IpAddress("127.0.0.1");
+    std::string tag = "test";
+    FdHandle fdHandle = nullptr;
+    RaSocketGetParam param(socketHandle, ipAddr, tag, fdHandle);
+
+    RaSocketFdHandleParam result = HrtRaBlockGetOneSocket(0, param, 10);
+}
+
+TEST_F(AdapterHccpTest, HrtRaWaitEventHandle_return_ok)
+{
+    MOCKER(RaWaitEventHandle).stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(0));
+
+    std::vector<SocketEventInfo> eventInfos(1);
+    u32 eventsNum = 0;
+    HcclResult ret = HrtRaWaitEventHandle(0, eventInfos, 100, 1, eventsNum);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}

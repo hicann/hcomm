@@ -380,7 +380,7 @@ HcclResult CommConfig::SetConfigExecTimeout(const CommConfigHandle &config)
 {
     if (config.execTimeOut == COMM_EXECTIMEOUT_CONFIG_NOT_SET) {
         // 默认跟随环境变量
-        HCCL_INFO("[SetConfigByVersion] The hcclExecTimeOut is not configured, use the env config [%u] as default.", execTimeOut_);
+        HCCL_INFO("[SetConfigByVersion] The hcclExecTimeOut is not configured, use the env config [%u s] as default.", execTimeOut_);
     } else {
         s32 execTimeOut = config.execTimeOut;
  

@@ -183,7 +183,7 @@ u32 CommConfiger::GetCommConfigRetryHoldTime(const std::string& identifier)
         return retryHoldTime;
     }
     retryHoldTime = commConfigMap_[identifier].GetConfigRetryHoldTime();
-    HCCL_INFO("[CommConfiger][GetCommConfigRetryHoldTime]: identifier[%s], retryHoldTime[%d].",
+    HCCL_INFO("[CommConfiger][GetCommConfigRetryHoldTime]: identifier[%s], retryHoldTime[%d ms].",
         identifier.c_str(), retryHoldTime);
     return retryHoldTime;
 }
@@ -203,7 +203,7 @@ u32 CommConfiger::GetCommConfigRetryIntervalTime(const std::string& identifier)
         return retryIntervalTime;
     }
     retryIntervalTime = commConfigMap_[identifier].GetConfigRetryIntervalTime();
-    HCCL_INFO("[CommConfiger][GetCommConfigRetryIntervalTime]: identifier[%s], retryIntervalTime[%d].",
+    HCCL_INFO("[CommConfiger][GetCommConfigRetryIntervalTime]: identifier[%s], retryIntervalTime[%d ms].",
         identifier.c_str(), retryIntervalTime);
     return retryIntervalTime;
 }

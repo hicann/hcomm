@@ -484,9 +484,9 @@ void SetCachePlaceholderHeaderV1(uint16_t streamId, uint16_t taskId, const uint8
 std::pair<uint64_t, uint64_t> GetTimeOutValue(const dfx::DfxTimeOutConfig &dfxTimeOutConfig)
 {
     if (dfxTimeOutConfig.useCredit) {
-        HCCL_DEBUG("Use hard sync with %lu", dfxTimeOutConfig.sqeCreditTimeOut);
+        HCCL_DEBUG("Use hard sync with [%lu s]", dfxTimeOutConfig.sqeCreditTimeOut);
         return {dfxTimeOutConfig.sqeCreditTimeOut, dfx::kTimeOutTimeInvalid};
     }
-    HCCL_DEBUG("Use soft sync with %lu", dfxTimeOutConfig.sqeTimeOutTimeOut);
+    HCCL_DEBUG("Use soft sync with [%lu s]", dfxTimeOutConfig.sqeTimeOutTimeOut);
     return {dfx::kCreditTimeInvalid, dfxTimeOutConfig.sqeTimeOutTimeOut};
 }

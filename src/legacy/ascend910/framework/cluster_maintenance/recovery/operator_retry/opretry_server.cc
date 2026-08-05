@@ -693,7 +693,7 @@ HcclResult SwitchNicServerCheckAllSwitchRanks::CollectSingleAgentActiveSwitchInf
         std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(curTime - startTime);
         CHK_PRT_RET(elapsed > timeout,
-            HCCL_ERROR("[SwitchNic][Server] timeout in recv agent RetryInfo, waitime[%u>%u]",
+            HCCL_ERROR("[SwitchNic][Server] timeout in recv agent RetryInfo, waitime[%u s>%u s]",
             elapsed, timeout), HCCL_E_TIMEOUT);
         ret = WaitResponse(agentInfo.socket, agentInfo.retryInfo);
         if (ret == HCCL_SUCCESS) { // 成功接收到数据

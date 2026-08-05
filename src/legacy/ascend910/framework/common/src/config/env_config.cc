@@ -688,7 +688,7 @@ HcclResult ParseMonitor(std::string &taskMonitorInterval, s32 &monitorTime)
     } else if (monitorTime >= 0 && monitorTime <= maxTimeInMs) {
         g_envConfig.dfsTaskMonitorInterval = monitorTime;
     } else { // 不在允许范围内报错
-        HCCL_ERROR("[ParseDFSConfig] HCCL_DFS_CONFIG-task_monitor_interval[%d] is invalid, except: [0, %d]",
+        HCCL_ERROR("[ParseDFSConfig] HCCL_DFS_CONFIG-task_monitor_interval[%d ms] is invalid, except: [0, %d ms]",
             monitorTime, maxTimeInMs);
         return HCCL_E_PARA;
     }

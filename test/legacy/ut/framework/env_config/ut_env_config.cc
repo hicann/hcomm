@@ -7,8 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
 #include "env_config_stub.h"
+
 #include "env_config.h"
 #include "orion_adapter_rts.h"
 #include "gtest/gtest.h"
@@ -644,3 +644,4 @@ TEST_F(EnvConfigTest, Ut_EnvPlfDebugConfig_When_CaseInsensitive_Expect_SameResul
     EXPECT_EQ(plfCfg.GetConfigValue(), PLF_TASK);
     unsetenv("HCCL_DEBUG_CONFIG");
 }
+

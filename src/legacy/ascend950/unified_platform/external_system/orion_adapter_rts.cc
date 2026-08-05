@@ -807,10 +807,10 @@ u32 HrtNotifyGetOffset(RtNotify_t ptr)
 void HrtNotifyWaitWithTimeOut(RtNotify_t notifyPtr, aclrtStream streamPtr, uint32_t timeOut)
 {
     aclError ret = aclrtWaitAndResetNotify(notifyPtr, streamPtr, timeOut);
-    HCCL_INFO("[HrtNotifyWaitWithTimeOut] notifyPtr[%p], streamPtr[%p], timeOut[%u], ret[%d].", 
+    HCCL_INFO("[HrtNotifyWaitWithTimeOut] notifyPtr[%p], streamPtr[%p], timeOut[%u ms], ret[%d].",
                 notifyPtr, streamPtr, timeOut, ret);
     if (ret != ACL_SUCCESS) {
-        string msg = StringFormat("call aclrtWaitAndResetNotify failed. notifyPtr=%p, streamPtr=%p, timeout=%u, return=%d.",
+        string msg = StringFormat("call aclrtWaitAndResetNotify failed. notifyPtr=[%p], streamPtr=[%p], timeout=[%u ms], return=[%d].",
                                 notifyPtr, streamPtr, timeOut, ret);
         MACRO_THROW(RuntimeApiException, msg);
     }
@@ -967,11 +967,11 @@ void HrtCntNotifyWaitWithTimeOut(const aclrtCntNotify inCntNotify, const aclrtSt
     waitInfo.timeout = timeout;
     aclError ret    = aclrtCntNotifyWaitWithTimeout(inCntNotify, streamPtr, &waitInfo);
     HCCL_INFO("[HrtCntNotifyWaitWithTimeOut] inCntNotify[%p], streamPtr[%p], mode[%d], "
-                "value[%u], timeout[%u], isClear[%d], ret[%d].",
+                "value[%u], timeout[%u ms], isClear[%d], ret[%d].",
                 inCntNotify, streamPtr, mode, value, timeout, isClear, ret);
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat("Call rtCntNotifyWaitWithTimeout failed. return[%d], inCntNotify[%p], "
-                    "streamPtr[%p], mode[%d], value[%u], timeout[%u], isClear[%d].", 
+                    "streamPtr[%p], mode[%d], value[%u], timeout[%u ms], isClear[%d].", 
                     ret, inCntNotify, streamPtr, mode, value, timeout, isClear);
         THROW<RuntimeApiException>(msg);
     }
