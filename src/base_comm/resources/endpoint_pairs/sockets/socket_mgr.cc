@@ -230,8 +230,7 @@ HcclResult SocketMgr::GetSocket(const Hccl::SocketConfig &socketConfig, Hccl::So
             auto timeoutPoint = std::chrono::steady_clock::now() + 
                                 std::chrono::seconds(EnvLinkTimeoutGet()) - std::chrono::seconds(10);
             while(socketInUseMap_[socket] == true) {
-                auto currentTime = std::chrono::steady_clock::now();
-                if (currentTime >= timeoutPoint) {
+                if (socketAvailableCv_.wait_until(lock, timeoutPoint) == std::cv_status::timeout) {
                     HCCL_ERROR("[SocketMgr][%s] Get Socket Time Out", __func__);
                     return HCCL_E_TIMEOUT;
                 }

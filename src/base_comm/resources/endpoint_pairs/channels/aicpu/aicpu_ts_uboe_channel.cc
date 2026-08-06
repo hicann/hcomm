@@ -12,6 +12,7 @@
 #include "orion_adpt_utils.h"
 #include "env_config/env_config.h"
 #include "makebufs_helper.h"
+#include "endpoint.h"
 
 // Orion
 #include "adapter_rts_common.h"

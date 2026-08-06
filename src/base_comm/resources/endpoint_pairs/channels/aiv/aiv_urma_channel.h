@@ -21,6 +21,8 @@
 
 namespace hcomm {
 
+struct UbConnBuildContext;
+
 class AivUrmaChannel : public Channel {
 public:
     AivUrmaChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
@@ -55,6 +57,11 @@ private:
     void PutSocketIfNeeded();
     void ReleaseDeviceChannelEntity();
 
+    HcclResult CreateUbConnectionByProtocol(const UbConnBuildContext &ctx,
+        std::unique_ptr<Hccl::DevUbConnection> &ubConn);
+    HcclResult AcquireSharedJettyInBuildConnection(const UbConnBuildContext &ctx,
+        Hccl::DevUbConnection *connection);
+
     // --------------------- 转换参数 ---------------------
     EndpointDesc localEp_{};
     EndpointDesc remoteEp_{};
@@ -79,6 +86,13 @@ private:
     std::unique_ptr<Hccl::SocketConfig> socketConfigHolder_{nullptr};
     const Hccl::SocketConfig* socketConfig_{nullptr};
     uint32_t devicePhyId_{};
+
+    // 共享 jetty 模式下从 Endpoint::SharedJettyCtx 取得的 PI/CI device 内存指针，
+    // BuildChannelEntityToDevice 时绑给 transport，使同 endpoint 下多 channel 共用同一 PI/CI。
+    void *sharedSqPiPtr_{nullptr};
+    void *sharedSqCiPtr_{nullptr};
+    void *sharedCqPiPtr_{nullptr};
+    void *sharedCqCiPtr_{nullptr};
 };
 
 } // namespace hcomm

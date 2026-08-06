@@ -12,6 +12,7 @@
 #include "endpoint.h"
 #include "orion_adpt_utils.h"
 #include "acl_device_slab_guard.h"
+#include "shared_jetty_channel_helper.h"
 
 #include "hcomm_c_adpt.h"
 
@@ -374,15 +375,12 @@ HcclResult AivUrmaChannel::BuildAttr()
     return HCCL_SUCCESS;
 }
 
-HcclResult AivUrmaChannel::BuildConnection()
+HcclResult AivUrmaChannel::CreateUbConnectionByProtocol(const UbConnBuildContext &ctx,
+    std::unique_ptr<Hccl::DevUbConnection> &ubConn)
 {
-    UbConnBuildContext ctx;
-    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_.qos, ctx));
-
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true;
     Hccl::HrtUbJfcMode jfcMode = Hccl::HrtUbJfcMode::USER_CTL;
-    std::unique_ptr<Hccl::DevUbConnection> ubConn = nullptr;
     switch (ctx.protocol) {
         case Hccl::LinkProtocol::UB_TP:
             EXCEPTION_CATCH(ubConn = std::make_unique<Hccl::DevUbTpConnection>(
@@ -406,7 +404,58 @@ HcclResult AivUrmaChannel::BuildConnection()
             HCCL_ERROR("%s No LinkProtocol to match", __func__);
             break;
     }
+    return HCCL_SUCCESS;
+}
+
+HcclResult AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext &ctx,
+    Hccl::DevUbConnection *connection)
+{
+    // 共享 jetty 模式：复用同 Endpoint 下已创建的 jetty
+    Endpoint *endpoint = reinterpret_cast<Endpoint *>(endpointHandle_);
+    auto tempFactory = [rdmaHandle = rdmaHandle_, &ctxLoc = ctx.locAddr, &ctxRmt = ctx.rmtAddr,
+        qosPre = ctx.qosPre, protocol = ctx.protocol]()
+        -> std::unique_ptr<Hccl::DevUbConnection> {
+        // 与主 switch 保持对称的协议判断，避免 UBG/未知协议误降级为 CTP
+        switch (protocol) {
+            case Hccl::LinkProtocol::UB_TP:
+                return std::make_unique<Hccl::DevUbTpConnection>(rdmaHandle, ctxLoc, ctxRmt,
+                    Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
+                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV);
+            case Hccl::LinkProtocol::UB_CTP:
+                return std::make_unique<Hccl::DevUbCtpConnection>(rdmaHandle, ctxLoc, ctxRmt,
+                    Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
+                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV);
+            default:
+                HCCL_ERROR("[AivUrmaChannel][tempFactory] unsupported protocol[%s], return nullptr.",
+                    protocol.Describe().c_str());
+                return nullptr;
+        }
+    };
+    Endpoint::SharedJettyCtx sharedCtx{};
+    CHK_RET(hcomm::AcquireSharedJettyForChannel(endpoint, connection, tempFactory, sharedCtx));
+    // 保存共享 PI/CI 指针，供 BuildChannelEntityToDevice 绑给 transport
+    sharedSqPiPtr_ = sharedCtx.sqPiPtr;
+    sharedSqCiPtr_ = sharedCtx.sqCiPtr;
+    sharedCqPiPtr_ = sharedCtx.cqPiPtr;
+    sharedCqCiPtr_ = sharedCtx.cqCiPtr;
+    return HCCL_SUCCESS;
+}
+
+HcclResult AivUrmaChannel::BuildConnection()
+{
+    UbConnBuildContext ctx;
+    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_.qos, ctx));
+
+    std::unique_ptr<Hccl::DevUbConnection> ubConn = nullptr;
+    CHK_RET(CreateUbConnectionByProtocol(ctx, ubConn));
     CHK_SMART_PTR_NULL(ubConn);
+
+    // 共享 jetty 模式：复用同 Endpoint 下已创建的 jetty。
+    // 必须在 push_back(move(ubConn)) 之前调用：AcquireSharedJetty 失败时 ubConn 仍为局部变量，
+    // 函数返回时自动析构，不会在 connections_/connVec 中残留不完整 connection。
+    if (IsSharedJetty()) {
+        CHK_RET(AcquireSharedJettyInBuildConnection(ctx, ubConn.get()));
+    }
 
     commonRes_.connVec.clear();
     connections_.clear();
@@ -451,8 +500,15 @@ HcclResult AivUrmaChannel::BuildChannelEntityToDevice(void **devChannelPtr)
     AclDeviceSlabGuard slabGuard;
     CHK_RET(AllocDeviceEntitySlab(layout.slabSize, slabGuard, slabPtr));
     uint32_t queueNum = std::max(hostChannel.sqNum, hostChannel.cqNum);
-    CHK_RET(InitQueueIndexSections(slabPtr, layout, queueNum));
-    SetQueueIndexDeviceMem(*transport_, slabPtr, layout, queueNum);
+    if (IsSharedJetty() && sharedSqPiPtr_ != nullptr) {
+        // 共享 jetty：PI/CI 用同 endpoint 下多 channel 共享的 device 内存，slab 内 PI/CI 段闲置不用。
+        // 共享内存在首次 AcquireSharedJettyForChannel 时已分配并清零，此处直接绑给 transport。
+        transport_->SetQueueIndexDeviceMem(sharedSqPiPtr_, sharedSqCiPtr_, sharedCqPiPtr_, sharedCqCiPtr_,
+            queueNum * QUEUE_INDEX_MEM_UNIT_SIZE);
+    } else {
+        CHK_RET(InitQueueIndexSections(slabPtr, layout, queueNum));
+        SetQueueIndexDeviceMem(*transport_, slabPtr, layout, queueNum);
+    }
 
     CHK_RET(SecureMemset(&hostChannel, sizeof(ChannelEntity), 0, sizeof(ChannelEntity), "hostChannel"));
     transport_->GetHostChannelEntity(&hostChannel);
@@ -506,12 +562,20 @@ HcclResult AivUrmaChannel::PreAllocChannelEntityToDevice(void **devChannelPtr)
     CHK_RET(AllocDeviceEntitySlab(layout.slabSize, slabGuard, slabPtr));
 
     uint32_t queueNum = std::max(tmp.sqNum, tmp.cqNum);
-    CHK_RET(InitQueueIndexSections(slabPtr, layout, queueNum));
+    if (IsSharedJetty() && sharedSqPiPtr_ != nullptr) {
+        // 共享 jetty：PI/CI 用共享 device 内存，slab 内 PI/CI 段闲置不用（已在首次分配时清零）
+        transport_->SetQueueIndexDeviceMem(sharedSqPiPtr_, sharedSqCiPtr_, sharedCqPiPtr_, sharedCqCiPtr_,
+            queueNum * QUEUE_INDEX_MEM_UNIT_SIZE);
+    } else {
+        CHK_RET(InitQueueIndexSections(slabPtr, layout, queueNum));
+    }
 
     devChannelEntitySlab_ = slabGuard.Release();
     devChannelEntitySlabSize_ = layout.slabSize;
     devChannelEntity_ = GetSlabPtr(devChannelEntitySlab_, layout.entitySection);
-    SetQueueIndexDeviceMem(*transport_, devChannelEntitySlab_, layout, queueNum);
+    if (!IsSharedJetty() || sharedSqPiPtr_ == nullptr) {
+        SetQueueIndexDeviceMem(*transport_, devChannelEntitySlab_, layout, queueNum);
+    }
     *devChannelPtr = devChannelEntity_;
 
     HCCL_INFO("[AivUrmaChannel::%s] pre-alloc success, devPtr[%p], slabPtr[%p], slabSize[%zu]",

@@ -10,6 +10,7 @@
 
 #include "aicpu_ts_ubg_channel.h"
 #include "orion_adpt_utils.h"
+#include "endpoint.h"
 
 // Orion
 #include "topo_common_types.h"

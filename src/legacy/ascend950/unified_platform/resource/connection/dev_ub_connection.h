@@ -21,6 +21,7 @@
 #include "task.h"
 #include "mc2_type.h"
 #include "hcomm/hcomm_res_entity_defs.h"
+#include <functional>
 
 namespace Hccl {
 
@@ -74,6 +75,56 @@ public:
     class UbCiUpdater;
 
     void AddNop(const Stream &stream) override;
+
+    /**
+     * @brief 注入共享 jetty 模式：复用外部已创建的 jetty 句柄，connection 不再自建/自销毁 jetty。
+     *        必须在 connection 构造后、Connect/GetStatus 推进状态机前调用。
+     *        调用后状态机跳过 JETTY_CREATING，直接进入 JETTY_CREATED。
+     * @note 架构说明：本组方法属 base_comm 共享 jetty 特性（IS_SHARED_QUEUE）的实现细节，
+     *       因 DevUbConnection 当前仍位于 legacy/ 而暂置于此。base_comm 侧通过
+     *       shared_jetty_connection_adapter 适配层调用，不直接依赖本类。
+     * @param[in] jettyHdl 共享 jetty 句柄
+     * @param[in] jettyHdlPtr 底层 jetty 指针（用于 HrtRaUbPostSend 等）
+     * @param[in] jId jetty id
+     * @param[in] sqVa SQ 缓冲 VA
+     * @param[in] db doorbell 地址
+     * @param[in] qpKey 本地 QP key
+     * @param[in] kSize key 长度
+     * @param[in] sDepth SQ 深度
+     * @param[in] tpHdl 创建共享 jetty 时使用的 TP handle（注入后主 connection 复用此 tpHandle，
+     *                  避免重新向管控面申请得到不同 tpHandle 导致对端 import 路由不匹配）
+     * @param[in] epTag Endpoint 不透明标签（透传给 releaseCb 供回调定位 Endpoint）
+     * @param[in] releaseCb connection 销毁时调用的释放回调（由 base_comm 层注入 Endpoint::ReleaseSharedJetty）
+     */
+    HcclResult InjectSharedJetty(JettyHandle jettyHdl, void *jettyHdlPtr, uint32_t jId,
+        uint64_t sqVa, uint64_t db, const uint8_t *qpKey, uint32_t kSize, uint32_t sDepth,
+        uint64_t tpHdl, void *epTag, std::function<void(void *)> releaseCb);
+
+    /**
+     * @brief 将已自建 jetty 的 connection 标记为共享所有权移交：之后析构不再销毁 jetty，
+     *        jetty 生命周期交由 Endpoint::sharedJettyCtx_ 管理。仅当 connection 已完成 SetJettyInfo 后调用。
+     */
+    void TransferJettyOwnership();
+
+    /**
+     * @brief jetty 衍生字段集合，供共享模式下提取注入给其他 connection
+     */
+    struct JettyInfo {
+        JettyHandle handle{0};
+        void *handlePtr{nullptr};
+        uint32_t jettyId{0};
+        uint64_t sqBuffVa{0};
+        uint64_t dbAddr{0};
+        uint8_t localQpKey[HRT_UB_QP_KEY_MAX_LEN]{0};
+        uint32_t keySize{0};
+        uint32_t sqDepth{0};
+        uint64_t tpHandle{0};
+        RdmaHandle rdmaHandle{nullptr};   // 销毁 JFC 所需的 RDMA 句柄
+        JfcHandle jfcHandle{0};           // 临时 connection 创建的 JFC, 由 Endpoint 统一销毁
+    };
+
+    /** 获取当前 connection 的 jetty 衍生字段（共享模式下用于 Adopt 到 Holder） */
+    HcclResult GetJettyInfo(JettyInfo &info) const;
 
     void         ReleaseTp();
     ~DevUbConnection() override;
@@ -160,6 +211,11 @@ private:
     // 最大传输size，切片使用
     u32 maxReadSize{0};
     u32 maxWriteSize{0};
+
+    // 共享 jetty 注入模式标记：true 表示复用外部 jetty，不自建/自销毁
+    bool isSharedJetty_{false};
+    void *endpointTag_{nullptr};  // 共享模式下透传给 releaseCb_ 的 Endpoint 标签
+    std::function<void(void *)> releaseCb_{nullptr};  // 共享 jetty 释放回调（调 Endpoint::ReleaseSharedJetty）
 
     bool CheckRequestResult();
     void ThrowAbnormalStatus(std::string funcName);

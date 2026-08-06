@@ -91,6 +91,11 @@ set(src_to_test_list
     comms/endpoints/dfx/ut_endpoint_monitor.cc
     coll_comms/rank/ut_exchange_info_mgr.cc
     coll_comms/rank/comm_mems/test_hcclCommMemReg_api.cc
+    # Shared jetty UT
+    comms/endpoint_pairs/channels/ut_shared_jetty_mgr.cc
+    comms/endpoint_pairs/channels/ut_shared_jetty_connection_adapter.cc
+    comms/endpoint_pairs/channels/ut_shared_jetty_channel_helper.cc
+    coll_comms/rank/ut_shared_jetty_channel_pool.cc
     coll_comms/rank_graphs/common/ut_conn_interface.cc
     coll_comms/rank_graphs/common/ut_graph.cc
     coll_comms/rank_graphs/phy_topo/ut_phy_topo.cc

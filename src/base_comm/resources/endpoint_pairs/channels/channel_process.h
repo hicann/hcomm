@@ -56,7 +56,7 @@ public:
     ChannelProcess() = default;
     ~ChannelProcess() = default;
     static HcclResult CreateChannelsLoop(EndpointHandle endpointHandle, CommEngine engine,
-        HcommChannelDesc *channelDescs, uint32_t channelNum, ChannelHandle *outHandles);
+        HcommChannelDesc *channelDescs, uint32_t channelNum, ChannelHandle *outHandles, bool isSharedQueue = false);
     static HcclResult ChannelUpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum, ChannelHandle channelHandle);
     static HcclResult GetChannelsInfo(const ChannelHandle *channelList, uint32_t listNum,
         std::vector<CommEngine> &engines, std::vector<HcommChannelDesc> &channelDescs,

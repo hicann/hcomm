@@ -348,6 +348,24 @@ typedef enum {
     HCOMM_ENDPOINT_FEATURE_NDA = 0,  // NPU Direct RDMA Async 特性
 } HcommEndpointFeatureType;
 
+/**
+ * @brief Channel 配置对象不透明句柄（base_comm 层）。
+ *        通过 HcommChannelConfigCreate 创建，HcommChannelConfigDestroy 销毁。
+ */
+typedef void *HcommChannelConfig;
+
+/**
+ * @brief Channel 配置属性类型枚举
+ *        通过 HcommChannelConfigSetInt  设置。
+ */
+typedef enum {
+    HCOMM_CHANNEL_CONFIG_TYPE_INVALID = -1,
+    /** 0: IS_SHARED_QUEUE (bool/int, 默认 0=false)。
+     *    仅支持 AIV 引擎的 UB 网络语义协议（UBC_CTP/UBC_TP，不支持 UBMem/RoCE/UBOE/UBG）。
+     *    设为 true 时，使用 HcommChannelCreateWithConfig 创建的多个 Channel 共享一个 Jetty。 */
+    HCOMM_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE = 0,
+} HcommChannelConfigType;
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

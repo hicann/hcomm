@@ -31,6 +31,7 @@
 #include "coll_comm_mgr.h"
 
 #include <acl/acl.h>
+#include "shared_jetty_channel_pool.h"
 
 using namespace hcomm;
 
@@ -114,6 +115,8 @@ MyRank::MyRank(aclrtBinHandle binHandle, uint32_t rankId, const CommConfig &conf
 MyRank::~MyRank()
 {
     HCCL_INFO("[MyRank][~MyRank] MyRank deinit, rankId_[%u], devLogicId_[%d]", rankId_, devLogicId_);
+    // 共享 Jetty Channel 不归 rankPairMgr_ 管理，需在 rankPairMgr_ 析构前独立清理
+    (void)SharedJettyChannelPool::GetInstance().DestroyAllByMyRank(this);
     // 析构有时序要求
     rankPairMgr_ = nullptr; // 内部会销毁channel，可能需要返还endpoint与ccu资源
     endpointMgr_ = nullptr; // 内部会销毁endpoint，可能需要返回ccu资源
@@ -568,6 +571,32 @@ HcclResult MyRank::BatchCreateSockets(const HcclChannelDesc* channelDescs, uint3
     return HCCL_SUCCESS;
 }
 
+HcclResult MyRank::BatchExchangeAndCheckConsistency(const HcclChannelDesc* channelDescs,
+    const std::vector<HcommChannelDesc> &hcommDescs, uint32_t channelNum,
+    const std::vector<std::pair<u32, u32>> &newChannels, CommEngine engine)
+{
+    CHK_PTR_NULL(channelDescs);
+    CHK_PRT_RET(channelNum == 0,
+        HCCL_ERROR("[%s] invalid param: channelNum is zero", __func__), HCCL_E_PARA);
+
+    // 与非共享路径 MyRank::CreateChannels 一致：仅 DEV_TYPE_950 需要执行通信域一致性校验交换。
+    DevType devType;
+    CHK_RET(hrtGetDeviceType(devType));
+    if (devType != DevType::DEV_TYPE_950) {
+        return HCCL_SUCCESS;
+    }
+
+    auto startConsistency = std::chrono::steady_clock::now();
+    CHK_RET(exchangeInfoMgr_.BatchExchangeAndCheckConsistency(
+        channelDescs, hcommDescs, channelNum, newChannels, collCommConfigConsistency_, engine));
+    auto endConsistency = std::chrono::steady_clock::now();
+    auto durationConsistency =
+        std::chrono::duration_cast<std::chrono::microseconds>(endConsistency - startConsistency).count();
+    HCCL_INFO("[MyRank][%s] BatchExchangeAndCheckConsistency Time Elapsed [%lld]us, channelNum [%u]",
+        __func__, durationConsistency, channelNum);
+    return HCCL_SUCCESS;
+}
+
 constexpr uint32_t MEM_HANDLE_NUM_MAX = 256;  // memHandleNum的默认限制最大为256
 constexpr uint32_t NOTIFY_NUM_MAX = 64; // notifynum 的默认限制最大为64
 
@@ -873,17 +902,7 @@ HcclResult MyRank::CreateChannels(CommEngine engine, const std::string &commTag,
     }
 
     // 借用hcommDescs.socket，完成一致性校验必要的数据交换
-    DevType devType;
-    CHK_RET(hrtGetDeviceType(devType));
-    if (devType == DevType::DEV_TYPE_950) {
-        auto startConsistency = std::chrono::steady_clock::now();
-        CHK_RET(exchangeInfoMgr_.BatchExchangeAndCheckConsistency(
-            channelDescs, hcommDescs, channelNum, newChannels_, collCommConfigConsistency_, engine));
-        auto endConsistency = std::chrono::steady_clock::now();
-        auto durationConsistency = std::chrono::duration_cast<std::chrono::microseconds>(endConsistency - startConsistency).count();
-        HCCL_INFO("[MyRank][CreateChannels] BatchExchangeAndCheckConsistency Time Elapsed [%lld]us, channelNum [%u]",
-            durationConsistency, channelNum);
-    }
+    CHK_RET(BatchExchangeAndCheckConsistency(channelDescs, hcommDescs, channelNum, newChannels_, engine));
 
     // 添加初始化时进行填表
     for (u32 i = 0; i < channelNum; ++i) {

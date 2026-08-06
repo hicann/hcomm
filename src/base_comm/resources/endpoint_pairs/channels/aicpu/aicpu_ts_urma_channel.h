@@ -90,6 +90,7 @@ private:
     std::vector<std::unique_ptr<Hccl::DevUbConnection>>         connections_{};
     std::vector<std::unique_ptr<Hccl::UbLocalNotify>>           localNotifies_{};
     std::unique_ptr<Hccl::Socket>                               serverSocket_;
+    std::unique_ptr<Hccl::SocketConfig>                         socketConfigHolder_;
     const Hccl::SocketConfig*                                   socketConfig_{nullptr};
     DevBaseAttr                                                 devBaseAttr_{};
     uint32_t                                                    devicePhyId_{};

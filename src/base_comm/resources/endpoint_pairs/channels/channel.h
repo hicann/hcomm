@@ -122,11 +122,18 @@ public:
     // ------------------ 工具方法 ------------------
     static ChannelStatus TransportStatusToChannelStatus(Hccl::TransportStatus ts);
 
+    // ------------------ 共享 Jetty 模式 ------------------
+    // 由 CreateChannelsLoop 根据本次调用是否共享（HcommChannelConfig.isSharedQueue）设置；
+    // BuildConnection 据此决定走复用路径还是自建独立 jetty，避免 Endpoint 全局标记跨调用串扰。
+    void SetSharedJetty(bool enable) { isSharedJetty_ = enable; }
+    bool IsSharedJetty() const { return isSharedJetty_; }
+
     // ------------------ 工厂 ------------------
     static HcclResult CreateChannel(EndpointHandle endpointHandle, 
                                     CommEngine engine, 
                                     HcommChannelDesc channelDesc,
-                                    std::shared_ptr<Channel>& out);
+                                    std::shared_ptr<Channel>& out,
+                                    bool isSharedQueue = false);
 
     virtual AicpuTsChannelHelper *GetAicpuTsHelper() { return nullptr; }
 
@@ -140,6 +147,7 @@ protected:
     CommEngine engine_{COMM_ENGINE_RESERVED};
     std::vector<std::shared_ptr<hccl::DeviceMem>> ptrArrayDevMems_{};
     bool deviceEntityReady_{false};
+    bool isSharedJetty_{false};
 };
 
 } // namespace hcomm

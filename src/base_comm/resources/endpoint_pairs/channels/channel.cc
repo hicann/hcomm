@@ -33,7 +33,8 @@ std::unordered_map<ChannelHandle, ChannelHandle> channelD2HHandleMap_;
 
 HcclResult Channel::CreateChannel(
     EndpointHandle endpointHandle, CommEngine engine, 
-    HcommChannelDesc channelDesc, std::shared_ptr<Channel>& channelPtr)
+    HcommChannelDesc channelDesc, std::shared_ptr<Channel>& channelPtr,
+    bool isSharedQueue)
 {
     DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
@@ -117,6 +118,7 @@ HcclResult Channel::CreateChannel(
     }
     CHK_PTR_NULL(uniqueChannelPtr);
     uniqueChannelPtr->engine_ = engine;
+    uniqueChannelPtr->SetSharedJetty(isSharedQueue);
     CHK_RET_UNAVAIL(uniqueChannelPtr->Init());
     channelPtr = std::move(uniqueChannelPtr);
     return HCCL_SUCCESS;

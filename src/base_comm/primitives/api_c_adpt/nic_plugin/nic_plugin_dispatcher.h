@@ -39,6 +39,16 @@ HcommResult PluginChannelCreate(EndpointHandle endpointHandle, CommEngine engine
 HcommResult PluginChannelGet(ChannelHandle handle, void **channel, bool &handled);
 HcommResult PluginChannelGetStatus(ChannelHandle handle, int32_t *status, bool &handled);
 HcommResult PluginChannelGetNotifyNum(ChannelHandle handle, uint32_t *notifyNum, bool &handled);
+/**
+ * @brief 尝试销毁 plugin channel。
+ * @param[in] handle channel 句柄
+ * @param[out] handled 是否由 plugin 认领。
+ *   handled=false：非 plugin channel，保证返回 HCCL_SUCCESS 且不修改 channel 任何状态，
+ *                  调用方可安全走 builtin 销毁路径，无 double-free/UAF 风险。
+ *   handled=true：plugin 已认领所有权（无论返回成功或失败），由 plugin 负责清理，
+ *                 调用方不可再走 builtin 路径。
+ * @return handled=true 时为 plugin 销毁结果；handled=false 时恒为 HCCL_SUCCESS。
+ */
 HcommResult PluginChannelDestroy(ChannelHandle handle, bool &handled);
 HcommResult PluginChannelUpdateMemInfo(ChannelHandle handle, HcommMemHandle *memHandles, uint32_t memHandleNum,
     bool &handled);

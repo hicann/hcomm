@@ -221,6 +221,81 @@ extern HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine, const Hcc
     uint32_t channelNum, ChannelHandle *channels);
 
 /**
+ * @brief Channel 配置对象不透明句柄（HCCM 层）。
+ *        通过 HcclChannelConfigCreate 创建，HcclChannelConfigDestroy 销毁。
+ */
+typedef void *HcclChannelConfig;
+
+/**
+ * @brief Channel 配置属性类型枚举
+ *        通过 HcclChannelConfigSetInt / HcclChannelConfigSetStr 设置。
+ */
+typedef enum {
+    HCCL_CHANNEL_CONFIG_TYPE_INVALID = -1,
+    /** 0: IS_SHARED_QUEUE (bool/int, 默认 0=false)。
+     *    仅支持 AIV 引擎的 UB 网络语义协议（UBC_CTP/UBC_TP，不支持 UBMem/RoCE/UBOE/UBG）。
+     *    设为 true 时，创建的多个 Channel 共享一个 Jetty。 */
+    HCCL_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE = 0,
+    /** 1: SHARED_QUEUE_TAG (string)。
+     *    仅 IS_SHARED_QUEUE=true 时有效，指定创建 channel 的 tag。
+     *    重复调用时，使用相同 tag 创建出的 channel 共享一个 jetty。 */
+    HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG = 1,
+} HcclChannelConfigType;
+
+/**
+ * @brief 创建 Channel 配置对象
+ * @param[out] config 输出的配置对象指针（不透明句柄）
+ * @return HcclResult 执行结果状态码
+ */
+extern HcclResult HcclChannelConfigCreate(HcclChannelConfig *config);
+
+/**
+ * @brief 销毁 Channel 配置对象
+ * @param[in] config 配置对象指针
+ * @return HcclResult 执行结果状态码
+ */
+extern HcclResult HcclChannelConfigDestroy(HcclChannelConfig config);
+
+/**
+ * @brief 设置 Channel 配置的整型属性
+ * @param[in] config 配置对象指针
+ * @param[in] type  属性类型，参见 HcclChannelConfigType
+ * @param[in] value 属性值
+ * @return HcclResult 执行结果状态码
+ */
+extern HcclResult HcclChannelConfigSetInt(HcclChannelConfig config, HcclChannelConfigType type, uint32_t value);
+
+/**
+ * @brief 设置 Channel 配置的字符串型属性
+ * @param[in] config 配置对象指针
+ * @param[in] type  属性类型，参见 HcclChannelConfigType
+ * @param[in] value 属性值字符串
+ * @return HcclResult 执行结果状态码
+ */
+extern HcclResult HcclChannelConfigSetStr(HcclChannelConfig config, HcclChannelConfigType type, const char *value);
+
+/**
+ * @brief 基于通信域和配置创建通信通道（支持共享 Jetty）
+ * @param[in] comm 通信域句柄
+ * @param[in] engine 通信引擎类型
+ * @param[in] channelDescs 通道描述列表
+ * @param[in] channelNum channel数量
+ * @param[in] config Channel 配置对象指针（可为 NULL，等价于 HcclChannelAcquire）
+ * @param[out] channels 创建的通道句柄列表
+ * @return HcclResult 执行结果状态码
+ * @note 当 config 中 IS_SHARED_QUEUE=true 时：
+ *       - 仅支持 AIV 引擎的 UB 网络语义协议（UBC_CTP/UBC_TP），不支持 UBMem/RoCE/UBOE/UBG。
+ *       - channelDescs 中的源 localEndpoint 必须相同（复用的 jetty 只能关联一个 endpoint）。
+ *       - 通信域基于 SHARED_QUEUE_TAG 指定的 tag 管理 channel 复用。
+ *       - tag 之下，使用源目的 endpointPair 索引一组 channel。
+ *       - 重复调用时，如果 tag->endpointPair 下 channel 数量不足则创建后再返回；如果足够直接按序返回。
+ *       - 不同通信域使用不同 EndpointHandle，同一个 EndpointHandle 共享一个 Jetty。
+ * @warning 重要约束：channelDescs必须使用HcclChannelDescInit进行初始化
+ */
+extern HcclResult HcclChannelAcquireWithConfig(HcclComm comm, CommEngine engine,
+    const HcclChannelDesc *channelDescs, uint32_t channelNum, HcclChannelConfig config, ChannelHandle *channels);
+
+/**
  * @brief 获取指定channel的Hccl通信缓存
  * @param[in] comm 通信域句柄
  * @param[in] channel 通信通道句柄

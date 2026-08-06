@@ -9,6 +9,8 @@
  */
 #include "endpoint.h"
 #include <functional>
+#include <chrono>
+#include <thread>
 #include "aicpu_ts_roce_endpoint.h"
 #include "cpu_roce_endpoint.h"
 #include "urma_endpoint.h"
@@ -54,6 +56,123 @@ static bool IsSupported(const EndpointDesc &endpointDesc)
 Endpoint::Endpoint(const EndpointDesc &endpointDesc)
 {
     endpointDesc_ = endpointDesc;
+}
+
+Endpoint::~Endpoint()
+{
+    // 防御性清理：若仍有共享 jetty 未释放（理论上 CheckEndpointDestroy 应已拦截）。
+    // refCount == 0 时可安全强制销毁；refCount > 0 表示仍有 connection 持有 jetty 句柄，
+    // 强制销毁会导致 use-after-free，此时仅告警不销毁（接受泄漏以避免更严重后果）。
+    if (sharedJettyCtx_.valid && sharedJettyCtx_.handle != 0) {
+        if (sharedJettyCtx_.refCount == 0) {
+            HCCL_WARNING("[Endpoint][~Endpoint] shared jetty still valid on destroy, handle[%llu], force destroy.",
+                static_cast<unsigned long long>(sharedJettyCtx_.handle));
+            Hccl::HrtRaUbDestroyJetty(sharedJettyCtx_.handle);
+            if (sharedJettyCtx_.jfcHandle != 0 && sharedJettyCtx_.rdmaHandle != nullptr) {
+                Hccl::HrtRaUbDestroyJfc(sharedJettyCtx_.rdmaHandle, sharedJettyCtx_.jfcHandle);
+            }
+            if (sharedJettyCtx_.sqPiPtr != nullptr) { (void)hrtFree(sharedJettyCtx_.sqPiPtr); }
+            if (sharedJettyCtx_.sqCiPtr != nullptr) { (void)hrtFree(sharedJettyCtx_.sqCiPtr); }
+            if (sharedJettyCtx_.cqPiPtr != nullptr) { (void)hrtFree(sharedJettyCtx_.cqPiPtr); }
+            if (sharedJettyCtx_.cqCiPtr != nullptr) { (void)hrtFree(sharedJettyCtx_.cqCiPtr); }
+        } else {
+            HCCL_WARNING("[Endpoint][~Endpoint] shared jetty still in use, refCount[%u], handle[%llu], skip destroy "
+                "to avoid use-after-free.",
+                sharedJettyCtx_.refCount, static_cast<unsigned long long>(sharedJettyCtx_.handle));
+        }
+        sharedJettyCtx_ = SharedJettyCtx{};
+    }
+}
+
+HcclResult Endpoint::AcquireSharedJetty(
+    const std::function<HcclResult(SharedJettyCtx &)> &provideCtx, SharedJettyCtx &outCtx)
+{
+    // 第一段（持锁）：检查是否已创建或正在创建。已创建则 refCount++ 返回；未创建则标记 creating。
+    while (true) {
+        std::unique_lock<std::mutex> lk(sharedJettyMtx_);
+        if (sharedJettyCtx_.valid) {
+            sharedJettyCtx_.refCount++;
+            outCtx = sharedJettyCtx_;
+            HCCL_INFO("[Endpoint][AcquireSharedJetty] reuse shared jetty, handle[%llu], refCount[%u]",
+                static_cast<unsigned long long>(outCtx.handle), sharedJettyCtx_.refCount);
+            return HCCL_SUCCESS;
+        }
+        if (!sharedJettyCtx_.creating) {
+            // 抢占创建权
+            sharedJettyCtx_.creating = true;
+            break;
+        }
+        // 其他线程正在创建：释放锁短暂 sleep 后重新检查，避免紧密 spin 占 CPU。
+        lk.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    }
+
+    // 第二段（无锁）：执行首次创建回调（含网络建链 I/O，可能耗时数秒）。
+    // 创建期间不持锁，其他线程的 Acquire 会在此循环等待，Release 不被阻塞。
+    SharedJettyCtx createdCtx;
+    HcclResult createRet = provideCtx(createdCtx);
+    if (createRet != HCCL_SUCCESS) {
+        std::lock_guard<std::mutex> lk(sharedJettyMtx_);
+        sharedJettyCtx_.creating = false;
+        HCCL_ERROR("[Endpoint][AcquireSharedJetty] provideCtx failed, ret[%d].", createRet);
+        return createRet;
+    }
+
+    // 第三段（持锁）：写入缓存，清除 creating 标记，设置 refCount=1。
+    {
+        std::lock_guard<std::mutex> lk(sharedJettyMtx_);
+        sharedJettyCtx_ = createdCtx;
+        sharedJettyCtx_.valid = true;
+        sharedJettyCtx_.creating = false;
+        sharedJettyCtx_.refCount = 1;
+        outCtx = sharedJettyCtx_;
+    }
+    HCCL_INFO("[Endpoint][AcquireSharedJetty] created shared jetty, handle[%llu]",
+        static_cast<unsigned long long>(outCtx.handle));
+    return HCCL_SUCCESS;
+}
+
+HcclResult Endpoint::ReleaseSharedJetty()
+{
+    std::lock_guard<std::mutex> lk(sharedJettyMtx_);
+    if (!sharedJettyCtx_.valid) {
+        HCCL_WARNING("[Endpoint][ReleaseSharedJetty] shared jetty already invalid, skip release.");
+        return HCCL_SUCCESS;
+    }
+    if (sharedJettyCtx_.refCount == 0) {
+        HCCL_WARNING("[Endpoint][ReleaseSharedJetty] refCount already 0, skip release.");
+        return HCCL_SUCCESS;
+    }
+    sharedJettyCtx_.refCount--;
+    HCCL_INFO("[Endpoint][ReleaseSharedJetty] release shared jetty, handle[%llu], refCount[%u]",
+        static_cast<unsigned long long>(sharedJettyCtx_.handle), sharedJettyCtx_.refCount);
+    if (sharedJettyCtx_.refCount == 0) {
+        if (sharedJettyCtx_.handle != 0) {
+            Hccl::HrtRaUbDestroyJetty(sharedJettyCtx_.handle);
+            HCCL_INFO("[Endpoint][ReleaseSharedJetty] destroyed shared jetty, handle[%llu]",
+                static_cast<unsigned long long>(sharedJettyCtx_.handle));
+        }
+        // 销毁临时 connection 转移过来的 JFC（共享 jetty 模式下临时 connection 不自销毁 JFC）
+        if (sharedJettyCtx_.jfcHandle != 0 && sharedJettyCtx_.rdmaHandle != nullptr) {
+            Hccl::HrtRaUbDestroyJfc(sharedJettyCtx_.rdmaHandle, sharedJettyCtx_.jfcHandle);
+            HCCL_INFO("[Endpoint][ReleaseSharedJetty] destroyed shared jfc, jfcHandle[%llu]",
+                static_cast<unsigned long long>(sharedJettyCtx_.jfcHandle));
+        }
+        if (sharedJettyCtx_.sqPiPtr != nullptr) {
+            (void)hrtFree(sharedJettyCtx_.sqPiPtr);
+        }
+        if (sharedJettyCtx_.sqCiPtr != nullptr) {
+            (void)hrtFree(sharedJettyCtx_.sqCiPtr);
+        }
+        if (sharedJettyCtx_.cqPiPtr != nullptr) {
+            (void)hrtFree(sharedJettyCtx_.cqPiPtr);
+        }
+        if (sharedJettyCtx_.cqCiPtr != nullptr) {
+            (void)hrtFree(sharedJettyCtx_.cqCiPtr);
+        }
+        sharedJettyCtx_ = SharedJettyCtx{};
+    }
+    return HCCL_SUCCESS;
 }
 
 HcclResult Endpoint::CreateEndpoint(const EndpointDesc &endpointDesc, std::unique_ptr<Endpoint> &endpointPtr)

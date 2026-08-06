@@ -13,6 +13,7 @@
 #include "orion_adpt_utils.h"
 #include "hcomm_c_adpt.h"
 #include "config_log.h"
+#include "endpoint.h"
 
 // Orion
 #include "adapter_rts_common.h"
@@ -196,6 +197,8 @@ HcclResult AicpuTsUrmaChannel::BuildSocket()
         bool noRankId = true;
         Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, socketTag, noRankId);
         CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket_));
+        socketConfigHolder_ = std::make_unique<Hccl::SocketConfig>(socketConfig);
+        socketConfig_ = socketConfigHolder_.get();
     } else {
         uint16_t port = channelDesc_.port;
         if (port == 0) {
@@ -210,6 +213,8 @@ HcclResult AicpuTsUrmaChannel::BuildSocket()
         bool isServer = (channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER);
         Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, port, socketTag, isServer);
         CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket_));
+        socketConfigHolder_ = std::make_unique<Hccl::SocketConfig>(socketConfig);
+        socketConfig_ = socketConfigHolder_.get();
     }
     return HCCL_SUCCESS;
 }

@@ -81,7 +81,7 @@ HcclResult ChannelProcess::WithChannelByHandleLocked(ChannelHandle inHandle, Fun
 }
 
 HcclResult ChannelProcess::CreateChannelsLoop(EndpointHandle endpointHandle, CommEngine engine,
-    HcommChannelDesc *channelDescs, uint32_t channelNum, ChannelHandle *outHandles)
+    HcommChannelDesc *channelDescs, uint32_t channelNum, ChannelHandle *outHandles, bool isSharedQueue)
 {
     CHK_PTR_NULL(endpointHandle);
 
@@ -90,7 +90,7 @@ HcclResult ChannelProcess::CreateChannelsLoop(EndpointHandle endpointHandle, Com
 
     for (uint32_t i = 0; i < channelNum; ++i) {
         std::shared_ptr<Channel> tmpPtr = nullptr;
-        CHK_RET_UNAVAIL(Channel::CreateChannel(endpointHandle, engine, channelDescs[i], tmpPtr));
+        CHK_RET_UNAVAIL(Channel::CreateChannel(endpointHandle, engine, channelDescs[i], tmpPtr, isSharedQueue));
         CHK_SMART_PTR_NULL(tmpPtr);
 
         ChannelHandle handle = reinterpret_cast<ChannelHandle>(tmpPtr.get());

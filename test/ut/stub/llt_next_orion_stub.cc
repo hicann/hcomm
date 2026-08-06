@@ -494,6 +494,54 @@ void DevUbConnection::CreateAivUrmaJfc() {}
 
 DevUbConnection::~DevUbConnection() {}
 
+HcclResult DevUbConnection::InjectSharedJetty(JettyHandle jettyHdl, void *jettyHdlPtr, uint32_t jId,
+    uint64_t sqVa, uint64_t db, const uint8_t *qpKey, uint32_t kSize, uint32_t sDepth,
+    uint64_t tpHdl, void *epTag, std::function<void(void*)> releaseCb)
+{
+    if (qpKey != nullptr && kSize > 0 && kSize <= HRT_UB_QP_KEY_MAX_LEN) {
+        s32 ret = memcpy_s(localQpKey, HRT_UB_QP_KEY_MAX_LEN, qpKey, kSize);
+        if (ret != 0) {
+            return HCCL_E_INTERNAL;
+        }
+    }
+    isSharedJetty_  = true;
+    endpointTag_    = epTag;
+    releaseCb_      = std::move(releaseCb);
+    jettyHandle     = jettyHdl;
+    jettyHandlePtr  = jettyHdlPtr;
+    jettyId         = jId;
+    sqBuffVa        = sqVa;
+    dbAddr          = db;
+    keySize         = kSize;
+    sqDepth         = sDepth;
+    tpInfo.tpHandle = tpHdl;
+    return HCCL_SUCCESS;
+}
+
+void DevUbConnection::TransferJettyOwnership()
+{
+    isSharedJetty_ = true;
+}
+
+HcclResult DevUbConnection::GetJettyInfo(JettyInfo &info) const
+{
+    info.handle    = jettyHandle;
+    info.handlePtr = jettyHandlePtr;
+    info.jettyId   = jettyId;
+    info.sqBuffVa  = sqBuffVa;
+    info.dbAddr    = dbAddr;
+    info.keySize   = keySize;
+    info.sqDepth   = sqDepth;
+    info.tpHandle  = tpInfo.tpHandle;
+    info.rdmaHandle = rdmaHandle;
+    info.jfcHandle  = jfcHandle;
+    auto sRet = memcpy_s(info.localQpKey, HRT_UB_QP_KEY_MAX_LEN, localQpKey, HRT_UB_QP_KEY_MAX_LEN);
+    if (sRet != EOK) {
+        return HCCL_E_INTERNAL;
+    }
+    return HCCL_SUCCESS;
+}
+
 // Suspend接口当前已不使用，由框架调用触发析构流程
 bool DevUbConnection::Suspend() { return true; }
 

@@ -73,6 +73,8 @@ public:
 
     CollCommConfigConsistency &GetCollCommConfigConsistency();
 
+    hcomm::EndpointMgr *GetEndpointMgr() const { return endpointMgr_.get(); }
+
     HcclResult CreateChannels(CommEngine engine, const std::string &commTag, 
         const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle *channels);
     
@@ -89,6 +91,34 @@ public:
     HcclResult Clean();
     HcclResult Resume();
 
+    /**
+     * @brief 批量预建 socket（server 监听 + client 连接），与非共享路径 MyRank::CreateChannels 一致。
+     *        共享 jetty 路径在 createFunc 中调用，确保两端 socket 体系一致、可对接。
+     * @param[in] channelDescs HCCL 层 channel desc 数组
+     * @param[in] channelNum 数量
+     * @param[in] socketTag socket 标签（commTag + "_engine_" + engine）
+     * @param[out] hcommDescs 输出的 HcommChannelDesc 数组（调用前需用 ChannelDescHccl2Hcomm 填充基础字段，
+     *             本方法补上 socket/role/port 字段）
+     */
+    HcclResult BatchCreateSockets(const HcclChannelDesc* channelDescs, uint32_t channelNum,
+        const std::string &socketTag, std::vector<HcommChannelDesc> &hcommDescs);
+
+    /**
+     * @brief 在已建好的 socket 上执行通信域一致性校验交换（CheckFrameV2 + 用户信息）。
+     *        与非共享路径 MyRank::CreateChannels 内部调用 exchangeInfoMgr_ 的逻辑一致，
+     *        供共享 jetty 路径在 createFunc 中调用，确保两端无论 shared/非shared 配置是否对称，
+     *        都会在 socket 上完成定长 CheckFrameV2（120B）的对称收发，避免一端死等。
+     * @param[in] channelDescs HCCL 层 channel desc 数组
+     * @param[in] hcommDescs 已通过 BatchCreateSockets 填充 socket 字段的 HcommChannelDesc 数组
+     * @param[in] channelNum 数量
+     * @param[in] newChannels 新建 channel 的 (idx, reuseIdx) 列表；空表示全部按新建处理
+     * @param[in] engine 通信引擎
+     * @note 仅 DEV_TYPE_950 实际执行交换，其它设备类型直接返回 SUCCESS，与非共享路径保持一致。
+     */
+    HcclResult BatchExchangeAndCheckConsistency(const HcclChannelDesc* channelDescs,
+        const std::vector<HcommChannelDesc> &hcommDescs, uint32_t channelNum,
+        const std::vector<std::pair<u32, u32>> &newChannels, CommEngine engine);
+
 private:
     using ReuseSocketIdxMap = std::unordered_map<RankPair*, std::unordered_map<hcomm::EndpointPair*, u32>>;
     HcclResult GetEndpointPairFromChannel(const HcclChannelDesc &channelDesc, uint32_t channelIndex, uint32_t channelNum,
@@ -98,8 +128,6 @@ private:
     HcclResult BatchGetSocketsForChannels(const HcclChannelDesc* channelDescs, uint32_t channelNum,
         const std::string &socketTag, std::vector<HcommChannelDesc> &hcommDescs,
         ReuseSocketIdxMap &reuseSocketIdxMap);
-    HcclResult BatchCreateSockets(const HcclChannelDesc* channelDescs, uint32_t channelNum,
-        const std::string &socketTag, std::vector<HcommChannelDesc> &hcommDescs);
     HcclResult BatchCreateChannels(CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum,
         std::vector<HcommChannelDesc> &hcommDescs, ChannelHandle *channelHandles);
     HcclResult BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle *channelHandles, uint32_t channelNum);

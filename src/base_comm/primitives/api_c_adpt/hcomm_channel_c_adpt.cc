@@ -23,6 +23,9 @@
 #ifdef ENABLE_EXPERIMENTAL
 #include "nic_plugin_dispatcher.h"
 #endif
+#include "channel_config.h"
+#include "shared_jetty_mgr.h"
+#include "endpoint.h"
 
 using namespace hcomm;
 
@@ -318,29 +321,234 @@ HcommResult HcommChannelGetNotifyNum(ChannelHandle channelHandle, uint32_t *noti
     return ChannelProcess::ChannelGetNotifyNum(channelHandle, notifyNum);
 }
 
+#ifdef ENABLE_EXPERIMENTAL
+static void UnregisterPluginChannels(std::vector<ChannelHandle> &pluginChannels)
+{
+    // plugin channel 虽由 PluginChannelDestroy 销毁，但创建时同样经 RegisterChannels 注册，
+    // 需在此统一注销，否则 CheckEndpointDestroy 会因残留记录阻止 Endpoint 销毁。
+    // 无论 PluginChannelDestroy 是否失败，已收集的 pluginChannels 都需注销。
+    if (!pluginChannels.empty()) {
+        (void)hcomm::SharedJettyMgr::GetInstance().UnregisterChannels(
+            pluginChannels.data(), pluginChannels.size());
+    }
+}
+#endif
+
+static HcclResult DestroyBuiltinChannels(std::vector<ChannelHandle> &builtinChannels)
+{
+    // 即使 plugin channel 销毁失败，也需继续销毁 builtin channel，避免 RDMA/jetty 资源泄漏
+    // 及 SharedJettyMgr 残留记录永久阻塞 Endpoint 销毁。最终返回首个错误（优先 plugin 错误）。
+    HcclResult builtinRet = HCCL_SUCCESS;
+    if (builtinChannels.empty()) {
+        return builtinRet;
+    }
+    builtinRet = ChannelProcess::ChannelDestroy(builtinChannels.data(), builtinChannels.size(),
+        AicpuTsChannelHelper::GetBinHandle());
+    // 无论 ChannelDestroy 成功与否都注销 SharedJettyMgr 记录：
+    // 成功时正常清理；失败时 channel 已不可用，若不注销会永久阻塞 Endpoint 销毁。
+    if (builtinRet != HCCL_SUCCESS) {
+        HCCL_WARNING("[%s] ChannelDestroy failed, ret[%d], force unregister shared jetty channels.",
+            __func__, builtinRet);
+    }
+    (void)hcomm::SharedJettyMgr::GetInstance().UnregisterChannels(
+        builtinChannels.data(), builtinChannels.size());
+    return builtinRet;
+}
+
 HcommResult HcommChannelDestroy(const ChannelHandle *channels, uint32_t channelNum)
 {
     CHK_PTR_NULL(channels);
     (void)HcommResMgrInit();
-    CHK_PRT_RET(
-        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+    CHK_PRT_RET((channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]",
+        __func__, channelNum), HCCL_E_PARA);
     std::vector<ChannelHandle> builtinChannels;
     builtinChannels.reserve(channelNum);
-    for (uint32_t idx = 0; idx < channelNum; ++idx) {
 #ifdef ENABLE_EXPERIMENTAL
+    std::vector<ChannelHandle> pluginChannels;
+    pluginChannels.reserve(channelNum);
+    HcclResult pluginRet = HCCL_SUCCESS;
+    for (uint32_t idx = 0; idx < channelNum; ++idx) {
         bool handled = false;
-        CHK_RET(static_cast<HcclResult>(PluginChannelDestroy(channels[idx], handled)));
-        if (handled) {
+        HcclResult curRet = static_cast<HcclResult>(PluginChannelDestroy(channels[idx], handled));
+        if (curRet != HCCL_SUCCESS) {
+            HCCL_ERROR("[%s] PluginChannelDestroy failed, idx[%u], ret[%d], handled[%d].",
+                __func__, idx, curRet, static_cast<int>(handled));
+            pluginRet = curRet;
+            // 不 break，继续处理剩余 channel，确保全部得到销毁/注销
+            if (handled) {
+                // plugin 已认领 channel 所有权，即使返回错误也由 plugin 负责清理，
+                // 不再走 builtin 路径以免 double-free，但仍需注销 SharedJettyMgr 记录
+                pluginChannels.push_back(channels[idx]);
+                continue;
+            }
+            // handled=false 契约保证 plugin 未修改 channel 状态且应返回 HCCL_SUCCESS；
+            // 此分支为防御性兜底（当前实现不可达），仍按 builtin 路径销毁避免资源泄漏。
+            HCCL_WARNING("[%s] PluginChannelDestroy returned error with handled=false, idx[%u], ret[%d]. "
+                "Falling back to builtin destroy per contract.", __func__, idx, curRet);
+        } else if (handled) {
+            pluginChannels.push_back(channels[idx]);
             continue;
         }
-#endif
+        // 非 plugin channel 或 plugin 未认领，按 builtin 路径处理
         builtinChannels.push_back(channels[idx]);
     }
-    if (builtinChannels.empty()) {
-        return HCCL_SUCCESS;
+    UnregisterPluginChannels(pluginChannels);
+    HcclResult builtinRet = DestroyBuiltinChannels(builtinChannels);
+    if (pluginRet != HCCL_SUCCESS) {
+        return pluginRet;
     }
-    return ChannelProcess::ChannelDestroy(
-        builtinChannels.data(), builtinChannels.size(), AicpuTsChannelHelper::GetBinHandle());
+    return builtinRet;
+#else
+    for (uint32_t idx = 0; idx < channelNum; ++idx) {
+        builtinChannels.push_back(channels[idx]);
+    }
+    return static_cast<HcommResult>(DestroyBuiltinChannels(builtinChannels));
+#endif
+}
+
+HcommResult HcommChannelConfigCreate(HcommChannelConfig *config)
+{
+    return static_cast<HcommResult>(hcomm::ChannelConfigCreate(config));
+}
+
+HcommResult HcommChannelConfigDestroy(HcommChannelConfig config)
+{
+    return static_cast<HcommResult>(hcomm::ChannelConfigDestroy(config));
+}
+
+HcommResult HcommChannelConfigSetInt(HcommChannelConfig config, HcommChannelConfigType type, uint32_t value)
+{
+    return static_cast<HcommResult>(hcomm::ChannelConfigSetInt(config, type, value));
+}
+
+static bool IsUbProtocol(CommProtocol protocol)
+{
+    return protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP;
+}
+
+static HcclResult ValidateSharedQueueConfig(const std::vector<HcommChannelDesc> &channelDescs)
+{
+    for (uint32_t i = 0; i < channelDescs.size(); ++i) {
+        CommProtocol protocol = channelDescs[i].remoteEndpoint.protocol;
+        if (!IsUbProtocol(protocol)) {
+            HCCL_ERROR("[%s] IS_SHARED_QUEUE only supports UB protocols (UBC_CTP/UBC_TP), "
+                "channelDesc[%u] protocol[%d].", __func__, i, protocol);
+            return HCCL_E_NOT_SUPPORT;
+        }
+    }
+    return HCCL_SUCCESS;
+}
+
+#ifdef ENABLE_EXPERIMENTAL
+static HcclResult RegisterSharedQueuePluginChannels(EndpointHandle endpointHandle,
+    uint32_t channelNum, ChannelHandle *channels)
+{
+    // plugin channel 不经过 Channel::BuildConnection，无法走共享 jetty 复用路径。
+    // 但仍需注册到 SharedJettyMgr 以便 CheckEndpointDestroy 校验，确保 plugin channel
+    // 销毁后 endpoint 才能销毁（plugin channel 与 endpoint 也有资源依赖关系）。
+    HcclResult regRet = hcomm::SharedJettyMgr::GetInstance().RegisterChannels(
+        endpointHandle, channels, channelNum);
+    if (regRet != HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] failed to register shared jetty channels (plugin), ret[%d].", __func__, regRet);
+        // 注册失败需销毁已创建的 plugin channel，避免泄漏
+        for (uint32_t i = 0; i < channelNum; ++i) {
+            bool handled = false;
+            (void)static_cast<HcclResult>(PluginChannelDestroy(channels[i], handled));
+        }
+        return regRet;
+    }
+    return HCCL_SUCCESS;
+}
+#endif
+
+static HcclResult CreateAndRegisterSharedQueueBuiltinChannels(EndpointHandle endpointHandle, CommEngine engine,
+    HcommChannelDesc *channelDescFinals, uint32_t channelNum, ChannelHandle *channels)
+{
+    // 共享模式建链流程与 HcommChannelCreate 一致：CreateChannelsLoop 传 isSharedQueue=true，
+    // channel 的 BuildConnection 据此走共享 jetty 复用路径；PrepareUserChannels 完成 AICPU/AIV 预分配。
+    std::vector<ChannelHandle> hostChannelHandles(channelNum);
+    ChannelHandle *targetChannels = hostChannelHandles.data();
+
+    CHK_RET(ChannelProcess::CreateChannelsLoop(endpointHandle, engine, channelDescFinals, channelNum,
+        targetChannels, true));
+    HcclResult prepRet = ChannelProcess::PrepareUserChannels(targetChannels, channels,
+        channelDescFinals, channelNum, engine);
+    if (prepRet != HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] PrepareUserChannels failed, ret[%d], destroying created channels.", __func__, prepRet);
+        (void)ChannelProcess::ChannelDestroy(targetChannels, channelNum, AicpuTsChannelHelper::GetBinHandle());
+        return prepRet;
+    }
+
+    HcclResult regRet = hcomm::SharedJettyMgr::GetInstance().RegisterChannels(
+        endpointHandle, channels, channelNum);
+    if (regRet != HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] failed to register shared jetty channels, ret[%d].", __func__, regRet);
+        (void)ChannelProcess::ChannelDestroy(channels, channelNum, AicpuTsChannelHelper::GetBinHandle());
+        return regRet;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcommResult HcommChannelCreateWithConfig(EndpointHandle endpointHandle, CommEngine engine,
+    HcommChannelDesc *channelDescs, uint32_t channelNum, HcommChannelConfig config, ChannelHandle *channels)
+{
+    CHK_PTR_NULL(endpointHandle);
+    CHK_PTR_NULL(channelDescs);
+    CHK_PTR_NULL(channels);
+    CHK_PRT_RET((channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]",
+        __func__, channelNum), HCCL_E_PARA);
+    HCCL_INFO("[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u], config[%p].",
+        __func__, endpointHandle, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
+        channelNum, config);
+
+    bool isSharedQueue = false;
+    if (config != nullptr) {
+        auto *cfg = static_cast<hcomm::HcommChannelConfigData *>(config);
+        isSharedQueue = cfg->isSharedQueue;
+    }
+
+    // 非共享模式直接复用 HcommChannelCreate 流程，避免重复维护两套建链逻辑
+    if (!isSharedQueue) {
+        return HcommChannelCreate(endpointHandle, engine, channelDescs, channelNum, channels);
+    }
+
+    // 共享 jetty 仅支持 AIV 引擎：AICPU 等 channel 的 BuildConnection 不处理共享 jetty 路径，
+    // 强行创建会导致 channel 注册到 SharedJettyMgr 但无实际 jetty 共享，多 channel 共用同一 SQ
+    // 但 PI/CI 未协调，引发 WQE 覆盖、doorbell 不前进、notify 超时。
+    if (engine != COMM_ENGINE_AIV) {
+        HCCL_ERROR("[%s] IS_SHARED_QUEUE currently only supports AIV engine, engine[%d].",
+            __func__, static_cast<int>(engine));
+        return HCCL_E_NOT_SUPPORT;
+    }
+
+    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    if (endpoint != nullptr) {
+        CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
+    }
+    (void)HcommResMgrInit();
+
+    std::vector<HcommChannelDesc> channelDescFinals;
+    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals)));
+    // NormalizeHcommChannelDescs 内部已调 CheckUbAttr，此处仅补共享模式专有校验
+    CHK_RET(ValidateSharedQueueConfig(channelDescFinals));
+
+#ifdef ENABLE_EXPERIMENTAL
+    bool pluginHandled = false;
+    CHK_RET(static_cast<HcclResult>(PluginChannelCreate(endpointHandle, engine,
+        channelDescFinals.data(), channelNum, channels, pluginHandled)));
+    if (pluginHandled) {
+        return static_cast<HcommResult>(RegisterSharedQueuePluginChannels(endpointHandle, channelNum, channels));
+    }
+#endif
+
+    HcclResult ret = CreateAndRegisterSharedQueueBuiltinChannels(
+        endpointHandle, engine, channelDescFinals.data(), channelNum, channels);
+    if (ret != HCCL_SUCCESS) {
+        return static_cast<HcommResult>(ret);
+    }
+
+    HCCL_INFO("[%s] SUCCESS. isSharedQueue[%d], channelNum[%u].", __func__, isSharedQueue, channelNum);
+    return HCCL_SUCCESS;
 }
 
 HcommResult HcommChannelGetRemoteMems(

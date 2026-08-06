@@ -20,6 +20,9 @@
 #include "exception_handler.h"
 #include "hcom_common.h"
 #include "hcomm_res_defs.h"
+#include "channel_config.h"
+#include "shared_jetty_mgr.h"
+#include "endpoint.h"
 #ifdef ENABLE_EXPERIMENTAL
 #include "nic_plugin_dispatcher.h"
 #endif
@@ -125,6 +128,13 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
 {
     (void)HcommResMgrInit();
     HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
+
+    // 无论 plugin 还是 builtin 路径, 均需校验共享 jetty channel 是否已全部销毁，
+    // 否则残留 channel 持有的 jetty 引用会在 endpoint 销毁后成为悬空引用。
+    HcclResult jettyRet = hcomm::SharedJettyMgr::GetInstance().CheckEndpointDestroy(endpointHandle);
+    CHK_PRT_RET(jettyRet != HCCL_SUCCESS,
+        HCCL_ERROR("[%s] cannot destroy endpointHandle[0x%llx], shared jetty channels still exist.",
+            __func__, endpointHandle), jettyRet);
 #ifdef ENABLE_EXPERIMENTAL
     bool handled = false;
     CHK_RET(static_cast<HcclResult>(PluginEndpointDestroy(endpointHandle, handled)));

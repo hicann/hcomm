@@ -10,6 +10,7 @@
 set(src_list
     my_rank.cc
     exchange_info_mgr.cc
+    shared_jetty_channel_pool.cc
 )
 
 if(TARGET hcomm)
