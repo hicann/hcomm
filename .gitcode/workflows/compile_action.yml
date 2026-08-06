@@ -77,6 +77,7 @@ jobs:
         name: api-check
         identifier: api-check
         uses: cann/.gitcode/actions/api-check@master
+        if: ${{ inputs.task_name == 'Compile_Ascend_X86_ubuntu24' && env.TARGET_BRANCH == 'master' }}
         with:
           org_name: ${{ env.org_name }}
           mode: ${{ steps.compile.outputs.api-check }}
