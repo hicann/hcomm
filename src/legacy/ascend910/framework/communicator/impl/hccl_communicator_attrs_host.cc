@@ -462,11 +462,20 @@ namespace hccl
         HCCL_RUN_INFO("[Set][SuperPodInfo]different surperPod contains different numbers of servers:[%d]",
                       multiSuperPodDiffServerNumMode_);
 
-        // 计算最大公约数
+        for (auto item: superPodToDeviceNum) {
+            u32 curDeviceNum = item.second.size();
+            if (curDeviceNum != superPodToDeviceNum.begin()->second.size()) {
+                multiSuperPodDiffDeviceNumMode_ = true;
+            }
+            HCCL_INFO("[Set][SuperPodInfo]SuperPod[%s] contains [%d] devices", item.first.c_str(), item.second.size());
+        }
+
+        // 计算最大公约数，切分超节点
         if (!IsConfigAHCAlgo(algoConfigMap_) && !multiModuleDiffDeviceNumMode_ && multiSuperPodDiffServerNumMode_)
         {
             gcdServerNumPerSuperPod_ = CalGCD(superPodServerNumVec);
             multiSuperPodDiffServerNumMode_ = false; // 取公约数不存在server数不一致场景
+            multiSuperPodDiffDeviceNumMode_ = false; // 切分后各超节点server数一致，device数也一致
             superPodNum_ = serverNum_ / gcdServerNumPerSuperPod_;
             HCCL_RUN_INFO("[Set][SuperPodInfo] gcdServerNumPerSuperPod[%u] original superPodNum[%u] converted superPodNum[%u]",
                           gcdServerNumPerSuperPod_, superPodToServerNum.size(), superPodNum_);
@@ -476,14 +485,6 @@ namespace hccl
         {
             multiSuperPodDiffServerNumMode_ = false;
             HCCL_RUN_INFO("mix mode, set multiSuperPodDiffServerNumMode to false");
-        }
-
-        for (auto item: superPodToDeviceNum) {
-            u32 curDeviceNum = item.second.size();
-            if (curDeviceNum != superPodToDeviceNum.begin()->second.size()) {
-                multiSuperPodDiffDeviceNumMode_ = true;
-            }
-            HCCL_INFO("[Set][SuperPodInfo]SuperPod[%s] contains [%d] devices", item.first.c_str(), item.second.size());
         }
         return HCCL_SUCCESS;
     }
