@@ -31,6 +31,7 @@
 #include "ccu_pfe_cfg_mgr.h"
 #include "ccu_launch.h"
 #include "ccu_res.h"
+#include "ccu_var_event_res_mgr.h"
 
 #include "mocks/ccu_device_mock_utils.h"
 #include "mocks/ccu_channel_mock_utils.h"
@@ -47,6 +48,7 @@
 #include "ccu_kernel_impl/ccu_reduce_scatter_mesh1d_demo.h"
 #include "ccu_kernel_impl/ccu_reduce_scatter_mesh1d_a6_demo.h"
 #include "ccu_kernel_impl/ccu_groupcopy_demo.h"
+#include "ccu_kernel_impl/ccu_var_acquire_demo.h"
 
 #undef protected
 #undef private
@@ -1379,6 +1381,107 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelReduceScatterMesh1d_When_V2_Expe
     DestroyCcuResDescs(resDescs);
 }
 
+TEST_F(HcommCcuControlApiTest, Ut_HcommCcuVariableAllocConsecutive_When_AllFine_Expect_ReturnCcuSUCCESS)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 13;
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
+    const int32_t fakeDeviceLogicId = MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
+
+    constexpr auto MS_INS_TPYE = CcuInstanceType::CCU_MS;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreateLegacy(MS_INS_TPYE, &insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    constexpr uint8_t fakeDieId = 0;
+    constexpr uint32_t varNum = 10;
+    CcuVariableHandle varHandle{0};
+    ccuRet = HcommCcuVariableAlloc(insHandle, fakeDieId, varNum, &varHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    for(int i=0; i<varNum; i++) {
+        uint64_t startVa = 0;
+        ccuRet = HcommCcuVariableGetAddr(varHandle, i, &startVa);
+        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+        std::cout << "[Ut_HcommCcuVariableAllocConsecutive] varHandle=0x" << std::hex << varHandle
+                  << ", startVa=0x" << startVa << std::dec << ", i=" << i << std::endl;
+    }
+
+    auto &resMgr = hcomm::CcuVarEventResMgr::GetInstance(fakeDeviceLogicId);
+    auto it = resMgr.resMap_.find(varHandle);
+    ASSERT_NE(it, resMgr.resMap_.end());
+    const auto &resInfos = it->second.resInfos;
+    EXPECT_EQ(resInfos.size(), 1U);
+
+    uint32_t totalNum = 0;
+    for (const auto &info : resInfos) {
+        std::cout << "  consecutive block: startId=" << info.startId << ", num=" << info.num
+                  << ", xn ids=[";
+        for (uint32_t i = 0; i < info.num; i++) {
+            std::cout << (info.startId + i);
+            if (i + 1 < info.num) {
+                std::cout << ", ";
+            }
+        }
+        std::cout << "]" << std::endl;
+        totalNum += info.num;
+    }
+    EXPECT_EQ(totalNum, varNum);
+
+    CcuEventHandle eventHandle{0};
+    constexpr uint32_t eventNum = 4;
+    ccuRet = HcommCcuEventAlloc(insHandle, fakeDieId, eventNum, &eventHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    for(int i=0; i<eventNum; i++) {
+        uint64_t eventVa = 0;
+        ccuRet = HcommCcuEventGetAddr(eventHandle, i, &eventVa);
+        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+        std::cout << "[Ut_HcommCcuVariableAllocConsecutive] eventHandle=0x" << std::hex << eventHandle
+                  << ", eventVa=0x" << eventVa << std::dec << ", i=" << i << std::endl;
+    }
+
+    auto eventIt = resMgr.resMap_.find(eventHandle);
+    ASSERT_NE(eventIt, resMgr.resMap_.end());
+    const auto &ckeInfos = eventIt->second.resInfos;
+    EXPECT_EQ(ckeInfos.size(), 1U);
+    for (const auto &info : ckeInfos) {
+        std::cout << "  consecutive block: startId=" << info.startId << ", num=" << info.num
+                  << ", xn ids=[";
+        for (uint32_t i = 0; i < info.num; i++) {
+            std::cout << (info.startId + i);
+            if (i + 1 < info.num) {
+                std::cout << ", ";
+            }
+        }
+        std::cout << "]" << std::endl;
+    }
+
+    ccuRet = HcommCcuKernelRegisterStart(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    CcuVarAcquireDemoKernelArg demoArg{};
+    demoArg.acqHandle = varHandle;
+    demoArg.varNum = varNum;
+    demoArg.acqEventHandle = eventHandle;
+    demoArg.eventNum = eventNum;
+    auto kernelFunc = reinterpret_cast<void *>(CcuVarAcquireDemoKernel);
+    auto kernelArg = static_cast<CcuKernelArg>(&demoArg);
+    const void *kernelArgs[] = {kernelArg};
+    char *kernelFuncName = "ccu_var_acquire_demo";
+    CcuKernelHandle kernelHandle{0};
+    constexpr uint32_t kernelArgNum = 1;
+    ccuRet = HcommCcuKernelRegister(insHandle, fakeDieId,
+        kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+}
+
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelNestedInIfIf_When_AllFine_Expect_ReturnCcuSUCCESS)
 {
     CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
@@ -1429,6 +1532,247 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelNestedInIfIf_When_AllFine_Expect
     MockChannelDestory(handlePair);
     ccuRet = HcommCcuInsDestroy(insHandle);
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    DestroyCcuResDescs(resDescs);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_HcommCcuVariableAndEventAllocAddrGet_When_AllFine_Expect_ReturnCcuSUCCESS)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 14;
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
+    const int32_t fakeDeviceLogicId = MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
+
+    // ccuInstance构建（正常在通信域创建中，本用例仅测试hcomm接口）
+    constexpr auto MS_INS_TPYE = CcuInstanceType::CCU_MS;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreateLegacy(MS_INS_TPYE, &insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    constexpr uint8_t fakeDieId = 0;
+
+    constexpr uint32_t varNum = 8;
+    CcuVariableHandle varHandle{0};
+    ccuRet = HcommCcuVariableAlloc(insHandle, fakeDieId, varNum, &varHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    for (uint32_t i = 0; i < varNum; i++) {
+        uint64_t startVa = 0;
+        ccuRet = HcommCcuVariableGetAddr(varHandle, i, &startVa);
+        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+        EXPECT_NE(startVa, 0U);
+    }
+
+    // 越界index应返回失败
+    uint64_t invalidVa = 0;
+    ccuRet = HcommCcuVariableGetAddr(varHandle, varNum, &invalidVa);
+    EXPECT_NE(ccuRet, CcuResult::CCU_SUCCESS);
+
+    constexpr uint32_t eventNum = 4;
+    CcuEventHandle eventHandle{0};
+    ccuRet = HcommCcuEventAlloc(insHandle, fakeDieId, eventNum, &eventHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    for (uint32_t i = 0; i < eventNum; i++) {
+        uint64_t eventVa = 0;
+        ccuRet = HcommCcuEventGetAddr(eventHandle, i, &eventVa);
+        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+        EXPECT_NE(eventVa, 0U);
+    }
+
+    // 越界index应返回失败
+    uint64_t invalidEventVa = 0;
+    ccuRet = HcommCcuEventGetAddr(eventHandle, eventNum, &invalidEventVa);
+    EXPECT_NE(ccuRet, CcuResult::CCU_SUCCESS);
+
+    // 校验资源管理器中记录了对应连续资源块
+    auto &resMgr = hcomm::CcuVarEventResMgr::GetInstance(fakeDeviceLogicId);
+    auto varIt = resMgr.resMap_.find(varHandle);
+    ASSERT_NE(varIt, resMgr.resMap_.end());
+    uint32_t varTotal = 0;
+    for (const auto &info : varIt->second.resInfos) {
+        varTotal += info.num;
+    }
+    EXPECT_EQ(varTotal, varNum);
+
+    auto eventIt = resMgr.resMap_.find(eventHandle);
+    ASSERT_NE(eventIt, resMgr.resMap_.end());
+    uint32_t eventTotal = 0;
+    for (const auto &info : eventIt->second.resInfos) {
+        eventTotal += info.num;
+    }
+    EXPECT_EQ(eventTotal, eventNum);
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_HcommCcuVarEventAlloc_When_InvalidParam_Expect_ReturnFailed)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 15;
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
+    const int32_t fakeDeviceLogicId = MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
+
+    constexpr auto MS_INS_TPYE = CcuInstanceType::CCU_MS;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreateLegacy(MS_INS_TPYE, &insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    constexpr uint8_t fakeDieId = 0;
+    constexpr uint32_t validNum = 4;
+    CcuVariableHandle varHandle{0xFFFF};
+    CcuEventHandle eventHandle{0xFFFF};
+
+    // num 为 0：参数非法，且出参必须被清 0，避免调用方误用脏值
+    ccuRet = HcommCcuVariableAlloc(insHandle, fakeDieId, 0, &varHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_E_PARA);
+    EXPECT_EQ(varHandle, 0U);
+    varHandle = 0xFFFF;
+    ccuRet = HcommCcuEventAlloc(insHandle, fakeDieId, 0, &eventHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_E_PARA);
+    EXPECT_EQ(eventHandle, 0U);
+    eventHandle = 0xFFFF;
+
+    // dieId 越界：参数非法
+    constexpr uint8_t invalidDieId = static_cast<uint8_t>(hcomm::CCU_MAX_IODIE_NUM);
+    ccuRet = HcommCcuVariableAlloc(insHandle, invalidDieId, validNum, &varHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_E_PARA);
+    EXPECT_EQ(varHandle, 0U);
+    varHandle = 0xFFFF;
+    ccuRet = HcommCcuEventAlloc(insHandle, invalidDieId, validNum, &eventHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_E_PARA);
+    EXPECT_EQ(eventHandle, 0U);
+
+    // 出参指针为空
+    EXPECT_EQ(HcommCcuVariableAlloc(insHandle, fakeDieId, validNum, nullptr), CcuResult::CCU_E_PTR);
+    EXPECT_EQ(HcommCcuEventAlloc(insHandle, fakeDieId, validNum, nullptr), CcuResult::CCU_E_PTR);
+
+    // 池中无长度足够的连续块：资源不可用
+    constexpr uint32_t hugeNum = 100000;
+    varHandle = 0xFFFF;
+    ccuRet = HcommCcuVariableAlloc(insHandle, fakeDieId, hugeNum, &varHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_E_UNAVAIL);
+    EXPECT_EQ(varHandle, 0U);
+    eventHandle = 0xFFFF;
+    ccuRet = HcommCcuEventAlloc(insHandle, fakeDieId, hugeNum, &eventHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_E_UNAVAIL);
+    EXPECT_EQ(eventHandle, 0U);
+
+    // AddrGet 的错误路径：句柄不存在 / 句柄类型不符 / 出参指针为空
+    uint64_t va = 0;
+    EXPECT_EQ(HcommCcuVariableGetAddr(0xDEADBEEF, 0, &va), CcuResult::CCU_E_NOT_FOUND);
+    EXPECT_EQ(HcommCcuEventGetAddr(0xDEADBEEF, 0, &va), CcuResult::CCU_E_NOT_FOUND);
+
+    ccuRet = HcommCcuVariableAlloc(insHandle, fakeDieId, validNum, &varHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    EXPECT_NE(varHandle, 0U);
+    EXPECT_EQ(HcommCcuVariableGetAddr(varHandle, 0, nullptr), CcuResult::CCU_E_PTR);
+    // 用 variable 的预约句柄去查 event 地址，类型不符应失败
+    EXPECT_EQ(HcommCcuEventGetAddr(varHandle, 0, &va), CcuResult::CCU_E_PARA);
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_HcommCcuVariableAlloc_When_MapAddrFailed_Expect_RollbackAll)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 16;
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
+    const int32_t fakeDeviceLogicId = MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
+
+    constexpr auto MS_INS_TPYE = CcuInstanceType::CCU_MS;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreateLegacy(MS_INS_TPYE, &insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    auto *ccuIns = hcomm::CcuInstanceMgr::GetInstance(fakeDeviceLogicId).Get(insHandle);
+    ASSERT_NE(ccuIns, nullptr);
+    auto *resPack = ccuIns->GetResPack();
+    ASSERT_NE(resPack, nullptr);
+
+    constexpr uint8_t fakeDieId = 0;
+    const std::vector<hcomm::ResInfo> poolBefore = resPack->GetCcuResRepo().blockXn[fakeDieId];
+    auto &resMgr = hcomm::CcuVarEventResMgr::GetInstance(fakeDeviceLogicId);
+    const size_t resMapSizeBefore = resMgr.resMap_.size();
+
+    // 第 1 个资源映射成功、第 2 个起失败，触发已映射资源的逐个解映射 + 整笔归还
+    MOCKER(rtGetDevResAddress).stubs()
+        .will(returnValue(static_cast<rtError_t>(RT_ERROR_NONE)))
+        .then(returnValue(static_cast<rtError_t>(0xFFFFFFFF)));
+    // 已成功映射的那 1 个资源必须被精确解映射：次数由 TearDown 的 GlobalMockObject::verify 校验
+    MOCKER(rtReleaseDevResAddress).expects(exactly(1))
+        .will(returnValue(static_cast<rtError_t>(RT_ERROR_NONE)));
+
+    constexpr uint32_t varNum = 4;
+    CcuVariableHandle varHandle{0xFFFF};
+    ccuRet = HcommCcuVariableAlloc(insHandle, fakeDieId, varNum, &varHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_E_RUNTIME);
+
+    // 回滚后：出参不得残留句柄，登记表不得残留记录，资源池必须完全恢复
+    EXPECT_EQ(varHandle, 0U);
+    EXPECT_EQ(resMgr.resMap_.size(), resMapSizeBefore);
+
+    const std::vector<hcomm::ResInfo> &poolAfter = resPack->GetCcuResRepo().blockXn[fakeDieId];
+    uint32_t totalBefore = 0;
+    for (const auto &info : poolBefore) {
+        totalBefore += info.num;
+    }
+    uint32_t totalAfter = 0;
+    for (const auto &info : poolAfter) {
+        totalAfter += info.num;
+    }
+    EXPECT_EQ(totalAfter, totalBefore);
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+}
+
+// 前几条用例都经 HcommCcuInsCreateLegacy 建实例，走 CcuInstanceMgr::CreateByInsType；
+// 本例改走 HcommCcuInsCreate（落到 CreateByResDescs）。两条路径都必须把实例句柄回填给
+// CcuInstance，否则析构时 ReleaseByInstance 拿到的 insHandle_ 为 0，匹配不到任何预约记录，
+// 预约的 XN/CKE 既不解映射也不还池——不报错、只泄漏。用「解映射次数」与「登记表是否清空」
+// 两个可观测量把这条约束钉住。
+TEST_F(HcommCcuControlApiTest, Ut_HcommCcuVarEventAlloc_When_InsCreateByResDescs_Expect_ReleaseOnInsDestroy)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 17;
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
+    const int32_t fakeDeviceLogicId = MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
+
+    HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
+    CreateCcuResDescsPair(resDescs, fakeCcuVersion);
+    constexpr uint32_t descNum = 2;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreate(resDescs, descNum, &insHandle);
+    ASSERT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    constexpr uint8_t fakeDieId = 0;
+    constexpr uint32_t varNum = 4;
+    constexpr uint32_t eventNum = 2;
+    // 预约期每个资源各注册一次 VA，实例析构时必须一一解映射；次数由 TearDown 的
+    // GlobalMockObject::verify 校验，漏调 SetHandle 时这里会是 0 次
+    MOCKER(rtReleaseDevResAddress).expects(exactly(varNum + eventNum))
+        .will(returnValue(static_cast<rtError_t>(RT_ERROR_NONE)));
+
+    CcuVariableHandle varHandle{0};
+    ASSERT_EQ(HcommCcuVariableAlloc(insHandle, fakeDieId, varNum, &varHandle),
+        CcuResult::CCU_SUCCESS);
+    CcuEventHandle eventHandle{0};
+    ASSERT_EQ(HcommCcuEventAlloc(insHandle, fakeDieId, eventNum, &eventHandle),
+        CcuResult::CCU_SUCCESS);
+
+    auto &resMgr = hcomm::CcuVarEventResMgr::GetInstance(fakeDeviceLogicId);
+    ASSERT_NE(resMgr.resMap_.find(varHandle), resMgr.resMap_.end());
+    ASSERT_NE(resMgr.resMap_.find(eventHandle), resMgr.resMap_.end());
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    // 实例销毁后两条预约记录都不得残留
+    EXPECT_EQ(resMgr.resMap_.find(varHandle), resMgr.resMap_.end());
+    EXPECT_EQ(resMgr.resMap_.find(eventHandle), resMgr.resMap_.end());
+
     DestroyCcuResDescs(resDescs);
 }
 

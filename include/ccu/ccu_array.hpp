@@ -25,19 +25,25 @@
 namespace AscendC {
 namespace ccu {
 
-// 主模板未实现：未特化的资源类型实例化 Array<T> 时编译失败，
-// 当前期次仅 Variable / Event / Buffer 提供底层 CcuBlock*Alloc C 接口。
 template <typename T> struct CcuArrayTraits;
 
 template <> struct CcuArrayTraits<Variable> {
     using Handle = CcuVariableHandle;
     static CcuResult BlockAlloc(Handle* h, uint32_t n) { return CcuBlockVariableAlloc(h, n); }
+    static CcuResult CreateByAcquire(Handle acqHandle, uint32_t index, Handle* h)
+    {
+        return CcuVariableGetByIndex(acqHandle, index, h);
+    }
     static void SetHandle(Variable& v, Handle h) { v.handle = h; }
 };
 
 template <> struct CcuArrayTraits<Event> {
     using Handle = CcuEventHandle;
     static CcuResult BlockAlloc(Handle* h, uint32_t n) { return CcuBlockEventAlloc(h, n); }
+    static CcuResult CreateByAcquire(Handle acqHandle, uint32_t index, Handle* h)
+    {
+        return CcuEventGetByIndex(acqHandle, index, h);
+    }
     static void SetHandle(Event& e, Handle h) { e.handle = h; }
 };
 
@@ -47,8 +53,6 @@ template <> struct CcuArrayTraits<CcuBuffer> {
     static void SetHandle(CcuBuffer& b, Handle h) { b.handle = h; }
 };
 
-// 连续资源容器：在构造时一次性 BlockAlloc 出 count 个底层句柄并填充给占位元素。
-// 元素本身通过 NoAllocTag 私有构造跳过单元 Alloc，避免与 BlockAlloc 双重分配。
 template <typename T>
 class Array final {
 public:
@@ -74,6 +78,34 @@ public:
         }
         for (uint32_t i = 0; i < count; ++i) {
             CcuArrayTraits<T>::SetHandle(elems_[i], handles[i]);
+        }
+    }
+
+    Array(typename CcuArrayTraits<T>::Handle acqHandle, uint32_t count) : count_(count) {
+        if (count == 0) {
+            return;
+        }
+        using H = typename CcuArrayTraits<T>::Handle;
+        elems_ = static_cast<T*>(::operator new(sizeof(T) * count));
+        for (uint32_t i = 0; i < count; ++i) {
+            ::new (static_cast<void*>(&elems_[i])) T(detail::NoAllocTag{});
+        }
+        for (uint32_t i = 0; i < count; ++i) {
+            H handle{};
+            auto ret = CcuArrayTraits<T>::CreateByAcquire(acqHandle, i, &handle);
+            if (ret != CcuResult::CCU_SUCCESS) {
+                std::string errMsg = "Array creation failed at index " + std::to_string(i) +
+                    ", requested count=" + std::to_string(count) +
+                    "; the acquire handle likely holds fewer resources than count";
+                for (uint32_t j = 0; j < count; ++j) {
+                    elems_[j].~T();
+                }
+                ::operator delete(elems_);
+                elems_ = nullptr;
+                count_ = 0;
+                throw ::AscendC::ccu::detail::CcuException(ret, errMsg.c_str());
+            }
+            CcuArrayTraits<T>::SetHandle(elems_[i], handle);
         }
     }
 

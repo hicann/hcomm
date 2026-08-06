@@ -42,6 +42,7 @@ public:
     const CcuResDesc &GetTotalResDescs(uint8_t dieId) const;
     CcuResult SaveKernel(const CcuKernelHandle kernelHandle);
     const std::vector<CcuKernelHandle> &GetUntranslatedKernels();
+    void SetHandle(CcuInsHandle insHandle);
 
     CcuResult BeginRegister();
     CcuResult CheckRegistering() const;
@@ -55,6 +56,7 @@ private:
     enum class RegisterState { IDLE, REGISTERING, REGISTER_ABORTED };
     RegisterState registerState_{RegisterState::IDLE};
     int32_t devLogicId_{INT32_MAX};
+    CcuInsHandle insHandle_{0};
     std::shared_ptr<hcomm::CcuDrvHandle> ccuDrvHandle_{};
     std::unique_ptr<CcuResPack> resPack_{};
     std::vector<CcuKernelHandle> kernelHandles_{};

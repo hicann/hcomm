@@ -66,5 +66,14 @@ rtError_t rtReleaseDevResAddress(rtDevResInfo * const resInfo)
 
 rtError_t rtGetDevResAddress(rtDevResInfo * const resInfo, rtDevResAddrInfo * const addrInfo)
 {
+    if (resInfo == nullptr || addrInfo == nullptr ||
+        addrInfo->resAddress == nullptr || addrInfo->len == nullptr) {
+        return static_cast<rtError_t>(0xFFFFFFFF);
+    }
+    // 合成一个非0映射地址，按resId偏移，便于UT校验
+    constexpr uint64_t stubResBaseAddr = 0x100000000ULL;
+    constexpr uint64_t stubResPerSize  = 0x1000ULL;
+    *addrInfo->resAddress = stubResBaseAddr + static_cast<uint64_t>(resInfo->resId) * stubResPerSize;
+    *addrInfo->len        = static_cast<uint32_t>(stubResPerSize);
     return RT_ERROR_NONE;
 }

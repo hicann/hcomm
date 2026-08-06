@@ -25,6 +25,7 @@
 #include "ccu_rep_context_v1.h"
 #include "ccu_rep_funccall_v1.h"
 #include "../../endpoint_pairs/channels/ccu/ccu_urma_channel.h"
+#include "../ccu_instance/ccu_var_event_res_mgr.h"
 
 #include "ccu_log.h"
 
@@ -532,6 +533,38 @@ CcuResult CcuKernel::VariableCreateByChannel(ChannelHandle channel, uint32_t var
     CcuVariableHandle handle = ccuVarMap_.size();
     ccuVarMap_.emplace(handle, var);
     *varHandle = handle;
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuKernel::VariableCreateByAcquire(CcuVariableHandle acqHandle, uint32_t index,
+    CcuVariableHandle *varHandle)
+{
+    uint8_t dieId = 0;
+    uint32_t xnId = 0;
+    CCU_CHK_RET(CcuVarEventResMgr::GetInstance(HcclGetThreadDeviceId())
+        .GetVariableXnId(acqHandle, index, dieId, xnId));
+
+    CcuRep::Variable var(this);
+    var.Reset(static_cast<uint16_t>(xnId), static_cast<uint16_t>(dieId));
+    CcuVariableHandle handle = ccuVarMap_.size();
+    ccuVarMap_.emplace(handle, var);
+    *varHandle = handle;
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuKernel::EventCreateByAcquire(CcuEventHandle acqHandle, uint32_t index,
+    CcuEventHandle *eventHandle)
+{
+    uint8_t dieId = 0;
+    uint32_t ckeId = 0;
+    CCU_CHK_RET(CcuVarEventResMgr::GetInstance(HcclGetThreadDeviceId())
+        .GetEventCkeId(acqHandle, index, dieId, ckeId));
+
+    CcuRep::CompletedEvent event(this);
+    event.Reset(static_cast<uint16_t>(ckeId), static_cast<uint16_t>(dieId));
+    CcuEventHandle handle = ccuEventMap_.size();
+    ccuEventMap_.emplace(handle, event);
+    *eventHandle = handle;
     return CcuResult::CCU_SUCCESS;
 }
 

@@ -29,6 +29,11 @@ public:
         CCU_THROW_IF_FAILED(CcuEventAlloc(&this->handle),"CcuEventAlloc: failed");   
     }
 
+    explicit Event(CcuEventHandle acqHandle, uint32_t index = 0) {
+        CCU_THROW_IF_FAILED(CcuEventGetByIndex(acqHandle, index, &this->handle),
+            "CcuEventGetByIndex: failed");
+    }
+
     Event(const Event& other) : handle(other.handle) {}
 
     Event(Event&& other) noexcept : handle(other.handle) {}

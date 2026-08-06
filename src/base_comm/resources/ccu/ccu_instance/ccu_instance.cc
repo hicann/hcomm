@@ -19,6 +19,7 @@
 
 #include "ccu_res_pack.h"
 #include "ccu_kernel_mgr.h"
+#include "ccu_var_event_res_mgr.h"
 #include "ccu_res_specs.h"
 #include "ccu_dev_mgr_imp.h"
 
@@ -34,6 +35,8 @@ CcuInstance::~CcuInstance()
         }
     }
     kernelHandles_.clear();
+
+    (void)CcuVarEventResMgr::GetInstance(devLogicId_).ReleaseByInstance(insHandle_);
 
     resPack_ = nullptr; // 释放instance持有的CCU资源
     if (ccuDrvHandle_) {
@@ -152,12 +155,19 @@ CcuResult CcuInstance::Reset()
 
     untranslatedKernelHandles_.clear();
     CCU_CHK_RET(resPack_->Reset());
+
+    CCU_CHK_RET(CcuVarEventResMgr::GetInstance(devLogicId_).ExcludeAllocatedFromRepo(insHandle_));
     return CcuResult::CCU_SUCCESS;
 }
 
 CcuResPack *CcuInstance::GetResPack()
 {
     return resPack_.get();
+}
+
+void CcuInstance::SetHandle(CcuInsHandle insHandle)
+{
+    insHandle_ = insHandle;
 }
 
 // 累加某 die 上某资源 vector 中各 ResInfo::num，得到该 die 该资源的占用数量

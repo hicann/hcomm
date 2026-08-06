@@ -13,6 +13,7 @@ set(src_list
     ccu_instance.cc
     ccu_res_desc_mgr.cc
     ccu_instance_mgr.cc
+    ccu_var_event_res_mgr.cc
 )
 
 if(TARGET hcomm)

@@ -41,6 +41,12 @@ extern CcuResult CcuBlockBufferAlloc(CcuBufferHandle *bufHandles, uint32_t count
 extern CcuResult CcuVariableCreateByChannel(ChannelHandle channel,
     uint32_t varIndex, CcuVariableHandle *varHandle);
 
+extern CcuResult CcuVariableGetByIndex(CcuVariableHandle acqHandle,
+    uint32_t index, CcuVariableHandle *varHandle);
+
+extern CcuResult CcuEventGetByIndex(CcuEventHandle acqHandle,
+    uint32_t index, CcuEventHandle *eventHandle);
+
 //Variable操作类 相关接口
 extern CcuResult CcuVariableAssignImm(CcuVariableHandle resVar, uint64_t immediate);
 extern CcuResult CcuVariableAssignVar(CcuVariableHandle dstVarHandle, CcuVariableHandle srcVarHandle);

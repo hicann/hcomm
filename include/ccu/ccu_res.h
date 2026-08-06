@@ -19,6 +19,51 @@ extern "C" {
 #endif // __cplusplus
 
 /**
+ * @brief 在指定 CCU 实例上预约一段连续的 Variable(XN) 资源，并在申请期完成地址映射。
+ * @param[in] insHandle CCU 实例句柄，资源从该实例的资源池中切分。
+ * @param[in] dieId 资源归属的 ioDie ID，取值范围 [0, CCU_MAX_IODIE_NUM)。
+ * @param[in] num 预约的连续资源个数，须大于 0。
+ * @param[out] varHandle 预约句柄，不可为 nullptr；失败时置 0。
+ * @return CcuResult。CCU_E_PARA：dieId 或 num 非法；CCU_E_UNAVAIL：无满足 num 的连续块；
+ *         CCU_E_PTR：varHandle 为 nullptr；CCU_E_RUNTIME：地址映射失败。
+ * @note 句柄生命周期与 insHandle 绑定，无显式释放接口，由 HcommCcuInsDestroy 统一解映射并还池。
+ */
+extern CcuResult HcommCcuVariableAlloc(CcuInsHandle insHandle, uint8_t dieId, uint32_t num,
+    CcuVariableHandle *varHandle);
+
+/**
+ * @brief 预约一段连续的 Event(CKE) 资源，参数与生命周期约束同 HcommCcuVariableAlloc。
+ * @param[in] insHandle CCU 实例句柄。
+ * @param[in] dieId 资源归属的 ioDie ID，取值范围 [0, CCU_MAX_IODIE_NUM)。
+ * @param[in] num 预约的连续资源个数，须大于 0。
+ * @param[out] eventHandle 预约句柄，不可为 nullptr；失败时置 0。
+ * @return CcuResult，错误码语义同 HcommCcuVariableAlloc。
+ * @note CKE 池与 kernel 自身的完成事件共用且单 die 容量有限，大 num 可能总量足够却无连续块。
+ */
+extern CcuResult HcommCcuEventAlloc(CcuInsHandle insHandle, uint8_t dieId, uint32_t num,
+    CcuEventHandle *eventHandle);
+
+/**
+ * @brief 查询预约句柄名下第 index 个 Variable(XN) 的进程可访问虚拟地址。
+ * @param[in] varHandle HcommCcuVariableAlloc 返回的预约句柄。
+ * @param[in] index 预约段内序号，取值范围 [0, num)。
+ * @param[out] va 该资源的进程可访问虚拟地址，不可为 nullptr。
+ * @return CcuResult。CCU_E_NOT_FOUND：句柄不存在；CCU_E_PARA：句柄类型不符或 index 越界；
+ *         CCU_E_PTR：va 为 nullptr。
+ * @note 地址已在 Alloc 阶段映射并缓存，此处为纯查表；VA 供 CCU 外模块访问，有效期同句柄。
+ */
+extern CcuResult HcommCcuVariableGetAddr(CcuVariableHandle varHandle, uint32_t index, uint64_t *va);
+
+/**
+ * @brief 查询预约句柄名下第 index 个 Event(CKE) 的进程可访问虚拟地址。
+ * @param[in] eventHandle HcommCcuEventAlloc 返回的预约句柄。
+ * @param[in] index 预约段内序号，取值范围 [0, num)。
+ * @param[out] va 该资源的进程可访问虚拟地址，不可为 nullptr。
+ * @return CcuResult，错误码与约束同 HcommCcuVariableGetAddr。
+ */
+extern CcuResult HcommCcuEventGetAddr(CcuEventHandle eventHandle, uint32_t index, uint64_t *va);
+
+/**
  * @brief 创建 CCU 实例资源描述符
  * @param[in]  dieId    IO Die 编号，取值范围 [0, CCU_MAX_IODIE_NUM)
  * @param[out] resDesc  输出指针，成功时写入 HcommCcuResDescHandle 句柄；调用方负责通过

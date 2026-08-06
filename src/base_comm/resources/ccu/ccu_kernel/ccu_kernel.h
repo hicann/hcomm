@@ -131,6 +131,8 @@ public:
     CcuResult BlockEventAlloc(CcuEventHandle *eventHandles, uint32_t count);
     CcuResult BlockBufferAlloc(CcuBufferHandle *bufHandles, uint32_t count);
     CcuResult VariableCreateByChannel(ChannelHandle channel, uint32_t varIndex, CcuVariableHandle *varHandle);
+    CcuResult VariableCreateByAcquire(CcuVariableHandle acqHandle, uint32_t index, CcuVariableHandle *varHandle);
+    CcuResult EventCreateByAcquire(CcuEventHandle acqHandle, uint32_t index, CcuEventHandle *eventHandle);
 
     //参数加载类 相关接口
     CcuResult LoadArg(CcuVariableHandle varHandle, uint32_t argId);

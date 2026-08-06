@@ -72,6 +72,7 @@ CcuResult CcuInstanceMgr::CreateByInsType(const CcuInstanceType insType, CcuInsH
     CCU_CHK_RET(instance->InitByInsType(insType));
 
     instanceId_ += 1;
+    instance->SetHandle(instanceId_);
     EXCEPTION_CATCH(
         insMap_.emplace(instanceId_, std::move(instance)),
         return CcuResult::CCU_E_INTERNAL);
@@ -119,6 +120,7 @@ CcuResult CcuInstanceMgr::CreateByResDescs(
     CCU_CHK_RET(instance->InitByResDescs(descs, descNum));
 
     instanceId_ += 1;
+    instance->SetHandle(instanceId_);
     EXCEPTION_CATCH(
         insMap_.emplace(instanceId_, std::move(instance)),
         return CcuResult::CCU_E_INTERNAL);
@@ -138,6 +140,7 @@ CcuResult CcuInstanceMgr::CreateByAllRes(CcuInsHandle &insHandle)
     CCU_CHK_RET(instance->InitByAllRes());
 
     instanceId_ += 1;
+    instance->SetHandle(instanceId_);
     EXCEPTION_CATCH(
         insMap_.emplace(instanceId_, std::move(instance)),
         return CcuResult::CCU_E_INTERNAL);
