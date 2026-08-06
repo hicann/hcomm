@@ -46,7 +46,6 @@ struct NdaPcieDbCb {
 struct NdaUbDbCb {
     uint64_t guidL;
     uint64_t guidH;
-    uint64_t dva;
     uint16_t guidIdx;
     uint16_t resv;
     uint32_t refCnt;
