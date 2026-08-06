@@ -32,6 +32,11 @@ void CcuResourceManager::Reset()
             ccuResData_.v1Res[rankId]->Reset();
         }
     }
+    for (size_t rankId = 0; rankId < ccuResData_.v2Res.size(); rankId++) {
+        if (ccuResData_.v2Res[rankId] != nullptr) {
+            ccuResData_.v2Res[rankId]->Reset();
+        }
+    }
 }
 
 void CcuResourceManager::Init(int rankId, int rankSize, RunnerCcuVersion version, const std::vector<uint64_t> &ccuResourceBaseAddr)
@@ -42,6 +47,11 @@ void CcuResourceManager::Init(int rankId, int rankSize, RunnerCcuVersion version
             ccuResData_.v1Res.resize(rankSize);
         }
         ccuResData_.v1Res[rankId] = std::make_unique<CcuResourceV1>(rankId, rankSize);
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        if (static_cast<int>(ccuResData_.v2Res.size()) < rankSize) {
+            ccuResData_.v2Res.resize(rankSize);
+        }
+        ccuResData_.v2Res[rankId] = std::make_unique<CcuResourceV2>(rankId, rankSize);
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(ccuResData_.version));
     }
@@ -53,6 +63,8 @@ void CcuResourceManager::InitInstrInfo(int rankId, int dieId, const CcuInstrData
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         ccuResData_.v1Res[rankId]->instrSpace_[dieId] = ccuInstrInfo;
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        ccuResData_.v2Res[rankId]->instrSpace_[dieId] = ccuInstrInfo;
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
     }
@@ -63,6 +75,8 @@ void CcuResourceManager::InitChannelInfo(int rankId, const RankChannelInfo &chan
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         ccuResData_.v1Res[rankId]->channelId2RmtRankMap_ = channelInfo;
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        ccuResData_.v2Res[rankId]->channelId2RmtRankMap_ = channelInfo;
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
     }
@@ -78,6 +92,8 @@ void CcuResourceManager::AddTaskInfo(int rankId, const HcclTaskMetaData &task)
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         ccuResData_.v1Res[rankId]->ccuTaskInfos_[dieId] = task.taskData.ccu;
+    }  else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+       ccuResData_.v2Res[rankId]->ccuTaskInfos_[dieId] = task.taskData.ccu;
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
     }
@@ -88,6 +104,8 @@ uint64_t CcuResourceManager::GetSqeArgValue(int rankId, int dieId, uint16_t argI
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         return ccuResData_.v1Res[rankId]->ccuTaskInfos_[dieId].args[argId];
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+       return ccuResData_.v2Res[rankId]->ccuTaskInfos_[dieId].args[argId];
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
         return U64_INVALID;
@@ -99,6 +117,8 @@ uint64_t CcuResourceManager::GetXnValue(int rankId, int dieId, uint16_t xnId) co
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         return ccuResData_.v1Res[rankId]->xn_[dieId][xnId];
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        return ccuResData_.v2Res[rankId]->xn_[dieId][xnId];
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
          return U64_INVALID;
@@ -110,6 +130,8 @@ uint64_t CcuResourceManager::GetGsaValue(int rankId, int dieId, uint16_t gsaId) 
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         return ccuResData_.v1Res[rankId]->gsa_[dieId][gsaId];
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        return ccuResData_.v2Res[rankId]->gsa_[dieId][gsaId];
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
          return U64_INVALID;
@@ -121,6 +143,8 @@ uint16_t CcuResourceManager::GetCkeValue(int rankId, int dieId, uint16_t ckeId) 
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         return ccuResData_.v1Res[rankId]->cke_[dieId][ckeId];
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        return ccuResData_.v2Res[rankId]->cke_[dieId][ckeId];
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
          return U16_INVALID;
@@ -141,6 +165,9 @@ std::pair<int, int> CcuResourceManager::GetRmtCcu(int rankId, int dieId, uint16_
     if (version == RunnerCcuVersion::CCU_V1) {
         rmtRank = ccuResData_.v1Res[rankId]->channelId2RmtRankMap_[dieId][channelId].rankId;
         rmtDie  = ccuResData_.v1Res[rankId]->channelId2RmtRankMap_[dieId][channelId].dieId;
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        rmtRank = ccuResData_.v2Res[rankId]->channelId2RmtRankMap_[dieId][channelId].rankId;
+        rmtDie  = ccuResData_.v2Res[rankId]->channelId2RmtRankMap_[dieId][channelId].dieId;
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
         return std::make_pair(S32_INVALID, S32_INVALID);
@@ -159,6 +186,8 @@ void CcuResourceManager::UpdateXnValue(int rankId, int dieId, uint16_t xnId, uin
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         ccuResData_.v1Res[rankId]->xn_[dieId][xnId] = value;
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        ccuResData_.v2Res[rankId]->xn_[dieId][xnId] = value;
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
     }
@@ -169,6 +198,8 @@ void CcuResourceManager::UpdateGsaValue(int rankId, int dieId, uint16_t gsaId, u
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         ccuResData_.v1Res[rankId]->gsa_[dieId][gsaId] = value;
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        ccuResData_.v2Res[rankId]->gsa_[dieId][gsaId] = value;
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
     }
@@ -179,6 +210,8 @@ void CcuResourceManager::UpdateCkeValue(int rankId, int dieId, uint16_t ckeId, u
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         ccuResData_.v1Res[rankId]->cke_[dieId][ckeId] = value;
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        ccuResData_.v2Res[rankId]->cke_[dieId][ckeId] = value;
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
     }
@@ -299,6 +332,8 @@ char *CcuResourceManager::GetMsAddr(int rankId, int dieId, uint16_t msId) const
     uint32_t offset = static_cast<uint32_t>(msId) * HcclSim::BYTE_NUM_4K;  // 一个MS容量为4KB
     if (version == RunnerCcuVersion::CCU_V1) {
         return (ccuResData_.v1Res[rankId]->ms_[dieId].data() + offset);
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+         return (ccuResData_.v2Res[rankId]->ms_[dieId].data() + offset);
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
         return nullptr;
@@ -311,10 +346,158 @@ uint64_t *CcuResourceManager::GetXnAddr(int rankId, int dieId, uint16_t xnId) co
     uint32_t offset = static_cast<uint32_t>(xnId) *64;  // 一个MS容量为4KB
     if (version == RunnerCcuVersion::CCU_V1) {
         return (ccuResData_.v1Res[rankId]->xn_[dieId].data() + offset);
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+         return (ccuResData_.v2Res[rankId]->xn_[dieId].data() + offset);
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
         return nullptr;
     }
+}
+
+const uint64_t XN_OFFSET_ADDR_A6 = 0x100000;
+const uint64_t XN_CKB_ADDR_A6 = 0x140000;
+const uint64_t XN_PFE_ADDR_A6 = 0x148000;
+const uint64_t XN_CHANNEL_ADDR_A6 = 0x150000;
+const uint64_t XN_JETTY_ADDR_A6 = 0x170000;
+const uint64_t XN_MISSION_ADDR_A6 = 0x178000;
+const uint64_t XN_LOOP_ADDR_A6 = 0x180000;
+const uint64_t XN_CCUA0_MS_ADDR_A6 = 0x4000000; // MS的起始地址CCU0为64M
+const uint64_t XN_CCUA1_MS_ADDR_A6 = 0x4200000; // MS的起始地址CCU1为66M
+const uint64_t XN_CCUA2_MS_ADDR_A6 = 0x4400000; // MS的起始地址CCU2为68M
+const uint64_t XN_CCUA3_MS_ADDR_A6 = 0x4600000; // MS的起始地址CCU3为70M
+const uint64_t XN_MS_SIZE_A6 = 4000; // 每个MS占用4k 
+const uint64_t MS_INTERLEAVE_NUM = 8; // 每组8个MS
+const uint64_t CCUA_MS_ADDR_GAP = 0x200000; // CCUA寄存器的MS地址间隔
+const uint64_t CCUA_NUM_A6 = 4;
+const uint64_t GROUP_TOTAL_MS = MS_INTERLEAVE_NUM * CCUA_NUM_A6;// 一组总共32个MS
+
+const uint64_t CCU_MS_START_ADDR[4] = {XN_CCUA0_MS_ADDR_A6, XN_CCUA1_MS_ADDR_A6,
+                                      XN_CCUA2_MS_ADDR_A6, XN_CCUA3_MS_ADDR_A6};
+
+bool CcuResourceManager::GetMSIdByAddr(uint32_t dieId,  uint64_t addr, uint16_t& msId) {
+    if (dieId >= ccuResourceBaseAddr_.size()) {
+        HCCL_VM_ERROR("dieId is out of range, dieId=[{}]", dieId);
+        return false;
+    }
+    uint64_t msAddr = addr - ccuResourceBaseAddr_[dieId];
+    uint64_t ccuIndex {UINT64_MAX};
+    for (uint64_t i = 0; i < CCUA_NUM_A6; ++i) {
+        uint64_t ccuEnd = CCU_MS_START_ADDR[i] + CCUA_MS_ADDR_GAP;
+        if (msAddr >= CCU_MS_START_ADDR[i] && msAddr < ccuEnd) {
+            ccuIndex = i;
+            break;
+        }
+    }
+    if (ccuIndex == UINT64_MAX) {
+        HCCL_VM_ERROR("msAddr is out of range, msAddr=[{}],addr=[{}]", msAddr, addr);
+        return false;
+    }
+    uint64_t localOffset = msAddr - CCU_MS_START_ADDR[ccuIndex];
+    uint64_t localMsIndex = localOffset / XN_MS_SIZE_A6;
+    uint64_t groupIndex = localMsIndex / MS_INTERLEAVE_NUM;
+    uint64_t posInGroup = localMsIndex % MS_INTERLEAVE_NUM;
+    msId = groupIndex * GROUP_TOTAL_MS + ccuIndex * MS_INTERLEAVE_NUM + posInGroup;
+    return true;
+}
+
+// 根据type的类型找基础地址
+uint64_t findBaseAddr(CcuComponerntType type) {
+    if (type == CcuComponerntType::XN_A6) {
+        return XN_OFFSET_ADDR_A6;
+    } else if (type == CcuComponerntType::CKE_A6) {
+        return XN_CKB_ADDR_A6;
+    } else if (type == CcuComponerntType::PFE_A6) {
+        return XN_PFE_ADDR_A6;
+    } else if (type == CcuComponerntType::CHANNEL_A6) {
+        return XN_CHANNEL_ADDR_A6;
+    } else if (type == CcuComponerntType::JETTY_A6) {
+        return XN_JETTY_ADDR_A6;
+    } else if (type == CcuComponerntType::MISSION_A6) {
+        return XN_MISSION_ADDR_A6;
+    } else if (type == CcuComponerntType::LOOP_A6) {
+        return XN_LOOP_ADDR_A6;
+    } else {
+        return 0x000000000;
+    }
+}
+
+// 根据地址值来找到类型
+CcuComponerntType findTypeByAddr(uint64_t addr) {
+    if (addr >= XN_OFFSET_ADDR_A6 && addr < XN_CKB_ADDR_A6) {
+        return CcuComponerntType::XN_A6;
+    } else if (addr >= XN_CKB_ADDR_A6 && addr < XN_PFE_ADDR_A6) {
+        return CcuComponerntType::CKE_A6;
+    } else if (addr >= XN_PFE_ADDR_A6 && addr < XN_CHANNEL_ADDR_A6) {
+        return CcuComponerntType::PFE_A6;
+    } else if (addr >= XN_CHANNEL_ADDR_A6 && addr < XN_JETTY_ADDR_A6) {
+        return CcuComponerntType::CHANNEL_A6;
+    } else if (addr >= XN_JETTY_ADDR_A6 && addr < XN_MISSION_ADDR_A6) {
+        return CcuComponerntType::JETTY_A6;
+    } else if (addr >= XN_MISSION_ADDR_A6 && addr < XN_LOOP_ADDR_A6) {
+        return CcuComponerntType::MISSION_A6;
+    } else if (addr >= XN_LOOP_ADDR_A6 && addr < XN_LOOP_ADDR_A6 + 0x8000) {
+        return CcuComponerntType::LOOP_A6;
+    } else {
+        return CcuComponerntType::UNKNOWN;
+    }
+}
+
+// 根据type的类型返回寄存器每块的数量
+uint16_t findBaseSize(CcuComponerntType type) {
+    if (type == CcuComponerntType::XN_A6 || type == CcuComponerntType::CKE_A6 || type == CcuComponerntType::PFE_A6 ){
+        return 8;
+    } else if (type == CcuComponerntType::CHANNEL_A6 || type == CcuComponerntType::JETTY_A6  ||
+        type == CcuComponerntType::LOOP_A6) {
+        return 32;
+    } else if(type == CcuComponerntType::MISSION_A6) {
+        return 64;
+    } else {
+        return 0;
+    }
+}
+
+// 通过XnId所在的地址值来找到XnId
+bool CcuResourceManager::GetXnAndTypeIdByAddr(uint32_t dieId,  uint64_t xnAddr, CcuComponerntType& type, uint16_t& xnId) {
+    if (dieId >= ccuResourceBaseAddr_.size()) {
+        HCCL_VM_ERROR("dieId is out of range, dieId=[{}]", dieId);
+        return false;
+    }
+    type = findTypeByAddr(xnAddr - ccuResourceBaseAddr_[dieId]);
+    if (type == CcuComponerntType::UNKNOWN) {
+        HCCL_VM_ERROR("unknown type, addr=[{}],dieId=[{}],ccuResourceBaseAddr_[dieId]=[{}]", xnAddr, dieId,
+            ccuResourceBaseAddr_[dieId]);
+        return false;
+    }
+    uint64_t baseAddr = findBaseAddr(type) + ccuResourceBaseAddr_[dieId];
+    uint16_t sizeofXn = findBaseSize(type);
+    xnId = static_cast<uint16_t>((xnAddr - baseAddr) / static_cast<uint64_t>(sizeofXn));
+    return  true;
+}
+
+// 通过XnId所在的地址值来找到XnId
+bool CcuResourceManager::GetXnIdByAddr(uint32_t dieId, CcuComponerntType type, uint64_t xnAddr, uint16_t& xnId) {
+    if(dieId >= ccuResourceBaseAddr_.size()) {
+        HCCL_VM_ERROR("dieId is out of range, dieId=[{}]", dieId);
+        return false;
+    }
+    // 需要判断界限  todo
+    uint64_t baseAddr = findBaseAddr(type) + ccuResourceBaseAddr_[dieId];
+    uint16_t sizeofXn = findBaseSize(type);
+    xnId = static_cast<uint16_t>((xnAddr - baseAddr) / static_cast<uint64_t>(sizeofXn));
+    return  true;
+}
+
+// 通过XnId所在的地址值来找到XnId
+bool CcuResourceManager::GetAddrByXnId(uint32_t dieId, CcuComponerntType type, uint16_t xnId, uint64_t& xnAddr) {
+    // 需要判断界限  todo
+    if(dieId >= ccuResourceBaseAddr_.size()) {
+        HCCL_VM_ERROR("dieId is out of range, dieId=[{}]", dieId);
+        return false;
+    }
+    uint64_t baseAddr = findBaseAddr(type) + ccuResourceBaseAddr_[dieId];
+    uint16_t sizeofXn = findBaseSize(type);
+    xnAddr = baseAddr + static_cast<uint64_t>(xnId) * sizeofXn;
+    return true;
 }
 
 uint16_t CcuResourceManager::GetInstrCnt(int rankId, int dieId) const
@@ -322,6 +505,8 @@ uint16_t CcuResourceManager::GetInstrCnt(int rankId, int dieId) const
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         return ccuResData_.v1Res[rankId]->instrSpace_[dieId].instrCnt;
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        return ccuResData_.v2Res[rankId]->instrSpace_[dieId].instrCnt;
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
         return U16_INVALID;
@@ -333,6 +518,8 @@ std::vector<hcomm::CcuRep::CcuInstr> CcuResourceManager::GetInstrData(int rankId
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         return ccuResData_.v1Res[rankId]->instrSpace_[dieId].instrData;
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        return ccuResData_.v2Res[rankId]->instrSpace_[dieId].instrData;
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
         return {};
@@ -345,6 +532,8 @@ std::string CcuResourceManager::GetInstrDescribe(int rankId, int dieId, int inst
     auto version = ccuResData_.version;
     if (version == RunnerCcuVersion::CCU_V1) {
         // return hcomm::CcuRep::ParseInstr(&(ccuResData_.v1Res[rankId]->instrSpace_[dieId].instrData[instrId]));
+    } else if (ccuResData_.version == RunnerCcuVersion::CCU_V2) {
+        // return hcomm::CcuRep::ParseInstr(&(ccuResData_.v2Res[rankId]->instrSpace_[dieId].instrData[instrId]));
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));
         return "";
@@ -363,6 +552,14 @@ std::shared_ptr<CcuSimulator> CcuResourceManager::InitSimulator(int rankId, int 
         } else {
             ccuResData_.v1Res[rankId]->simulators_[dieId]->Init(instrStartId, endInstrId, instCnt, version);
             return ccuResData_.v1Res[rankId]->simulators_[dieId]; 
+        }
+    } else if (version == RunnerCcuVersion::CCU_V2) {
+        if (ccuResData_.v2Res[rankId]->simulators_[dieId] == nullptr) {
+            ccuResData_.v2Res[rankId]->simulators_[dieId] = std::make_shared<CcuSimulator>(rankId, dieId, instrStartId, endInstrId, instCnt, version);
+            return ccuResData_.v2Res[rankId]->simulators_[dieId];
+        } else {
+           ccuResData_.v2Res[rankId]->simulators_[dieId]->Init(instrStartId, endInstrId, instCnt, version);
+            return ccuResData_.v2Res[rankId]->simulators_[dieId]; 
         }
     } else {
         HCCL_VM_ERROR("ccu version {} not supported", static_cast<int>(version));

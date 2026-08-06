@@ -138,7 +138,8 @@ enum HcclVmMode {
 };
 
 enum CcuVersion {
-    CCU_V1 = 0
+    CCU_V1 = 0,
+    CCU_V2  = 1
 };
 
 }   // namespace HcclSim

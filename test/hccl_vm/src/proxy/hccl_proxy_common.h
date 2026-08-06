@@ -15,8 +15,39 @@
 #include <string>
 #include <map>
 
+#include <cstdint>
+#include <map>
+
 namespace sim {
-int GetDataTypeSize(HcclDataType dataType, uint32_t &size);
+inline const std::map<HcclDataType, uint32_t> DATA_TYPE_SIZE_MAP = {
+    {HcclDataType::HCCL_DATA_TYPE_INT8, 1},
+    {HcclDataType::HCCL_DATA_TYPE_INT16, 2},
+    {HcclDataType::HCCL_DATA_TYPE_INT32, 4},
+    {HcclDataType::HCCL_DATA_TYPE_FP16, 2},
+    {HcclDataType::HCCL_DATA_TYPE_FP32, 4},
+    {HcclDataType::HCCL_DATA_TYPE_INT64, 8},
+    {HcclDataType::HCCL_DATA_TYPE_UINT64, 8},
+    {HcclDataType::HCCL_DATA_TYPE_UINT8, 1},
+    {HcclDataType::HCCL_DATA_TYPE_UINT16, 2},
+    {HcclDataType::HCCL_DATA_TYPE_UINT32, 4},
+    {HcclDataType::HCCL_DATA_TYPE_FP64, 8},
+    {HcclDataType::HCCL_DATA_TYPE_BFP16, 2},
+    {HcclDataType::HCCL_DATA_TYPE_INT128, 16},
+    {HcclDataType::HCCL_DATA_TYPE_HIF8, 1},
+    {HcclDataType::HCCL_DATA_TYPE_FP8E4M3, 1},
+    {HcclDataType::HCCL_DATA_TYPE_FP8E5M2, 1},
+    {HcclDataType::HCCL_DATA_TYPE_FP8E8M0, 1}
+};
+
+inline int GetDataTypeSize(HcclDataType dataType, uint32_t &size)
+{
+    auto iter = DATA_TYPE_SIZE_MAP.find(dataType);
+    if (iter == DATA_TYPE_SIZE_MAP.end()) {
+        return 1;
+    }
+    size = iter->second;
+    return 0;
+}
 
 bool IsDeviceAddress(void *addr);
 

@@ -72,6 +72,7 @@ HcclResult HcclCommInitRootInfo(uint32_t nRanks, const HcclRootInfo *rootInfo, u
 HcclResult HcclCommInitRootInfoConfig(uint32_t nRanks, const HcclRootInfo *rootInfo, uint32_t rank,
     const HcclCommConfig *config, HcclComm *comm)
 {
+    HCCL_VM_INFO("xxxxxxxxxx");
     (void) nRanks;
     (void) rootInfo;
     const char* clusterInfo = getenv("RANK_TABLE_FILE");
@@ -111,6 +112,7 @@ HcclResult SimGetDeviceComm(uint32_t ndev, const uint32_t rank, const uint32_t l
 
 HcclResult HcclCommInitAll(uint32_t ndev, int32_t *devices, HcclComm *comms)
 {
+    HCCL_VM_INFO("xxxxxxxxxx");
     HCCL_VM_INFO("Init all comm...");
     SimimSetThreadName("Hccl_GetCommAll");
 

@@ -17,17 +17,15 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include/runnerdb
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/store
-    ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
+    ${YAMLCPP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
 )
 
-find_package(SQLite3 REQUIRED)
-
 # test_sqlite_table
 add_executable(test_sqlite_table sqlite_table_test.cc)
 target_link_libraries(test_sqlite_table PRIVATE
-    SQLite::SQLite3
+    sqlite3
     gtest_main
     gtest
 )
@@ -38,7 +36,7 @@ set_target_properties(test_sqlite_table PROPERTIES
 # test_sim_models
 add_executable(test_sim_models sim_models_test.cc)
 target_link_libraries(test_sim_models PRIVATE
-    SQLite::SQLite3
+    sqlite3
     gtest_main
     gtest
 )
@@ -49,7 +47,7 @@ set_target_properties(test_sim_models PROPERTIES
 # test_runner_db
 add_executable(test_runner_db runner_db_test.cc)
 target_link_libraries(test_runner_db PRIVATE
-    SQLite::SQLite3
+    sqlite3
     gtest_main
     gtest
 )
@@ -65,7 +63,7 @@ target_link_libraries(test_sim_runner_common PRIVATE
     gmock
     gtest
     runnerdb
-    SQLite::SQLite3
+    sqlite3
 )
 set_target_properties(test_sim_runner_common PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -79,7 +77,7 @@ target_link_libraries(test_sim_runner_db_test PRIVATE
     gmock
     gtest
     runnerdb
-    SQLite::SQLite3
+    sqlite3
 )
 set_target_properties(test_sim_runner_db_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -93,7 +91,7 @@ target_link_libraries(test_sim_runner_ops PRIVATE
     gmock
     gtest
     runnerdb
-    SQLite::SQLite3
+    sqlite3
 )
 set_target_properties(test_sim_runner_ops PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -107,7 +105,7 @@ target_link_libraries(test_sim_sqlite_db_test PRIVATE
     gmock
     gtest
     runnerdb
-    SQLite::SQLite3
+    sqlite3
 )
 set_target_properties(test_sim_sqlite_db_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"

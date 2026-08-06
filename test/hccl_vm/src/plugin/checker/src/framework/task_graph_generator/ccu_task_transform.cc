@@ -176,6 +176,10 @@ CcuInstrVersion GetCcuInstrVersion() {
     DevType devType = AllRankParamRecorder::Global()->GetDevType();
     if (devType == DevType::DEV_TYPE_950) {
         return CcuInstrVersion::VERSION_A5;
+    #ifdef BUILD_A6_CCU_INSTR
+    } else if (devType == DevType::DEV_TYPE_960) {
+        return CcuInstrVersion::VERSION_A6;
+    #endif
     } else {
         return CcuInstrVersion::VERSION_A5;
     }
@@ -446,6 +450,10 @@ std::unique_ptr<InstructMapBase> InstructMapFactory::Create(CcuInstrVersion vers
     switch (version) {
         case CcuInstrVersion::VERSION_A5:
             return std::make_unique<InstructMapA5>();
+#ifdef BUILD_A6_CCU_INSTR
+        case CcuInstrVersion::VERSION_A6:
+             return std::make_unique<InstructMapA6>();
+#endif
         default:
             return nullptr;
     }

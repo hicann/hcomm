@@ -82,6 +82,8 @@ public:
         return m_checker_param;
     }
 
+    std::string FindRootPath();
+
     HcclVmResult InitCcuResource(std::vector<sim::CcuInstrResTab>& instrRes);
     HcclVmResult InitAivResourceFromCompositeOpDetail(const sim::CompositeOpDetail &opDetail);
     void ResetAivResource();
@@ -110,6 +112,7 @@ public:
         m_checker_param = {};
         devType_ = DevType::DEV_TYPE_COUNT;
     }
+    std::vector<RankChannelInfo> &GetAllRankChannelInfo();
 private:
     StorageManager() = default;
     HcclVmResult PrintAllRankInputBuffer();
@@ -119,7 +122,6 @@ private:
                       const std::vector<BufferInfo> &allRankInput,
                       const std::vector<BufferInfo> &allRankOutput);
 
-    std::string FindRootPath();
     bool IsDirExists(const std::string& path);
 
     std::string m_data_id;

@@ -138,4 +138,149 @@ HcclResult AllRankParamRecorder::GetHBM(uint32_t rankId, uint32_t dieId, uint64_
     return HCCL_E_PARA;
 }
 
+const uint64_t XN_OFFSET_ADDR_A6 = 0x100000;
+const uint64_t XN_CKB_ADDR_A6 = 0x140000;
+const uint64_t XN_PFE_ADDR_A6 = 0x148000;
+const uint64_t XN_CHANNEL_ADDR_A6 = 0x150000;
+const uint64_t XN_JETTY_ADDR_A6 = 0x170000;
+const uint64_t XN_MISSION_ADDR_A6 = 0x178000;
+const uint64_t XN_LOOP_ADDR_A6 = 0x180000;
+const uint64_t XN_CCUA0_MS_ADDR_A6 = 0x4000000; // MS的起始地址CCU0为64M
+const uint64_t XN_CCUA1_MS_ADDR_A6 = 0x4200000; // MS的起始地址CCU1为66M
+const uint64_t XN_CCUA2_MS_ADDR_A6 = 0x4400000; // MS的起始地址CCU2为68M
+const uint64_t XN_CCUA3_MS_ADDR_A6 = 0x4600000; // MS的起始地址CCU3为70M
+const uint64_t XN_MS_SIZE_A6 = 4000; // 每个MS占用4k 
+const uint64_t MS_INTERLEAVE_NUM = 8; // 每组8个MS
+const uint64_t CCUA_MS_ADDR_GAP = 0x200000; // CCUA寄存器的MS地址间隔
+const uint64_t CCUA_NUM_A6 = 4;
+const uint64_t GROUP_TOTAL_MS = MS_INTERLEAVE_NUM * CCUA_NUM_A6;// 一组总共32个MS
+
+const uint64_t CCU_MS_START_ADDR[4] = {XN_CCUA0_MS_ADDR_A6, XN_CCUA1_MS_ADDR_A6,
+                                      XN_CCUA2_MS_ADDR_A6, XN_CCUA3_MS_ADDR_A6};
+
+HcclResult AllRankParamRecorder::GetMSIdByAddr(uint32_t dieId,  uint64_t addr, uint16_t& msId) {
+    if (dieId >= ccu_resource_base_addr_.size()) {
+        HCCL_ERROR("dieId is out of range, dieId=[%u]", dieId);
+        return HCCL_E_PARA;
+    }
+    uint64_t msAddr = addr - ccu_resource_base_addr_[dieId];
+    uint64_t ccuIndex {UINT64_MAX};
+    for (uint64_t i = 0; i < CCUA_NUM_A6; ++i) {
+        uint64_t ccuEnd = CCU_MS_START_ADDR[i] + CCUA_MS_ADDR_GAP;
+        if (msAddr >= CCU_MS_START_ADDR[i] && msAddr < ccuEnd) {
+            ccuIndex = i;
+            break;
+        }
+    }
+    if (ccuIndex == UINT64_MAX) {
+        HCCL_ERROR("msAddr is out of range, msAddr=[%llu],addr=[%llu]", msAddr, addr);
+        return HCCL_E_PARA;
+    }
+    uint64_t localOffset = msAddr - CCU_MS_START_ADDR[ccuIndex];
+    uint64_t localMsIndex = localOffset / XN_MS_SIZE_A6;
+    uint64_t groupIndex = localMsIndex / MS_INTERLEAVE_NUM;
+    uint64_t posInGroup = localMsIndex % MS_INTERLEAVE_NUM;
+    msId = groupIndex * GROUP_TOTAL_MS + ccuIndex * MS_INTERLEAVE_NUM + posInGroup;
+    return HCCL_SUCCESS;
+}
+
+// 根据type的类型找基础地址
+uint64_t findBaseAddr(CcuComponerntType type) {
+    if (type == CcuComponerntType::XN_A6) {
+        return XN_OFFSET_ADDR_A6;
+    } else if (type == CcuComponerntType::CKE_A6) {
+        return XN_CKB_ADDR_A6;
+    } else if (type == CcuComponerntType::PFE_A6) {
+        return XN_PFE_ADDR_A6;
+    } else if (type == CcuComponerntType::CHANNEL_A6) {
+        return XN_CHANNEL_ADDR_A6;
+    } else if (type == CcuComponerntType::JETTY_A6) {
+        return XN_JETTY_ADDR_A6;
+    } else if (type == CcuComponerntType::MISSION_A6) {
+        return XN_MISSION_ADDR_A6;
+    } else if (type == CcuComponerntType::LOOP_A6) {
+        return XN_LOOP_ADDR_A6;
+    } else {
+        return 0x000000000;
+    }
+}
+
+// 根据地址值来找到类型
+CcuComponerntType findTypeByAddr(uint64_t addr) {
+    if (addr >= XN_OFFSET_ADDR_A6 && addr < XN_CKB_ADDR_A6) {
+        return CcuComponerntType::XN_A6;
+    } else if (addr >= XN_CKB_ADDR_A6 && addr < XN_PFE_ADDR_A6) {
+        return CcuComponerntType::CKE_A6;
+    } else if (addr >= XN_PFE_ADDR_A6 && addr < XN_CHANNEL_ADDR_A6) {
+        return CcuComponerntType::PFE_A6;
+    } else if (addr >= XN_CHANNEL_ADDR_A6 && addr < XN_JETTY_ADDR_A6) {
+        return CcuComponerntType::CHANNEL_A6;
+    } else if (addr >= XN_JETTY_ADDR_A6 && addr < XN_MISSION_ADDR_A6) {
+        return CcuComponerntType::JETTY_A6;
+    } else if (addr >= XN_MISSION_ADDR_A6 && addr < XN_LOOP_ADDR_A6) {
+        return CcuComponerntType::MISSION_A6;
+    } else if (addr >= XN_LOOP_ADDR_A6 && addr < XN_LOOP_ADDR_A6 + 0x8000) {
+        return CcuComponerntType::LOOP_A6;
+    } else {
+        return CcuComponerntType::UNKNOWN;
+    }
+}
+
+// 根据type的类型返回寄存器每块的数量
+uint16_t findBaseSize(CcuComponerntType type) {
+    if (type == CcuComponerntType::XN_A6 || type == CcuComponerntType::CKE_A6 || type == CcuComponerntType::PFE_A6 ){
+        return 8;
+    } else if (type == CcuComponerntType::CHANNEL_A6 || type == CcuComponerntType::JETTY_A6  ||
+        type == CcuComponerntType::LOOP_A6) {
+        return 32;
+    } else if(type == CcuComponerntType::MISSION_A6) {
+        return 64;
+    } else {
+        return 0;
+    }
+}
+
+// 通过XnId所在的地址值来找到XnId
+HcclResult AllRankParamRecorder::GetXnAndTypeIdByAddr(uint32_t dieId,  uint64_t xnAddr, CcuComponerntType& type, uint16_t& xnId) {
+    if (dieId >= ccu_resource_base_addr_.size()) {
+        HCCL_ERROR("dieId is out of range, dieId=[%u]", dieId);
+        return HCCL_E_PARA;
+    }
+    type = findTypeByAddr(xnAddr - ccu_resource_base_addr_[dieId]);
+    if (type == CcuComponerntType::UNKNOWN) {
+        HCCL_ERROR("unknown type, addr=[%llu],dieId=[%u],ccu_resource_base_addr_[dieId]=[%llu]", xnAddr, dieId,
+            ccu_resource_base_addr_[dieId]);
+        return HCCL_E_PARA;
+    }
+    uint64_t baseAddr = findBaseAddr(type) + ccu_resource_base_addr_[dieId];
+    uint16_t sizeofXn = findBaseSize(type);
+    xnId = static_cast<uint16_t>((xnAddr - baseAddr) / static_cast<uint64_t>(sizeofXn));
+    return  HCCL_SUCCESS;
+}
+
+// 通过XnId所在的地址值来找到XnId
+HcclResult AllRankParamRecorder::GetXnIdByAddr(uint32_t dieId, CcuComponerntType type, uint64_t xnAddr, uint16_t& xnId) {
+    if(dieId >= ccu_resource_base_addr_.size()) {
+        HCCL_ERROR("dieId is out of range, dieId=[%u]", dieId);
+        return HCCL_E_PARA;
+    }
+    // 需要判断界限  todo
+    uint64_t baseAddr = findBaseAddr(type) + ccu_resource_base_addr_[dieId];
+    uint16_t sizeofXn = findBaseSize(type);
+    xnId = static_cast<uint16_t>((xnAddr - baseAddr) / static_cast<uint64_t>(sizeofXn));
+    return  HCCL_SUCCESS;
+}
+
+// 通过XnId所在的地址值来找到XnId
+HcclResult AllRankParamRecorder::GetAddrByXnId(uint32_t dieId, CcuComponerntType type, uint16_t xnId, uint64_t& xnAddr) {
+    // 需要判断界限  todo
+    if(dieId >= ccu_resource_base_addr_.size()) {
+        HCCL_ERROR("dieId is out of range, dieId=[%u]", dieId);
+        return HCCL_E_PARA;
+    }
+    uint64_t baseAddr = findBaseAddr(type) + ccu_resource_base_addr_[dieId];
+    uint16_t sizeofXn = findBaseSize(type);
+    xnAddr = baseAddr + static_cast<uint64_t>(xnId) * sizeofXn;
+    return HCCL_SUCCESS;
+}
 }

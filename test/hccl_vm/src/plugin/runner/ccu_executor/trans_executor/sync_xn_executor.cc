@@ -71,3 +71,10 @@ std::string SyncXnExecutor::Describe() {
         setCKEMask_,
         clearType_);
 }
+
+CcuTrace::CcuInstrTraceDetail SyncXnExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "SyncXn";
+    return detail;
+}

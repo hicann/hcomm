@@ -320,7 +320,7 @@ aclError aclrtGetFunctionName(aclrtFuncHandle funcHandle, uint32_t maxLen, char 
     sim::FuncHandle* funcHandlePtr = (sim::FuncHandle *)(uintptr_t)funcHandle;
 
     memcpy(name, funcHandlePtr->funcName.data(), funcHandlePtr->funcName.length());
-    HCCL_VM_INFO("funcName{}", funcHandlePtr->funcName.data());
+    HCCL_VM_INFO(" funcName{}", funcHandlePtr->funcName.data());
     return ACL_SUCCESS;
 }
 
@@ -337,7 +337,7 @@ aclError aclrtRegisterCpuFunc(const aclrtBinHandle handle, const char *funcName,
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
     *funcHandle = reinterpret_cast<aclrtFuncHandle>(func);
-    HCCL_VM_INFO("funcHandle:{:p}", *funcHandle);
+    HCCL_VM_INFO(" funcHandle:{:p}", *funcHandle);
     return ACL_SUCCESS;
 }
 
@@ -356,7 +356,7 @@ aclError aclrtKernelArgsInit(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHa
 aclError aclrtKernelArgsInitByUserMem(aclrtFuncHandle funcHandle, aclrtArgsHandle argsHandle, void *userHostMem, size_t actualArgsSize)
 {
     (void) funcHandle;
-    HCCL_VM_INFO("argsHandle:{:p} userHostMem:{:p},actualArgsSize:{:d}", argsHandle, userHostMem, actualArgsSize);
+    HCCL_VM_INFO(" argsHandle:{:p} userHostMem:{:p},actualArgsSize:{:d}", argsHandle, userHostMem, actualArgsSize);
     sim::FuncArgs* args = (sim::FuncArgs*)argsHandle;
     args->ResetArgsBuff();
     args->argsBuff = (uint8_t*)userHostMem;
@@ -1221,14 +1221,14 @@ static bool ParseAivHostLaunchArgs(
 {
     parsedArgs = {};
     if (hostArgs == nullptr) {
-        HCCL_VM_ERROR("[virtual-aiv-aclrtLaunchKernelWithHostArgs] hostArgs is null, can not virtual execute kernel.");
+        HCCL_VM_ERROR("hostArgs is null, can not virtual execute kernel.");
         return false;
     }
 
     if (IsAivExtraArgsCmdType(cmdType)) {
         if (argsSize < sizeof(AivExtraKernelArgs)) {
             HCCL_VM_ERROR(
-                "[virtual-aiv-aclrtLaunchKernelWithHostArgs] argsSize({}) < sizeof(AivExtraKernelArgs)({}) "
+                "argsSize({}) < sizeof(AivExtraKernelArgs)({}) "
                 "for cmdType={}, stop virtual execution.",
                 argsSize,
                 sizeof(AivExtraKernelArgs),
@@ -1244,7 +1244,7 @@ static bool ParseAivHostLaunchArgs(
 
     if (argsSize < sizeof(AivKernelArgs)) {
         HCCL_VM_ERROR(
-            "[virtual-aiv-aclrtLaunchKernelWithHostArgs] argsSize({}) < sizeof(AivKernelArgs)({}) "
+            "argsSize({}) < sizeof(AivKernelArgs)({}) "
             "for cmdType={}, stop virtual execution.",
             argsSize,
             sizeof(AivKernelArgs),
@@ -1494,7 +1494,7 @@ static ResolvedKernelLaunchArgs PrepareResolvedKernelLaunchArgs(const AivHostLau
     resolvedArgs.buffersInHandle = ResolveHostPtr(rawArgs.buffersIn);
     if (resolvedArgs.buffersInHandle.hostPtr == nullptr && rawArgs.buffersIn != nullptr) {
         HCCL_VM_ERROR(
-            "[virtual-aiv-VirtualExecuteAivKernel] buffersIn translation failed, translated host ptr is null, "
+            "buffersIn translation failed, translated host ptr is null, "
             "raw={:p}",
             rawArgs.buffersIn);
     }
@@ -1572,14 +1572,14 @@ static OpMemInfoLookupStatus LookupOpMemInfoByVirtualAddr(
         baseAddr = opMemInfo.cclAddr;
         size = opMemInfo.cclSize;
     } else {
-        HCCL_VM_ERROR("[virtual-aiv] unsupported opMemInfo buffer type, rankId={}, baseAddr=0x{:x}, bufType={}",
+        HCCL_VM_ERROR("unsupported opMemInfo buffer type, rankId={}, baseAddr=0x{:x}, bufType={}",
             rankId, queryVirtualAddr, static_cast<uint32_t>(bufType));
         return OpMemInfoLookupStatus::INVALID;
     }
 
     if (!TryMatchOpMemInfoRange(queryVirtualAddr, baseAddr, size, matchInfo)) {
         HCCL_VM_DEBUG(
-            "[virtual-aiv] queryAddr=0x{:x} did not match opMemInfo range. "
+            "queryAddr=0x{:x} did not match opMemInfo range. "
             "rankId={}, bufType={}, opMemBase=0x{:x}, opMemSize={}",
             queryVirtualAddr,
             rankId,
@@ -1605,7 +1605,7 @@ static void InitCclOpMemInfoCache(uint32_t rankSize)
     for (uint32_t rankId = 0; rankId < rankSize; ++rankId) {
         sim::OpMemInfoTab opMemInfo {};
         if (sim::QueryCurrentOpMemInfoByRank(rankId, opMemInfo) != 0) {
-            HCCL_VM_ERROR("[virtual-aiv] failed to cache CCL opMemInfo, rankId={}", rankId);
+            HCCL_VM_ERROR("failed to cache CCL opMemInfo, rankId={}", rankId);
             continue;
         }
 
@@ -1616,7 +1616,7 @@ static void InitCclOpMemInfoCache(uint32_t rankSize)
         entry.opDetailId = opMemInfo.opDetailId;
         entry.valid = opMemInfo.cclAddr != 0 && opMemInfo.cclSize != 0;
         HCCL_VM_INFO(
-            "[virtual-aiv] cache CCL opMemInfo, rankId={}, opMemId={}, opDetailId={}, cclAddr=0x{:x}, cclSize={}",
+            "cache CCL opMemInfo, rankId={}, opMemId={}, opDetailId={}, cclAddr=0x{:x}, cclSize={}",
             rankId,
             entry.opMemId,
             entry.opDetailId,
@@ -1640,7 +1640,7 @@ static OpMemInfoLookupStatus LookupCachedCclOpMemInfoByVirtualAddr(
 
     if (rankId >= g_cclOpMemInfoCache.entries.size()) {
         HCCL_VM_ERROR(
-            "[virtual-aiv] cached CCL opMemInfo rank out of range, rankId={}, cachedRankSize={}, currentRankSize={}",
+            "cached CCL opMemInfo rank out of range, rankId={}, cachedRankSize={}, currentRankSize={}",
             rankId,
             g_cclOpMemInfoCache.rankSize,
             rankSize);
@@ -1649,7 +1649,7 @@ static OpMemInfoLookupStatus LookupCachedCclOpMemInfoByVirtualAddr(
 
     if (g_cclOpMemInfoCache.rankSize != rankSize) {
         HCCL_VM_ERROR(
-            "[virtual-aiv] cached CCL opMemInfo rankSize mismatch, cachedRankSize={}, currentRankSize={}",
+            "cached CCL opMemInfo rankSize mismatch, cachedRankSize={}, currentRankSize={}",
             g_cclOpMemInfoCache.rankSize,
             rankSize);
         return OpMemInfoLookupStatus::INVALID;
@@ -1658,7 +1658,7 @@ static OpMemInfoLookupStatus LookupCachedCclOpMemInfoByVirtualAddr(
     const auto &entry = g_cclOpMemInfoCache.entries[rankId];
     if (!entry.valid) {
         HCCL_VM_ERROR(
-            "[virtual-aiv] cached CCL opMemInfo is invalid, rankId={}, opMemId={}, opDetailId={}, "
+            "cached CCL opMemInfo is invalid, rankId={}, opMemId={}, opDetailId={}, "
             "cclAddr=0x{:x}, cclSize={}",
             rankId,
             entry.opMemId,
@@ -1670,7 +1670,7 @@ static OpMemInfoLookupStatus LookupCachedCclOpMemInfoByVirtualAddr(
 
     if (!TryMatchOpMemInfoRange(queryVirtualAddr, entry.cclAddr, entry.cclSize, matchInfo)) {
         HCCL_VM_DEBUG(
-            "[virtual-aiv] queryAddr=0x{:x} did not match cached CCL opMemInfo range. "
+            "queryAddr=0x{:x} did not match cached CCL opMemInfo range. "
             "rankId={}, opMemId={}, opDetailId={}, cclAddr=0x{:x}, cclSize={}",
             queryVirtualAddr,
             rankId,
@@ -1694,7 +1694,7 @@ static void BackfillCurrentAivOpMemCclBuffer(const ResolvedKernelLaunchArgs &res
     const uint32_t rankSize = resolvedArgs.args.rankSize;
     if (rankSize == 0 || rank >= rankSize) {
         HCCL_VM_WARN(
-            "[virtual-aiv] skip backfilling current opMem CCL buffer, invalid rank/rankSize, rank={}, rankSize={}",
+            "skip backfilling current opMem CCL buffer, invalid rank/rankSize, rank={}, rankSize={}",
             rank,
             rankSize);
         return;
@@ -1703,7 +1703,7 @@ static void BackfillCurrentAivOpMemCclBuffer(const ResolvedKernelLaunchArgs &res
     const auto *ipcBufferGlobal = static_cast<const uint64_t *>(resolvedArgs.args.buffersIn);
     const uint64_t cclBufferAddr = ipcBufferGlobal[rank];
     if (cclBufferAddr == 0) {
-        HCCL_VM_DEBUG("[virtual-aiv] skip backfilling current opMem CCL buffer, rank={}, cclBufferAddr is 0",
+        HCCL_VM_DEBUG("skip backfilling current opMem CCL buffer, rank={}, cclBufferAddr is 0",
             rank);
         return;
     }
@@ -1713,7 +1713,7 @@ static void BackfillCurrentAivOpMemCclBuffer(const ResolvedKernelLaunchArgs &res
         LookupCachedCclOpMemInfoByVirtualAddr(rank, cclBufferAddr, rankSize, cclMatchInfo);
     if (cclStatus != OpMemInfoLookupStatus::RESOLVED || cclMatchInfo.baseAddr == 0 || cclMatchInfo.totalSize == 0) {
         HCCL_VM_WARN(
-            "[virtual-aiv] skip backfilling current opMem CCL buffer, failed to resolve cached CCL, "
+            "skip backfilling current opMem CCL buffer, failed to resolve cached CCL, "
             "rank={}, rankSize={}, cclBufferAddr=0x{:x}, status={}, resolvedBase=0x{:x}, resolvedSize={}",
             rank,
             rankSize,
@@ -1726,14 +1726,14 @@ static void BackfillCurrentAivOpMemCclBuffer(const ResolvedKernelLaunchArgs &res
 
     if (sim::UpdateOpMemCclBuffer(cclMatchInfo.baseAddr, cclMatchInfo.totalSize) != 0) {
         HCCL_VM_ERROR(
-            "[virtual-aiv] failed to backfill current opMem CCL buffer, rank={}, cclAddr=0x{:x}, cclSize={}",
+            "failed to backfill current opMem CCL buffer, rank={}, cclAddr=0x{:x}, cclSize={}",
             rank,
             cclMatchInfo.baseAddr,
             cclMatchInfo.totalSize);
         return;
     }
 
-    HCCL_VM_INFO("[virtual-aiv] backfill current opMem CCL buffer, rank={}, cclAddr=0x{:x}, cclSize={}",
+    HCCL_VM_INFO("backfill current opMem CCL buffer, rank={}, cclAddr=0x{:x}, cclSize={}",
         rank,
         cclMatchInfo.baseAddr,
         cclMatchInfo.totalSize);
@@ -1756,13 +1756,13 @@ static void ResolveVirtualAivBufferSizes(const std::string &kernelName,
         resolvedArgs.args.rank, inputAddr, BufferType::INPUT, inputMatchInfo);
     if (inputStatus == OpMemInfoLookupStatus::MISSING) {
         if (IsAivScatterKernel(kernelName) && resolvedArgs.args.rank != resolvedArgs.args.root) {
-            HCCL_VM_INFO("[virtual-aiv] skip missing input opMemInfo for kernel {}, rank={}, root={}, baseAddr=0x{:x}",
+            HCCL_VM_INFO("skip missing input opMemInfo for kernel {}, rank={}, root={}, baseAddr=0x{:x}",
                 kernelName, resolvedArgs.args.rank, resolvedArgs.args.root, inputAddr);
             resolvedArgs.args.input = 0;
             inputSize = 0;
         } else {
             HCCL_VM_ERROR(
-                "[virtual-aiv] expected exactly one opMemInfo range, rankId={}, baseAddr=0x{:x}, bufType={}, matchedCount={}",
+                "expected exactly one opMemInfo range, rankId={}, baseAddr=0x{:x}, bufType={}, matchedCount={}",
                 resolvedArgs.args.rank,
                 inputAddr,
                 static_cast<uint32_t>(BufferType::INPUT),
@@ -1782,13 +1782,13 @@ static void ResolveVirtualAivBufferSizes(const std::string &kernelName,
         resolvedArgs.args.rank, outputAddr, BufferType::OUTPUT, outputMatchInfo);
     if (outputStatus == OpMemInfoLookupStatus::MISSING) {
         if (IsAivBroadcastKernel(kernelName)) {
-            HCCL_VM_INFO("[virtual-aiv] skip missing output opMemInfo for kernel {}, rank={}, baseAddr=0x{:x}",
+            HCCL_VM_INFO("skip missing output opMemInfo for kernel {}, rank={}, baseAddr=0x{:x}",
                 kernelName, resolvedArgs.args.rank, outputAddr);
             resolvedArgs.args.output = 0;
             outputSize = 0;
         } else {
             HCCL_VM_ERROR(
-                "[virtual-aiv] expected exactly one opMemInfo range, rankId={}, baseAddr=0x{:x}, bufType={}, matchedCount={}",
+                "expected exactly one opMemInfo range, rankId={}, baseAddr=0x{:x}, bufType={}, matchedCount={}",
                 resolvedArgs.args.rank,
                 outputAddr,
                 static_cast<uint32_t>(BufferType::OUTPUT),
@@ -1822,7 +1822,7 @@ static void ResolveVirtualAivBufferSizes(const std::string &kernelName,
                     cclMatchInfo);
             if (finalCclBufferStatus == OpMemInfoLookupStatus::MISSING) {
                 HCCL_VM_ERROR(
-                    "[virtual-aiv] expected exactly one opMemInfo range, rankId={}, baseAddr=0x{:x}, bufType={}, matchedCount={}",
+                    "expected exactly one opMemInfo range, rankId={}, baseAddr=0x{:x}, bufType={}, matchedCount={}",
                     i,
                     cclBufferAddr,
                     static_cast<uint32_t>(BufferType::CCL),
@@ -1973,7 +1973,7 @@ static VirtualAivLibrary LoadVirtualAivLibrary(const std::string &soName, const 
     VirtualAivLibrary lib {};
     lib.soName = soName;
     if (lib.soName.empty()) {
-        HCCL_VM_ERROR("[virtual-aiv] empty soName for kernel {}",
+        HCCL_VM_ERROR("empty soName for kernel {}",
             kernelName.empty() ? "<empty>" : kernelName.c_str());
         return lib;
     }
@@ -1987,7 +1987,7 @@ static VirtualAivLibrary LoadVirtualAivLibrary(const std::string &soName, const 
     lib.handle = dlopen(lib.soPath.c_str(), RTLD_NOW | RTLD_LOCAL);
     const char *dlopenErr = dlerror();
     if (lib.handle == nullptr || dlopenErr != nullptr) {
-        HCCL_VM_ERROR("[virtual-aiv] dlopen {} failed, err = {}",
+        HCCL_VM_ERROR("dlopen {} failed, err = {}",
             lib.soPath, dlopenErr == nullptr ? "unknown" : dlopenErr);
         CloseVirtualAivLibrary(lib);
         return lib;
@@ -1997,7 +1997,7 @@ static VirtualAivLibrary LoadVirtualAivLibrary(const std::string &soName, const 
     lib.envInit = reinterpret_cast<AivEnvInitFunc>(dlsym(lib.handle, AIV_STUB_ENV_INIT_SYMBOL));
     const char *envInitErr = dlerror();
     if (lib.envInit == nullptr || envInitErr != nullptr) {
-        HCCL_VM_ERROR("[virtual-aiv] dlsym {} from {} failed, err = {}",
+        HCCL_VM_ERROR("dlsym {} from {} failed, err = {}",
             AIV_STUB_ENV_INIT_SYMBOL, lib.soPath, envInitErr == nullptr ? "unknown" : envInitErr);
         lib.envInit = nullptr;
     }
@@ -2007,7 +2007,7 @@ static VirtualAivLibrary LoadVirtualAivLibrary(const std::string &soName, const 
         reinterpret_cast<AivSetBlockIdxFunc>(dlsym(lib.handle, AIV_STUB_SET_BLOCK_IDX_SYMBOL));
     const char *setBlockIdxErr = dlerror();
     if (lib.setBlockIdx == nullptr || setBlockIdxErr != nullptr) {
-        HCCL_VM_ERROR("[virtual-aiv] dlsym {} from {} failed, err = {}",
+        HCCL_VM_ERROR("dlsym {} from {} failed, err = {}",
             AIV_STUB_SET_BLOCK_IDX_SYMBOL, lib.soPath, setBlockIdxErr == nullptr ? "unknown" : setBlockIdxErr);
         lib.setBlockIdx = nullptr;
     }
@@ -2016,7 +2016,7 @@ static VirtualAivLibrary LoadVirtualAivLibrary(const std::string &soName, const 
     lib.dumpTasks = reinterpret_cast<AivDumpTasksFunc>(dlsym(lib.handle, AIV_STUB_DUMP_TASKS_SYMBOL));
     const char *dumpTasksErr = dlerror();
     if (lib.dumpTasks == nullptr || dumpTasksErr != nullptr) {
-        HCCL_VM_ERROR("[virtual-aiv] dlsym {} from {} failed, err = {}",
+        HCCL_VM_ERROR("dlsym {} from {} failed, err = {}",
             AIV_STUB_DUMP_TASKS_SYMBOL, lib.soPath, dumpTasksErr == nullptr ? "unknown" : dumpTasksErr);
         lib.dumpTasks = nullptr;
     }
@@ -2036,7 +2036,7 @@ static aclError VirtualExecuteAivKernel(
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
     if (kernelName.empty()) {
-        HCCL_VM_ERROR("[virtual-aiv-VirtualExecuteAivKernel] empty kernelName, can not virtual execute AIV kernel.");
+        HCCL_VM_ERROR("empty kernelName, can not virtual execute AIV kernel.");
         CloseVirtualAivLibrary(lib);
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -2045,7 +2045,7 @@ static aclError VirtualExecuteAivKernel(
     void *kernelSymbol = dlsym(lib.handle, kernelName.c_str());
     const char *kernelErr = dlerror();
     if (kernelSymbol == nullptr || kernelErr != nullptr) {
-        HCCL_VM_ERROR("[virtual-aiv] dlsym {} from {} failed, err = {}",
+        HCCL_VM_ERROR("dlsym {} from {} failed, err = {}",
             kernelName, lib.soPath, kernelErr == nullptr ? "unknown" : kernelErr);
         CloseVirtualAivLibrary(lib);
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
@@ -2071,7 +2071,7 @@ static aclError VirtualExecuteAivKernel(
     if (inputSize == INVALID_MEMORY_LAYOUT_SIZE ||
         outputSize == INVALID_MEMORY_LAYOUT_SIZE ||
         cclBufferSize == INVALID_MEMORY_LAYOUT_SIZE) {
-        HCCL_VM_ERROR("[virtual-aiv] failed to resolve opMemInfo size for kernel {}, rank={}",
+        HCCL_VM_ERROR("failed to resolve opMemInfo size for kernel {}, rank={}",
             kernelName,
             resolvedArgs.args.rank);
         ReleaseHostPtr(resolvedArgs.buffersInHandle);
@@ -2095,7 +2095,7 @@ static aclError VirtualExecuteAivKernel(
     std::memcpy(curOpParam.kernelName, kernelName.data(), kernelNameCopyLen);
     curOpParam.kernelName[kernelNameCopyLen] = '\0';
     HCCL_VM_DEBUG(
-        "[virtual-aiv-VirtualExecuteAivKernel] aiv_env_init and curOp:\n"
+        "aiv_env_init and curOp:\n"
         "  rank = {}\n"
         "  blockNum = {}\n"
         "  buffIn = {:p}\n"
@@ -2152,7 +2152,7 @@ static aclError VirtualExecuteAivKernel(
         curOpParam);
 
     if (numBlocks == 0) {
-        HCCL_VM_DEBUG("[virtual-aiv-VirtualExecuteAivKernel] numBlocks is 0, skip kernel invocation.");
+        HCCL_VM_DEBUG("numBlocks is 0, skip kernel invocation.");
         ReleaseHostPtr(resolvedArgs.buffersInHandle);
         CloseVirtualAivLibrary(lib);
         return ACL_SUCCESS;
@@ -2160,7 +2160,7 @@ static aclError VirtualExecuteAivKernel(
 
     for (uint32_t blockIdx = 0; blockIdx < numBlocks; ++blockIdx) {
         HCCL_VM_DEBUG(
-            "[virtual-aiv-VirtualExecuteAivKernel] launch kernel {}, blockIdx={} <- "
+            "launch kernel {}, blockIdx={} <- "
             "aclrtLaunchKernelWithHostArgs(numBlocks) loop index; shared kernelFunc args are printed above",
             kernelName,
             blockIdx);
@@ -2238,7 +2238,7 @@ static aclError VirtualExecuteAivKernel(
 HcclResult ExecuteKernelLaunch(const AivOpArgs &opArgs)
 {
     HCCL_VM_DEBUG(
-        "[virtual-aiv-ExecuteKernelLaunch] called with parameters:\n"
+        "called with parameters:\n"
         "  cmdType = {}\n"
         "  comm = {}\n"
         "  hcclComm = {:p}\n"
@@ -2306,7 +2306,7 @@ HcclResult ExecuteKernelLaunch(const AivOpArgs &opArgs)
     if (IsAivExtraArgsCmdType(opArgs.cmdType)) {
         DumpAivExtraArgs(opArgs.extraArgs);
     } else {
-        HCCL_VM_DEBUG("[virtual-aiv-ExecuteKernelLaunch] extraArgs are not used for cmdType={}.",
+        HCCL_VM_DEBUG("extraArgs are not used for cmdType={}.",
             static_cast<int>(opArgs.cmdType));
     }
     DumpAivTopo(opArgs.topo_);
@@ -2322,7 +2322,7 @@ HcclResult ExecuteKernelLaunch(const AivOpArgs &opArgs)
     g_currentAivLaunchIndex = INVALID_AIV_LAUNCH_INDEX;
     g_currentAivStream = opArgs.stream;
     g_currentAivContextActive = true;
-    HCCL_VM_INFO("[virtual-aiv-ExecuteKernelLaunch] prepared AIV launch context, cmdType={}, argsType={}, stream={:p}",
+    HCCL_VM_INFO("prepared AIV launch context, cmdType={}, argsType={}, stream={:p}",
         static_cast<int>(g_currentAivCmdType),
         static_cast<int>(g_currentAivArgsType),
         g_currentAivStream);
@@ -2340,7 +2340,7 @@ HcclResult ExecuteKernelLaunch(const AivOpArgs &opArgs)
         g_currentAivLaunchIndex = prevLaunchIndex;
         g_currentAivStream = prevStream;
         g_currentAivContextActive = prevContextActive;
-        HCCL_VM_ERROR("[virtual-aiv-ExecuteKernelLaunch] dlsym {} failed, err = {}", executeKernelLaunchSymbol,
+        HCCL_VM_ERROR("dlsym {} failed, err = {}", executeKernelLaunchSymbol,
             dlsymErr == nullptr ? "unknown" : dlsymErr);
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
@@ -2351,7 +2351,7 @@ HcclResult ExecuteKernelLaunch(const AivOpArgs &opArgs)
     g_currentAivLaunchIndex = prevLaunchIndex;
     g_currentAivStream = prevStream;
     g_currentAivContextActive = prevContextActive;
-    HCCL_VM_INFO("[virtual-aiv-ExecuteKernelLaunch] returned {}", static_cast<int>(ret));
+    HCCL_VM_INFO("returned {}", static_cast<int>(ret));
     return ret;
 }
 }
@@ -2362,7 +2362,7 @@ extern "C" aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, ui
 {
     (void) cfg;
     HCCL_VM_DEBUG(
-        "[virtual-aiv-aclrtLaunchKernelWithHostArgs] called with parameters:\n"
+        "called with parameters:\n"
         "  funcHandle = {:p}\n"
         "  numBlocks = {}\n"
         "  stream = {:p}\n"
@@ -2392,7 +2392,7 @@ extern "C" aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, ui
 
     if (!g_currentAivContextActive) {
         HCCL_VM_ERROR(
-            "[virtual-aiv-aclrtLaunchKernelWithHostArgs] no active HCCL AIV ExecuteKernelLaunch context, "
+            "no active HCCL AIV ExecuteKernelLaunch context, "
             "can not record or virtual execute AIV kernel.");
         return ACL_ERROR_INTERNAL_ERROR;
     }
@@ -2414,7 +2414,7 @@ extern "C" aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, ui
     std::string kernelName = inferredKernelName;
     if (!kernelName.empty()) {
         HCCL_VM_INFO(
-            "[virtual-aiv-aclrtLaunchKernelWithHostArgs] use inferred kernelName from funcHandle = {} "
+            "use inferred kernelName from funcHandle = {} "
             "(cmdType={}, dataType={}, argsType={}, fallbackKernelName={})",
             kernelName,
             static_cast<int>(ops_hccl::g_currentAivCmdType),
@@ -2424,14 +2424,14 @@ extern "C" aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, ui
     } else {
         if (isUnsupportedFallbackCmdType) {
             HCCL_VM_ERROR(
-                "[virtual-aiv-aclrtLaunchKernelWithHostArgs] cmdType={} fallback AIV kernel is not supported currently.",
+                "cmdType={} fallback AIV kernel is not supported currently.",
                 static_cast<int>(ops_hccl::g_currentAivCmdType));
             return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
         }
         kernelName = fallbackKernelName;
         if (!kernelName.empty()) {
             HCCL_VM_INFO(
-                "[virtual-aiv-aclrtLaunchKernelWithHostArgs] fallback kernelName by cmdType/dataType/argsType = {} "
+                "fallback kernelName by cmdType/dataType/argsType = {} "
                 "(cmdType={}, dataType={}, argsType={}, inferredKernelName=<empty>)",
                 kernelName,
                 static_cast<int>(ops_hccl::g_currentAivCmdType),
@@ -2442,7 +2442,7 @@ extern "C" aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, ui
 
     if (kernelName.empty()) {
         HCCL_VM_ERROR(
-            "[virtual-aiv-aclrtLaunchKernelWithHostArgs] failed to resolve kernelName from funcHandle/hostArgs, "
+            "failed to resolve kernelName from funcHandle/hostArgs, "
             "cmdType={}, dataType={}, argsType={}, can not virtual execute kernel.",
             static_cast<int>(ops_hccl::g_currentAivCmdType),
             parsedHostArgs.dataType,
@@ -2452,7 +2452,7 @@ extern "C" aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, ui
 
     const std::string soName = ops_hccl::AIV_STUB_SO_NAME;
     HCCL_VM_INFO(
-        "[virtual-aiv-aclrtLaunchKernelWithHostArgs] resolved kernelName = {}, soName = {}, cmdType = {}, "
+        "resolved kernelName = {}, soName = {}, cmdType = {}, "
         "argsType = {}",
         kernelName,
         soName,
@@ -2479,13 +2479,13 @@ extern "C" aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, ui
     if (insertRet != HcclSim::HcclVmResult::HCCL_SIM_SUCCESS) {
         g_currentAivLaunchIndex = prevLaunchIndex;
         HCCL_VM_ERROR(
-            "[virtual-aiv-aclrtLaunchKernelWithHostArgs] failed to insert AIV launch task, ret={}, rankId={}",
+            "failed to insert AIV launch task, ret={}, rankId={}",
             static_cast<uint32_t>(insertRet),
             taskMetaData.rankId);
         return ACL_ERROR_INTERNAL_ERROR;
     }
     HCCL_VM_INFO(
-        "[virtual-aiv-aclrtLaunchKernelWithHostArgs] inserted AIV launch task, rankId={}, "
+        "inserted AIV launch task, rankId={}, "
         "launchIndex={}, streamId={}",
         taskMetaData.rankId,
         launchIndex,
@@ -2493,7 +2493,7 @@ extern "C" aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, ui
 
     aclError ret = ops_hccl::VirtualExecuteAivKernel(kernelName, soName, numBlocks, parsedHostArgs, launchIndex);
     g_currentAivLaunchIndex = prevLaunchIndex;
-    HCCL_VM_INFO("[virtual-aiv-aclrtLaunchKernelWithHostArgs] virtual execute ret = {}", static_cast<int>(ret));
+    HCCL_VM_INFO("virtual execute ret = {}", static_cast<int>(ret));
     return ret;
 }
 // ===== AIV virtual-kernel support scope end =====

@@ -49,16 +49,19 @@ HcclResult SingleTaskCheck::CheckSlaveTaskQueue(AllRankTaskQueues& allRankTaskQu
                 }
             }
 
-            if (firstTask->GetType() != TaskTypeStub::LOCAL_WAIT_FROM) {
-                HCCL_ERROR("[SlaveStreamCheck]RankId:%u, queueId:%u first task type should be LOCAL_WAIT_FROM, while is %s",
-                    rankId, queueId, firstTask->GetType().Describe().c_str());
-                return HCCL_E_INTERNAL;
-            }
+            const char* hcclvmTopoType = std::getenv("HCCLVM_TOPO_TYPE");
+            if (hcclvmTopoType == nullptr || std::string(hcclvmTopoType) != "HF") {
+                if (firstTask->GetType() != TaskTypeStub::LOCAL_WAIT_FROM) {
+                    HCCL_ERROR("[SlaveStreamCheck]RankId:%u, queueId:%u first task type should be LOCAL_WAIT_FROM, while is %s",
+                        rankId, queueId, firstTask->GetType().Describe().c_str());
+                    return HCCL_E_INTERNAL;
+                }
 
-            if (lastTask->GetType() != TaskTypeStub::LOCAL_POST_TO) {
-                HCCL_ERROR("[SlaveStreamCheck]RankId:%u, queueId:%u last task type should be LOCAL_POST_TO, while is %s",
-                    rankId, queueId, lastTask->GetType().Describe().c_str());
-                return HCCL_E_INTERNAL;
+                if (lastTask->GetType() != TaskTypeStub::LOCAL_POST_TO) {
+                    HCCL_ERROR("[SlaveStreamCheck]RankId:%u, queueId:%u last task type should be LOCAL_POST_TO, while is %s",
+                        rankId, queueId, lastTask->GetType().Describe().c_str());
+                    return HCCL_E_INTERNAL;
+                }
             }
         }
     }

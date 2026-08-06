@@ -85,6 +85,38 @@ void SetCcuV1ResourceBasicInfo(channel_info_out* output, uint8_t dieId, uint32_t
     output->data.data_info.data_array[0].baseinfo.caps.lqc_ccu_cap4 = (pfeNum - 1) & 0x000000FF;
 }
 
+void SetCcuV2ResourceBasicInfo(channel_info_out* output, uint8_t dieId, uint32_t devId)
+{
+    // todo: 后续根据dieId，设置不同的resourceAddr
+    if (dieId == 0) {
+        output->data.data_info.data_array[0].baseinfo.resourceAddr = (void*)0x123123123;
+        // RunnerDB::Update<sim::SimModelData>(simModelKey, [](sim::SimModelData &smd) { smd.ccu0_resource_base_addr = 0x123123123; });
+    } else {
+        output->data.data_info.data_array[0].baseinfo.resourceAddr = (void*)0x456456456;
+        // RunnerDB::Update<sim::SimModelData>(simModelKey, [](sim::SimModelData &smd) { smd.ccu0_resource_base_addr = 0x456456456; });
+    }
+    output->data.data_info.data_array[0].baseinfo.missionKey = 0;
+    output->data.data_info.data_array[0].baseinfo.ms_id = 3;  //
+    uint32_t instructionNum = 0x8000;                      // Instruction 32k
+    uint32_t missionNum = 16;                              // Mission ctx 16
+    uint32_t loopEngineNum = 512;                          // Loop ctx 512
+    output->data.data_info.data_array[0].baseinfo.caps.lqc_ccu_cap0 =
+        ((instructionNum - 1) & 0xFFFF) |
+        (((missionNum - 1) & 0xF) << 16) |
+        (((loopEngineNum - 1) & 0xFFF) << 20);
+    uint32_t gsaNum = 0;     // GSA 0 for v2
+    uint32_t xnNum = 16384;      // Xn 16384
+    output->data.data_info.data_array[0].baseinfo.caps.lqc_ccu_cap1 = ((xnNum - 1) << MOVE_TOW_BYTES);
+    uint32_t ckeNum = 1024;     // Checlist Entry(CKE) 1024
+    uint32_t msNum = 1536;      // MemorySlice(MS) 1536
+    output->data.data_info.data_array[0].baseinfo.caps.lqc_ccu_cap2 = ((msNum - 1) << MOVE_TOW_BYTES) | (ckeNum - 1);
+    uint32_t channelNum = 1024;  // Channel map 1024 for v2
+    uint32_t jettyNum = 128;    // Jetty context 128
+    output->data.data_info.data_array[0].baseinfo.caps.lqc_ccu_cap3 = ((jettyNum - 1) << MOVE_TOW_BYTES) | (channelNum - 1);
+    uint32_t pfeNum = 20;       // PFE 20 for v2
+    output->data.data_info.data_array[0].baseinfo.caps.lqc_ccu_cap4 = (pfeNum - 1) & 0x000000FF;
+}
+
 int SetCcuResourceBasicInfo(channel_info_out* output, uint8_t dieId, uint32_t devId)
 {
     sim::Device device{};
@@ -94,6 +126,8 @@ int SetCcuResourceBasicInfo(channel_info_out* output, uint8_t dieId, uint32_t de
     }
     if (strcmp(device.soc_version, "Ascend950") == 0) {
         SetCcuV1ResourceBasicInfo(output, dieId, devId);
+    } else if (strcmp(device.soc_version, "Ascend960") == 0) {
+        SetCcuV2ResourceBasicInfo(output, dieId, devId);
     } else {
         HCCL_VM_ERROR("unknown device version: {} for devId: {}", device.soc_version, devId);
         return -1;
@@ -216,6 +250,12 @@ int LoadMicrocodeInstructionStub(uint32_t devId, uint8_t dieId, const channel_in
         for (uint32_t idx = 0; idx < instrCnt; idx++) {
             mcData << "[InstrData][ " + std::to_string(startId + idx) + "]" + hcomm::CcuRep::ParseInstr(&instructionData[idx]) + "\n";
         }
+    #ifdef BUILD_A6_CCU_INSTR
+    } else if (strcmp(device.soc_version, "Ascend960") == 0) {
+        for (uint32_t idx = 0; idx < instrCnt; idx++) {
+            mcData << "[InstrData][ " + std::to_string(startId + idx) + "]" + hcomm::CcuRep::CcuV2::ParseInstrV2(&instructionData[idx]) + "\n";
+        }
+    #endif
     } else {
         HCCL_VM_ERROR("not support device soc version: {:s}", device.soc_version);
         return HCCL_E_NOT_SUPPORT;
@@ -337,6 +377,12 @@ int ConfigChannelInfo(channel_info_in *input, uint32_t deviceId)
     if (devType == DevType::DEV_TYPE_950) {
         srcJettyId = (uint16_t)((chDataTmp.startJettyIdHigh << 4) | chDataTmp.startJettyIdLow);
         srcDieId = chDataTmp.ioDieId;
+#ifdef BUILD_A6_CCU_INSTR
+    } else if (devType == DevType::DEV_TYPE_960) {
+        srcJettyId = chId/8 + 1024;
+        ChannelDataV2 *chnV2 = (ChannelDataV2 *)input->data.data_info.data_array;
+        srcDieId = chnV2->ioDieId;
+#endif
     }
     auto jettyNum = (uint16_t)((chDataTmp.jettyNumHigh << 4) | chDataTmp.jettyNumLow);
     // 根据endPointPair获取src eid
@@ -425,6 +471,8 @@ int GetCcuVersion(channel_info_out* output, uint32_t deviceId)
     }
     if (strcmp(locDevice.soc_version, "Ascend950") == 0) {
         output->data.data_info.data_array[0].version = static_cast<ccu_version_e>(CcuVersion::CCU_V1);
+    } else if (strcmp(locDevice.soc_version, "Ascend960") == 0) {
+        output->data.data_info.data_array[0].version = static_cast<ccu_version_e>(CcuVersion::CCU_V2);
     } else {
         HCCL_VM_ERROR("unknown soc version: {}", locDevice.soc_version);
         return -1;
@@ -473,12 +521,6 @@ int RaCtxGetAsyncEvents(void *ctxHandle, struct AsyncEvent events[], unsigned in
     sleep(1);
     *num = 0;
     return 0;
-}
-
-int RaGetEidByIp(void *ctxHandle, struct IpInfo ip[], union HccpEid eid[], unsigned int *num)
-{
-    HCCL_VM_ERROR("not support for now.");
-    return -1;
 }
 
 int GetAllUsedEndPoint(uint32_t phyDevId, std::vector<sim::EndPoint> &endPoints)

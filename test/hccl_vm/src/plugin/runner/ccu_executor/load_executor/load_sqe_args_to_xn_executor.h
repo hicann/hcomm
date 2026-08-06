@@ -31,10 +31,13 @@ public:
     void Parser() override;
     void Run() override;
     std::string Describe() override;
+    CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
     uint16_t xnId_{SimCcuV1::CCU_RESOURCE_XN_MAX};
     uint16_t sqeArgId_{RT_CCU_SQE_ARGS_LEN};
+    uint16_t ckeId_ {0};
+    uint16_t ckeMask_{0};
 };
 
 #endif // HCCL_SIM_LOAD_SQE_ARGS_TO_XN_EXECUTOR_H

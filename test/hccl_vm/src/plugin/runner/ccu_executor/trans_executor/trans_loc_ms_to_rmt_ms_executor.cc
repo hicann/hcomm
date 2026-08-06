@@ -101,3 +101,10 @@ std::string TransLocMSToRmtMSExecutor::Describe()
         clearType_,
         lengthEn_);
 }
+
+CcuTrace::CcuInstrTraceDetail TransLocMSToRmtMSExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "TransLocMSToRmtMS";
+    return detail;
+}

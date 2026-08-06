@@ -99,3 +99,10 @@ std::string TransLocMemToRmtMemExecutor::Describe()
         reduceOpCode_,
         reduceEn_);
 }
+
+CcuTrace::CcuInstrTraceDetail TransLocMemToRmtMemExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "TransLocMemToRmtMem";
+    return detail;
+}

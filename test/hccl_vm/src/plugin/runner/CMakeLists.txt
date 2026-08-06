@@ -6,45 +6,29 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
-cmake_minimum_required(VERSION 3.14)
-
 add_subdirectory(ccu_executor)
 add_subdirectory(aiv_executor)
 
-# 自动扫描当前目录下的所有 .cc 文件
-file(GLOB_RECURSE SRC_SOURCES 
-    "./runner_utils/*.cc"
-    "./runner_worker/*.cc"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../hccl_virtual_runtime_main.cc"
-)
-
-# 设置插件输出目录
-set(PLUGIN_PATH "${CMAKE_SOURCE_DIR}/build/output/bin")
-file(GLOB_RECURSE VR_LIB_SOURCES
+file(GLOB_RECURSE VR_LIB_SOURCES CONFIGURE_DEPENDS
     "./runner_utils/*.cc"
     "./runner_worker/*.cc"
     ${CMAKE_CURRENT_SOURCE_DIR}/../hccl_virtual_runtime_main.cc
 )
- # 添加插件库
 add_executable(runner ${VR_LIB_SOURCES})
 
-
-target_compile_options(runner PRIVATE
-    -g
-    -O0
-    -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(runner)
+set_target_properties(runner PROPERTIES
+    INSTALL_RPATH "$ORIGIN/../../lib/${CMAKE_SYSTEM_PROCESSOR}"
+    BUILD_RPATH "$ORIGIN")
 
 target_include_directories(runner PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
 
-    
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 
     ${HCCL_VM_SRC}
-    ${HCCL_VM_SRC}/store
     ${HCCL_VM_SRC}/store
     ${HCCL_VM_INCLUDE}
     ${HCCL_VM_INCLUDE}/runnerdb
@@ -60,6 +44,7 @@ target_include_directories(runner PRIVATE
 
 target_link_libraries(runner PRIVATE
     -Wl,--whole-archive
+    -Wl,--start-group
     aiv_executor
     store
     loader
@@ -67,29 +52,28 @@ target_link_libraries(runner PRIVATE
     modeldb
     ccu_executor
     log
+    -Wl,--end-group
     -Wl,--no-whole-archive
     rt
     JSON::JSON
-    
     yaml-cpp::yaml-cpp
     sqlite3
 )
 install(TARGETS runner
     DESTINATION "plugin/runner"
     # 文件的权限 (755)
-    PERMISSIONS 
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE 
-        GROUP_READ GROUP_EXECUTE 
+    PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE
         WORLD_READ WORLD_EXECUTE
  )
 
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../manifest.json"
     DESTINATION "plugin/runner"
-    # 文件的权限 (755)
     PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-        GROUP_READ GROUP_EXECUTE
-        WORLD_READ WORLD_EXECUTE
+        OWNER_READ OWNER_WRITE
+        GROUP_READ
+        WORLD_READ
 )
 
 # 日志染色: 模块 tag

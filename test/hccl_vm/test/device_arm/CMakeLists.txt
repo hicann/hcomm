@@ -21,7 +21,7 @@ set(COMMON_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/src/utils
     ${CMAKE_SOURCE_DIR}/src/plugin/checker/header/external
     ${CMAKE_SOURCE_DIR}/third_party/CLI11
-    ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
+    ${YAMLCPP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/driver
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/driver

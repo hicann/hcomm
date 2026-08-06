@@ -223,8 +223,9 @@ void RunVirtualRuntime(HcclSim::StorageManager& storage) {
                  param.srcRank, param.dstRank, param.root);
 
     // 获取所有rank的任务队列
+    auto rootPath = storage.FindRootPath();
     HcclSim::AllRankTaskQueues& allRankTaskQueues = storage.GetAllRankTaskQueues();
-    VirtualRunTime::SqeuentialExecutor executor(allRankTaskQueues);
+    VirtualRunTime::SqeuentialExecutor executor(allRankTaskQueues, rootPath);
     auto allTaskSize = allRankTaskQueues.size();
     executor.Execute();
     // 查看input/output的buffer数据

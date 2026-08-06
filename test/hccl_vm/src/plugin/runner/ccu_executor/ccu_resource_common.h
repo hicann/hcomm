@@ -19,14 +19,16 @@
 
 #include "ccu_microcode_v1.h"
 #include "ccu_microcode_common_v1.h"
+#include "ccu_microcode_common_v2.h"
 #include "sim_common_defs.h"
 
-enum class RunnerCcuVersion:uint16_t {CCU_INVALID, CCU_V1};
+enum class RunnerCcuVersion:uint16_t {CCU_INVALID, CCU_V1, CCU_V2};
 
 inline const char* RunnerCcuVersionToString(RunnerCcuVersion version) {
     switch (version) {
         case RunnerCcuVersion::CCU_INVALID: return "CCU_INVALID";
         case RunnerCcuVersion::CCU_V1: return "CCU_V1";
+        case RunnerCcuVersion::CCU_V2: return "CCU_V2";
         default: return "UNKNOWN";
     }
 }

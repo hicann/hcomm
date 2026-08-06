@@ -75,3 +75,10 @@ std::string SyncCkeExecutor::Describe() {
         setCKEMask_,
         clearType_);
 }
+
+CcuTrace::CcuInstrTraceDetail SyncCkeExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "SyncCke";
+    return detail;
+}

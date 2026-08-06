@@ -70,3 +70,10 @@ std::string SyncGsaExecutor::Describe() {
         setCKEMask_,
         clearType_);
 }
+
+CcuTrace::CcuInstrTraceDetail SyncGsaExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "SyncGsa";
+    return detail;
+}

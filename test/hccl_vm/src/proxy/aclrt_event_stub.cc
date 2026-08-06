@@ -32,12 +32,11 @@ extern "C" {
 
 aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
 {
-    sim::Runner runner;
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
+    sim::Runner runner;
     if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -191,12 +190,11 @@ aclError aclrtGetEventId(aclrtEvent event, uint32_t *eventId)
 
 aclError aclrtGetEventAvailNum(uint32_t *eventCount)
 {
-    sim::Runner runner;
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
+    sim::Runner runner;
     if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }

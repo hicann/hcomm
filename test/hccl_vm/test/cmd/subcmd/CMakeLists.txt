@@ -8,36 +8,27 @@
 
 cmake_minimum_required(VERSION 3.14)
 
-if(NOT TARGET hccl-vm)
-    return()
-endif()
-
-set(SUBCMD_OBJS
-    ${CMAKE_BINARY_DIR}/src/CMakeFiles/hccl-vm.dir/plugin/hccl_plugin_manager.cc.o
-    ${CMAKE_BINARY_DIR}/src/CMakeFiles/hccl-vm.dir/plugin/hccl_plugin.cc.o
-)
-
 set(SUBCMD_LIBS
     gtest_main gtest
-    ${SUBCMD_OBJS}
-    common cmd store runnerdb topo log yaml-cpp sqlite3 dl rt
+    hccl_plugin_objs
+    cmd common store runnerdb topo log yaml-cpp sqlite3 dl rt
     z
 )
 
 set(SUBCMD_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/src 
+    ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/common
     ${CMAKE_SOURCE_DIR}/src/plugin
-    ${CMAKE_SOURCE_DIR}/src/cmd 
-    ${CMAKE_SOURCE_DIR}/src/cmd/subcmd 
+    ${CMAKE_SOURCE_DIR}/src/cmd
+    ${CMAKE_SOURCE_DIR}/src/cmd/subcmd
     ${CMAKE_SOURCE_DIR}/src/utils
-    ${CMAKE_SOURCE_DIR}/include 
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/plugin/checker/header/external
-    ${CMAKE_SOURCE_DIR}/include 
-    ${CMAKE_SOURCE_DIR}/include/store 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/store
     ${CMAKE_SOURCE_DIR}/include/runnerdb
     ${CMAKE_SOURCE_DIR}/third_party/CLI11
-    ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include 
+    ${YAMLCPP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json
 )
 

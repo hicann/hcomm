@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "ccu_resource_v1.h"
+#include "ccu_resource_v2.h"
 
 constexpr uint16_t U16_INVALID = UINT16_MAX;
 constexpr uint32_t U32_INVALID = UINT32_MAX;
@@ -30,6 +31,19 @@ constexpr uint64_t U64_INVALID = UINT64_MAX;
 struct CcuResData {
     RunnerCcuVersion version{RunnerCcuVersion::CCU_V1};
     std::vector<std::unique_ptr<CcuResourceV1>> v1Res;
+    std::vector<std::unique_ptr<CcuResourceV2>> v2Res;
+};
+
+// 记录CCU中偏移地址的类型
+enum class CcuComponerntType: uint16_t {
+    UNKNOWN = 0,
+    XN_A6 = 1,
+    CKE_A6 = 2,
+    PFE_A6 = 3,
+    CHANNEL_A6 = 4,
+    JETTY_A6 = 5,
+    MISSION_A6 = 6,
+    LOOP_A6 = 7,
 };
 
 class CcuResourceManager {
@@ -65,11 +79,22 @@ public:
     bool TransMSToMem(int rankId, int dieId, uint16_t msId, void *buf, uint16_t length);
     bool TransMemToMS(int rankId, int dieId, uint16_t msId, void *buf, uint16_t length);
 
+       // 通过MS的地址找到MS的Id
+    bool GetMSIdByAddr(uint32_t dieId,  uint64_t addr, uint16_t& msId);
+    // 通过XnId所在的地址值来找到XnId以及寄存器的类型
+    bool GetXnAndTypeIdByAddr(uint32_t dieId,  uint64_t xnAddr, CcuComponerntType& type, uint16_t& xnId);
+    // 通过XnId所在的地址值来找到XnId
+    bool GetXnIdByAddr(uint32_t dieId, CcuComponerntType type, uint64_t xnAddr, uint16_t& xnId);
+    // 通过XnId所在的地址值来找到XnId
+    bool GetAddrByXnId(uint32_t dieId, CcuComponerntType type, uint16_t xnId, uint64_t& xnAddr);
+
     uint64_t GetSqeArgValue(int rankId, int dieId, uint16_t argId) const;
     uint16_t GetInstrCnt(int rankId, int dieId) const;
     std::vector<hcomm::CcuRep::CcuInstr> GetInstrData(int rankId, int dieId) const;
     std::string GetInstrDescribe(int rankId, int dieId, int instrId) const;
     std::shared_ptr<CcuSimulator> InitSimulator(int rankId, int dieId, uint16_t instrStartId, uint16_t endInstrId, uint16_t instCnt);
+
+    RunnerCcuVersion GetVersion() const { return ccuResData_.version; }
 
     void DumpChannelId2RmtRank(int rankId, int dieId) const;
     void DumpCcuInstructions(int rankId) const;

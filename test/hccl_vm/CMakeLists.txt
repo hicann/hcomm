@@ -6,7 +6,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 project(hccl_vm VERSION 1.0.0)
 #set(CMAKE_VERBOSE_MAKEFILE true)
 
@@ -14,6 +14,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+function(hcclvm_apply_common_flags target)
+    target_compile_options(${target} PRIVATE
+        -Werror
+        -fno-common
+        -fno-strict-aliasing
+        -pipe
+        -O0
+        -g
+    )
+    target_compile_definitions(${target} PRIVATE
+        _GLIBCXX_USE_CXX11_ABI=0
+    )
+endfunction()
 
 set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
@@ -29,7 +43,11 @@ if(ENABLE_COVERAGE)
 endif()
 
 option(BUILD_DEVICE_ARM "Build device_arm (ARM cross-compile)" OFF)
+option(BUILD_A6_CCU_INSTR "Build A6 ccu instruction (ARM cross-compile)" ON)
 
+if(BUILD_A6_CCU_INSTR)
+    add_definitions(-DBUILD_A6_CCU_INSTR)
+endif()
 
 set(HCOMM_VM_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -74,17 +92,14 @@ message(STATUS "HCOMM_CODE_ROOT: ${HCOMM_CODE_ROOT}")
 
 set(HCOMM_CODE_PLATFORM  ${HCOMM_CODE_ROOT}/src/platform)
 
-# 使用一个自定义的 Cache 变量，默认值设为 OFF 或空
-set(HCCL_VM_PROJECT_PREFIX_SET OFF CACHE INTERNAL "Check if install prefix is set")
-
-if(NOT HCCL_VM_PROJECT_PREFIX_SET)
-    # 只要这个逻辑没跑成功过，就设置一次
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/hccl_vm_install" CACHE PATH "Default install prefix" FORCE)
-    set(HCCL_VM_PROJECT_PREFIX_SET ON CACHE INTERNAL "Check if install prefix is set")
-    message(STATUS "First-time setup: Installation prefix locked to: ${CMAKE_INSTALL_PREFIX}")
+    message(STATUS "Install prefix not set by user, defaulting to: ${CMAKE_INSTALL_PREFIX}")
 endif()
 
-set(CMAKE_INSTALL_RPATH "\$ORIGIN")
+set(CMAKE_BUILD_RPATH "$ORIGIN")
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
 
 include(cmake/third_party/yaml-cpp.cmake)
 include(cmake/third_party/nlohmann_json.cmake)
@@ -118,6 +133,10 @@ function(config_hcclvm_install)
     )
     install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/asset/cluster_model/config/cluster"
         DESTINATION "config"
+        FILE_PERMISSIONS
+            OWNER_READ OWNER_WRITE
+            GROUP_READ
+            WORLD_READ
         DIRECTORY_PERMISSIONS
             OWNER_READ OWNER_WRITE OWNER_EXECUTE
             GROUP_READ GROUP_EXECUTE
@@ -125,6 +144,10 @@ function(config_hcclvm_install)
     )
     install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/asset/cluster_model/config/server_or_pod"
         DESTINATION "config"
+        FILE_PERMISSIONS
+            OWNER_READ OWNER_WRITE
+            GROUP_READ
+            WORLD_READ
         DIRECTORY_PERMISSIONS
             OWNER_READ OWNER_WRITE OWNER_EXECUTE
             GROUP_READ GROUP_EXECUTE
@@ -132,6 +155,10 @@ function(config_hcclvm_install)
     )
     install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/asset/cluster_model/topo_meta"
         DESTINATION "config"
+        FILE_PERMISSIONS
+            OWNER_READ OWNER_WRITE
+            GROUP_READ
+            WORLD_READ
         DIRECTORY_PERMISSIONS
             OWNER_READ OWNER_WRITE OWNER_EXECUTE
             GROUP_READ GROUP_EXECUTE
@@ -166,17 +193,16 @@ if(BUILD_DEVICE_ARM)
             -DCANN_ARCH_DIR=${CANN_ARCH_DIR}
             -DHCOMM_CODE_ROOT=${HCOMM_CODE_ROOT}
             -DHCCL_CODE_ROOT=${HCCL_CODE_ROOT}
-        
+
         BINARY_DIR ${DEVICE_ARM_BUILD_DIR}
         INSTALL_DIR ${DEVICE_ARM_INSTALL_DIR}
         BUILD_ALWAYS ON
     )
-    
+
     message(STATUS "device_arm cross-compilation enabled")
     message(STATUS "  Build dir: ${DEVICE_ARM_BUILD_DIR}")
     message(STATUS "  Install dir: ${DEVICE_ARM_INSTALL_DIR}")
 endif()
-
 
 option(BUILD_TESTS "Build unit tests" OFF)
 if(BUILD_TESTS)

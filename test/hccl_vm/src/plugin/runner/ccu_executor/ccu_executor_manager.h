@@ -101,6 +101,18 @@ public:
             return executor;                                                                 \
         })
 
+// V2指令注册宏
+#define REG_CCU_EXECUTOR_CREATE_FUNC_V2(type, code, className)                              \
+    static CcuExecutorCreateFuncRegister g_reg##className##_v2(                             \
+        RunnerCcuVersion::CCU_V2, type, code,                                               \
+        [](int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr,       \
+           CcuSimulator *ccuSimulator) {                                                     \
+            auto executor = std::make_unique<className>(streamId, rankId, dieId, instr,      \
+                                                        ccuSimulator);                       \
+            executor->SetVersion(RunnerCcuVersion::CCU_V2);                                 \
+            return executor;                                                                 \
+        })
+
 // 兼容旧宏（默认V1）
 #define REG_CCU_EXECUTOR_CREATE_FUNC REG_CCU_EXECUTOR_CREATE_FUNC_V1
 

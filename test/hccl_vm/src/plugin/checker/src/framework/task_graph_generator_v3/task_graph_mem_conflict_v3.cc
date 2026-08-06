@@ -634,10 +634,11 @@ HcclResult CheckCollectedConflictCandidates(const ConflictCandidates &candidates
         ++stats.parallelCandidatePairCount;
         const uint64_t overlapStart = std::max(candidate.current->start, candidate.history->start);
         const uint64_t overlapEnd = std::min(candidate.current->end, candidate.history->end);
-        HCCL_VM_ERROR("[MemConflict] {} Memory conflict detected, memory={}, overlap=[0x{:x},0x{:x}), "
-            "conflictTask1={}, conflictTask2={}", MakeErrorCodeText(ErrorCode::MEMCONFLICT_DETECTED),
-            DescribeKey(candidate.current->key), overlapStart, overlapEnd, DescribeAccess(*candidate.current),
-            DescribeAccess(*candidate.history));
+        HCCL_VM_ERROR("{} Two tasks may access the same memory range in parallel, and at least one "
+            "access is a write.\n  Conflict memory : {}\n  Overlap range    : [0x{:x},0x{:x})\n"
+            "  Conflict task 1:\n{}\n  Conflict task 2:\n{}",
+            MakeErrorCodeText(ErrorCode::MEMCONFLICT_DETECTED), DescribeKey(candidate.current->key),
+            overlapStart, overlapEnd, DescribeAccess(*candidate.current), DescribeAccess(*candidate.history));
         return HCCL_E_MEMORY;
     }
     return HCCL_SUCCESS;

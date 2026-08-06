@@ -18,9 +18,8 @@ include_directories(
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/include
     ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/toolchain
- 	${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/asc/include/adv_api
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/asc/include/adv_api
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/trace
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/runtime
@@ -29,8 +28,6 @@ include_directories(
     ${HCOMM_VM_ROOT_PATH}/include
     ${HCOMM_VM_ROOT_PATH}/include/runnerdb
     ${HCOMM_VM_ROOT_PATH}/include/store
-    ${HCOMM_VM_ROOT_PATH}/include
-    ${HCOMM_VM_ROOT_PATH}/hccl_host/hccl_cmd
     ${HCOMM_VM_ROOT_PATH}/src/proxy
 )
 
@@ -45,4 +42,3 @@ add_subdirectory(hccl_plugin_manager)
 add_subdirectory(utils)
 
 enable_testing()
-add_test(NAME hccl_host_test COMMAND hccl_host_test)

@@ -27,14 +27,14 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include/store
     ${CMAKE_SOURCE_DIR}/include/runnerdb
     ${CMAKE_SOURCE_DIR}/third_party/CLI11
-    ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
+    ${YAMLCPP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party
     ${CMAKE_SOURCE_DIR}/third_party
     ${CMAKE_SOURCE_DIR}/third_party/spdlog
     ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
- 	${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
- 	${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
     ${ASCEND_CANN_PACKAGE_PATH}/include
 
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode

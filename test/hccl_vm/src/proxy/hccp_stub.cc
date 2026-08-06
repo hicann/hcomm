@@ -91,19 +91,19 @@ int RaGetInterfaceVersion(unsigned int phyId, unsigned int interfaceOpcode, unsi
 
 int RaGetTsqpDepth(void *rdevHandle, unsigned int *tempDepth, unsigned int *qpNum)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 int RaSetTsqpDepth(void *rdevHandle, unsigned int tempDepth, unsigned int *qpNum)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaRdevGetSupportLite(void *rdmaHandle, int *supportLite)
 {
     if (rdmaHandle == nullptr || supportLite == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, rdmaHandle: {}, supportLite: {}", rdmaHandle, (void *)supportLite);
         return -1;
     }
     *supportLite = 1;
@@ -114,26 +114,26 @@ int RaRdevGetSupportLite(void *rdmaHandle, int *supportLite)
 
 int RaSocketSetWhiteListStatus(unsigned int enable)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaSocketGetWhiteListStatus(unsigned int *enable)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaNormalQpCreate(void *rdevHandle, struct ibv_qp_init_attr *qpInitAttr, void **qpHandle, void **qp)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaNormalQpDestroy(void *qpHandle)
 {
-    HCCL_VM_INFO("stub");
     if (qpHandle == nullptr) {
+        HCCL_VM_ERROR("qpHandle is null");
         return HCCL_E_PTR;
     }
     return 0;
@@ -142,7 +142,7 @@ int RaNormalQpDestroy(void *qpHandle)
 int RaMrReg(void *qpHandle, struct MrInfoT *info)
 {
     if (qpHandle == nullptr || info == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, info: {}", qpHandle, (void *)info);
         return -1;
     }
 
@@ -171,7 +171,7 @@ int RaMrReg(void *qpHandle, struct MrInfoT *info)
 int RaMrDereg(void *qpHandle, struct MrInfoT *info)
 {
     if (qpHandle == nullptr || info == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, info: {}", qpHandle, (void *)info);
         return -1;
     }
 
@@ -194,7 +194,7 @@ int RaMrDereg(void *qpHandle, struct MrInfoT *info)
 int RaRegisterMr(const void *rdmaHandle, struct MrInfoT *info, void **mrHandle)
 {
     if (rdmaHandle == nullptr || info == nullptr || mrHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, rdmaHandle: {}, info: {}, mrHandle: {}", rdmaHandle, (void *)info, (void *)mrHandle);
         return -1;
     }
 
@@ -218,14 +218,14 @@ int RaRegisterMr(const void *rdmaHandle, struct MrInfoT *info, void **mrHandle)
 
 int RaRemapMr(const void *rdmaHandle, struct MemRemapInfo info[], unsigned int num)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaDeregisterMr(const void *rdmaHandle, void *mrHandle)
 {
     if (rdmaHandle == nullptr || mrHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, rdmaHandle: {}, mrHandle: {}", rdmaHandle, mrHandle);
         return -1;
     }
 
@@ -244,7 +244,7 @@ int RaDeregisterMr(const void *rdmaHandle, void *mrHandle)
 int RaSendWr(void *qpHandle, struct SendWr *wr, struct SendWrRsp *opRsp)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, wr: {}", qpHandle, (void *)wr);
         return -1;
     }
 
@@ -267,81 +267,79 @@ int RaSendWr(void *qpHandle, struct SendWr *wr, struct SendWrRsp *opRsp)
 
 int RaSetQpAttrQos(void *qpHandle, struct QosAttr *attr)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaSetQpAttrTimeout(void *qpHandle, unsigned int *timeout)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaSetQpAttrRetryCnt(void *qpHandle, unsigned int *retryCnt)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaGetCqeErrInfo(unsigned int phyId, struct CqeErrInfo *info)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaCreateSrq(const void *rdmaHandle, struct SrqAttr *attr)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaDestroySrq(const void *rdmaHandle, struct SrqAttr *attr)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaCreateEventHandle(int *eventHandle)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaCtlEventHandle(int eventHandle, const void *fdHandle, int opcode, enum RaEpollEvent event)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaWaitEventHandle(int eventHandle, struct SocketEventInfoT *eventInfos, int timeout, unsigned int maxevents,
                       unsigned int *eventsNum)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaDestroyEventHandle(int *eventHandle)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaCreateCompChannel(const void *rdmaHandle, void **compChannel)
 {
-    HCCL_VM_INFO("stub");
     *compChannel = reinterpret_cast<void *>(static_cast<uintptr_t>(0xabcdU));
     return ((rdmaHandle == nullptr) || (compChannel == nullptr)) ? -1 : 0;
 }
 
 int RaDestroyCompChannel(const void *rdmaHandle, void *compChannel)
 {
-    HCCL_VM_INFO("stub");
     return ((rdmaHandle == nullptr) || (compChannel == nullptr)) ? -1 : 0;
 }
 
 int RaLoopbackQpCreate(void *rdevHandle, struct LoopbackQpPair *qpPair, void **qpHandle)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -368,7 +366,7 @@ int RaQpConnectAsync(void *qpHandle, const void *fdHandle)
 int RaSendWrV2(void *qpHandle, struct SendWrV2 *wr, struct SendWrRsp *opRsp)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, wr: {}", qpHandle, (void *)wr);
         return -1;
     }
 
@@ -430,7 +428,7 @@ int RaPollCq(void *qpHandle, bool isSendCq, unsigned int numEntries, void *wc)
 int RaRecvWrlist(void *qpHandle, struct RecvWrlistData *wr, unsigned int recvNum, unsigned int *completeNum)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, wr: {}", qpHandle, (void *)wr);
         return -1;
     }
 
@@ -486,7 +484,7 @@ int RaGetQpContext(void *qpHandle, void **qp, void **sendCq, void **recvCq)
 int RaQpBatchModify(void *rdmaHandle, void *qpHandle[], unsigned int num, int expectStatus)
 {
     if (qpHandle == nullptr || num == 0) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, rdmaHandle: {}", rdmaHandle);
         return -1;
     }
 
@@ -512,7 +510,7 @@ int RaQpBatchModify(void *rdmaHandle, void *qpHandle[], unsigned int num, int ex
 
 int RaRdevGetCqeErrInfoList(void *rdmaHandle, struct CqeErrInfo *infoList, unsigned int *num)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -544,26 +542,26 @@ int RaRdevGetHandle(unsigned int phyId, void **rdmaHandle)
 
 int RaSaveSnapshot(struct RaInfo *info, enum SaveSnapshotAction action)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaRestoreSnapshot(struct RaInfo *info)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 int RaRdevInitWithBackup(struct RdevInitInfo *initInfo, struct rdev *rdevInfo, struct rdev *backupRdevInfo,
                          void **rdmaHandle)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaGetQpStatus(void *qpHandle, int *status)
 {
     if (qpHandle == nullptr || status == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, status: {}", qpHandle, (void *)status);
         return -1;
     }
 
@@ -583,7 +581,7 @@ int RaSendWrlist(void *qpHandle, struct SendWrlistData wr[], struct SendWrRsp op
                  unsigned int *completeNum)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, wr: {}", qpHandle, (void *)wr);
         return -1;
     }
 
@@ -613,7 +611,7 @@ int RaSendWrlistExt(void *qpHandle, struct SendWrlistDataExt wr[], struct SendWr
                     unsigned int *completeNum)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, wr: {}", qpHandle, (void *)wr);
         return -1;
     }
 
@@ -643,7 +641,7 @@ int RaSendNormalWrlist(void *qpHandle, struct WrInfo wr[], struct SendWrRsp opRs
                        unsigned int *completeNum)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, wr: {}", qpHandle, (void *)wr);
         return -1;
     }
 
@@ -671,37 +669,37 @@ int RaSendNormalWrlist(void *qpHandle, struct WrInfo wr[], struct SendWrRsp opRs
 
 int RaGetNotifyBaseAddr(void *rdevHandle, unsigned long long *va, unsigned long long *size)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaGetNotifyMrInfo(void *rdevHandle, struct MrInfoT *info)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaInit(struct RaInitConfig *config)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaDeinit(struct RaInitConfig *config)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaGetTlsEnable(struct RaInfo *info, bool *tlsEnable)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -712,8 +710,10 @@ int RaRdevInitV2(struct RdevInitInfo initInfo, struct rdev rdevInfo, void **rdma
         HCCL_VM_ERROR("GetCurServerId failed");
         return -1;
     }
+    
     sim::Runner runner;
     if (!sim::GetCurrRunnerTls(serverId, runner)) {
+        HCCL_VM_ERROR("GetCurrRunnerTls failed");
         return -1;
     }
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);
@@ -733,7 +733,6 @@ int RaRdevInitV2(struct RdevInitInfo initInfo, struct rdev rdevInfo, void **rdma
 
 int RaRdevInit(int mode, unsigned int notifyType, struct rdev rdevInfo, void **rdmaHandle)
 {
-    HCCL_VM_INFO("stub");
     struct RdevInitInfo initInfo;
     RaRdevInitV2(initInfo, rdevInfo, rdmaHandle);
     return 0;
@@ -756,7 +755,7 @@ int RaCqCreate(void *rdevHandle, struct CqAttr *attr)
 
     *(attr->qpContext) = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
 
-    HCCL_VM_INFO("stub RaDev {:d} add RaCQ id:{:d}", raDevId, id);
+    HCCL_VM_WARN("RaDev {:d} add RaCQ id:{:d}", raDevId, id);
     return 0;
 }
 
@@ -766,14 +765,14 @@ int RaCqDestroy(void *rdevHandle, struct CqAttr *attr)
     uint64_t cqId = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(attr->qpContext));
     RunnerDB::Delete<sim::RaCQ>(cqId);
 
-    HCCL_VM_INFO("stub RaDev {:d} delete RaCQ id:{:d}", raDevId, cqId);
+    HCCL_VM_WARN("RaDev {:d} delete RaCQ id:{:d}", raDevId, cqId);
     return 0;
 }
 
 int RaQpCreate(void *rdevHandle, int flag, int qpMode, void **qpHandle)
 {
     if (rdevHandle == nullptr || qpHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, rdevHandle: {}, qpHandle: {}", rdevHandle, (void *)qpHandle);
         return -1;
     }
 
@@ -809,7 +808,7 @@ int RaQpCreate(void *rdevHandle, int flag, int qpMode, void **qpHandle)
 int RaQpCreateWithAttrs(void *rdevHandle, struct QpExtAttrs *extAttrs, void **qpHandle)
 {
     if (rdevHandle == nullptr || qpHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, rdevHandle: {}, qpHandle: {}", rdevHandle, (void *)qpHandle);
         return -1;
     }
 
@@ -849,14 +848,12 @@ int RaQpCreateWithAttrs(void *rdevHandle, struct QpExtAttrs *extAttrs, void **qp
 
 int RaAiQpCreate(void *rdevHandle, struct QpExtAttrs *attrs, struct AiQpInfo *info, void **qpHandle)
 {
-    HCCL_VM_INFO("stub");
     int ret = RaQpCreate(rdevHandle, 0, 0, qpHandle);
     return ret;
 }
 
 int RaTypicalQpCreate(void *rdevHandle, int flag, int qpMode, struct TypicalQp *qpInfo, void **qpHandle)
 {
-    HCCL_VM_INFO("stub");
     int ret = RaQpCreate(rdevHandle, 0, 0, qpHandle);
     return ret;
 }
@@ -898,8 +895,6 @@ int RaCtxInit(struct CtxInitCfg *cfg, struct CtxInitAttr *attr, void **ctxHandle
 int RaCtxDeinit(void *ctxHandle)
 {
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle));
-    // RunnerDB::Delete<sim::RaDevice>(id);
-    // RunnerDB::Delete<sim::RaContext>(id);
     HCCL_VM_INFO("soft delete ctx id {:d}, for checker use after", id);
     return 0;
 }
@@ -967,8 +962,6 @@ int RaQpDestroy(void *qpHandle)
         RunnerDB::Delete<sim::RaCQE>(cqe.id);
     }
 
-    // RunnerDB::Delete<sim::RaQP>(qpId);
-
     HCCL_VM_INFO("destroy QP {:d}, qp_num:{:d}",qpId, qpOpt->qp_num);
     return 0;
 }
@@ -976,7 +969,7 @@ int RaQpDestroy(void *qpHandle)
 int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInfo *info, void **qpHandle)
 {
     if (ctxHandle == nullptr || attr == nullptr || info == nullptr || qpHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, ctxHandle: {}, attr: {}, info: {}, qpHandle: {}", ctxHandle, (void *)attr, (void *)info, (void *)qpHandle);
         return -1;
     }
 
@@ -1107,7 +1100,7 @@ int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInf
 int RaCtxQpImportAsync(void *ctxHandle, struct QpImportInfoT *info, void **remQpHandle, void **reqHandle)
 {
     if (ctxHandle == nullptr || info == nullptr || remQpHandle == nullptr || reqHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, ctxHandle: {}, info: {}, remQpHandle: {}, reqHandle: {}", ctxHandle, (void *)info, (void *)remQpHandle, (void *)reqHandle);
         return -1;
     }
 
@@ -1123,7 +1116,7 @@ int RaCtxQpImportAsync(void *ctxHandle, struct QpImportInfoT *info, void **remQp
 int RaCtxQpBind(void *qpHandle, void *remQpHandle)
 {
     if (qpHandle == nullptr || remQpHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, remQpHandle: {}", qpHandle, remQpHandle);
         return -1;
     }
 
@@ -1204,7 +1197,7 @@ int RaTypicalQpModify(void *qpHandle, struct TypicalQp *localQpInfo, struct Typi
 int RaTypicalSendWr(void *qpHandle, struct SendWr *wr, struct SendWrRsp *opRsp)
 {
     if (qpHandle == nullptr || wr == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, wr: {}", qpHandle, (void *)wr);
         return -1;
     }
 
@@ -1228,7 +1221,7 @@ int RaTypicalSendWr(void *qpHandle, struct SendWr *wr, struct SendWrRsp *opRsp)
 int RaRdevGetPortStatus(void *rdmaHandle, enum PortStatus *status)
 {
     if (rdmaHandle == nullptr || status == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, rdmaHandle: {}, status: {}", rdmaHandle, (void *)status);
         return -1;
     }
 
@@ -1240,7 +1233,7 @@ int RaRdevGetPortStatus(void *rdmaHandle, enum PortStatus *status)
 int RaGetQpAttr(void *qpHandle, struct QpAttr *attr)
 {
     if (qpHandle == nullptr || attr == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, attr: {}", qpHandle, (void *)attr);
         return -1;
     }
 
@@ -1263,18 +1256,18 @@ int RaGetQpAttr(void *qpHandle, struct QpAttr *attr)
 
 int RaSocketWhiteListAdd(void *socketHandle, struct SocketWlistInfoT whiteList[], unsigned int num)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaSocketWhiteListDel(void *socketHandle, struct SocketWlistInfoT whiteList[], unsigned int num)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 int RaSocketAcceptCreditAdd(struct SocketListenInfoT conn[], unsigned int num, unsigned int creditLimit)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -1292,7 +1285,7 @@ int RaGetIfnum(struct RaGetIfattr *config, unsigned int *num)
     });
   
     *num = endPoints.size();
-    HCCL_VM_INFO("stub Get num:{:d}", *num);
+    HCCL_VM_WARN("Get num:{:d}", *num);
     return 0;
 }
 
@@ -1501,51 +1494,51 @@ int RaTlvRequest(void *tlvHandle, unsigned int moduleType, struct TlvMsg *sendMs
 
 int RaPingInit(struct PingInitAttr *initAttr, struct PingInitInfo *initInfo, void **pingHandle)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaPingDeinit(void *pingHandle)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaPingTargetAdd(void *pingHandle, struct PingTargetInfo target[], uint32_t num)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaPingTaskStart(void *pingHandle, struct PingTaskAttr *attr)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaPingGetResults(void *pingHandle, struct PingTargetResult target[], uint32_t *num)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaPingTargetDel(void *pingHandle, struct PingTargetCommInfo target[], uint32_t num)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaPingTaskStop(void *pingHandle)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaCtxTokenIdAlloc(void *ctxHandle, struct HccpTokenId *info, void **tokenIdHandle)
 {
     if (ctxHandle == nullptr || info == nullptr || tokenIdHandle == nullptr) {
-            HCCL_VM_ERROR("invalid params");
-            return -1;
+        HCCL_VM_ERROR("invalid params, ctxHandle: {}, info: {}, tokenIdHandle: {}", ctxHandle, (void *)info, (void *)tokenIdHandle);
+        return -1;
     }
     sim::RaTokenId tokenId{};
     tokenId.ctx_handle = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle));
@@ -1558,14 +1551,14 @@ int RaCtxTokenIdAlloc(void *ctxHandle, struct HccpTokenId *info, void **tokenIdH
 
 int RaGetSecRandom(struct RaInfo *info, uint32_t *value)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaCtxLmemUnregister(void *ctxHandle, void *lmemHandle)
 {
     if (ctxHandle == nullptr || lmemHandle == nullptr){
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, ctxHandle: {}, lmemHandle: {}", ctxHandle, lmemHandle);
         return -1;
     }
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(lmemHandle));
@@ -1578,7 +1571,7 @@ int RaCtxLmemUnregister(void *ctxHandle, void *lmemHandle)
  int RaCtxRmemUnimport(void *ctxHandle, void *rmemHandle)
 {
     if (ctxHandle == nullptr || rmemHandle == nullptr){
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, ctxHandle: {}, rmemHandle: {}", ctxHandle, rmemHandle);
         return -1;
     }
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(rmemHandle));
@@ -1589,14 +1582,12 @@ int RaCtxLmemUnregister(void *ctxHandle, void *lmemHandle)
 
 int RaCtxQpUnimportAsync(void *remQpHandle, void **reqHandle)
 {
-    HCCL_VM_INFO("stub");
     *reqHandle = reinterpret_cast<void *>(0x12345678);
     return 0;
 }
 
 int RaCtxLmemUnregisterAsync(void *ctxHandle, void *lmemHandle, void **reqHandle)
 {
-    HCCL_VM_INFO("stub");
     *reqHandle = reinterpret_cast<void *>(0x12345678);
     return 0;
 }
@@ -1604,7 +1595,7 @@ int RaCtxLmemUnregisterAsync(void *ctxHandle, void *lmemHandle, void **reqHandle
 int RaCtxQpDestroyAsync(void *qpHandle, void **reqHandle)
 {
     if (qpHandle == nullptr || reqHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, qpHandle: {}, reqHandle: {}", qpHandle, (void *)reqHandle);
         return -1;
     }
 
@@ -1618,7 +1609,7 @@ int RaCtxQpDestroyAsync(void *qpHandle, void **reqHandle)
 
 int RaCtxQpDestroyBatchAsync(void *ctxHandle, void *qpHandle[], unsigned int *num, void **reqHandle)
 {
-    HCCL_VM_INFO("stub num {:d}", *num);
+    HCCL_VM_INFO("enter num {:d}", *num);
     int ret = 0;
     for (uint32_t i = 0; i < *num; i++) {
         ret |= RaCtxQpDestroyAsync(qpHandle[i], reqHandle);
@@ -1659,14 +1650,13 @@ int RaCtxChanCreate(void *ctxHandle, struct ChanInfoT *chanInfo, void **chanHand
     auto id = RunnerDB::Add<sim::RaChan>(ch);
     *(chanHandle) = reinterpret_cast<void *>(static_cast<uintptr_t>(id));
 
-    HCCL_VM_INFO("stub RaChan {:d} add RaChan id:{:d}", raCtxId, id);
+    HCCL_VM_WARN("RaChan {:d} add RaChan id:{:d}", raCtxId, id);
     return 0;
 }
 
 int RaCtxChanDestroy(void *ctxHandle, void *chanHandle)
 {
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle));
-    // RunnerDB::Delete<sim::RaChan>(id);
     HCCL_VM_INFO("soft delete chan id {:d}, for checker use after", id);
     return 0;
 }
@@ -1679,7 +1669,6 @@ int RaCtxQpDestroy(void *qpHandle)
     }
 
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(qpHandle));
-    // RunnerDB::Delete<sim::RaJetty>(id);
     HCCL_VM_INFO("soft delete jetty id {:d}, for checker use after", id);
     return 0;
 }
@@ -1687,20 +1676,18 @@ int RaCtxQpDestroy(void *qpHandle)
 int RaCtxTokenIdFree(void *ctxHandle, void *tokenIdHandle)
 {
     if (ctxHandle == nullptr || tokenIdHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, ctxHandle: {}, tokenIdHandle: {}", ctxHandle, tokenIdHandle);
         return -1;
     }
     uint64_t id = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(tokenIdHandle));
-    // RunnerDB::Delete<sim::RaTokenId>(id);
     HCCL_VM_INFO("soft delete token id {:d}, for checker use after", id);
     return 0;
 }
 
 int RaCtxLmemRegister(void *ctxHandle, struct MrRegInfoT *lmemInfo, void **lmemHandle)
 {
-    // HCCL_VM_INFO("stub empty");
     if (ctxHandle == nullptr || lmemInfo == nullptr || lmemHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, ctxHandle: {}, lmemInfo: {}, lmemHandle: {}", ctxHandle, (void *)lmemInfo, (void *)lmemHandle);
         return -1;
     }
     sim::RaLmem memInfo{};
@@ -1728,7 +1715,7 @@ int RaCtxLmemRegister(void *ctxHandle, struct MrRegInfoT *lmemInfo, void **lmemH
 int RaCtxLmemRegisterAsync(void *ctxHandle, struct MrRegInfoT *lmemInfo,
     void **lmemHandle, void **reqHandle)
 {
-    HCCL_VM_INFO("stub empty");
+    HCCL_VM_ERROR("not support");
     return -1;
 }
 
@@ -1744,7 +1731,7 @@ int RaGetTpInfoListAsync(void *ctxHandle, struct GetTpCfg *cfg, struct HccpTpInf
 int RaGetEidByIpAsync(void *ctxHandle, struct IpInfo ip[], union HccpEid eid[],
     unsigned int *num, void **reqHandle)
 {
-    HCCL_VM_INFO("stub not support");
+    HCCL_VM_ERROR("not support");
     return -1;
 }
 
@@ -1758,7 +1745,7 @@ int RaGetTpAttrAsync(void *ctxHandle, uint64_t tpHandle, uint32_t *attrBitmap,
 
 int RaCtxQpQueryBatch(void *qpHandle[], struct JettyAttr attr[], unsigned int *num)
 {
-    HCCL_VM_INFO("stub not support");
+    HCCL_VM_ERROR("not support");
     return -1;
 }
 
@@ -1788,33 +1775,32 @@ int RaCtxQpUnbind(void *qpHandle)
 int RaBatchSendWr(
     void *qpHandle, struct SendWrData wrList[], struct SendWrResp opResp[], unsigned int num, unsigned int *completeNum)
 {
-    HCCL_VM_INFO("stub not support");
+    HCCL_VM_ERROR("not support");
     return -1;
 }
 
 int RaCtxCqCreate(void *ctxHandle, struct CqInfoT *info, void **cqHandle)
 {
-    HCCL_VM_INFO("stub");
     *cqHandle = reinterpret_cast<void *>(static_cast<uintptr_t>(0xabcdU));
     return 0;
 }
 
 int RaCtxCqDestroy(void *ctxHandle, void *cqHandle)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int RaCtxUpdateCi(void *qpHandle, uint16_t ci)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int ra_get_async_req_result(void *req_handle, int *req_result)
 {
     if (req_handle == nullptr || req_result == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, req_handle: {}, req_result: {}", req_handle, (void *)req_result);
         return -1;
     }
 
@@ -1825,6 +1811,7 @@ int ra_get_async_req_result(void *req_handle, int *req_result)
 
 int ra_get_qp_context(void* qpHandle, void** qp, void** sendCq, void** recvCq)
 {
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -1837,17 +1824,20 @@ int ra_get_tsqp_depth(void *rdev_handle, unsigned int *temp_depth, unsigned int 
 
 int ra_set_tsqp_depth(void *rdev_handle, unsigned int temp_depth, unsigned int *qp_num)
 {
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int ra_get_notify_mr_info(void* handle, struct mr_info *mrInfo)
 {
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int ra_send_wrlist_ext(void *qp_handle, struct send_wrlist_data_ext wr[], struct send_wr_rsp op_rsp[],
     unsigned int send_num, unsigned int *complete_num)
 {
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -1864,21 +1854,25 @@ int ra_deregister_mr(const void* handle, void *mrHandle)
 
 int ra_is_first_used(int ins_id)
 {
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int ra_epoll_ctl_add(const void *fd_handle, RaEpollEvent event)
 {
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int ra_epoll_ctl_mod(const void *fd_handle, RaEpollEvent event)
 {
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
 int ra_epoll_ctl_del(const void *fd_handle)
 {
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -1886,7 +1880,7 @@ int RaCtxQpCreateAsync(
     void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInfo *info, void **qpHandle, void **reqHandle)
 {
     if (ctxHandle == nullptr || attr == nullptr || qpHandle == nullptr || reqHandle == nullptr) {
-        HCCL_VM_ERROR("invalid params");
+        HCCL_VM_ERROR("invalid params, ctxHandle: {}, attr: {}, qpHandle: {}, reqHandle: {}", ctxHandle, (void *)attr, (void *)qpHandle, (void *)reqHandle);
         return -1;
     }
 
@@ -1930,6 +1924,7 @@ TraStatus AtraceSubmit(TraHandle handle, const void *buffer, uint32_t bufSize)
     if (handle == 0) {
         return 0;
     } else if (handle == 1) {
+        HCCL_VM_ERROR("invalid params, handle: {}", handle);
         return -1;
     }
     return 0;
@@ -1937,7 +1932,7 @@ TraStatus AtraceSubmit(TraHandle handle, const void *buffer, uint32_t bufSize)
 
 rtError_t rtPointerGetAttributes(rtPointerAttributes_t *attributes, const void *ptr)
 {
-    HCCL_VM_INFO("stub");
+    HCCL_VM_WARN("is empty");
     return 0;
 }
 
@@ -1945,8 +1940,72 @@ rtError_t rtStreamGetCqid(const rtStream_t stm, uint32_t *cqId, uint32_t *logicC
 {
     static uint32_t i = 0U;
     *logicCqId = i++;
-    HCCL_VM_INFO("stub");
     return 0;
+}
+
+int RaGetEidByIp(void *ctxHandle, struct IpInfo ip[], union HccpEid eid[], unsigned int *num)
+{
+    if (ctxHandle == nullptr || ip == nullptr || eid == nullptr || num == nullptr) {
+        HCCL_VM_ERROR("invalid params, ctxHandle: {:p}, ip: {:p}, eid: {:p}, num: {}", ctxHandle, (void *)ip, (void *)eid, (void *)num);
+        return -1;
+    }
+
+    if (*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM) {
+        HCCL_VM_ERROR("num({}) must be in range [1, {}]", *num, HCCP_EID_IP_QUERY_MAX_NUM);
+        return -1;
+    }
+
+    for (uint32_t i = 0; i < *num; i++) {
+        BinaryAddr ipAddr;
+        ipAddr.addr = ip[i].ip.addr;
+        ipAddr.addr6 = ip[i].ip.addr6;
+
+        IpAddress addr(ipAddr, ip[i].family);
+        auto simEid = addr.GetEid();
+        for (uint32_t j = 0; j < URMA_EID_LEN; j++) {
+            eid[i].raw[j] = simEid.raw[j];
+        }
+    }
+
+    return 0;
+}
+
+int RaGetIpByEid(void *ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int *num)
+{
+    if (ctxHandle == nullptr || ip == nullptr || eid == nullptr || num == nullptr) {
+        HCCL_VM_ERROR("invalid params, ctxHandle: {:p}, ip: {:p}, eid: {:p}, num: {}", ctxHandle, (void *)ip, (void *)eid, (void *)num);
+        return -1;
+    }
+
+    if (*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM) {
+        HCCL_VM_ERROR("num({}) must be in range [1, {}]", *num, HCCP_EID_IP_QUERY_MAX_NUM);
+        return -1;
+    }
+
+    for (uint32_t i = 0; i < *num; i++) {
+        Eid simEid;
+        for (uint32_t j = 0; j < URMA_EID_LEN; j++) {
+            simEid.raw[j] = eid[i].raw[j];
+        }
+        auto ipAddr = IpAddress(simEid);
+        auto ipInfo = ipAddr.GetBinaryAddress();
+        ip[i].ip.addr = ipInfo.addr;
+        ip[i].ip.addr6 = ipInfo.addr6;
+        ip[i].family = ipAddr.GetFamily();
+    }
+
+    return 0;
+}
+
+int RaGetIpByEidAsync(void *ctxHandle, union HccpEid eid[], struct IpInfo ip[],
+    unsigned int *num, void **reqHandle)
+{
+    HCCL_VM_WARN("Enter RaGetIpByEidAsync");
+    if (reqHandle == nullptr) {
+        HCCL_VM_ERROR("invalid params, reqHandle: {:p}", (void *)reqHandle);
+        return -1;
+    }
+    return RaGetIpByEid(ctxHandle, eid, ip, num);
 }
 
 #ifdef __cplusplus

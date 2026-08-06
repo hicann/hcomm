@@ -39,7 +39,9 @@ public:
     void Init(uint16_t startInstrId, uint16_t endInstrId, uint16_t instrCnt, RunnerCcuVersion version);
     void InitLoopGroupInfo(const LoopGroupInfo &loopGroupInfo);
     void InitLoopGroupInfo(uint16_t startLoopId, uint64_t offsetCfg, uint64_t repeatCfg);
+    void InitLoopGroupInfoV2(uint16_t startLoopId, uint64_t xnValue, uint64_t xmValue, uint64_t xpValue);
     void InitLoopInfo(uint16_t startInstrId, uint16_t endInstrId, uint16_t execCount, uint32_t addrStep);
+    void InitLoopInfoV2(uint16_t startInstrId, uint16_t endInstrId, uint64_t xnValue, uint64_t xmValue, uint64_t xpValue);
     void InitJumpStatus(uint16_t jumpInstrId);
 
     uint64_t GetLoopGsaAddrOffset();

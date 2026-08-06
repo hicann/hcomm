@@ -145,6 +145,11 @@ public:
         return dst;
     }
 
+    auto GetFamily() const
+    {
+        return family_;
+    }
+
 private:
     union BinaryAddr binaryAddr_{}; // 二进制IP地址
     s32 family_{AF_INET};

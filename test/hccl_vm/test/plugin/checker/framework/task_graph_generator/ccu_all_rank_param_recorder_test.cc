@@ -137,6 +137,39 @@ TEST_F(AllRankParamRecorderTest, SetHBM_EightByteAligned_Success)
     EXPECT_EQ(AllRankParamRecorder::Global()->SetHBM(1, 0, 0x2000, data), HCCL_SUCCESS);
 }
 
+TEST_F(AllRankParamRecorderTest, GetXnIdByAddr_ValidDieId_Success)
+{
+    auto* rec = AllRankParamRecorder::Global();
+    rec->ccu_resource_base_addr_ = {0x0, 0x200000};
+    uint16_t xnId = 0;
+    EXPECT_EQ(rec->GetXnIdByAddr(0, CcuComponerntType::XN_A6, 0x100000, xnId), HCCL_SUCCESS);
+    EXPECT_EQ(xnId, 0u);
+}
+
+TEST_F(AllRankParamRecorderTest, GetXnIdByAddr_OutOfRangeDieId_ReturnsError)
+{
+    auto* rec = AllRankParamRecorder::Global();
+    rec->ccu_resource_base_addr_ = {0x0};
+    uint16_t xnId = 0;
+    EXPECT_EQ(rec->GetXnIdByAddr(5, CcuComponerntType::XN_A6, 0x100000, xnId), HCCL_E_PARA);
+}
+
+TEST_F(AllRankParamRecorderTest, GetAddrByXnId_ValidDieId_Success)
+{
+    auto* rec = AllRankParamRecorder::Global();
+    rec->ccu_resource_base_addr_ = {0x0};
+    uint64_t addr = 1;
+    EXPECT_EQ(rec->GetAddrByXnId(0, CcuComponerntType::XN_A6, 0, addr), HCCL_SUCCESS);
+}
+
+TEST_F(AllRankParamRecorderTest, GetAddrByXnId_OutOfRangeDieId_ReturnsError)
+{
+    auto* rec = AllRankParamRecorder::Global();
+    rec->ccu_resource_base_addr_ = {0x0};
+    uint64_t addr = 0;
+    EXPECT_EQ(rec->GetAddrByXnId(5, CcuComponerntType::XN_A6, 0, addr), HCCL_E_PARA);
+}
+
 TEST_F(AllRankParamRecorderTest, GetDevType_Default_ReturnsInvalid)
 {
     EXPECT_EQ(AllRankParamRecorder::Global()->GetDevType(), DevType::DEV_TYPE_COUNT);
@@ -162,6 +195,29 @@ TEST_F(AllRankParamRecorderTest, MultipleRanksAndDies_SetGetSuccess)
     EXPECT_EQ(val, 300u);
 }
 
+TEST_F(AllRankParamRecorderTest, GetXnIdByAddr_AllComponentTypes_Success)
+{
+    auto* rec = AllRankParamRecorder::Global();
+    rec->ccu_resource_base_addr_ = {0x0};
+    uint16_t xnId = 0xFFFF;
+    EXPECT_EQ(rec->GetXnIdByAddr(0, CcuComponerntType::XN_A6, 0x100000, xnId), HCCL_SUCCESS);
+    EXPECT_EQ(rec->GetXnIdByAddr(0, CcuComponerntType::CKE_A6, 0x140000, xnId), HCCL_SUCCESS);
+    EXPECT_EQ(rec->GetXnIdByAddr(0, CcuComponerntType::PFE_A6, 0x148000, xnId), HCCL_SUCCESS);
+    EXPECT_EQ(rec->GetXnIdByAddr(0, CcuComponerntType::CHANNEL_A6, 0x150000, xnId), HCCL_SUCCESS);
+    EXPECT_EQ(rec->GetXnIdByAddr(0, CcuComponerntType::JETTY_A6, 0x170000, xnId), HCCL_SUCCESS);
+    EXPECT_EQ(rec->GetXnIdByAddr(0, CcuComponerntType::MISSION_A6, 0x178000, xnId), HCCL_SUCCESS);
+    EXPECT_EQ(rec->GetXnIdByAddr(0, CcuComponerntType::LOOP_A6, 0x180000, xnId), HCCL_SUCCESS);
+}
+
+TEST_F(AllRankParamRecorderTest, GetAddrByXnId_AllComponentTypes_Success)
+{
+    auto* rec = AllRankParamRecorder::Global();
+    rec->ccu_resource_base_addr_ = {0x0};
+    uint64_t addr = 0;
+    EXPECT_EQ(rec->GetAddrByXnId(0, CcuComponerntType::XN_A6, 0, addr), HCCL_SUCCESS);
+    EXPECT_EQ(rec->GetAddrByXnId(0, CcuComponerntType::CKE_A6, 0, addr), HCCL_SUCCESS);
+    EXPECT_EQ(rec->GetAddrByXnId(0, CcuComponerntType::CHANNEL_A6, 0, addr), HCCL_SUCCESS);
+}
 
 class TypeConversionTest : public testing::Test {};
 

@@ -45,3 +45,13 @@ std::string LoadGsaGsaExecutor::Describe()
 {
     return HcclSim::StringFormat("[Simulation Execute] Load GSA[%u] + GSA[%u] to GSA[%u]\n", gsAmId_, gsAnId_, gsAdId_);
 }
+
+CcuTrace::CcuInstrTraceDetail LoadGsaGsaExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "LoadGsaGsa";
+    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    detail.args["gsa1"] = std::to_string(ccuResMgr.GetGsaValue(rankId_, dieId_, gsAmId_));
+    detail.args["gsa2"] = std::to_string(ccuResMgr.GetGsaValue(rankId_, dieId_, gsAnId_));
+    return detail;
+}

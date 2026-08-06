@@ -30,6 +30,7 @@
 #include "hccp_tlv.h"
 #include "rts_device.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
@@ -154,14 +155,14 @@ int ibv_ext_post_send_stub(struct ibv_qp *qp, struct ibv_send_wr *wr, struct ibv
 
 HcclResult hrtTsdCapabilityGet(uint32_t deviceLogicId, int32_t type, uint64_t ptr)
 {
-    HCCL_VM_INFO("deviceLogicId:[{}] type:[{}]], ptr:[{}]\n", deviceLogicId, type, ptr);
+    HCCL_VM_INFO("deviceLogicId:[{}] type:[{}]], ptr:[{}]", deviceLogicId, type, ptr);
     return (HcclResult)0;
 }
 
 HcclResult hrtGetDeviceInfo(u32 deviceId, HcclRtDeviceModuleType hcclModuleType, HcclRtDeviceInfoType hcclInfoType,
                             s64 &val)
 {
-    HCCL_VM_INFO("deviceId:[{}] hcclModuleType:[{}], HcclRtDeviceInfoType:[{}]\n", deviceId,
+    HCCL_VM_INFO("deviceId:[{}] hcclModuleType:[{}], HcclRtDeviceInfoType:[{}]", deviceId,
            (int)hcclModuleType, (int)hcclInfoType);
     return (HcclResult)0;
 }

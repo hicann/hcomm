@@ -10,12 +10,10 @@
 
 #include "task_graph_reachability_v3.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <map>
 #include <queue>
 #include <set>
-#include <sstream>
 #include <utility>
 
 #include "sim_log.h"
@@ -294,8 +292,7 @@ HcclResult BuildReachabilityContext(const TaskNode *start, ReachabilityBuildCont
             "topoSize={}, expectedTopoSize={}, reachableTaskCount={}, taskNodeCount={}, mainStartNodeId={}",
             MakeErrorCodeText(ErrorCode::MEMCONFLICT_DAG_INVALID),
             context.fullTopoOrder.size(), nodeCount + 1U, context.taskTopoNodes.size(), nodeCount,
-            MAIN_START_NODE_ID,
-            firstUnreachedNode == nullptr ? "null" : firstUnreachedNode->Describe());
+            MAIN_START_NODE_ID);
         return HCCL_E_INTERNAL;
     }
 

@@ -27,6 +27,7 @@ using namespace hcomm::CcuRep;
 
 // 注册ReduceMinExecutor create Func
 REG_CCU_EXECUTOR_CREATE_FUNC(SimCcuV1::REDUCE_TYPE, SimCcuV1::MIN_CODE, ReduceMinExecutor);
+REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::REDUCE_TYPE, SimCcuV2::REDUCEMIN_CODE, ReduceMinExecutor);
 
 void ReduceMinExecutor::Parser()
 {
@@ -39,6 +40,13 @@ void ReduceMinExecutor::Parser()
         waitCKEId_   = instr_.v1.min.waitCKEId;
         waitCKEMask_ = instr_.v1.min.waitCKEMask;
         (void)memcpy(msId_, instr_.v1.min.msId, sizeof(uint16_t) * CCU_REDUCE_MAX_MS);
+        } else if (version_ == RunnerCcuVersion::CCU_V2) {
+        count_       = instr_.v2.reduce.count;
+        dataType_    = instr_.v2.reduce.dataType;
+        setCKEId_    = instr_.v2.reduce.setCKEId;
+        setCKEMask_  = instr_.v2.reduce.setCKEMask;
+
+        (void)memcpy(msId_, instr_.v2.reduce.msId, sizeof(uint16_t) * CCU_REDUCE_MAX_MS);
     } else {
         HCCL_VM_ERROR("Invalid ccu version:{}", RunnerCcuVersionToString(version_));
         ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
@@ -82,10 +90,36 @@ void ReduceMinExecutor::RunV1() {
     WaitCkeProcess(waitCKEId_, waitCKEMask_, clearType_, "ReduceMin");
 }
 
+void ReduceMinExecutor::RunV2() {
+    HCCL_VM_DEBUG("Reduce Min info, locCcu[{}:{}], count=[{}], dataType=[{}]",
+        rankId_, dieId_, count_, dataType_);
+    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    for (uint32_t i = 0; i < CCU_REDUCE_MAX_MS; i++) {
+        HCCL_VM_TRACE("msId_[{}]:dieId[{}], msId[{}]", i, msId_[i] >> 15, msId_[i] & 0x7FFF);
+        msId_[i] = UpdateMSId(msId_[i] & 0x7FFF);
+    }
+    if (dataType_ >= ReduceMaxMinDataType::MAX_MIN_RESERVED4 || dataType_ == ReduceMaxMinDataType::MAX_MIN_RESERVED1 ||
+        dataType_ == ReduceMaxMinDataType::MAX_MIN_RESERVED2 || dataType_ == ReduceMaxMinDataType::MAX_MIN_RESERVED3) {
+        ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
+        return;
+    }
+    // 2. reduce操作
+    ReduceMaxMinDataType type = static_cast<ReduceMaxMinDataType>(dataType_);
+    auto res = reduceMinFuncMap.find(type);
+    if (res !=  reduceMinFuncMap.end()) {
+        res->second(rankId_, dieId_, msId_, count_);
+    }
+    // 3.设置本端的cke
+    uint16_t ckeId = UpdateCkeId(setCKEId_);
+    SetCkeSignal(ccuResMgr, ckeId, setCKEMask_);
+}
+
 void ReduceMinExecutor::Run()
 {
     if (version_ == RunnerCcuVersion::CCU_V1) {
         RunV1();
+    } else if (version_ == RunnerCcuVersion::CCU_V2) {
+        RunV2();
     } else {
         HCCL_VM_ERROR("Invalid ccu version:{}", RunnerCcuVersionToString(version_));
         ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
@@ -105,4 +139,12 @@ std::string ReduceMinExecutor::Describe()
         setCKEId_,
         setCKEMask_,
         clearType_);
+}
+
+CcuTrace::CcuInstrTraceDetail ReduceMinExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "ReduceMin";
+    detail.args["reduceOp"] = "Min";
+    return detail;
 }

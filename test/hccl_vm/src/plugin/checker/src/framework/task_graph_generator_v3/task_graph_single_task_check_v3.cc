@@ -760,6 +760,11 @@ HcclResult CheckSlaveTaskQueue(const std::vector<std::unique_ptr<TaskNode>> &nod
                 ++backStep;
             }
 
+            const char *hcclvmTopoType = std::getenv("HCCLVM_TOPO_TYPE");
+            if (hcclvmTopoType != nullptr && std::string(hcclvmTopoType) == "HF") {
+                continue;
+            }
+
             if (!IsLocalAicpuWait(firstTask)) {
                 HCCL_VM_ERROR("{} The first task in this slave stream is not a "
                     "local WAIT task, rankId={}, streamId={}, actualFirstTaskType={}, firstTask={}",

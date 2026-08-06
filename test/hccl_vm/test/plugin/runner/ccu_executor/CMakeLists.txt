@@ -16,6 +16,9 @@ add_library(ccu_executor_common_objs OBJECT
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/ccu_reduce_operator.cc
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/ccu_executor_manager.cc
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/ccu_resource_v1.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/ccu_resource_v2.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/trace/ccu_trace_collector.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/trace/ccu_trace_serializer.cc
     ${CMAKE_SOURCE_DIR}/src/utils/sim_log.cc
     ${CMAKE_SOURCE_DIR}/src/store/store_sim_shm_memory_common.cc
 )
@@ -46,13 +49,14 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/load_executor
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/reduce_executor
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/trans_executor
+    ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor/trace
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/runner_utils
     ${CMAKE_SOURCE_DIR}/src/plugin/checker/header/external
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/store
     ${CMAKE_SOURCE_DIR}/include/runnerdb
-    ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
+    ${YAMLCPP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party/yaml-cpp/include
     ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json
 )

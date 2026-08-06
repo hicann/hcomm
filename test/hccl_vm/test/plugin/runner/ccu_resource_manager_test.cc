@@ -54,6 +54,12 @@ TEST_F(CcuResourceManagerTest, InitWithCcuV1) {
     EXPECT_NO_THROW(mgr.Init(0, 4, RunnerCcuVersion::CCU_V1, {}));
 }
 
+// Test: Init with CCU_V2 (not supported)
+TEST_F(CcuResourceManagerTest, InitWithCcuV2) {
+    CcuResourceManager& mgr = CcuResourceManager::GetInstance();
+    EXPECT_NO_THROW(mgr.Init(0, 4, RunnerCcuVersion::CCU_V2, {}));
+}
+
 // Test: Init with CCU_INVALID
 TEST_F(CcuResourceManagerTest, InitWithCcuInvalid) {
     CcuResourceManager& mgr = CcuResourceManager::GetInstance();

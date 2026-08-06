@@ -21,14 +21,14 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/store
     ${CMAKE_SOURCE_DIR}/include/runnerdb
-    ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
+    ${YAMLCPP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json
-    $ENV{HCOMM_CODE_HOME}/pkg_inc
+    ${HCOMM_CODE_ROOT}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/include
 )
 
 link_libraries(
-    
+
     gtest
 )
 

@@ -32,6 +32,7 @@ public:
     void Run() override;
     void Process(CcuResourceManager &ccuResMgr) override;
     std::string Describe() override;
+    CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
     uint16_t locDieId_{0};

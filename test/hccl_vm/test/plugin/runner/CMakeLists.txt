@@ -70,6 +70,7 @@ target_sources(test_hccl_task_thread PRIVATE
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/runner_utils/hccl_task_reduce_process.cc
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/runner_utils/device_resource.cc
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/runner_utils/device_resource_manager.cc
+    ${CMAKE_SOURCE_DIR}/src/plugin/runner/runner_utils/storage_manager.cc
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/aiv_executor/aiv_resource_manager.cc
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/aiv_executor/aiv_graph_executor.cc
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/aiv_executor/aiv_graph_executor_mgr.cc
@@ -82,7 +83,8 @@ target_sources(test_hccl_task_thread PRIVATE
     ${CMAKE_SOURCE_DIR}/src/store/store_binary_data_operator.cc
     ${CMAKE_SOURCE_DIR}/src/runnerdb/tracedb/db_sim_sqlite_db.cc
 )
-target_link_libraries(test_hccl_task_thread ccu_executor_common_objs ${CCU_EXECUTOR_COMMON_LIBS})
+target_link_libraries(test_hccl_task_thread ccu_executor_common_objs ${CCU_EXECUTOR_COMMON_LIBS}
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libhcomm.so)
 set_target_properties(test_hccl_task_thread PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
 )

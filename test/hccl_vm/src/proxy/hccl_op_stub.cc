@@ -11,7 +11,6 @@
 // 日志染色: 模块 tag (须在 include sim_log.h 之前)
 #define HCCL_VM_MODULE "OP_STUB"
 
-#include <atomic>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>

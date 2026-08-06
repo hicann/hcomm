@@ -31,6 +31,7 @@ public:
     void Parser() override;
     void Run() override;
     std::string Describe() override;
+    CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
     void Process(CcuResourceManager &ccuResMgr);

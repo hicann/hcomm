@@ -374,6 +374,11 @@ HcclResult TaskGraphGeneratorV3::GenGraph(std::vector<std::unique_ptr<TaskNode>>
     Reset();
     HCCL_VM_INFO("Start building the CheckerV3 graph from translated nodes, rankCount={}, nodeCount={}",
         translatedTaskQueues.size(), translatedNodes.size());
+    if (translatedNodes.empty() || translatedTaskQueues.empty()) {
+        HCCL_VM_ERROR("{} Checker get empty task queue, please check if the HCCL-VM end normally, rankCount={}, nodeCount={}",
+            MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR), translatedTaskQueues.size(), translatedNodes.size());
+        return HCCL_E_PARA;
+    }
     nodes_ = std::move(translatedNodes);
     taskQueues_ = std::move(translatedTaskQueues);
     hasAiv_ = std::any_of(nodes_.begin(), nodes_.end(), [](const std::unique_ptr<TaskNode> &node) {

@@ -213,8 +213,6 @@ else
 fi
 
 echo "CANN_ARCH_DIR: $CANN_ARCH_DIR (processor: $MACHINE_ARCH)"
-
-
 echo "--- 环境变量解析成功 ---"
 echo "HCCL_VM_PATH: $HCCL_VM_PATH"
 echo "ASCEND_INSTALL_PATH: $ASCEND_INSTALL_PATH"

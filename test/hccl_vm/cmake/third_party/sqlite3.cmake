@@ -33,28 +33,49 @@ if(NOT (EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.c" AND EXISTS "${SQLITE3_TARGET_DI
         message(STATUS "[ThirdParty] Found local SQLite3 package: ${SQLITE3_PKG_PATH}")
     endif()
 
-# 解压
-set(_sqlite3_extract_dir "${CMAKE_BINARY_DIR}/_sqlite3_tmp")
-file(MAKE_DIRECTORY ${_sqlite3_extract_dir})
-file(ARCHIVE_EXTRACT
-    INPUT ${SQLITE3_PKG_PATH}
-    DESTINATION ${_sqlite3_extract_dir}
-)
-file(GLOB _sqlite3_extracted_entries "${_sqlite3_extract_dir}/*")
-list(GET _sqlite3_extracted_entries 0 _extracted_dir)
+    # 解压
+    set(_sqlite3_extract_dir "${CMAKE_BINARY_DIR}/_sqlite3_tmp")
+    file(MAKE_DIRECTORY ${_sqlite3_extract_dir})
+    file(ARCHIVE_EXTRACT
+        INPUT ${SQLITE3_PKG_PATH}
+        DESTINATION ${_sqlite3_extract_dir}
+    )
+    file(GLOB _sqlite3_extracted_entries "${_sqlite3_extract_dir}/*")
+    list(GET _sqlite3_extracted_entries 0 _extracted_dir)
 
-# 规范化目录名：sqlite-amalgamation-3510300 -> sqlite
-if(EXISTS "${SQLITE3_TARGET_DIR}")
-    file(REMOVE_RECURSE ${SQLITE3_TARGET_DIR})
-endif()
-file(RENAME ${_extracted_dir} ${SQLITE3_TARGET_DIR})
-file(REMOVE_RECURSE ${_sqlite3_extract_dir})
+    # 规范化目录名：sqlite-amalgamation-3510300 -> sqlite
+    if(EXISTS "${SQLITE3_TARGET_DIR}")
+        file(REMOVE_RECURSE ${SQLITE3_TARGET_DIR})
+    endif()
+    file(RENAME ${_extracted_dir} ${SQLITE3_TARGET_DIR})
+    file(REMOVE_RECURSE ${_sqlite3_extract_dir})
 
-# 验证产物
-if(NOT EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.c" OR NOT EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.h")
-    message(FATAL_ERROR
-        "[ThirdParty] SQLite3 source extraction failed. "
-        "Missing sqlite3.c or sqlite3.h in ${SQLITE3_TARGET_DIR}")
+    # 验证产物
+    if(NOT EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.c" OR NOT EXISTS "${SQLITE3_TARGET_DIR}/sqlite3.h")
+        message(FATAL_ERROR
+            "[ThirdParty] SQLite3 source extraction failed. "
+            "Missing sqlite3.c or sqlite3.h in ${SQLITE3_TARGET_DIR}")
+    endif()
+    message(STATUS "[ThirdParty] SQLite3 source extracted to ${SQLITE3_TARGET_DIR}")
+else()
+    message(STATUS "[ThirdParty] SQLite3 source already available in ${SQLITE3_TARGET_DIR}")
 endif()
-message(STATUS "[ThirdParty] SQLite3 source extracted to ${SQLITE3_TARGET_DIR}")
+
+# 源码就绪后再创建 target，避免引用尚未下载的源文件
+if(NOT TARGET sqlite3)
+    add_library(sqlite3 STATIC ${SQLITE3_TARGET_DIR}/sqlite3.c)
+    target_include_directories(sqlite3 PUBLIC ${SQLITE3_TARGET_DIR})
+    set_target_properties(sqlite3 PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        CXX_STANDARD 17
+    )
+    target_compile_options(sqlite3 PRIVATE
+        -O2
+        -DSQLITE_THREADSAFE=1
+        -DSQLITE_OMIT_LOAD_EXTENSION
+        -DSQLITE_DEFAULT_MEMSTATUS=0
+        -DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1
+        -DSQLITE_LIKE_DOESNT_MATCH_BLOBS
+        -DSQLITE_OMIT_DEPRECATED
+    )
 endif()

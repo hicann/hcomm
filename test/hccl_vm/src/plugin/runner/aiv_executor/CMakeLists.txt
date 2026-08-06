@@ -6,8 +6,6 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
-cmake_minimum_required(VERSION 3.14)
-
 set(AIV_EXECUTOR_SOURCES
     aiv_resource_manager.cc
     aiv_graph_executor.cc
@@ -20,11 +18,7 @@ set(AIV_EXECUTOR_SOURCES
 
 add_library(aiv_executor STATIC ${AIV_EXECUTOR_SOURCES})
 
-target_compile_options(aiv_executor PRIVATE
-    -g
-    -O0
-    -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(aiv_executor)
 
 target_include_directories(aiv_executor
     PUBLIC

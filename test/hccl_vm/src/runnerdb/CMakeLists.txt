@@ -19,46 +19,23 @@ target_sources(runnerdb PRIVATE
 )
 
 target_include_directories(runnerdb PRIVATE
-        # hccl_proxy依赖的HCCL业务代码头文件, 这里的头文件有要求: 开源用户可获取
-        ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
-        ${ASCEND_CANN_PACKAGE_PATH}/include
-        ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
-)
-target_include_directories(runnerdb PRIVATE
-        ${PROJECT_SOURCE_DIR}/include
-        ${PROJECT_SOURCE_DIR}/include/runnerdb
-)
-
-target_link_libraries(runnerdb PUBLIC log modeldb)
-
-target_include_directories(runnerdb PRIVATE
-        # hccl_proxy依赖的Checker L2其他模块的头文件
-        ${HCOMM_VM_ROOT_PATH}/include
-        ${HCOMM_VM_ROOT_PATH}/include
-        ${HCOMM_VM_ROOT_PATH}/include/runnerdb
-        ${HCOMM_VM_ROOT_PATH}/src/store
-        ${HCOMM_VM_ROOT_PATH}/src/runnerdb
-        ${HCOMM_VM_ROOT_PATH}/src/runnerdb/modeldb
-        ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
-        ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/runtime
-        ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/profiling
+    ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
+    ${ASCEND_CANN_PACKAGE_PATH}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/runtime
+    ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/profiling
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/runnerdb
+    ${HCOMM_VM_ROOT_PATH}/include
+    ${HCOMM_VM_ROOT_PATH}/include/runnerdb
+    ${HCOMM_VM_ROOT_PATH}/src/store
+    ${HCOMM_VM_ROOT_PATH}/src/runnerdb
+    ${HCOMM_VM_ROOT_PATH}/src/runnerdb/modeldb
 )
 
-target_compile_options(runnerdb PRIVATE
-        -fPIC
-        -Werror
-        -fno-common
-        -fno-strict-aliasing
-        -pipe
-        -O0
-        -g
-        -D_GLIBCXX_USE_CXX11_ABI=0
-)
+target_link_libraries(runnerdb PRIVATE log modeldb sqlite3)
 
-find_package(SQLite3 REQUIRED)
-
-target_link_libraries(runnerdb PUBLIC SQLite::SQLite3)
-
+hcclvm_apply_common_flags(runnerdb)
 
 # 日志染色: 模块 tag
 target_compile_definitions(runnerdb PRIVATE HCCL_VM_MODULE="RUNNERDB")

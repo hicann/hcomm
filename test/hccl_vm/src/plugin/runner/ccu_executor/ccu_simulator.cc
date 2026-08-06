@@ -16,6 +16,7 @@
 
 #include "ccu_executor_manager.h"
 #include "ccu_resource_manager.h"
+#include "ccu_trace_collector.h"
 #include "sim_log.h"
 
 using namespace std;
@@ -38,6 +39,24 @@ void CcuSimulator::InitLoopGroupInfo(uint16_t startLoopId, uint64_t offsetCfg, u
         rankId_, dieId_, loopGroupInfo_.ckeOffset_, loopGroupInfo_.msOffset_, loopGroupInfo_.gsaOffset_);
 }
 
+void CcuSimulator::InitLoopGroupInfoV2(uint16_t startLoopId, uint64_t xnValue, uint64_t xmValue, uint64_t xpValue)
+{
+    state_ =  CcuExecState::EXEC_LOOPGROUP_INSTR;
+    loopGroupInfo_.startLoopId_   = startLoopId;
+    loopGroupInfo_.loopNum_       = xnValue & 0x7F; // 0x7F: 取loop指令个数，即[9:0]位
+    loopGroupInfo_.loopOffset_    = (xnValue >> 10) & 0x1FF; // 0x1FF: 取loop偏移，即[18:10]位
+    loopGroupInfo_.loopExtendNum_ = (xnValue >> 19) & 0x1FF; // 0x7F: 取loop展开次数，即[27:19]位
+    HCCL_VM_DEBUG("locCcu[{}:{}], curInstrId_=[{}], loopNum=[{}], loopOffset=[{}], loopExtendNum=[{}]",
+        rankId_, dieId_, curInstrId_, loopGroupInfo_.loopNum_, loopGroupInfo_.loopOffset_, loopGroupInfo_.loopExtendNum_);
+
+    loopGroupInfo_.ckeOffset_ = xmValue & 0x3FF;               // 0x3FF: 取低[9:0]位
+    loopGroupInfo_.msOffset_  = (xmValue >> 10) & 0x7FF;       // 0x7FF: 取低[20:10]位
+    loopGroupInfo_.gsaOffset_ = (xmValue >> 21) & 0xFFFFFFFF;  // 0xFFFFFFFF: 取低[52:21]位
+    loopGroupInfo_.xnIdOffset = xpValue & 0xFFFFFFFF;
+    HCCL_VM_DEBUG("locCcu[{}:{}], ckeOffset=[{}], msOffset=[{}], gsaOffset=[{}], xnIdOffset=[{}]",
+        rankId_, dieId_, loopGroupInfo_.ckeOffset_, loopGroupInfo_.msOffset_, loopGroupInfo_.gsaOffset_, loopGroupInfo_.xnIdOffset);
+}
+
 void CcuSimulator::InitLoopInfo(uint16_t startInstrId, uint16_t endInstrId, uint16_t execCount, uint32_t addrStep)
 {
     loopGroupInfo_.loopStatus_.loopStartInstrId = startInstrId;
@@ -50,6 +69,21 @@ void CcuSimulator::InitLoopInfo(uint16_t startInstrId, uint16_t endInstrId, uint
     HCCL_VM_DEBUG("locCcu[{}:{}], loopStartInstrId=[{}], loopCurInstrId=[{}], "
                "loopEndInstrId=[{}], loopExecCount=[{}], loopGsaIterStep=[{}]",
         rankId_, dieId_, startInstrId, startInstrId, endInstrId, execCount, addrStep);
+}
+
+void CcuSimulator::InitLoopInfoV2(uint16_t startInstrId, uint16_t endInstrId, uint64_t xnValue, uint64_t xmValue, uint64_t xpValue)
+{
+    loopGroupInfo_.loopStatus_.loopStartInstrId = startInstrId;
+    loopGroupInfo_.loopStatus_.loopCurInstrId   = startInstrId;
+    loopGroupInfo_.loopStatus_.loopEndInstrId   = endInstrId;
+    loopGroupInfo_.loopStatus_.loopExecCount    = (xmValue & 0x1FFFF);// 循环次数
+    loopGroupInfo_.loopStatus_.curLoopRound     = 0;
+    loopGroupInfo_.loopStatus_.loopGsaIterStep  = (xnValue & 0xFFFFFFFF);
+    loopGroupInfo_.loopStatus_.loopCtxId = (xpValue & 0x1FF);
+
+    HCCL_VM_DEBUG("locCcu[{}:{}], loopStartInstrId=[{}], loopCurInstrId=[{}], "
+               "loopEndInstrId=[{}], xnValue=[{}], xpValue=[{}], xmValue=[{}]",
+        rankId_, dieId_, startInstrId, startInstrId, endInstrId, xnValue, xpValue,xmValue);
 }
 
 void CcuSimulator::InitLoopGroupInfo(const LoopGroupInfo &loopGroupInfo)
@@ -192,6 +226,8 @@ bool CcuSimulator::ExecuteInstr(uint16_t curInstrId)
 {
     auto &ccuResMgr = CcuResourceManager::GetInstance();
     auto instrData = ccuResMgr.GetInstrData(rankId_, dieId_);
+    auto& traceCollector = CcuTrace::CcuTraceCollector::GetInstance();
+
     HCCL_VM_DEBUG("locCcu[{}:{}], current instr[{}], state=[{}]", rankId_, dieId_, curInstrId, static_cast<int>(state_));
     if (curInstrId >= endInstrId_) {
         state_ =  CcuExecState::EXEC_FAIL;
@@ -204,8 +240,135 @@ bool CcuSimulator::ExecuteInstr(uint16_t curInstrId)
         HCCL_VM_DEBUG("locCcu[{}:{}], curInstrId_[{}] executor is null.", rankId_, dieId_, curInstrId);
         return true;  // 让还未添加的Executor先跑下去，看下是否能从start->loop->end
     }
+
+    // === Trace: 设置当前执行 CCU ===
+    traceCollector.BeginGlobalStep();
+    traceCollector.SetCurrentExecutingCcu(rankId_, dieId_);
+
+    // === Trace: 资源快照（执行前） ===
+    std::vector<uint64_t> xnBefore, xnAfter;
+    std::vector<uint64_t> gsaBefore, gsaAfter;
+    std::vector<uint16_t> ckeBefore, ckeAfter;
+    bool captureDelta = traceCollector.IsEnabled();
+    if (captureDelta) {
+        xnBefore.resize(SimCcuV1::CCU_RESOURCE_XN_NUM);
+        gsaBefore.resize(SimCcuV1::CCU_RESOURCE_GSA_NUM);
+        ckeBefore.resize(SimCcuV1::CCU_RESOURCE_CKE_NUM);
+        for (uint16_t i = 0; i < SimCcuV1::CCU_RESOURCE_XN_NUM; i++) {
+            xnBefore[i] = ccuResMgr.GetXnValue(rankId_, dieId_, i);
+        }
+        for (uint16_t i = 0; i < SimCcuV1::CCU_RESOURCE_GSA_NUM; i++) {
+            gsaBefore[i] = ccuResMgr.GetGsaValue(rankId_, dieId_, i);
+        }
+        for (uint16_t i = 0; i < SimCcuV1::CCU_RESOURCE_CKE_NUM; i++) {
+            ckeBefore[i] = ccuResMgr.GetCkeValue(rankId_, dieId_, i);
+        }
+    }
+
     executor->Parser();
     executor->Run();
+
+    // === Trace: CKE Wait 自旋检测与合并 ===
+    if (waitCKE_) {
+        // CKE 条件不满足，记录一次自旋，不产生 trace entry
+        // waitCKEId/waitCKEMask 由 WaitCkeProcess 设置，此处取不到精确值，传 0
+        traceCollector.RecordWaitSpin(rankId_, dieId_, curInstrId, 0, 0, 0);
+        if (UpdateLoopStatus() == false) {
+            return false;
+        }
+        return true;
+    }
+
+    // === Trace: CKE 通过（或本条指令不涉及 CKE 等待），采集并记录 trace entry ===
+    if (traceCollector.IsEnabled()) {
+        CcuTrace::CcuTraceEntry entry;
+
+        // 全局定位信息
+        auto globalCtx = traceCollector.GetCurrentGlobalContext();
+        entry.globalSeqId = globalCtx.globalSeqId;
+        entry.execRound = globalCtx.execRound;
+        entry.sqeTaskId = globalCtx.currentSqeTaskId;
+
+        // CCU 归属 + 指令索引（三元组索引指令空间）
+        entry.rankId = rankId_;
+        entry.dieId = dieId_;
+        entry.instrId = curInstrId;
+
+        // 指令类别（仅用于统计聚合）
+        uint16_t instrType = instrData[curInstrId].header.header & 0x3;  // 低 2 位为类型
+        switch (instrType) {
+            case 0: entry.category = CcuTrace::CcuInstrCategory::LOAD; break;
+            case 1: entry.category = CcuTrace::CcuInstrCategory::CONTROL; break;
+            case 2: entry.category = CcuTrace::CcuInstrCategory::TRANS; break;
+            case 3: entry.category = CcuTrace::CcuInstrCategory::REDUCE; break;
+            default: entry.category = CcuTrace::CcuInstrCategory::UNKNOWN; break;
+        }
+
+        // 执行状态
+        entry.execState = state_;
+
+        // 执行上下文（Loop 偏移信息）
+        entry.context.inLoop = (state_ == CcuExecState::EXEC_LOOP_INSTR);
+        entry.context.loopRound = GetCurLoopCnt();
+        entry.context.loopExtendIndex = GetLoopExtendNum();
+        entry.context.gsaOffset = GetGSAOffset();
+        entry.context.iterStepGSA = GetLoopIterStepGSA();
+        entry.context.loopExtendNum = GetLoopExtendNum();
+        entry.context.curLoopCnt = GetCurLoopCnt();
+        entry.context.gsaAddrOffset = GetLoopGsaAddrOffset();
+        entry.context.msOffset = GetLoopMsOffset();
+        entry.context.ckeOffset = GetLoopCKEOffset();
+        entry.context.xnIdOffset = GetLoopXnIdOffset();
+
+        // 跨 CCU 变更（由 ResourceManager 拦截填充）
+        entry.crossCcuChanges = traceCollector.ConsumeCrossCcuChanges(rankId_, dieId_);
+
+        // CKE Wait 自旋信息（合并之前的自旋）
+        entry.waitInfo = traceCollector.FinalizeWaitInfo(rankId_, dieId_, curInstrId, 0);
+
+        // 指令专属细节
+        entry.detail = executor->CollectTraceDetail();
+
+        // === Trace: 资源变化（执行后快照 + diff） ===
+        if (captureDelta) {
+            xnAfter.resize(SimCcuV1::CCU_RESOURCE_XN_NUM);
+            gsaAfter.resize(SimCcuV1::CCU_RESOURCE_GSA_NUM);
+            ckeAfter.resize(SimCcuV1::CCU_RESOURCE_CKE_NUM);
+            for (uint16_t i = 0; i < SimCcuV1::CCU_RESOURCE_XN_NUM; i++) {
+                xnAfter[i] = ccuResMgr.GetXnValue(rankId_, dieId_, i);
+                if (xnAfter[i] != xnBefore[i]) {
+                    CcuTrace::CcuXnChange change;
+                    change.id = i;
+                    change.valueBefore = xnBefore[i];
+                    change.valueAfter = xnAfter[i];
+                    entry.resourceDelta.xnChanges.push_back(change);
+                }
+            }
+            for (uint16_t i = 0; i < SimCcuV1::CCU_RESOURCE_GSA_NUM; i++) {
+                gsaAfter[i] = ccuResMgr.GetGsaValue(rankId_, dieId_, i);
+                if (gsaAfter[i] != gsaBefore[i]) {
+                    CcuTrace::CcuGsaChange change;
+                    change.id = i;
+                    change.valueBefore = gsaBefore[i];
+                    change.valueAfter = gsaAfter[i];
+                    entry.resourceDelta.gsaChanges.push_back(change);
+                }
+            }
+            for (uint16_t i = 0; i < SimCcuV1::CCU_RESOURCE_CKE_NUM; i++) {
+                ckeAfter[i] = ccuResMgr.GetCkeValue(rankId_, dieId_, i);
+                if (ckeAfter[i] != ckeBefore[i]) {
+                    CcuTrace::CcuCkeChange change;
+                    change.id = i;
+                    change.valueBefore = ckeBefore[i];
+                    change.valueAfter = ckeAfter[i];
+                    entry.resourceDelta.ckeChanges.push_back(change);
+                }
+            }
+        }
+
+        traceCollector.RecordEntry(entry);
+    }
+
     if (UpdateLoopStatus() == false) {
         return false;
     }

@@ -39,12 +39,12 @@ hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测�
 
 ### 3.1 一键安装
 
-一行完成依赖安装、源码拉取、CANN 检测与编译（默认 `main` 配套方案）。工作目录与手动安装保持一致，用 `/home/workspace`（后文示例路径均以此为准）：
+一行完成依赖安装、源码拉取、CANN 检测与编译（默认使用 `main` profile，对应 hcomm/hccl 的 `master` 主线）。工作目录与手动安装保持一致，用 `/home/workspace`（后文示例路径均以此为准）：
 
 ```bash
 # 创建并进入工作目录（脚本默认装到当前目录）
 mkdir -p /home/workspace && cd /home/workspace
-curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_installer | bash
+curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/master/test/hccl_vm/hccl_vm_installer | bash
 ```
 
 也可下载后本地运行（便于先审阅或离线分发）：`bash hccl_vm_installer`；或用 `--workspace` 显式指定：`... | bash -s -- --workspace /home/workspace`。

@@ -860,6 +860,57 @@ TEST_F(SyncConflictTest, AivFlagValuesCreateIndependentBuckets)
     EXPECT_EQ(stats.conflictCount, 0U);
 }
 
+TEST_F(SyncConflictTest, AivFlagDifferentValuesAllowConcurrentReceives)
+{
+    TaskStart *start = AddMainStart();
+    const AivFlagSync firstFlag = MakeFlag(0xa000, 0, 0, 1);
+    const AivFlagSync secondFlag = MakeFlag(0xa000, 0, 0, 2);
+    const TaskPosition producerLane = MakeLane(3);
+    const TaskPosition firstReceiveLane = MakeLane(3);
+    const TaskPosition secondReceiveLane = MakeLane(0);
+
+    TaskAivSendFlag *send1 = AddNode(std::make_unique<TaskAivSendFlag>(firstFlag), producerLane);
+    TaskAivRecvFlag *recv1 = AddNode(std::make_unique<TaskAivRecvFlag>(firstFlag), firstReceiveLane);
+    TaskAivSendFlag *send2 = AddNode(std::make_unique<TaskAivSendFlag>(secondFlag), producerLane);
+    TaskAivRecvFlag *recv2 = AddNode(std::make_unique<TaskAivRecvFlag>(secondFlag), secondReceiveLane);
+    AddEdge(start, send1);
+    AddEdge(send1, recv1);
+    AddEdge(recv1, send2);
+    AddEdge(send2, recv2);
+
+    SyncConflictCheckStats stats;
+    EXPECT_EQ(CheckSyncResourceConflict(start, &stats), HCCL_SUCCESS);
+    EXPECT_EQ(stats.resourceBucketCount, 2U);
+    EXPECT_EQ(stats.pairCount, 2U);
+    EXPECT_EQ(stats.checkedBucketCount, 2U);
+    EXPECT_EQ(stats.conflictCount, 0U);
+}
+
+TEST_F(SyncConflictTest, AivFlagDifferentValuesStillRequireProducerOrdering)
+{
+    TaskStart *start = AddMainStart();
+    const AivFlagSync firstFlag = MakeFlag(0xa000, 0, 0, 1);
+    const AivFlagSync secondFlag = MakeFlag(0xa000, 0, 0, 2);
+    const TaskPosition firstLane = MakeLane(3);
+    const TaskPosition secondReceiveLane = MakeLane(0);
+
+    TaskAivSendFlag *send1 = AddNode(std::make_unique<TaskAivSendFlag>(firstFlag), firstLane);
+    TaskAivRecvFlag *recv1 = AddNode(std::make_unique<TaskAivRecvFlag>(firstFlag), firstLane);
+    TaskAivSendFlag *send2 = AddNode(std::make_unique<TaskAivSendFlag>(secondFlag), firstLane);
+    TaskAivRecvFlag *recv2 = AddNode(std::make_unique<TaskAivRecvFlag>(secondFlag), secondReceiveLane);
+    AddEdge(start, send1);
+    AddEdge(send1, recv1);
+    AddEdge(start, send2);
+    AddEdge(send2, recv2);
+
+    SyncConflictCheckStats stats;
+    EXPECT_NE(CheckSyncResourceConflict(start, &stats), HCCL_SUCCESS);
+    EXPECT_EQ(stats.resourceBucketCount, 2U);
+    EXPECT_EQ(stats.pairCount, 2U);
+    EXPECT_EQ(stats.checkedBucketCount, 2U);
+    EXPECT_EQ(stats.conflictCount, 1U);
+}
+
 TEST_F(SyncConflictTest, AivFlagFanOutGroupsRequireAllPreviousReceivesToReachNextGroup)
 {
     TaskStart *start = AddMainStart();

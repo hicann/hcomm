@@ -6,15 +6,30 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
-cmake_minimum_required(VERSION 3.10)
 project(device)
 
 # 设置交叉编译器
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)
-# 设置交叉编译工具链路径
-set(CMAKE_C_COMPILER /usr/bin/aarch64-linux-gnu-gcc)
-set(CMAKE_CXX_COMPILER /usr/bin/aarch64-linux-gnu-g++)
+# 设置交叉编译工具链路径（允许环境变量覆盖，便于不同发行版/自定义工具链）
+if(NOT DEFINED AARCH64_C_COMPILER)
+    if(DEFINED ENV{AARCH64_C_COMPILER})
+        set(AARCH64_C_COMPILER $ENV{AARCH64_C_COMPILER})
+    else()
+        set(AARCH64_C_COMPILER /usr/bin/aarch64-linux-gnu-gcc)
+    endif()
+endif()
+if(NOT DEFINED AARCH64_CXX_COMPILER)
+    if(DEFINED ENV{AARCH64_CXX_COMPILER})
+        set(AARCH64_CXX_COMPILER $ENV{AARCH64_CXX_COMPILER})
+    else()
+        set(AARCH64_CXX_COMPILER /usr/bin/aarch64-linux-gnu-g++)
+    endif()
+endif()
+set(CMAKE_C_COMPILER ${AARCH64_C_COMPILER})
+set(CMAKE_CXX_COMPILER ${AARCH64_CXX_COMPILER})
+message(STATUS "Cross C compiler:   ${CMAKE_C_COMPILER}")
+message(STATUS "Cross CXX compiler: ${CMAKE_CXX_COMPILER}")
 
 if(NOT DEFINED HCCL_VM_SRC)
     set(HCCL_VM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../..)
@@ -44,8 +59,20 @@ add_library(sqlite3 STATIC "")
 target_sources(sqlite3 PRIVATE
     ${THRID_PARTY_DIR}/sqlite/sqlite3.c
 )
-target_include_directories(sqlite3 PRIVATE
+target_include_directories(sqlite3 PUBLIC
     ${THRID_PARTY_DIR}/sqlite
+)
+set_target_properties(sqlite3 PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+target_compile_options(sqlite3 PRIVATE
+    -O2
+    -DSQLITE_THREADSAFE=1
+    -DSQLITE_OMIT_LOAD_EXTENSION
+    -DSQLITE_DEFAULT_MEMSTATUS=0
+    -DSQLITE_DEFAULT_WAL_SYNCHRONOUS=1
+    -DSQLITE_LIKE_DOESNT_MATCH_BLOBS
+    -DSQLITE_OMIT_DEPRECATED
 )
 
 add_executable(device
@@ -74,6 +101,7 @@ target_link_libraries(device PRIVATE
     sqlite3
     -ldl
     -lrt
+    -lpthread
 )
 
 target_include_directories(device PRIVATE
@@ -120,24 +148,26 @@ if(HCCL_CANN_VERSION_NUM EQUAL 0)
 endif()
 
 target_compile_options(device PRIVATE
+    -Werror
+    -fno-common
+    -fno-strict-aliasing
+    -pipe
     -O0
     -g
-    -D_GLIBCXX_USE_CXX11_ABI=0
-    -DCANN_VERSION_NUM=${HCCL_CANN_VERSION_NUM}
-    -DNO_YAML_CONFIG
+)
+target_compile_definitions(device PRIVATE
+    _GLIBCXX_USE_CXX11_ABI=0
+    CANN_VERSION_NUM=${HCCL_CANN_VERSION_NUM}
+    NO_YAML_CONFIG
 )
 
 target_link_options(device PUBLIC "-Wl,--export-dynamic")
-
-add_dependencies(device sqlite3)
 
 install(TARGETS device
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib/aarch64
     ARCHIVE DESTINATION lib/aarch64
 )
-
-
 
 # 日志染色: 模块 tag
 target_compile_definitions(device PRIVATE HCCL_VM_MODULE="DEVICE")

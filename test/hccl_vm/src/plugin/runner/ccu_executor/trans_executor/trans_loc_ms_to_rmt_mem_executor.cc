@@ -86,3 +86,10 @@ std::string TransLocMSToRmtMemExecutor::Describe()
                         waitCKEId_, waitCKEMask_, locMSId_ / 0x8000, locMSId_ % 0x8000, rmtGSAId_, rmtXnId_, lengthXnId_,
                         channelId_, setCKEId_, setCKEMask_, clearType_, lengthEn_);
 }
+
+CcuTrace::CcuInstrTraceDetail TransLocMSToRmtMemExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "TransLocMSToRmtMem";
+    return detail;
+}

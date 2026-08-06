@@ -16,6 +16,7 @@ target_include_directories(log PUBLIC
         ${CMAKE_SOURCE_DIR}/third_party
         ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json
         ${CMAKE_SOURCE_DIR}/third_party/yaml-cpp/include
+        ${CMAKE_SOURCE_DIR}/third_party/spdlog
 )
 
 target_include_directories(log PRIVATE
@@ -29,17 +30,7 @@ target_include_directories(log PRIVATE
 
 target_compile_definitions(log PRIVATE HAVE_YAML_CPP)
 
-target_compile_options(log PRIVATE
-        -fPIC
-        -std=c++14
-        -Werror
-        -fno-common
-        -fno-strict-aliasing
-        -pipe
-        -O0
-        -g
-        -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(log)
 
 target_link_libraries(log PRIVATE yaml-cpp::yaml-cpp)
 
@@ -50,18 +41,12 @@ endif()
 # --- loader library (from sim_loader.cc, migrated from src/loader) ---
 add_library(loader STATIC sim_loader.cc)
 
-target_compile_options(loader PRIVATE
-    -fPIC
-    -g
-    -O0
-    -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(loader)
 
 target_include_directories(loader PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/runnerdb
     ${PROJECT_SOURCE_DIR}/include/store
-    ${PROJECT_SOURCE_DIR}/include
 
     ${HCCL_VM_SRC}
     ${THRID_PARTY_DIR}/nlohmann_json

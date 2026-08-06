@@ -1056,11 +1056,15 @@ for dev_id in range(device_num):
 hardware_type = config.get('hardware_type', None)
 if not hardware_type:
     desc = config.get('description', '')
-    if 'UB' in desc.upper():
+    if 'UBX' in desc.upper():
+        hardware_type = 'UBX'
+    elif 'UB' in desc.upper():
         hardware_type = 'UB'
     else:
         name_str = name.upper()
-        if 'UB' in name_str:
+        if 'UBX' in name_str:
+            hardware_type = 'UBX'
+        elif 'UB' in name_str:
             hardware_type = 'UB'
         else:
             hardware_type = soc_version.upper() if soc_version != 'unknown' else 'UNKNOWN'

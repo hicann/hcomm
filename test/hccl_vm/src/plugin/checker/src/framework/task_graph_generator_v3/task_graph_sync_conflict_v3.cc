@@ -121,6 +121,7 @@ struct AivFlagCellKey {
 struct AivFlagGroup {
     const TaskNode *post{nullptr};
     CopyNode *postCopy{nullptr};
+    int32_t flagValue{0};
     std::vector<const SyncPair *> pairs;
 };
 
@@ -732,19 +733,68 @@ std::string DescribeAivFlagCell(const AivFlagCellKey &cell)
     return os.str();
 }
 
+HcclResult CheckAivFlagProducerOrdering(const AivFlagCellKey &cell, const AivFlagGroup &previousGroup,
+    const AivFlagGroup &nextGroup, ReachabilityChecker &reachable, SyncConflictCheckStats &stats)
+{
+    for (const SyncPair *previousPair : previousGroup.pairs) {
+        if (previousPair == nullptr || previousPair->wait == nullptr) {
+            return HCCL_E_INTERNAL;
+        }
+        if (IsReachable(previousPair->receiveWaitCopy, nextGroup.postCopy, reachable)) {
+            continue;
+        }
+        ++stats.conflictCount;
+        HCCL_VM_ERROR("{} AIV flag resource has a many-to-one ordering conflict, "
+            "conflictType=many-to-one, producerTaskType=AIV_SEND_FLAG, "
+            "consumerTaskType=AIV_RECV_FLAG, cell={}, recvFlag={}, previousSendFlag={}, "
+            "nextSendFlag={}", MakeErrorCodeText(ErrorCode::SYNC_RESOURCE_CONFLICT), DescribeAivFlagCell(cell),
+            previousPair->wait->Describe(), previousPair->post->Describe(), nextGroup.post->Describe());
+        return HCCL_E_INTERNAL;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult CheckAivFlagFanOutOrdering(const AivFlagCellKey &cell, const AivFlagGroup &previousGroup,
+    const AivFlagGroup &nextGroup, ReachabilityChecker &reachable, SyncConflictCheckStats &stats)
+{
+    for (const SyncPair *previousPair : previousGroup.pairs) {
+        if (previousPair == nullptr || previousPair->wait == nullptr) {
+            return HCCL_E_INTERNAL;
+        }
+        for (const SyncPair *nextPair : nextGroup.pairs) {
+            if (nextPair == nullptr || nextPair->wait == nullptr) {
+                return HCCL_E_INTERNAL;
+            }
+            if (IsReachable(previousPair->receiveWaitCopy, nextPair->startWaitCopy, reachable)) {
+                continue;
+            }
+            ++stats.conflictCount;
+            HCCL_VM_ERROR("{} AIV flag resource has a one-to-many ordering conflict, "
+                "conflictType=one-to-many, producerTaskType=AIV_SEND_FLAG, "
+                "consumerTaskType=AIV_RECV_FLAG, cell={}, flagValue={}, sendFlag={}, previousRecvFlag={}, "
+                "nextRecvFlag={}", MakeErrorCodeText(ErrorCode::SYNC_RESOURCE_CONFLICT), DescribeAivFlagCell(cell),
+                nextGroup.flagValue, previousPair->post->Describe(), previousPair->wait->Describe(),
+                nextPair->wait->Describe());
+            return HCCL_E_INTERNAL;
+        }
+    }
+    return HCCL_SUCCESS;
+}
+
 // AIV SendFlag/RecvFlag 资源的专用校验器。该类型允许一对多扇出（一个 SendFlag 可满足
 // 多个 RecvFlag），因此不能用通用 1:1 的 CheckBuckets 规则。flag cell = (flagOwnerRank,
-// launchIdx, commInfoOffset) 把所有仅在 flagValue 上不同的 bucket 聚合在一起，因为覆盖
-// 某个取值时仍需与同一 cell 上其它取值的等待方保持顺序。
+// launchIdx, commInfoOffset) 把所有仅在 flagValue 上不同的 bucket 聚合在一起。不同 value
+// 之间只检查上一轮消费者到下一轮生产者的覆盖顺序；一对多的消费者启动顺序只在同 value
+// 的跨组之间检查。
 //
 // 每个 cell 的检查分两阶段：
 //   1. 配对校验：在每个有等待方的 bucket 内，每个 RecvFlag 必须恰好匹配一个 SendFlag
 //      （无匹配或多匹配均判为冲突）。整个 cell 内没有任何 RecvFlag 的 SendFlag 是合法的
 //      仅生产方操作，跳过。
-//   2. 跨组顺序：把配对按其（单一）Post 折叠成组，再按 post 的拓扑序排序后遍历，使每个
-//      已匹配组的 ReceiveWait 必须能到达下一组的 Post 以及下一组的 StartWait；残留的
-//      （无 wait）post 也必须排在上一已匹配组之后。这保证同一 flag cell 上后继的生产/
-//      消费方不能越过先前的扇出。
+//   2. 跨组顺序：把配对按 Post 折叠成带 value 的组，再按 post 的拓扑序排序后遍历。全局
+//      检查每个已匹配组的 ReceiveWait 是否能到达下一组的 Post；同一 value 内再检查其
+//      ReceiveWait 是否能到达下一组各 RecvFlag 的 StartWait。残留的（无 wait）post 也
+//      必须排在上一已匹配组之后。
 HcclResult CheckAivFlagBuckets(const SyncBuckets &buckets, const std::vector<size_t> &topoIndex,
     ReachabilityChecker &reachable, SyncConflictCheckStats &stats)
 {
@@ -813,6 +863,7 @@ HcclResult CheckAivFlagBuckets(const SyncBuckets &buckets, const std::vector<siz
                     AivFlagGroup group;
                     group.post = pair.post;
                     group.postCopy = pair.postCopy;
+                    group.flagValue = pair.resource.flagValue;
                     iter = groupsByPost.emplace(pair.post, std::move(group)).first;
                 }
                 iter->second.pairs.push_back(&pair);
@@ -837,10 +888,10 @@ HcclResult CheckAivFlagBuckets(const SyncBuckets &buckets, const std::vector<siz
             return lhs->post->GetNodeId() < rhs->post->GetNodeId();
         });
 
-        // 按序遍历各组；`lastMatchedGroup` 记录最近一个有匹配 RecvFlag 的组。每个后续组的
-        // Post（及其 StartWait）必须能从上一已匹配组的各 ReceiveWait 到达，以确保该 cell 上
-        // 后继的生产/消费方不能越过先前的扇出。
+        // `lastMatchedGroup` 用于保留同一 cell 上全局的生产顺序检查；不同 value 的 RecvFlag
+        // 可以并发启动，因此一对多顺序单独按 value 记录最近的 matched group。
         const AivFlagGroup *lastMatchedGroup = nullptr;
+        std::map<int32_t, const AivFlagGroup *> lastMatchedGroupByValue;
         for (const AivFlagGroup *group : groups) {
             // 一组是否"已匹配"取决于其配对是否携带 wait。由构造（groupsByPost）可知同组所有
             // 配对共享同一 Post 且 wait 是否存在一致，故检查首条配对即可判定整组。
@@ -854,57 +905,30 @@ HcclResult CheckAivFlagBuckets(const SyncBuckets &buckets, const std::vector<siz
                         DescribeAivFlagCell(cell), group->post->Describe());
                     return HCCL_E_INTERNAL;
                 }
-                for (const SyncPair *previousPair : lastMatchedGroup->pairs) {
-                    if (!IsReachable(previousPair->receiveWaitCopy, group->postCopy, reachable)) {
-                        ++stats.conflictCount;
-                        HCCL_VM_ERROR("{} AIV flag resource has a many-to-one ordering conflict, "
-                            "conflictType=many-to-one, producerTaskType=AIV_SEND_FLAG, "
-                            "consumerTaskType=AIV_RECV_FLAG, cell={}, recvFlag={}, previousSendFlag={}, "
-                            "nextSendFlag={}", MakeErrorCodeText(ErrorCode::SYNC_RESOURCE_CONFLICT),
-                            DescribeAivFlagCell(cell), previousPair->wait->Describe(), previousPair->post->Describe(),
-                            group->post->Describe());
-                        return HCCL_E_INTERNAL;
-                    }
+                HcclResult ret = CheckAivFlagProducerOrdering(cell, *lastMatchedGroup, *group, reachable, stats);
+                if (ret != HCCL_SUCCESS) {
+                    return ret;
                 }
                 continue;
             }
 
-            if (lastMatchedGroup == nullptr) {
-                lastMatchedGroup = group;
-                continue;
+            if (lastMatchedGroup != nullptr) {
+                HcclResult ret = CheckAivFlagProducerOrdering(cell, *lastMatchedGroup, *group, reachable, stats);
+                if (ret != HCCL_SUCCESS) {
+                    return ret;
+                }
             }
 
-            for (const SyncPair *previousPair : lastMatchedGroup->pairs) {
-                if (previousPair->wait == nullptr) {
-                    continue;
-                }
-                if (!IsReachable(previousPair->receiveWaitCopy, group->postCopy, reachable)) {
-                    ++stats.conflictCount;
-                    HCCL_VM_ERROR("{} AIV flag resource has a many-to-one ordering conflict, "
-                        "conflictType=many-to-one, producerTaskType=AIV_SEND_FLAG, "
-                        "consumerTaskType=AIV_RECV_FLAG, cell={}, recvFlag={}, previousSendFlag={}, "
-                        "nextSendFlag={}", MakeErrorCodeText(ErrorCode::SYNC_RESOURCE_CONFLICT),
-                        DescribeAivFlagCell(cell), previousPair->wait->Describe(), previousPair->post->Describe(),
-                        group->post->Describe());
-                    return HCCL_E_INTERNAL;
-                }
-                for (const SyncPair *nextPair : group->pairs) {
-                    if (nextPair->wait == nullptr) {
-                        continue;
-                    }
-                    if (!IsReachable(previousPair->receiveWaitCopy, nextPair->startWaitCopy, reachable)) {
-                        ++stats.conflictCount;
-                        HCCL_VM_ERROR("{} AIV flag resource has a one-to-many ordering conflict, "
-                            "conflictType=one-to-many, producerTaskType=AIV_SEND_FLAG, "
-                            "consumerTaskType=AIV_RECV_FLAG, cell={}, sendFlag={}, previousRecvFlag={}, "
-                            "nextRecvFlag={}", MakeErrorCodeText(ErrorCode::SYNC_RESOURCE_CONFLICT),
-                            DescribeAivFlagCell(cell), previousPair->post->Describe(), previousPair->wait->Describe(),
-                            nextPair->wait->Describe());
-                        return HCCL_E_INTERNAL;
-                    }
+            const auto previousSameValue = lastMatchedGroupByValue.find(group->flagValue);
+            if (previousSameValue != lastMatchedGroupByValue.end()) {
+                HcclResult ret = CheckAivFlagFanOutOrdering(
+                    cell, *previousSameValue->second, *group, reachable, stats);
+                if (ret != HCCL_SUCCESS) {
+                    return ret;
                 }
             }
             lastMatchedGroup = group;
+            lastMatchedGroupByValue[group->flagValue] = group;
         }
     }
     return HCCL_SUCCESS;

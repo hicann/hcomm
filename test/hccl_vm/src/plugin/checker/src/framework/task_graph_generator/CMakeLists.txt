@@ -19,3 +19,12 @@ target_sources(checker PRIVATE
     # ${CMAKE_CURRENT_SOURCE_DIR}/task_graph_generator_aiv.cc
 )
 
+if(BUILD_A6_CCU_INSTR)
+    add_definitions(-DBUILD_A6_CCU_INSTR)
+endif()
+
+if(BUILD_A6_CCU_INSTR)
+    target_sources(checker PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/ccu_task_transform_instruct_a6.cc
+    )
+endif()

@@ -23,6 +23,8 @@
 #include "hccl_task_reduce_process.h"
 #include "hccl_types.h"
 #include "sim_log.h"
+#include "trace/ccu_trace_collector.h"
+#include "storage_manager.h"
 
 using namespace HcclSim;
 
@@ -142,6 +144,90 @@ HcclSim::HcclVmResult TaskCcuGraph(const HcclTaskMetaData &task)
     auto simulator = ccuResMgr.InitSimulator(rankId, dieId, instrStartId, endInstrId, instCnt);
     HCCL_VM_INFO("TaskCcuGraph simulator start, rankId={}, dieId={}, instrStartId={}, endInstrId={}, instCnt={}, simulator_ptr: {:p}",
                 rankId, dieId, instrStartId, endInstrId, instCnt, (void*)(simulator.get()));
+
+    // === Trace: 注册 CCU 静态信息（仅首次，使用 collector 内部跟踪，随 StartRun 自动重置） ===
+    auto& traceCollector = CcuTrace::CcuTraceCollector::GetInstance();
+    if (traceCollector.IsEnabled()) {
+        HCCL_VM_INFO("TaskCcuGraph: rankId={}, dieId={}, traceEnabled=true",
+                    rankId, dieId);
+
+        if (traceCollector.TryRegisterCcuStatic(rankId, dieId)) {
+            HCCL_VM_INFO("First time seeing CCU [{}:{}], registering static info...", rankId, dieId);
+
+            // 1. 注册 CCU Identity
+            CcuTrace::CcuIdentity identity;
+            identity.rankId = rankId;
+            identity.dieId = dieId;
+            identity.ccuVersion = ccuResMgr.GetVersion();
+            traceCollector.RegisterCcuIdentity(identity);
+            HCCL_VM_INFO("Registered CCU Identity: rankId={}, dieId={}", rankId, dieId);
+
+            // 2. 捕获指令空间
+            auto instrData = ccuResMgr.GetInstrData(rankId, dieId);
+            auto instrCnt = ccuResMgr.GetInstrCnt(rankId, dieId);
+            HCCL_VM_INFO("Capturing instr space: instrCnt={}, instrData.size()={}", instrCnt, instrData.size());
+            std::vector<CcuTrace::CcuInstrSpaceEntry> instrEntries;
+            for (uint16_t i = 0; i < instrCnt && i < instrData.size(); i++) {
+                CcuTrace::CcuInstrSpaceEntry entry;
+                entry.instrId = i;
+                // 调用接口解析命令
+                // entry.instrDescribe = hcomm::CcuRep::ParseInstr(&instrData[i]);
+                instrEntries.push_back(entry);
+            }
+            traceCollector.CaptureInstrSpace(rankId, dieId, instrCnt, instrEntries);
+            HCCL_VM_INFO("Captured {} instructions for CCU [{}:{}]", instrEntries.size(), rankId, dieId);
+
+            // 3. 注册 Channel 空间（从 StorageManager 获取 channel 映射表）
+            auto& storageMgr = StorageManager::GetInstance();
+            auto& allChannelInfo = storageMgr.GetAllRankChannelInfo();
+            auto rankSize = storageMgr.GetRankSize();
+
+            if (rankId < (int)rankSize) {
+                CcuTrace::CcuChannelSpace channelSpace;
+                channelSpace.rankId = rankId;
+                channelSpace.dieId = dieId;
+
+                // m_allRankChannelInfo[rankId][dieId][channelId] → CcuInfo{remoteRankId, remoteDieId}
+                auto& dieChannels = allChannelInfo[rankId][dieId];
+                for (uint16_t chId = 0; chId < SimCcuV1::MAX_CCU_CHANNEL_NUM; chId++) {
+                    auto& rmtCcu = dieChannels[chId];
+                    if (rmtCcu.rankId != INT32_MAX && rmtCcu.dieId != INT32_MAX) {
+                        CcuTrace::CcuChannelRecord record;
+                        record.channelId = chId;
+                        record.remoteRankId = rmtCcu.rankId;
+                        record.remoteDieId = rmtCcu.dieId;
+                        channelSpace.channels.push_back(record);
+                    }
+                }
+
+                traceCollector.RegisterChannelSpace(channelSpace);
+                HCCL_VM_INFO("Registered {} channels for CCU [{}:{}] (from StorageManager)",
+                            channelSpace.channels.size(), rankId, dieId);
+            } else {
+                HCCL_VM_WARN("rankId {} >= rankSize {}, skipping channel registration", rankId, rankSize);
+            }
+
+            HCCL_VM_INFO("Registered CCU [{}:{}], instrCount={}",
+                        rankId, dieId, instrEntries.size());
+        } else {
+            HCCL_VM_INFO("CCU [{}:{}] already registered, skipping static info", rankId, dieId);
+        }
+
+        // 4. 注册 SQE 任务（每次调用都注册）
+        std::vector<uint64_t> args;
+        args.resize(task.taskData.ccu.argSize);
+        for (uint32_t i = 0; i < task.taskData.ccu.argSize; i++) {
+            args[i] = task.taskData.ccu.args[i];
+        }
+        uint32_t sqeTaskId = traceCollector.RegisterSqeTask(
+            rankId, dieId, 0, instrStartId, instCnt, 0, args,
+            reinterpret_cast<uint64_t>(simulator.get()));
+        traceCollector.SetCurrentSqeTaskId(sqeTaskId);
+        HCCL_VM_INFO("Registered SQE task: sqeTaskId={}, rankId={}, dieId={}, startId={}, cnt={}",
+                    sqeTaskId, rankId, dieId, instrStartId, instCnt);
+    } else {
+        HCCL_VM_INFO("TaskCcuGraph: traceEnabled=false, skipping registration");
+    }
 
     if (simulator->GetState() == CcuExecState::EXEC_FAIL) {
         return HcclVmResult::HCCL_SIM_E_INTERNAL;

@@ -41,9 +41,8 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 {
     (void) flag;
     (void) priority;
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::Runner runner;
@@ -213,9 +212,8 @@ aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamStatus *status)
 aclError aclrtGetStreamAvailableNum(uint32_t *streamCount)
 {
     (void) streamCount;
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::Runner runner;

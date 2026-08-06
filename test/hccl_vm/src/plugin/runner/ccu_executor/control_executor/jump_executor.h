@@ -31,12 +31,18 @@ public:
     void Parser() override;
     void Run() override;
     void RunV1(); 
+    void RunV2(); 
     std::string Describe() override;
+    CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
     uint16_t dstInstrXnId_{0};
     uint16_t conditionXnId_{0};
     uint64_t expectData_{0};
+    uint16_t relTarInstrXnId_{0};
+    uint16_t expectedXnId_{0};
+    uint8_t conditionType_{0};
+    uint8_t jumpMode_{0};
 };
 
 #endif // HCCL_SIM_JUMP_EXECUTOR_H

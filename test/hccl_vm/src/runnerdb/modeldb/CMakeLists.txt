@@ -19,23 +19,12 @@ target_include_directories(modeldb PRIVATE
         ${PROJECT_SOURCE_DIR}/include/runnerdb
 )
 
-target_link_libraries(modeldb PRIVATE log)
-
-target_compile_options(modeldb PRIVATE
-    -fPIC
-    -Werror
-    -fno-common
-    -fno-strict-aliasing
-    -pipe
-    -O0
-    -g
-    -D_GLIBCXX_USE_CXX11_ABI=0
+target_link_libraries(modeldb
+    PRIVATE log
+    PUBLIC sqlite3
 )
 
-find_package(SQLite3 REQUIRED)
-
-target_link_libraries(modeldb PUBLIC SQLite::SQLite3)
-
+hcclvm_apply_common_flags(modeldb)
 
 # 日志染色: 模块 tag
 target_compile_definitions(modeldb PRIVATE HCCL_VM_MODULE="RUNNERDB")

@@ -27,6 +27,7 @@
 #include "db_sim_runner_common.h"
 #include "db_sim_runner_ops.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
@@ -129,6 +130,7 @@ drvError_t drvGetDevNum(uint32_t *num_dev)
     if (serverId == 0) {
         return DRV_ERROR_NO_DEVICE;
     }
+
     sim::Runner runner;
     if (!sim::GetCurrRunnerTls(serverId, runner)) {
         HCCL_VM_ERROR("GetCurrRunnerTls failed");
@@ -142,7 +144,7 @@ drvError_t drvGetDevNum(uint32_t *num_dev)
     });
 
     if (devs.empty()) {
-        HCCL_VM_ERROR("devices failed");
+        HCCL_VM_ERROR("no available device found");
         return DRV_ERROR_NO_DEVICE;
     }
     *num_dev = devs.size();
@@ -283,7 +285,7 @@ drvError_t drvDeviceGetPhyIdByIndex(uint32_t devIndex, uint32_t *phyId)
         return DRV_ERROR_NO_DEVICE;
     }
     *phyId = (uint32_t)ret.first.physical_id;
-    HCCL_VM_INFO("index:%u, phyId:%u", devIndex, *phyId);
+    HCCL_VM_INFO("index:{}, phyId:{}", devIndex, *phyId);
     return DRV_ERROR_NONE;
 }
 
@@ -297,7 +299,7 @@ drvError_t drvDeviceGetIndexByPhyId(uint32_t phyId, uint32_t *devIndex)
         return DRV_ERROR_NO_DEVICE;
     }
     *devIndex = (uint32_t)ret.first.logic_id;
-    HCCL_VM_INFO("phyId:%u, devIndex:%u", phyId, *devIndex);
+    HCCL_VM_INFO("phyId:{}, devIndex:{}", phyId, *devIndex);
     return DRV_ERROR_NONE;
 }
 

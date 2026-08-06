@@ -49,3 +49,13 @@ std::string LoadXnXnExecutor::Describe()
 {
     return HcclSim::StringFormat("[Simulation Execute] Load Xn[%u] + Xn[%u] to Xn[%u]\n", xmId_, xnId_, xdId_);
 }
+
+CcuTrace::CcuInstrTraceDetail LoadXnXnExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "LoadXnXn";
+    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    detail.args["xn1"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xmId_));
+    detail.args["xn2"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xnId_));
+    return detail;
+}

@@ -18,6 +18,7 @@
 
 #include "ccu_executor_base.h"
 #include "ccu_microcode_common_v1.h"
+#include "ccu_microcode_common_v2.h"
 #include "ccu_resource_manager.h"
 
 class LoadImdToXnExecutor : public CcuExecutorBase {
@@ -31,10 +32,13 @@ public:
     void Parser() override;
     void Run() override;
     std::string Describe() override;
+    CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
     uint16_t xnId_{0};
     uint64_t immediate_{0};
+    uint16_t ckeId_ {0};
+    uint16_t ckeMask_{0};
 };
 
 #endif // HCCL_SIM_LOAD_IMD_TO_XN_EXECUTOR_H

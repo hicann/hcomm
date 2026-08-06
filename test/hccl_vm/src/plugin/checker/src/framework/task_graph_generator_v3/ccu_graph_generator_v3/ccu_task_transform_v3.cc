@@ -167,6 +167,10 @@ CcuInstrVersion GetCcuInstrVersion()
     DevType devType = AllRankParamRecorder::Global()->GetDevType();
     if (devType == DevType::DEV_TYPE_950) {
         return CcuInstrVersion::VERSION_A5;
+#ifdef BUILD_A6_CCU_INSTR
+    } else if (devType == DevType::DEV_TYPE_960) {
+        return CcuInstrVersion::VERSION_A6;
+#endif
     }
     return CcuInstrVersion::VERSION_A5;
 }
@@ -254,6 +258,8 @@ struct QueueReuseUnitV3 {
     QueueReuseUnitKindV3 kind{QueueReuseUnitKindV3::LOOP};
     TaskNode *head{nullptr};
     TaskNode *tail{nullptr};
+    // 保存该并行单元改造前由 tail 直接连接的外部后继，出口重连只能使用这组节点。
+    std::vector<TaskNode *> afterNodes;
     NodeId startNodeId{INVALID_NODE_ID};
     NodeId endNodeId{INVALID_NODE_ID};
     NodeId ownerLoopStartNodeId{INVALID_NODE_ID};
@@ -379,6 +385,36 @@ bool IsAsyncNodeV3(const CcuGraphStateV3 &state, const TaskNode *node)
            role == CcuNodeRoleV3::LOCAL_BATCH_REDUCE || role == CcuNodeRoleV3::READ ||
            role == CcuNodeRoleV3::READ_REDUCE || role == CcuNodeRoleV3::WRITE ||
            role == CcuNodeRoleV3::WRITE_REDUCE;
+}
+
+// 作用：根据 CCU 通知参数判断 RECORD 是否对应 WAIT；这里只判断同步语义，不负责判断图上是否已有边。
+bool IsCcuRecordWaitPairV3(const TaskNode *recordNode, const TaskNode *waitNode)
+{
+    if (recordNode == nullptr || waitNode == nullptr || recordNode->GetType() != TaskType::RECORD ||
+        waitNode->GetType() != TaskType::WAIT) {
+        return false;
+    }
+
+    const auto *record = dynamic_cast<const TaskRecordCCU *>(recordNode);
+    const auto *wait = dynamic_cast<const TaskWaitCCU *>(waitNode);
+    if (record == nullptr || wait == nullptr) {
+        return false;
+    }
+
+    const CcuNotify &recordNotify = record->GetNotify();
+    const CcuNotify &waitNotify = wait->GetNotify();
+    return recordNotify.waitRankId == waitNotify.waitRankId && recordNotify.dieId == waitNotify.dieId &&
+        recordNotify.ckeId == waitNotify.ckeId && (recordNotify.ckeMask & waitNotify.ckeMask) != 0;
+}
+
+// 作用：确认原始图中确实存在 parent -> child，避免仅凭通知参数凭空恢复一条新边。
+bool HasNodeEdgeV3(const TaskNode *parentNode, const TaskNode *childNode)
+{
+    if (parentNode == nullptr || childNode == nullptr) {
+        return false;
+    }
+    const auto &children = parentNode->GetChildren();
+    return std::find(children.begin(), children.end(), childNode) != children.end();
 }
 
 // 作用：在目标数组中去重追加一个节点。
@@ -635,6 +671,14 @@ void PopulateAsyncGroupBoundaryNodesV3(AsyncParallelGroupV3 &group)
     // async 单元在 loop 并行化后可能已经被重新分配 queue，
     // 因此它们的边界节点必须基于原图真实边来取，不能再依赖“同 queue 邻接”。
     group.beforeNodes = GetParentsOutsideNodesV3(group.units.front().head, groupNodes);
+    for (auto &unit : group.units) {
+        // 每个单元单独记录出口。不同单元的 tail 可能分别连接到不同的 WAIT，
+        // 不能使用整个 async 分组最后一个 tail 的 afterNodes 代替。
+        unit.afterNodes = GetChildrenOutsideNodesV3(unit.tail, groupNodes);
+        unit.afterNodes.erase(std::remove_if(unit.afterNodes.begin(), unit.afterNodes.end(),
+            [](TaskNode *node) { return IsCcuSubGraphEndNodeV3(node); }), unit.afterNodes.end());
+    }
+    // 分组级 afterNodes 用于原 queue 前后节点之间的桥接边，以及 queue 释放时机计算。
     group.afterNodes = GetChildrenOutsideNodesV3(group.units.back().tail, groupNodes);
     group.afterNodes.erase(std::remove_if(group.afterNodes.begin(), group.afterNodes.end(),
         [](TaskNode *node) { return IsCcuSubGraphEndNodeV3(node); }), group.afterNodes.end());
@@ -899,15 +943,46 @@ HcclResult RewireAsyncParallelGroupsV3(TaskGraphGeneratorV3 &graph, const std::v
             }
         }
 
-        for (TaskNode *afterNode : group.afterNodes) {
-            if (afterNode == nullptr) {
+        for (const auto &unit : group.units) {
+            TaskNode *tailNode = unit.tail;
+            if (tailNode == nullptr) {
                 continue;
             }
-            for (const auto &unit : group.units) {
-                if (unit.tail == nullptr) {
+
+            bool hasMatchingWaitNode = false;
+            if (tailNode->GetType() == TaskType::RECORD) {
+                for (TaskNode *afterNode : unit.afterNodes) {
+                    if (HasNodeEdgeV3(tailNode, afterNode) && IsCcuRecordWaitPairV3(tailNode, afterNode)) {
+                        hasMatchingWaitNode = true;
+                        break;
+                    }
+                }
+                if (!hasMatchingWaitNode) {
+                    HCCL_VM_ERROR("{} Async parallel tail RECORD has no matching wait node, tail={}",
+                        MakeErrorCodeText(ErrorCode::GRAPH_UNMATCHED).c_str(), tailNode->Describe());
+                    return HCCL_E_INTERNAL;
+                }
+            } else {
+                HCCL_VM_WARN("Skip async parallel exit edge because the tail node is not a RECORD, "
+                    "tail={}", tailNode->Describe());
+            }
+
+            for (TaskNode *afterNode : unit.afterNodes) {
+                if (afterNode == nullptr) {
                     continue;
                 }
-                CHK_RET(graph.AddEdge(unit.tail->GetNodeId(), afterNode->GetNodeId()));
+                // afterNodes 是改造前的快照；如果原边已被前面的重连步骤移除，不能再次处理。
+                if (!HasNodeEdgeV3(tailNode, afterNode)) {
+                    continue;
+                }
+
+                CHK_RET(graph.RemoveEdge(tailNode->GetNodeId(), afterNode->GetNodeId()));
+                if (!IsCcuRecordWaitPairV3(tailNode, afterNode)) {
+                    continue;
+                }
+
+                // 只有原本存在且确认属于 RECORD/WAIT 的边才恢复；普通 queue 顺序边保持删除。
+                CHK_RET(graph.AddEdge(tailNode->GetNodeId(), afterNode->GetNodeId()));
             }
         }
 
@@ -1397,6 +1472,10 @@ std::unique_ptr<InstructMapBase> InstructMapFactory::Create(CcuInstrVersion vers
     switch (version) {
         case CcuInstrVersion::VERSION_A5:
             return std::make_unique<InstructMapA5>();
+#ifdef BUILD_A6_CCU_INSTR
+        case CcuInstrVersion::VERSION_A6:
+            return std::make_unique<InstructMapA6>();
+#endif
         default:
             return nullptr;
     }

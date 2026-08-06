@@ -6,32 +6,21 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
-file(GLOB_RECURSE HCCL_SOURCES "*.cc")
+file(GLOB_RECURSE HCCL_SOURCES CONFIGURE_DEPENDS "*.cc")
 
 add_library(common STATIC ${HCCL_SOURCES})
 
-target_compile_options(common PRIVATE
-    -fPIC
-    -Werror
-    -fno-common
-    -fno-strict-aliasing
-    -pipe
-    -O0
-    -g
-    -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(common)
 
 target_include_directories(common PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/runnerdb
     ${PROJECT_SOURCE_DIR}/include/store
-    ${PROJECT_SOURCE_DIR}/include
 
     ${HCCL_VM_SRC}
     ${HCCL_VM_SRC}/common
     ${HCCL_VM_SRC}/plugin
     ${HCCL_VM_SRC}/cmd
-    ${HCCL_VM_SRC}/store
     ${HCCL_VM_SRC}/store
     ${HCCL_VM_SRC}/runnerdb
     ${THRID_PARTY_DIR}/nlohmann_json

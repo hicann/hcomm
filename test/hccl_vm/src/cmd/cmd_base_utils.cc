@@ -11,6 +11,7 @@
 #include "cmd_base_utils.h"
 #include <algorithm>
 #include <cerrno>
+#include <atomic>
 #include <chrono>
 #include <CLI11.hpp>
 #include <cstdint>
@@ -54,13 +55,21 @@
 #include "yaml-cpp/yaml.h"
 
 using namespace HcclSim; 
-namespace fs = std::filesystem; 
+namespace fs = std::filesystem;
+
+static std::atomic<bool> g_serverListenFlag{false};
+static std::atomic<bool> g_runnerListenFlag{false};
+static std::thread *g_serverThread = nullptr;
+static std::thread *g_runnerThread = nullptr;
 
 static std::string MakeDataBackupTimestamp();
 static void BackupAivTaskFiles(const fs::path &backupDir);
 
 const std::string HVM_BASH_ENV_KEY = "_HVM_BASH_ENV_PATH"; 
-const std::string g_binDir = GetBinLocation(); 
+const std::string g_binDir = GetBinLocation();
+static void StopListenThreads();
+static void ArchiveLogsAndData();
+
 // 定义队列名称和大小配置 
 const char* MQ_REQ_NAME = "host_mq_request"; 
 const char* MQ_RESP_NAME = "host_mq_response"; 
@@ -425,14 +434,54 @@ HcclVmResult InitHvmCommEnv(const TopoMeta& topoMeta, const std::string& configF
     return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD; 
 } 
 
+static void StopListenThreads()
+{
+    g_serverListenFlag.store(false);
+    g_runnerListenFlag.store(false);
+
+    try {
+        PosixMessageQueue wakeup(MQ_REQ_NAME, O_WRONLY | O_NONBLOCK);
+        wakeup.Send("", 1, 0);
+    } catch (...) {
+    }
+
+    if (g_serverThread && g_serverThread->joinable()) {
+        g_serverThread->join();
+    }
+    if (g_runnerThread && g_runnerThread->joinable()) {
+        g_runnerThread->join();
+    }
+
+    delete g_serverThread;
+    delete g_runnerThread;
+    g_serverThread = nullptr;
+    g_runnerThread = nullptr;
+}
+ 	 
+static void ArchiveLogsAndData()
+{
+    const std::string& installRoot = InstallPath::GetHcclVmInstallAbsPath();
+    if (installRoot.empty()) {
+        return;
+    }
+    std::string archiveScript = installRoot + "/script/archive.sh";
+    if (access(archiveScript.c_str(), F_OK) != 0) {
+        return;
+    }
+    int status = system(("bash " + archiveScript).c_str());
+    if (status != 0) {
+        HCCL_VM_WARN("archive.sh exited with code {:d}", status);
+    }
+}
+
 HcclVmResult HcclVmExit() 
 { 
     // hccl-vm 退出清除所有使用资源 
+    StopListenThreads();
     HCCL_VM_INFO("start Destroy SharedMemory."); 
 
     RemoveMessageQueue(MQ_REQ_NAME); 
     RemoveMessageQueue(MQ_RESP_NAME); 
-    // SHMManager::DestroyShm(); 
     HcclPluginManager &pluginManager = HcclPluginManager::GetInstance(); 
     auto ret = pluginManager.StopAllPlugins(); 
 
@@ -440,14 +489,12 @@ HcclVmResult HcclVmExit()
     BackupAivTaskFiles(backupDir);
 
     HCCL_VM_INFO("start Destroy ALL Resources.");
-    // 仅校验模式才解除主进程对复用区 HcclCommPool 的映射，普通模式从未建池。
-    // 这里只解主进程自己这一份，共享内存文件何时真正删除由跨进程引用计数决定，
-    // rank 还在用时不会删；异常退出未走到这里的，由下面的 rm 兜底删除。
     if (sim::IsCheckOnlyMode()) {
         sim::MemoryManager::GetInstance().FreeMemByName(sim::CommPoolPolicy::kPoolName);
     }
     int ret1 = system("sudo rm -fr /dev/shm/* 2>/dev/null");
-
+    FlushLog();
+ 	ArchiveLogsAndData();
     return ret; 
 } 
 
@@ -557,23 +604,25 @@ HcclVmResult ShowCurrentLogLevel() {
 HcclVmResult StartHvmCmd() { 
     // 初始化HOST通信队列 
     RemoveMessageQueue(MQ_REQ_NAME); 
-    RemoveMessageQueue(MQ_RESP_NAME); 
-    // 启动监听线程 
-    std::thread server(ServerListen); 
-    server.detach(); 
-    std::thread runner(RunnerListen); 
-    runner.detach(); 
-
+    RemoveMessageQueue(MQ_RESP_NAME);
+    // 启动监听线程  
+    g_serverThread = new std::thread(ServerListen); 
+ 	g_runnerThread = new std::thread(RunnerListen);
+    
     // Child Process(Bash) 
     // 劫持库存在性判断 
     std::string hcclVmbin = InstallPath::ResolveToInstallRoot("bin/hccl-vm");
-    std::string proxyPath = InstallPath::ResolveToInstallRoot("lib/" + GetArchStr() + "/libhccl_proxy_level" + std::to_string(g_hcclVmLevel) + ".so");
-    if (!fs::exists(proxyPath)) { 
-        HCCL_VM_ERROR("proxy hacking .so not found {}, please check your proxy hacking .so:" 
-            "1. Whether the hook library has been successfully built and installed. 2. Whether the simulation level matches the proxy hook library version. Current simulation level: {}, Default simulation level: 2" 
-            , proxyPath, g_hcclVmLevel); 
-        return HCCL_SIM_HOST_ERROR_CMD; 
-    } 
+    std::string libDir = "lib/" + GetArchStr() + "/";
+    std::string proxyPathL0 = InstallPath::ResolveToInstallRoot(libDir + "libhccl_proxy_level0.so");
+    std::string proxyPathL2 = InstallPath::ResolveToInstallRoot(
+        libDir + "libhccl_proxy_level" + std::to_string(g_hcclVmLevel) + ".so");
+    if (!fs::exists(proxyPathL0) || !fs::exists(proxyPathL2)) {
+        HCCL_VM_ERROR("proxy hacking .so not found: l0={}, l2={}. please check your proxy hacking .so:"
+            "1. Whether the hook library has been successfully built and installed. 2. Whether the simulation level matches the proxy hook library version. Current simulation level: {}, Default simulation level: 2"
+            , proxyPathL0, proxyPathL2, g_hcclVmLevel);
+        return HCCL_SIM_HOST_ERROR_CMD;
+    }
+    std::string preload = proxyPathL0 + ":" + proxyPathL2;
 
     // 管道处理的用途是隔绝进程终端在std::cout中的残留 
     int pipefds[2] = {-1, -1}; 
@@ -586,13 +635,14 @@ HcclVmResult StartHvmCmd() {
     std::string fdNum = std::to_string(pipefds[0]); 
     std::string bashrcHack = 
         "__HVM_SAVED_PATH=\"$PATH\";\n" 
+        "__HVM_SAVED_LD_PRELOAD=\"$LD_PRELOAD\";\n"
         "if [ -f ~/.bashrc ]; then . ~/.bashrc; fi;\n" 
         "export PATH=\"$__HVM_SAVED_PATH:$PATH\";\n" 
+        "export LD_PRELOAD=\"$__HVM_SAVED_LD_PRELOAD\";\n"
         "alias hccl-vm=\"" + safeBin + "\";\n" 
         "PS1='(hvm)$> ';\n" 
-        "unset __HVM_SAVED_PATH;\n" 
+        "unset __HVM_SAVED_PATH __HVM_SAVED_LD_PRELOAD;\n" 
         "exec " + fdNum + "<&-;\n"; 
-
     ssize_t written = write(pipefds[1], bashrcHack.c_str(), bashrcHack.size()); 
     if (written != static_cast<ssize_t>(bashrcHack.size())) { 
         HCCL_VM_ERROR("Failed to write full script to pipe"); 
@@ -616,13 +666,13 @@ HcclVmResult StartHvmCmd() {
     // Fork Bash 
     pid_t pid = fork(); 
     if (pid == -1) { 
-        auto ret = HcclVmExit();
         HCCL_VM_ERROR("fork failed: {}", std::strerror(errno));
+        auto ret = HcclVmExit(); 
         close(pipefds[0]); 
         return (ret == HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD) ? HcclVmResult::HCCL_SIM_HOST_ERROR_CMD : ret; 
     } else if (pid == 0) { 
         setenv(HVM_BASH_ENV_KEY.c_str(), g_binDir.c_str(), 1); 
-        setenv("LD_PRELOAD", proxyPath.c_str(), 1); 
+        setenv("LD_PRELOAD", preload.c_str(), 1); 
         setenv("HCCL_VM_INSTALL_ROOT", g_binDir.c_str(), 1);
         setenv("RANK_TABLE_FILE", InstallPath::ResolveToInstallRoot("data/ranktable.json").c_str(), 1); 
         execv("/bin/bash", bashArgv); 
@@ -632,8 +682,8 @@ HcclVmResult StartHvmCmd() {
         // 等待 bash 结束 (阻塞等待，保持Host存活) 
         int status; 
         waitpid(pid, &status, 0);
-        auto ret = HcclVmExit(); 
         HCCL_VM_INFO("Shell exited. Host shutting down."); 
+        auto ret = HcclVmExit();
     } 
     return HcclVmResult::HCCL_SIM_HOST_SUCCESS_CMD; 
 } 
@@ -663,17 +713,21 @@ void StartHostClient(int argc, char *argv[]) {
 } 
 
 void ServerListen() { 
-    // 创建队列 
+    // 创建队列
+    g_serverListenFlag.store(true); 
     mq_attr attr = MakeMessageQueueAttr(); 
     PosixMessageQueue mqReq(MQ_REQ_NAME, O_CREAT | O_EXCL | O_RDWR, &attr); 
     PosixMessageQueue mqResp(MQ_RESP_NAME, O_CREAT | O_EXCL | O_RDWR, &attr); 
     HCCL_VM_INFO("HOST Server listening..."); 
 
-    while(true) { 
+    while(g_serverListenFlag.load()) { 
         char buffer[MAX_MSG_SIZE]; 
         unsigned int priority = 0; 
-        // 阻塞等待请求 (Receive) 
-        ssize_t recvdSize = mqReq.Receive(&buffer, MAX_MSG_SIZE, &priority); 
+        ssize_t recvdSize = -1;
+ 	    timespec deadline = MakeDeadlineAfterMs(500);
+ 	    if (!mqReq.TimedReceive(buffer, MAX_MSG_SIZE, &priority, deadline, recvdSize)) { 
+ 	        continue; 
+ 	    }
 
         std::string cmd(buffer, recvdSize); 
         HCCL_VM_DEBUG("HOST : Command parsing request received: {}", cmd); 
@@ -683,16 +737,17 @@ void ServerListen() {
         std::string resp = "Success SubCommand Received"; 
         // 发送回执, 简易回执 
         mqResp.Send(resp.data(), resp.size(), 0); 
-    } 
+    }
+    HCCL_VM_INFO("HOST Server listening thread exit...");
 } 
 
 // 监听proxy和runner进程，中转进程状态 
 void RunnerListen() { 
     HCCL_VM_INFO("Runner listening..."); 
-
+    g_runnerListenFlag.store(true); 
     sim::ProcessSyncer syncer; 
     syncer.Init(); 
-    while(true) { 
+    while(g_runnerListenFlag.load()) {
         // 1. 监听DeviceStatus，等待所有proxy进程都进入等待状态 
         auto allStatus = RunnerDB::GetByPred<sim::DeviceStatus>( 
             [](const sim::DeviceStatus &d) { return d.synchronize_strategy == 1; }); 

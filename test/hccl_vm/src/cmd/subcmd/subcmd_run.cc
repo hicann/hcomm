@@ -62,13 +62,17 @@ void RunCommand::Execute(CLI::App& app) {
     }
     CstyleCmd syscmd(leftargvs);
     HCCL_VM_INFO("one_shot mode, executing: {}", syscmd.cmd());
-    std::string proxyPath = InstallPath::ResolveToInstallRoot("lib/" + GetArchStr() + "/libhccl_proxy_level2.so");
-    setenv("LD_PRELOAD", proxyPath.c_str(), 1);
+    std::string libDir = "lib/" + GetArchStr() + "/";
+    std::string proxyPathL0 = InstallPath::ResolveToInstallRoot(libDir + "libhccl_proxy_level0.so");
+    std::string proxyPathL2 = InstallPath::ResolveToInstallRoot(libDir + "libhccl_proxy_level2.so");
+    std::string preload = proxyPathL0 + ":" + proxyPathL2;
+    setenv("LD_PRELOAD", preload.c_str(), 1);
     int sysRet = std::system(syscmd.cmd().c_str()); // system() 会阻塞当前进程直到子命令结束
     if (sysRet != 0) {
         HCCL_VM_ERROR("Example execution failed: {}", sysRet);
     }
-    RemoveFromLDPreload(proxyPath);
+    RemoveFromLDPreload(proxyPathL0);
+    RemoveFromLDPreload(proxyPathL2);
     auto cleanRet = HcclVmExit();
     return;
 }

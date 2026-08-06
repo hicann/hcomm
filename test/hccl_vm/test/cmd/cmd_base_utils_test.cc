@@ -1180,6 +1180,25 @@ meta:
     RemoveYaml("ut_no_topo");
 }
 
+TEST_F(ParseYamlTopoBoundaryTest, Ascend960SocVersion) {
+    WriteYaml("ut_960", R"(
+meta:
+  podNum: 1
+  serNum: 1
+  rankNum: 2
+topology:
+  - podId: 0
+    servers:
+      - serId: 0
+        ip: 192.1.5.5
+        ranks: [0, 1]
+)");
+    TopoMeta topo;
+
+    EXPECT_TRUE(ParseYamlTopo("ut_960", topo));
+    RemoveYaml("ut_960");
+}
+
 // ==================== RunUserPlugin Tests ====================
 
 class RunUserPluginTest : public testing::Test {

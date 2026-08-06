@@ -153,6 +153,24 @@ TEST_F(SingleTaskCheckTest, CheckSlaveTaskQueue_EmptyLocalCopyAtEnd_Skips) {
     EXPECT_EQ(checker.CheckSlaveTaskQueue(allRank), HcclResult::HCCL_SUCCESS);
 }
 
+TEST_F(SingleTaskCheckTest, CheckSlaveTaskQueue_HFTopology_SkipsCheck) {
+    setenv("HCCLVM_TOPO_TYPE", "HF", 1);
+    SingleTaskCheck checker;
+    AllRankTaskQueues allRank;
+
+    DataSlice sliceA(BufferType::INPUT, 0, 64);
+    auto* localCopy = MakeTask<TaskStubLocalCopy>(sliceA, sliceA);
+
+    SingleTaskQueue sq;
+    sq.push_back({});
+    sq.push_back({std::shared_ptr<TaskStub>(localCopy, [](TaskStub*){}),
+                  std::shared_ptr<TaskStub>(localCopy, [](TaskStub*){})});
+    allRank[0] = sq;
+
+    EXPECT_EQ(checker.CheckSlaveTaskQueue(allRank), HcclResult::HCCL_SUCCESS);
+    unsetenv("HCCLVM_TOPO_TYPE");
+}
+
 // ==================== CheckSingleSlice Tests ====================
 
 TEST_F(SingleTaskCheckTest, CheckSingleSlice_MSType_ReturnsSuccess) {

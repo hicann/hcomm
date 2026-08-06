@@ -12,17 +12,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -D_GLIBCXX_USE_CXX11_ABI=0")
 
-if(DEFINED ENV{HCOMM_CODE_HOME})
-    set(HCOMM_CODE_ROOT $ENV{HCOMM_CODE_HOME})
-else()
-    message(WARNING "HCOMM_CODE_HOME environment variable is not set")
-endif()
-
-if(DEFINED ENV{ASCEND_TOOLKIT_HOME})
-    set(ASCEND_TOOLKIT_ROOT $ENV{ASCEND_TOOLKIT_HOME})
-else()
-    message(WARNING "ASCEND_TOOLKIT_HOME environment variable is not set")
-endif()
+# HCOMM_CODE_ROOT and ASCEND_CANN_PACKAGE_PATH are set by root CMakeLists.txt
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
@@ -32,10 +22,10 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/store
     ${CMAKE_SOURCE_DIR}/include/runnerdb
-    ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
+    ${YAMLCPP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
- 	${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/hccl
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include/hccl
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
 )
 

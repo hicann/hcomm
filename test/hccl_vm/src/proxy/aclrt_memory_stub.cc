@@ -239,12 +239,11 @@ bool GetDevMappedMemPtr(uint64_t rankId, size_t size, std::string& memName, bool
 
 aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 {
-    sim::Runner runner;
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
+    sim::Runner runner;
     if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -719,9 +718,8 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 {
     (void) prop;
     (void) flags;
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::Runner runner;
@@ -787,9 +785,8 @@ aclError aclrtReserveMemAddress(void **virPtr, size_t size, size_t alignment, vo
     (void) alignment;
     (void) expectPtr;
     (void) flags;
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::Runner runner;
@@ -955,9 +952,8 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 
 aclError aclrtDeviceGetBareTgid(int32_t *pid)
 {
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::Runner runner;
@@ -970,9 +966,8 @@ aclError aclrtDeviceGetBareTgid(int32_t *pid)
 
 aclError aclrtMemSetPidToShareableHandle(uint64_t shareableHandle, int32_t *pid, size_t pidNum)
 {
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::Runner runner;
@@ -1142,10 +1137,9 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
         HCCL_VM_ERROR("cannot find phy Mem offset: {:d}", phyMemId);
         return ACL_ERROR_INVALID_PARAM;
     }
-    
-    uint64_t serverId = sim::GetCurServerId();
+
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::Runner runner;
@@ -1165,9 +1159,8 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
 
 aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)
 {
-    uint64_t serverId = sim::GetCurServerId();
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::Runner runner;
@@ -1217,10 +1210,9 @@ aclError aclrtIpcMemClose(const char *key)
         HCCL_VM_ERROR("cannot find ipc record: {:d}", ipcRecordIdx);
         return ACL_ERROR_INVALID_PARAM;
     }
-    
-    uint64_t serverId = sim::GetCurServerId();
+
+    auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
         return ACL_ERROR_INVALID_PARAM;
     }
     sim::Runner runner;

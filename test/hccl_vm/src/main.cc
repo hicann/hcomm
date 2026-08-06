@@ -18,36 +18,6 @@
 #include "sim_log.h"
 #include "db_sim_op_db_ops.h"
 
-void ArchiveLogsAndData()
-{
-    const std::string& installRoot = InstallPath::GetHcclVmInstallAbsPath();
-    if (installRoot.empty())
-        return;
-
-    std::string archiveScript = installRoot + "/script/archive.sh";
-    if (access(archiveScript.c_str(), F_OK) != 0)
-        return;
-
-    pid_t pid1 = fork();
-    if (pid1 == 0) {
-        pid_t pid2 = fork();
-        if (pid2 == 0) {
-            setsid();
-            int devNull = open("/dev/null", O_RDWR);
-            dup2(devNull, STDIN_FILENO);
-            dup2(devNull, STDOUT_FILENO);
-            dup2(devNull, STDERR_FILENO);
-            if (devNull > STDERR_FILENO) {
-                close(devNull);
-            }
-            sleep(1);
-            execlp("bash", "bash", archiveScript.c_str(), nullptr);
-            _exit(1);
-        }
-        _exit(0);
-    }
-}
-
 void envInit()
 {
     setenv("HCCL_VM_INSTALL_ROOT", GetBinLocation().c_str(), 1);

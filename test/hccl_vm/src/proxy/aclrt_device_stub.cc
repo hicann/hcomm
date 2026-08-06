@@ -102,11 +102,11 @@ aclError aclrtSetDevice(int32_t deviceId)
 
         sim::Device device{};
         auto ret = RunnerDB::GetOneByPred<sim::Device>([serverId, deviceId](const sim::Device &d) {
- 	             return d.server_id == serverId && d.logic_id == (uint32_t)deviceId;
+            return d.server_id == serverId && d.logic_id == (uint32_t)deviceId;
         });
         if (!ret.second) {
- 	             HCCL_VM_ERROR("device not found logicId:{:d} serverId:{:d}", deviceId, serverId);
- 	             return ACL_ERROR_INVALID_PARAM;
+            HCCL_VM_ERROR("device not found logicId:{:d} serverId:{:d}", deviceId, serverId);
+            return ACL_ERROR_INVALID_PARAM;
         }
         device = ret.first;
 
@@ -128,7 +128,7 @@ aclError aclrtSetDevice(int32_t deviceId)
 
         sim::Runner runner{};
         if (!sim::GetCurrRunnerTls(serverId, runner)) {
- 	             return ACL_ERROR_INVALID_PARAM;
+            return ACL_ERROR_INVALID_PARAM;
         }
         auto curRunnerId = runner.id;
 
@@ -214,7 +214,7 @@ aclError aclrtResetDeviceForce(int32_t deviceId)
         HCCL_VM_DEBUG("stream not found deviceId:{:d}", deviceId);
         sim::Runner runner{};
         auto serverId = sim::GetCurServerId();
-        if (serverId == 0) {
+        if (serverId == 0){
             return ACL_ERROR_INVALID_PARAM;
         }
         if (!sim::GetCurrRunnerTls(serverId, runner)) {
@@ -254,7 +254,7 @@ aclError aclrtGetDevice(int32_t* device)
     try {
         sim::Runner runner{};
         auto serverId = sim::GetCurServerId();
-        if (serverId == 0) {
+        if (serverId == 0){
             return ACL_ERROR_INVALID_PARAM;
         }
         if (!sim::GetCurrRunnerTls(serverId, runner)) {
@@ -295,7 +295,7 @@ aclError aclrtSetTsDevice(aclrtTsId tsId)
 
         sim::Runner runner{};
         auto serverId = sim::GetCurServerId();
-        if (serverId == 0) {
+        if (serverId == 0){
             return ACL_ERROR_INVALID_PARAM;
         }
         if (!sim::GetCurrRunnerTls(serverId, runner)) {
@@ -334,14 +334,15 @@ aclError aclrtGetDeviceCount(uint32_t *count)
             return ACL_ERROR_INVALID_PARAM;
         }
         auto devs = RunnerDB::GetByPred<sim::Device>([serverId](const sim::Device& d) {
- 	             return d.status == 1 && d.server_id == serverId;
- 	    });
+            return d.status == 1 && d.server_id == serverId;
+        });
 
         if (devs.empty()) {
             HCCL_VM_ERROR("devices not found");
             return ACL_ERROR_INVALID_PARAM;
         }
         *count = devs.size();
+        HCCL_VM_INFO("device count:{:d}", *count);
         return ACL_SUCCESS;
     } catch (const std::exception &e) {
         HCCL_VM_ERROR("exception:{}", e.what());
@@ -417,9 +418,8 @@ aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)
 {
     try {
         sim::Runner runner{};
-        uint64_t serverId = sim::GetCurServerId();
-        if (serverId == 0) {
-            HCCL_VM_ERROR("GetCurServerId failed");
+        auto serverId = sim::GetCurServerId();
+        if (serverId == 0){
             return ACL_ERROR_INVALID_PARAM;
         }
         if (!sim::GetCurrRunnerTls(serverId, runner)) {
@@ -444,9 +444,8 @@ aclError aclrtGetDeviceSatMode(aclrtFloatOverflowMode *mode)
 {
     try {
         sim::Runner runner{};
-        uint64_t serverId = sim::GetCurServerId();
-        if (serverId == 0) {
-            HCCL_VM_ERROR("GetCurServerId failed");
+        auto serverId = sim::GetCurServerId();
+        if (serverId == 0){
             return ACL_ERROR_INVALID_PARAM;
         }
         if (!sim::GetCurrRunnerTls(serverId, runner)) {
@@ -514,9 +513,8 @@ aclError aclrtDeviceEnablePeerAccess(int32_t peerDeviceId, uint32_t flags)
     (void) flags;
     try {
         sim::Runner runner{};
-        uint64_t serverId = sim::GetCurServerId();
-        if (serverId == 0) {
-            HCCL_VM_ERROR("GetCurServerId failed");
+        auto serverId = sim::GetCurServerId();
+        if (serverId == 0){
             return ACL_ERROR_INVALID_PARAM;
         }
         if (!sim::GetCurrRunnerTls(serverId, runner)) {
@@ -569,9 +567,8 @@ aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId)
 {
     try {
         sim::Runner runner{};
-        uint64_t serverId = sim::GetCurServerId();
-        if (serverId == 0) {
-            HCCL_VM_ERROR("GetCurServerId failed");
+        auto serverId = sim::GetCurServerId();
+        if (serverId == 0){
             return ACL_ERROR_INVALID_PARAM;
         }
         if (!sim::GetCurrRunnerTls(serverId, runner)) {

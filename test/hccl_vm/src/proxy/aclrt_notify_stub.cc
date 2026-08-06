@@ -27,6 +27,7 @@
 #include "db_sim_runner_ops.h"
 #include "db_sim_runner_common.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
@@ -40,7 +41,7 @@ void PrintTaskMetaData(const HcclTaskMetaData &taskMeta)
                    pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.transMem.srcOffset, taskMeta.taskData.transMem.dstOffset, taskMeta.taskData.transMem.len,
                    taskMeta.taskData.transMem.srcRankId, taskMeta.taskData.transMem.dstRankId);
             break;
-        case HccLTaskMetaType::REDUCE:
+        case HccLTaskMetaType::REDUCE: 
             HCCL_VM_INFO("pid[{}]: rankId[{}], streamId[{}], taskType[REDUCE], srcOffset[{}], dstOffset[{}], len[{}], srcRankId[{}], dstRankId[{}], reduceOp[{}], dataType[{}]",
                    pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.reduce.srcOffset, taskMeta.taskData.reduce.dstOffset, taskMeta.taskData.reduce.dataCount,
                    taskMeta.taskData.reduce.srcRankId, taskMeta.taskData.reduce.dstRankId, taskMeta.taskData.reduce.reduceOp, taskMeta.taskData.reduce.dataType);
@@ -61,11 +62,10 @@ void PrintTaskMetaData(const HcclTaskMetaData &taskMeta)
 aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
 {
     (void) flag;
-    uint64_t serverId = sim::GetCurServerId();
-    if (serverId == 0) {
-        HCCL_VM_ERROR("GetCurServerId failed");
-        return ACL_ERROR_INVALID_PARAM;
-    }
+    auto serverId = sim::GetCurServerId();
+ 	if (serverId == 0) {
+ 	    return ACL_ERROR_INVALID_PARAM;
+ 	}
     sim::Runner runner;
     if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
@@ -76,7 +76,7 @@ aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
     }
     auto currCtx = RunnerDB::GetById<sim::Context>(runner.current_ctx_id);
     if (!currCtx.has_value()) {
-        HCCL_VM_ERROR("can not get CurrContext: {:d}", runner.current_ctx_id);
+        HCCL_VM_ERROR("CurrContext not found:{:d}", runner.current_ctx_id);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -87,14 +87,14 @@ aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
     auto res = RunnerDB::Add<sim::Notify>(tmp);
 
     *notify = (aclrtNotify)res;
-    HCCL_VM_DEBUG("notify: {:d}", res);
+    HCCL_VM_DEBUG("id:{:d}", res);
     return ACL_SUCCESS;
 }
 
 aclError aclrtDestroyNotify(aclrtNotify notify)
 {
     uint64_t notifyId = (uint32_t)(uintptr_t)notify;
-    HCCL_VM_DEBUG("notify: {:d}", notifyId);
+    HCCL_VM_DEBUG("id:{:d}", notifyId);
     RunnerDB::Delete<sim::Notify>(notifyId);
     return ACL_SUCCESS;
 }
@@ -102,7 +102,7 @@ aclError aclrtDestroyNotify(aclrtNotify notify)
 aclError aclrtGetNotifyId(aclrtNotify notify, uint32_t *notifyId)
 {
     *notifyId = (uint32_t)(uintptr_t)notify;
-    HCCL_VM_DEBUG("notifyId: {:d}", *notifyId);
+    HCCL_VM_DEBUG("id:{:d}", *notifyId);
     return ACL_SUCCESS;
 }
 
@@ -144,7 +144,7 @@ aclError aclrtWaitAndResetNotify(aclrtNotify notify, aclrtStream stream, uint32_
     // reset notify
     auto res = RunnerDB::Update<sim::Notify>(notifyId, [](sim::Notify &notify) { notify.value = 0; });
     if (!res) {
-        HCCL_VM_ERROR("can not get notify: {:d}", notifyId);
+        HCCL_VM_ERROR("notify not found:{:d}", notifyId);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -180,7 +180,7 @@ aclError aclrtNotifyBatchReset(aclrtNotify *notifies, size_t num)
         // reset notify
         auto res = RunnerDB::Update<sim::Notify>(notifyId, [](sim::Notify &notify) { notify.value = 0; });
         if (!res) {
-            HCCL_VM_ERROR("can not get notify: {:d}", notifyId);
+            HCCL_VM_ERROR("notify not found:{:d}", notifyId);
             return ACL_ERROR_INVALID_PARAM;
         }
     }
@@ -202,20 +202,20 @@ aclError aclrtNotifyGetExportKey(aclrtNotify notify, char *key, size_t len, uint
     memcpy(key, notifyKeyStr.data(), notifyKeyStr.length());
     tmp.create_pid = getpid();
     auto res = RunnerDB::Add<sim::IpcNotify>(tmp);
-    HCCL_VM_DEBUG("notify: {:d}", notifyId);
+    HCCL_VM_DEBUG("id:{:d}", notifyId);
     return ACL_SUCCESS;
 }
 
 aclError aclrtNotifySetImportPid(aclrtNotify notify, int32_t *pid, size_t num)
 {
     uint64_t notifyId = (uint32_t)(uintptr_t)notify;
-    HCCL_VM_DEBUG("notify: {:d}", notifyId);
+    HCCL_VM_DEBUG("id:{:d}", notifyId);
 
     auto ipcNotify = RunnerDB::GetOneByPred<sim::IpcNotify>([notifyId](const sim::IpcNotify& ipc) {
         return ipc.notify_id  == notifyId;
     });
     if (!ipcNotify.second) {
-        HCCL_VM_ERROR("can not get notify in ipc notify: {:d}", notifyId);
+        HCCL_VM_ERROR("notify in ipc notify not found:{:d}", notifyId);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -236,11 +236,11 @@ aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t f
         return memcmp(key, ipc.name_or_key, strlen(key)) == 0;
     });
     if (!ipcNotify.second) {
-        HCCL_VM_ERROR("can not get notify in ipc notify key: {}", key);
+        HCCL_VM_ERROR("notify in ipc notify key not found:{}", key);
         return ACL_ERROR_INVALID_PARAM;
     }
     *notify = (aclrtNotify)ipcNotify.first.notify_id;
-    HCCL_VM_DEBUG("notify: {:d}", ipcNotify.first.notify_id);
+    HCCL_VM_DEBUG("id:{:d}", ipcNotify.first.notify_id);
     return ACL_SUCCESS;
 }
 
@@ -268,19 +268,19 @@ rtError_t rtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *ts
     // reset notify
     auto res = RunnerDB::GetById<sim::Notify>(notifyId);
     if (!res.has_value()) {
-        HCCL_VM_ERROR("can not get notify: {:d}", notifyId);
+        HCCL_VM_ERROR("notify not found:{:d}", notifyId);
         return ACL_ERROR_INVALID_PARAM;
     }
 
     auto createCtx = RunnerDB::GetById<sim::Context>(res->create_ctx_id);
     if (!createCtx.has_value()) {
-        HCCL_VM_ERROR("can not get create ctx: {:d}", res->create_ctx_id);
+        HCCL_VM_ERROR("create ctx not found:{:d}", res->create_ctx_id);
         return ACL_ERROR_INVALID_PARAM;
     }
 
     auto devRes = RunnerDB::GetById<sim::Device>(createCtx->device_id);
     if (!devRes.has_value()) {
-        HCCL_VM_ERROR("can not get device id: {:d}", createCtx->device_id);
+        HCCL_VM_ERROR("device id not found:{:d}", createCtx->device_id);
         return ACL_ERROR_INVALID_PARAM;
     }
     *phyDevId = devRes->physical_id;
@@ -294,19 +294,19 @@ rtError_t rtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo *notifyInfo)
     // reset notify
     auto res = RunnerDB::GetById<sim::Notify>(notifyId);
     if (!res.has_value()) {
-        HCCL_VM_ERROR("can not get notify: {:d}", notifyId);
+        HCCL_VM_ERROR("notify not found:{:d}", notifyId);
         return ACL_ERROR_INVALID_PARAM;
     }
 
     auto createCtx = RunnerDB::GetById<sim::Context>(res->create_ctx_id);
     if (!createCtx.has_value()) {
-        HCCL_VM_ERROR("can not get create ctx: {:d}", res->create_ctx_id);
+        HCCL_VM_ERROR("create ctx not found:{:d}", res->create_ctx_id);
         return ACL_ERROR_INVALID_PARAM;
     }
 
     auto devRes = RunnerDB::GetById<sim::Device>(createCtx->device_id);
     if (!devRes.has_value()) {
-        HCCL_VM_ERROR("can not get device id: {:d}", createCtx->device_id);
+        HCCL_VM_ERROR("device id not found:{:d}", createCtx->device_id);
         return ACL_ERROR_INVALID_PARAM;
     }
     notifyInfo->phyId   = devRes->physical_id;

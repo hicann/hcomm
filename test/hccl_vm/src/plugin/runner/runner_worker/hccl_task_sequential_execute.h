@@ -36,7 +36,7 @@ using workerFunc = std::function<HcclSim::HcclVmResult(const HcclTaskMetaData&)>
 
 class SqeuentialExecutor {
 public:
-    SqeuentialExecutor(AllRankTaskQueues &allRankTaskQueues);
+    SqeuentialExecutor(AllRankTaskQueues &allRankTaskQueues, const std::string& rootPath);
     ~SqeuentialExecutor() = default;
 
     HcclVmResult Execute();
@@ -49,6 +49,7 @@ private:
     const static std::map<HccLTaskMetaType, const std::string> taskNames_;
 
     HcclSim::AllRankTaskQueues allRankTaskQueues_;
+    std::string rootPath_;
 };
 }
 #endif

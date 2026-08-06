@@ -27,7 +27,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/plugin
     ${CMAKE_SOURCE_DIR}/src/plugin/checker/header/external
     ${HOME}
-    ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
+    ${YAMLCPP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party
 
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode

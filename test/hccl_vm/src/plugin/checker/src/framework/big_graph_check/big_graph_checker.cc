@@ -160,6 +160,8 @@ HcclResult BigGraphCheckerV3::TranslateTask()
 HcclResult BigGraphCheckerV3::GenerateBigGraph()
 {
     if (translatedNodes_.empty() || translatedTaskQueues_.empty()) {
+        HCCL_VM_ERROR("{} Checker get empty task queue, please check if the HCCL-VM end normally, operatorCount={}, nodeCount={}, rankCount={}",
+            MakeErrorCodeText(ErrorCode::CHECKER_RUNTIME_ERROR), data_.operators.size(), translatedNodes_.size(), translatedTaskQueues_.size());
         return HCCL_E_PARA;
     }
 

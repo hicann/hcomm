@@ -45,6 +45,10 @@ HcclResult hrtGetDeviceType(DevType &devType)
     }
     if (strcmp(device->soc_version, "Ascend950") == 0) {
         devType = DevType::DEV_TYPE_950;
+#ifdef BUILD_A6_CCU_INSTR
+    } else if (strcmp(device->soc_version, "Ascend960") == 0) {
+        devType = DevType::DEV_TYPE_960;
+#endif
     } else {
         HCCL_VM_ERROR("not support device soc version: {:s}", device->soc_version);
         return HCCL_E_NOT_SUPPORT;

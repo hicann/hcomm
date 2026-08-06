@@ -18,7 +18,6 @@ target_sources(topo PRIVATE
 target_include_directories(topo PRIVATE
     ${THRID_PARTY_DIR}/nlohmann_json
     ${HCOMM_VM_ROOT_PATH}/include
-    ${HCOMM_VM_ROOT_PATH}/include
     ${HCOMM_VM_ROOT_PATH}/include/runnerdb
     ${HCOMM_VM_ROOT_PATH}/include/topo
     ${HCOMM_VM_ROOT_PATH}/src/cmd
@@ -28,16 +27,7 @@ target_include_directories(topo PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc/profiling
 )
 
-target_compile_options(topo PRIVATE
-        -fPIC
-        -Werror
-        -fno-common
-        -fno-strict-aliasing
-        -pipe
-        -O0
-        -g
-        -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(topo)
 
 target_link_libraries(topo PRIVATE log)
 

@@ -57,7 +57,8 @@ using TransformInstrFunc = HcclResult (*)(const CcuRep::CcuInstr*, TaskStubCcuGr
 
 // CCU指令版本
 enum class CcuInstrVersion: uint16_t {
-    VERSION_A5 = 1
+    VERSION_A5 = 1,
+    VERSION_A6 = 2
 };
 
 class InstructMapBase {
@@ -91,6 +92,26 @@ public:
     // 指令转换函数
     HcclResult Transform(const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
                         void* loopParam) ;
+private:
+    // 指令转换函数
+    std::unordered_map<uint16_t, TransformInstrFunc> transformInstrSqeMap;
+};
+
+class InstructMapA6: public InstructMapBase {
+public:
+    InstructMapA6();
+    // 获取指令版本
+    CcuInstrVersion GetVersion() override {
+        return CcuInstrVersion::VERSION_A6;
+    }
+    // 是否支持该指令,放基类的话无法访问到
+    bool IsSupported(uint16_t header) override {
+        return transformInstrSqeMap.find(header) != transformInstrSqeMap.end();
+    }
+    // 指令转换函数
+    HcclResult Transform(const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+        void* loopParam);
+
 private:
     // 指令转换函数
     std::unordered_map<uint16_t, TransformInstrFunc> transformInstrSqeMap;

@@ -20,6 +20,7 @@
 
 #include "ccu_microcode_common_v1.h"
 #include "ccu_resource_manager.h"
+#include "trace/ccu_trace_types.h"
 #include "sim_log.h"
 
 class CcuExecutorBase {
@@ -33,6 +34,15 @@ public:
     virtual void Run() = 0;
     virtual std::string Describe() = 0;
     virtual void Process(CcuResourceManager &ccuResMgr) { return; }
+
+    // 采集指令专属 trace 细节（仅含运行时动态参数）
+    // 默认实现：仅包含 typeName，子类可 override 补充 args
+    virtual CcuTrace::CcuInstrTraceDetail CollectTraceDetail()
+    {
+        CcuTrace::CcuInstrTraceDetail detail;
+        detail.typeName = "Unknown";
+        return detail;
+    }
 
     RunnerCcuVersion GetVersion() const { return version_; }
     void SetVersion(RunnerCcuVersion version) { version_ = version; }

@@ -122,7 +122,7 @@ aclError aclrtGetOpTimeOutInterval(uint64_t *interval)
     if (interval == nullptr) {
         return ACL_ERROR_INVALID_PARAM;
     }
-    *interval = 5ULL * 1000ULL * 1000ULL; // 模拟赋值
+    *interval = 5ULL * 1000ULL * 1000ULL;
     return ACL_SUCCESS;
 }
 

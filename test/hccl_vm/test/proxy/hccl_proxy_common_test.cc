@@ -13,32 +13,9 @@
 
 #include "hccl/hccl_common.h"
 #include "hccl/hccl_types.h"
+#include "hccl_proxy_common.h"
 
 using u32 = uint32_t;
-
-namespace sim {
-    const std::map<HcclDataType, u32> DATA_TYPE_SIZE_MAP = {
-        {HcclDataType::HCCL_DATA_TYPE_INT8, 1},
-        {HcclDataType::HCCL_DATA_TYPE_INT16, 2},
-        {HcclDataType::HCCL_DATA_TYPE_INT32, 4},
-        {HcclDataType::HCCL_DATA_TYPE_FP16, 2},
-        {HcclDataType::HCCL_DATA_TYPE_FP32, 4},
-        {HcclDataType::HCCL_DATA_TYPE_INT64, 8},
-        {HcclDataType::HCCL_DATA_TYPE_UINT64, 8},
-        {HcclDataType::HCCL_DATA_TYPE_UINT8, 1},
-        {HcclDataType::HCCL_DATA_TYPE_UINT16, 2},
-        {HcclDataType::HCCL_DATA_TYPE_UINT32, 4},
-        {HcclDataType::HCCL_DATA_TYPE_FP64, 8},
-        {HcclDataType::HCCL_DATA_TYPE_BFP16, 2},
-        {HcclDataType::HCCL_DATA_TYPE_INT128, 16},
-        {HcclDataType::HCCL_DATA_TYPE_HIF8, 1},
-        {HcclDataType::HCCL_DATA_TYPE_FP8E4M3, 1},
-        {HcclDataType::HCCL_DATA_TYPE_FP8E5M2, 1},
-        {HcclDataType::HCCL_DATA_TYPE_FP8E8M0, 1}
-    };
-
-    int GetDataTypeSize(HcclDataType dataType, uint32_t &size);
-}
 
 class HcclProxyCommonTest : public testing::Test {
 protected:

@@ -31,12 +31,15 @@ public:
     void Parser() override;
     void Run() override;
     void RunV1();
+    void RunV2();
     std::string Describe() override;
+    CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
     uint16_t startLoopInstrId_;
     uint16_t xnId_;
     uint16_t xmId_;
+    uint16_t xpId_{0};
     uint16_t highPerfModeEn_;
 };
 

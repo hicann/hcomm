@@ -11,7 +11,7 @@ file(GLOB HCCL_CMD_SOURCES CONFIGURE_DEPENDS
         "subcmd/*.cc"
 )
 
-add_library(cmd OBJECT ${HCCL_CMD_SOURCES})
+add_library(cmd STATIC ${HCCL_CMD_SOURCES})
 
 target_include_directories(cmd PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/..
@@ -20,12 +20,10 @@ target_include_directories(cmd PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/../common
         ${CMAKE_CURRENT_SOURCE_DIR}/../plugin
         ${CMAKE_CURRENT_SOURCE_DIR}/../store
-        ${CMAKE_CURRENT_SOURCE_DIR}/../store
         ${CMAKE_CURRENT_SOURCE_DIR}/../../include
         ${CMAKE_CURRENT_SOURCE_DIR}/../../include/runnerdb
         ${CMAKE_CURRENT_SOURCE_DIR}/../../include/topo
         ${CMAKE_CURRENT_SOURCE_DIR}/../../include/store
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../include
         ${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/nlohmann_json
 
         ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
@@ -37,19 +35,12 @@ target_include_directories(cmd PRIVATE
         ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
 
-target_compile_options(cmd PRIVATE
-        -Werror
-        -fno-common
-        -fno-strict-aliasing
-        -pipe
-        -O0
-        -g
-        -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(cmd)
 
 target_link_libraries(cmd PRIVATE
         dl
         rt
+        common
         log
         runnerdb
         store

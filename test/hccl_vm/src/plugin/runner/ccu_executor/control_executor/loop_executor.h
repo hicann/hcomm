@@ -31,12 +31,16 @@ public:
     void Parser() override;
     void Run() override;
     void RunV1();
+    void RunV2();
     std::string Describe() override;
+    CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
     uint16_t startInstrId_{0};
     uint16_t endInstrId_{0};
     uint16_t xnId_{0};
+    uint16_t xmId_{0};
+    uint16_t xpId_{0};
 };
 
 #endif // HCCL_SIM_LOOP_EXECUTOR_H

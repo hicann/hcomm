@@ -12,12 +12,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -D_GLIBCXX_USE_CXX11_ABI=0")
 
-if(NOT DEFINED ENV{ASCEND_TOOLKIT_HOME})
-    set(ASCEND_TOOLKIT_HOME ${ASCEND_CANN_PACKAGE_PATH})
-else()
-    set(ASCEND_TOOLKIT_HOME $ENV{ASCEND_TOOLKIT_HOME})
-endif()
-
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/proxy
     ${CMAKE_SOURCE_DIR}/src/common
@@ -26,7 +20,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include/runnerdb
     ${CMAKE_SOURCE_DIR}/include/hccl
     ${CMAKE_SOURCE_DIR}/src/plugin/checker/header/external
-    ${CMAKE_BINARY_DIR}/_deps/yaml-cpp-src/include
+    ${YAMLCPP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party/nlohmann_json
     # From level1 library includes
     ${ASCEND_CANN_PACKAGE_PATH}/pkg_inc
@@ -36,22 +30,14 @@ include_directories(
     ${ASCEND_CANN_PACKAGE_PATH}/include/hccl
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/asc/include/adv_api
-    ${ASCEND_TOOLKIT_HOME}/${CANN_ARCH_DIR}/include
     ${HCOMM_CODE_ROOT}/test/ut/depends/include
     ${HCOMM_CODE_ROOT}/include
     ${HCOMM_CODE_ROOT}/include/hccl
     ${HCOMM_CODE_ROOT}/pkg_inc
     ${HCOMM_CODE_ROOT}/pkg_inc/hccl
-    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
     ${HCOMM_CODE_ROOT}/src/pub_inc
     ${HCOMM_CODE_ROOT}/src/framework/communicator/impl/independent_op/rank_graph
     ${HCOMM_CODE_ROOT}/src/framework/inc
-    ${CMAKE_SOURCE_DIR}/hccl_common
-    ${CMAKE_SOURCE_DIR}/store
-    ${CMAKE_SOURCE_DIR}/hccl_ipc
-    ${CMAKE_SOURCE_DIR}/hccl_host/hccl_vm
-    ${CMAKE_SOURCE_DIR}/utils/base
-    ${CMAKE_SOURCE_DIR}/utils/exception
     ${CMAKE_SOURCE_DIR}/include
     ${HCOMM_CODE_ROOT}/test/ut/depends/pkg_inc/profiling
     ${HCOMM_CODE_ROOT}/test/ut/depends/pkg_inc/aicpu/tsd
@@ -60,6 +46,7 @@ include_directories(
     ${HCOMM_CODE_ROOT}/src/platform/hccp/inc/network
     ${HCOMM_CODE_ROOT}/src/legacy/common
     ${ASCEND_CANN_PACKAGE_PATH}/include
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
 
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/hccp
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/hccp/inc

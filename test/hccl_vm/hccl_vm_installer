@@ -23,8 +23,8 @@
 #   tag(见 release-management 的 cann-hcomm/cann-hccl 行)。即“源码跟随 CANN”。
 #
 # 本工具的配套：checker 存在于 hcomm 的竞赛/主线分支（发布 tag 里没有 checker）。默认按
-#   profile competition/campus-2026 取 hcomm/hccl 同一竞赛分支；CANN 版本由该分支 build.md
-#   提取（见 --list-profiles）。源码与 CANN 需同代配套，不配套时 device 侧会因缺新接口
+#   profile main 取 hcomm/hccl 的 master 主线；具体分支映射见下方 profile 注册表。源码与 CANN
+#   需同代配套，不配套时 device 侧会因缺新接口
 #   (如 ThreadType)编译失败，本脚本会在失败时提示更换配套 CANN。
 # ====================================================================
 set -euo pipefail
@@ -222,7 +222,7 @@ show_help() {
     echo "HCCL-VM 一键安装脚本 $(version_line)"
     echo ""
     echo "新手直接运行，无需任何参数（依赖自动安装；需确认的操作有终端时提示、超时按默认继续）:"
-    echo "  curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/competition%2Fcampus-2026/test/hccl_vm/hccl_vm_installer | bash"
+    echo "  curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/master/test/hccl_vm/hccl_vm_installer | bash"
     echo "  curl -fsSL <URL> | bash -s -- --workspace /root/hvm   # 一键并指定工作目录"
     echo "  （或下载后本地运行: bash hccl_vm_installer）"
     echo ""

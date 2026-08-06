@@ -6,17 +6,12 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
-file(GLOB_RECURSE HCCL_SOURCES "*.cc")
+file(GLOB_RECURSE HCCL_SOURCES CONFIGURE_DEPENDS "*.cc")
 
 # 添加静态库
 add_library(ccu_executor STATIC ${HCCL_SOURCES})
 
-target_compile_options(ccu_executor PRIVATE
-    -fPIC
-    -g
-    -O0
-    -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(ccu_executor)
 
 # 设置头文件包含路径（改为绝对路径，基于项目根目录）
 target_include_directories(ccu_executor PRIVATE
@@ -27,6 +22,7 @@ target_include_directories(ccu_executor PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/load_executor
     ${CMAKE_CURRENT_SOURCE_DIR}/reduce_executor
     ${CMAKE_CURRENT_SOURCE_DIR}/trans_executor
+    ${CMAKE_CURRENT_SOURCE_DIR}/trace
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/runnerdb
     ${PROJECT_SOURCE_DIR}/include/store

@@ -143,7 +143,7 @@ HcclVmResult StorageManager::LoadHcclVmSynthesisData(sim::OpDetailTab& detailTab
         CcuInfo rmtDieInfo1;
         rmtDieInfo1.rankId = channel.dstRankId;
         rmtDieInfo1.dieId = channel.dstDieId;
-        HCCL_VM_DEBUG("[Channel info] channelId={}, srcRank={}, srcDie={}, dstRank={}, dstDie={} srcEid={}, dstEid={}",
+        HCCL_VM_INFO("[Channel info] channelId={}, srcRank={}, srcDie={}, dstRank={}, dstDie={} srcEid={}, dstEid={}",
             channel.channelId, channel.srcRankId, static_cast<uint32_t>(channel.srcDieId), channel.dstRankId, channel.dstDieId, 
             EidToHexString(channel.leid), EidToHexString(channel.reid));
         m_allRankChannelInfo[channel.srcRankId][channel.srcDieId][channel.channelId] = rmtDieInfo1;
@@ -303,6 +303,11 @@ uint32_t StorageManager::GetRankSize() const
     return m_checker_param.rankSize;
 }
 
+std::vector<RankChannelInfo> &StorageManager::GetAllRankChannelInfo()
+{
+    return m_allRankChannelInfo;
+}
+
 HcclVmInstrData StorageManager::GetHvmInstrData() const
 {
     return m_instrData;
@@ -318,6 +323,10 @@ HcclVmResult StorageManager::InitCcuResource(std::vector<sim::CcuInstrResTab>& i
     RunnerCcuVersion ccuVersion{RunnerCcuVersion::CCU_INVALID};
     if (devType_ == DevType::DEV_TYPE_950) {
         ccuVersion = RunnerCcuVersion::CCU_V1;
+#ifdef BUILD_A6_CCU_INSTR
+    } else if (devType_ == DevType::DEV_TYPE_960) {
+        ccuVersion = RunnerCcuVersion::CCU_V2;
+#endif
     } else {
         HCCL_VM_ERROR("Wrong devive type: {:d}", static_cast<int>(devType_));
         return HcclVmResult::HCCL_SIM_E_INTERNAL;

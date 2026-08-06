@@ -96,3 +96,10 @@ std::string TransRmtMemToLocMSExecutor::Describe()
         clearType_,
         lengthEn_);
 }
+
+CcuTrace::CcuInstrTraceDetail TransRmtMemToLocMSExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "TransRmtMemToLocMS";
+    return detail;
+}

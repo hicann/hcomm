@@ -33,21 +33,17 @@ extern "C" {
     aclError aclrtMallocHostWithCfg(void **ptr, uint64_t size, aclrtMallocConfig *cfg);
 }
 
-// aclrt_memory_stub.cc 编进本二进制，其 __attribute__((constructor)) PrimeCheckOnlyMode 在
-// 加载期（先于 main）缓存仅校验模式。须在该构造器之前把 mode=1 写进 DB，否则缓存成 false。
-// 带优先级的构造器先于无优先级的 PrimeCheckOnlyMode 运行，借此抢先写入。
-__attribute__((constructor(101))) static void SeedCheckOnlyMode()
-{
-    RunnerDB::DeleteAll<sim::RunModeConfig>();
-    sim::RunModeConfig cfg{};
-    cfg.mode = 1;
-    RunnerDB::Add<sim::RunModeConfig>(cfg);
-}
-
 // 复用区在整个套件期间保持存活，套件开头建池一次，结束再回收。
 class AclrtMemStubTest : public testing::Test {
 protected:
     static void SetUpTestSuite() {
+        // 在套件初始化（已过 main、RunnerDB/sqlite 就绪）时把 mode=1 写进 DB，再主动触发一次
+        // IsCheckOnlyMode() 的懒加载，使进程内 static 缓存 latch 成仅校验模式；不依赖任何加载期构造器。
+        RunnerDB::DeleteAll<sim::RunModeConfig>();
+        sim::RunModeConfig cfg{};
+        cfg.mode = 1;
+        RunnerDB::Add<sim::RunModeConfig>(cfg);
+        ASSERT_TRUE(sim::IsCheckOnlyMode());
         // 清掉上次异常退出残留的 /dev/shm/HcclCommPool（ShmCreate 用 O_EXCL，残留会建池失败）。
         shm_unlink(sim::CommPoolPolicy::kPoolName);
         ASSERT_NE(sim::MemoryManager::GetInstance().AllocMemByName(
@@ -63,7 +59,7 @@ protected:
 
 // 主机大块两次申请归同一池首址，且与设备侧大块同址，主机与设备共用 HcclCommPool。
 TEST_F(AclrtMemStubTest, MallocHost_BigBlock_TwiceSameAddr_SharesDevicePool) {
-    EXPECT_TRUE(sim::IsCheckOnlyMode());   // 加载期构造器已写入仅校验模式，首次缓存须为 true。
+    EXPECT_TRUE(sim::IsCheckOnlyMode());   // SetUpTestSuite 已写入 mode=1 并预热缓存，须为 true。
     const size_t big = sim::CommPoolPolicy::kBigBlockThreshold;  // 200MB
     void* h1 = nullptr;
     void* h2 = nullptr;

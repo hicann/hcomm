@@ -34,8 +34,10 @@ public:
     void Parser() override;
     void Run() override;
     void RunV1();
+    void RunV2();
     void Process(CcuResourceManager &ccuResMgr) override;
     std::string Describe() override;
+    CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
     uint16_t count_{0};

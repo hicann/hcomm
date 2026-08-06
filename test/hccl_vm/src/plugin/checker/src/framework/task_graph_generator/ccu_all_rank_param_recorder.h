@@ -22,6 +22,17 @@
 #include "task_graph_generator.h"
 
 namespace HcclSim {
+// 记录CCU中偏移地址的类型
+enum class CcuComponerntType: uint16_t {
+    UNKNOWN = 0,
+    XN_A6 = 1,
+    CKE_A6 = 2,
+    PFE_A6 = 3,
+    CHANNEL_A6 = 4,
+    JETTY_A6 = 5,
+    MISSION_A6 = 6,
+    LOOP_A6 = 7,
+};
 
 class AllRankParamRecorder {
 public:
@@ -39,12 +50,20 @@ public:
     HcclResult GetGSA(uint32_t rankId, uint32_t dieId, uint16_t gsaId, uint64_t& gsaValue);
     HcclResult GetCKE(uint32_t rankId, uint32_t dieId, uint16_t ckeId, uint16_t& ckeValue);
     HcclResult GetHBM(uint32_t rankId, uint32_t dieId, uint64_t hbmAddr, std::vector<uint64_t>& data);
+    // 通过MS的地址找到MS的Id
+    HcclResult GetMSIdByAddr(uint32_t dieId,  uint64_t msAddr, uint16_t& msId);
+    // 通过XnId所在的地址值来找到XnId以及寄存器的类型
+    HcclResult GetXnAndTypeIdByAddr(uint32_t dieId,  uint64_t xnAddr, CcuComponerntType& type, uint16_t& xnId);
+    // 通过XnId所在的地址值来找到XnId
+    HcclResult GetXnIdByAddr(uint32_t dieId, CcuComponerntType type, uint64_t xnAddr, uint16_t& xnId);
+    // 通过XnId所在的地址值来找到XnId
+    HcclResult GetAddrByXnId(uint32_t dieId, CcuComponerntType type, uint16_t xnId, uint64_t& xnAddr);
 
     DevType GetDevType() const { return devType_; }
 
     // rankId -> dieId -> 寄存器Id -> 寄存器value
     std::map<uint32_t, std::map<uint32_t, std::map<uint16_t, uint64_t>>> curXn;
-    std::map<uint32_t, std::map<uint32_t, std::map<uint16_t, uint64_t>>> curGSA;
+    std::map<uint32_t, std::map<uint32_t, std::map<uint16_t, uint64_t>>> curGSA;// A6没有GSA，A5使用
     std::map<uint32_t, std::map<uint32_t, std::map<uint16_t, uint16_t>>> curCKE;
 
     std::map<uint32_t, std::map<uint32_t, std::map<uint64_t, std::vector<uint64_t>>>> curHBM;// 模拟HBM，记录每个rank的每个die的每个HBM的使用情况

@@ -20,6 +20,7 @@ using namespace hcomm::CcuRep;
 
 // 注册ClearCkeExecutor create Func
 REG_CCU_EXECUTOR_CREATE_FUNC(SimCcuV1::CTRL_TYPE, SimCcuV1::CLEARCKE_CODE, ClearCkeExecutor);
+REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::CTRL_TYPE, SimCcuV2::CLEARCKE_CODE, ClearCkeExecutor);
 
 void ClearCkeExecutor::Parser() {
     if (version_ == RunnerCcuVersion::CCU_V1) {
@@ -28,6 +29,12 @@ void ClearCkeExecutor::Parser() {
         clearMask_   = instr_.v1.clearCKE.clearMask;
         waitCKEId_   = instr_.v1.clearCKE.waitCKEId;
         waitCKEMask_ = instr_.v1.clearCKE.waitCKEMask;
+    } else if (version_ == RunnerCcuVersion::CCU_V2) {
+        clearType_   = instr_.v2.clearCKE.clearType;
+        clearCKEId_  = instr_.v2.clearCKE.clearCKEId;
+        clearMask_   = instr_.v2.clearCKE.clearMask;
+        waitCKEId_   = instr_.v2.clearCKE.waitCKEId;
+        waitCKEMask_ = instr_.v2.clearCKE.waitCKEMask;
     } else {
         HCCL_VM_ERROR("Invalid ccu version:{}", RunnerCcuVersionToString(version_));
         ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
@@ -51,4 +58,11 @@ std::string ClearCkeExecutor::Describe() {
         clearCKEId_,
         clearMask_,
         clearType_);
+}
+
+CcuTrace::CcuInstrTraceDetail ClearCkeExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "ClearCke";
+    return detail;
 }

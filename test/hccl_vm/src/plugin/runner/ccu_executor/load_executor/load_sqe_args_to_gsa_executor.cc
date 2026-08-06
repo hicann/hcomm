@@ -44,3 +44,12 @@ void LoadSqeArgsToGsaExecutor::Run() {
 std::string LoadSqeArgsToGsaExecutor::Describe() {
     return HcclSim::StringFormat("[Simulation Execute] Load SqeArg[%u] to GSA[%u]\n", sqeArgId_, gsaId_);
 }
+
+CcuTrace::CcuInstrTraceDetail LoadSqeArgsToGsaExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "LoadSqeArgsToGsa";
+    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    detail.args["sqeArgValue"] = std::to_string(ccuResMgr.GetSqeArgValue(rankId_, dieId_, sqeArgId_));
+    return detail;
+}

@@ -6,23 +6,17 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
-file(GLOB_RECURSE HCCL_SOURCES "*.cc")
+file(GLOB_RECURSE HCCL_SOURCES CONFIGURE_DEPENDS "*.cc")
 
 # 添加静态库
 add_library(store STATIC ${HCCL_SOURCES})
-target_compile_options(store PRIVATE
-    -fPIC
-    -g
-    -O0
-    -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(store)
 
 # 设置头文件包含路径（改为绝对路径，基于项目根目录）
 target_include_directories(store PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/include/runnerdb
     ${PROJECT_SOURCE_DIR}/include/store
-    ${PROJECT_SOURCE_DIR}/include
 
     ${HCCL_VM_SRC}
     ${HCCL_VM_SRC}/store
@@ -45,7 +39,7 @@ target_include_directories(store PRIVATE
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
 
-target_link_libraries(store PUBLIC log loader)
+target_link_libraries(store PRIVATE log loader)
 
 # 日志染色: 模块 tag
 target_compile_definitions(store PRIVATE HCCL_VM_MODULE="STORE")

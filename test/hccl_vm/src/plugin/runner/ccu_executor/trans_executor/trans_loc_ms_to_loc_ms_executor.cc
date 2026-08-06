@@ -22,6 +22,7 @@ using namespace std;
 using namespace hcomm::CcuRep;
 
 REG_CCU_EXECUTOR_CREATE_FUNC_V1(SimCcuV1::TRANS_TYPE, SimCcuV1::TRANSLOCMSTOLOCMS_CODE, TransLocMSToLocMSExecutor);
+REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::TRANS_TYPE, SimCcuV2::TRANSLOCMSTOLOCMS_CODE, TransLocMSToLocMSExecutor);
 
 void TransLocMSToLocMSExecutor::Parser()
 {
@@ -38,6 +39,13 @@ void TransLocMSToLocMSExecutor::Parser()
         setCKEMask_  = instr_.v1.transLocMSToLocMS.setCKEMask;
         waitCKEId_   = instr_.v1.transLocMSToLocMS.waitCKEId;
         waitCKEMask_ = instr_.v1.transLocMSToLocMS.waitCKEMask;
+    } else if (version_ == RunnerCcuVersion::CCU_V2) {
+        msdId_     = instr_.v2.transLocMSToLocMS.msdId & 0x7FFF;
+        mssId_     = instr_.v2.transLocMSToLocMS.mssId & 0x7FFF;
+        xlId_      = instr_.v2.transLocMSToLocMS.xlId;
+        xoId_      = instr_.v2.transLocMSToLocMS.xoId;
+        setCKEId_  = instr_.v2.transLocMSToLocMS.setCKEId;
+        setCKEMask_ = instr_.v2.transLocMSToLocMS.setCKEMask;
     } else {
         HCCL_VM_ERROR("Invalid ccu version:{}", RunnerCcuVersionToString(version_));
         ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
@@ -70,10 +78,37 @@ void TransLocMSToLocMSExecutor::RunV1()
     WaitCkeProcess(waitCKEId_, waitCKEMask_, clearType_, "TransLocMsToLocMs");
 }
 
+void TransLocMSToLocMSExecutor::RunV2()
+{
+    auto &ccuResMgr = CcuResourceManager::GetInstance();
+
+    uint16_t xlId = GetXnId(xlId_);
+    uint64_t len = ccuResMgr.GetXnValue(rankId_, dieId_, xlId);
+    if (len == 0) {
+        HCCL_VM_ERROR("The size of data transfer is 0.");
+        ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
+        return;
+    }
+
+    uint16_t locMsdId = UpdateMSId(msdId_);
+    uint16_t locMssId = UpdateMSId(mssId_);
+
+    HCCL_VM_DEBUG("Trans data from srcMsId[{}] to dstMsId[{}], length[{}].",
+        locMssId, locMsdId, len);
+
+    ccuResMgr.TransMSToMS(rankId_, dieId_, rankId_, dieId_,locMssId,locMsdId,len);
+
+    uint16_t ckeId = UpdateCkeId(setCKEId_);
+    SetCkeSignal(ccuResMgr, ckeId, setCKEMask_);
+}
+
 void TransLocMSToLocMSExecutor::Run()
 {
     if (version_ == RunnerCcuVersion::CCU_V1) {
         RunV1();
+        return;
+    } else if (version_ == RunnerCcuVersion::CCU_V2) {
+        RunV2();
         return;
     } else {
         HCCL_VM_ERROR("Invalid ccu version:{}", RunnerCcuVersionToString(version_));
@@ -84,20 +119,33 @@ void TransLocMSToLocMSExecutor::Run()
 
 std::string TransLocMSToLocMSExecutor::Describe()
 {
-    return HcclSim::StringFormat("ParseTransLocMSToLocMemInstr Wait CKE[%u:%04x], Trans LocMS[%u:%u] To LocMS[%u:%u] With "
-                              "LengthXn[%u] Use Channel[%u], "
-                              "Set CKE[%u:%04x], "
-                              "clearType[%u], lengthEn[%u]",
-        waitCKEId_,
-        waitCKEMask_,
-        srcMSId_ / 0x8000,
-        srcMSId_ % 0x8000,
-        dstMSId_ / 0x8000,
-        dstMSId_ % 0x8000,
-        lengthXnId_,
-        channelId_,
-        setCKEId_,
-        setCKEMask_,
-        clearType_,
-        lengthEn_);
+    if (version_ == RunnerCcuVersion::CCU_V1) {
+        return HcclSim::StringFormat("ParseTransLocMSToLocMemInstr Wait CKE[%u:%04x], Trans LocMS[%u:%u] To LocMS[%u:%u] With "
+                                  "LengthXn[%u] Use Channel[%u], "
+                                  "Set CKE[%u:%04x], "
+                                  "clearType[%u], lengthEn[%u]",
+            waitCKEId_,
+            waitCKEMask_,
+            srcMSId_ / 0x8000,
+            srcMSId_ % 0x8000,
+            dstMSId_ / 0x8000,
+            dstMSId_ % 0x8000,
+            lengthXnId_,
+            channelId_,
+            setCKEId_,
+            setCKEMask_,
+            clearType_,
+            lengthEn_);
+    } else {
+        return HcclSim::StringFormat("[TransLocMSToLocMSExecutor] msdId[%u] mssId[%u] "
+                                      "xlId[%u] xoId[%u] setCKEId[%u] setCKEMask[0x%04x]\n",
+            msdId_, mssId_, xlId_, xoId_, setCKEId_, setCKEMask_);
+    }
+}
+
+CcuTrace::CcuInstrTraceDetail TransLocMSToLocMSExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "TransLocMSToLocMS";
+    return detail;
 }

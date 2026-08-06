@@ -71,29 +71,15 @@ if [[ ${ARCHIVE_COUNT} -gt ${MAX_ARCHIVE_COUNT} ]]; then
 fi
 
 if [[ -d "${LOGS_DIR}" ]]; then
-    shopt -s dotglob nullglob
-    LOGS_CONTENTS=("${LOGS_DIR}"/*)
-    if [[ ${#LOGS_CONTENTS[@]} -gt 0 ]]; then
-        mv "${LOGS_DIR}"/* "${ARCHIVE_SUBDIR}/logs/"
-        info_msg "Moved logs contents to ${ARCHIVE_SUBDIR}/logs/"
-    else
-        info_msg "Logs directory is empty, nothing to move"
-    fi
-    shopt -u dotglob nullglob
+    cp -a "${LOGS_DIR}/." "${ARCHIVE_SUBDIR}/logs/"
+ 	info_msg "Copied logs to ${ARCHIVE_SUBDIR}/logs/"
 else
     warn_msg "Logs directory not found: ${LOGS_DIR}"
 fi
 
 if [[ -d "${DATA_DIR}" ]]; then
-    shopt -s dotglob nullglob
-    DATA_CONTENTS=("${DATA_DIR}"/*)
-    if [[ ${#DATA_CONTENTS[@]} -gt 0 ]]; then
-        mv "${DATA_DIR}"/* "${ARCHIVE_SUBDIR}/data/"
-        info_msg "Moved data contents to ${ARCHIVE_SUBDIR}/data/"
-    else
-        info_msg "Data directory is empty, nothing to move"
-    fi
-    shopt -u dotglob nullglob
+    cp -a "${DATA_DIR}/." "${ARCHIVE_SUBDIR}/data/"
+ 	info_msg "Copied data to ${ARCHIVE_SUBDIR}/data/"
 else
     warn_msg "Data directory not found: ${DATA_DIR}"
 fi

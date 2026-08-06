@@ -38,3 +38,10 @@ std::string LoadImdToGSAExecutor::Describe()
 {
     return HcclSim::StringFormat("[Simulation Execute] Load immediate[%lu] to GSA[%u]\n", immediate_, gsaId_);
 }
+
+CcuTrace::CcuInstrTraceDetail LoadImdToGSAExecutor::CollectTraceDetail()
+{
+    CcuTrace::CcuInstrTraceDetail detail;
+    detail.typeName = "LoadImdToGSA";
+    return detail;
+}

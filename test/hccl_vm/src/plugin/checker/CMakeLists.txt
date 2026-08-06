@@ -6,14 +6,6 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 
-cmake_minimum_required(VERSION 3.10)
-
-project(checker_lib LANGUAGES CXX)
-
-set(CMAKE_CXX_STANDARD 14)
-
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # 创建checker.bin
 add_executable(checker
     main.cc
@@ -26,7 +18,7 @@ target_include_directories(checker PUBLIC
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
-    
+
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -42,9 +34,6 @@ target_include_directories(checker PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/header/external
     ${CMAKE_CURRENT_SOURCE_DIR}/header/internal
 
-    # hcomm仓头文件
-    ${CMAKE_CURRENT_SOURCE_DIR}/../hcomm/pkg_inc
-
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/runnerdb
     ${CMAKE_SOURCE_DIR}/third_party
@@ -55,33 +44,27 @@ target_sources(checker PRIVATE
     ${HCCL_VM_INCLUDE}/sim_log.h
 )
 
-target_link_libraries(checker PRIVATE 
+target_link_libraries(checker PRIVATE
+    -Wl,--start-group
     log
     loader
     runnerdb
     modeldb
     store
     common
-    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
+    -Wl,--end-group
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.a
     pthread
     yaml-cpp::yaml-cpp
     sqlite3
 )
 
 set_target_properties(checker PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(checker PROPERTIES
+    INSTALL_RPATH "$ORIGIN/../../lib/${CMAKE_SYSTEM_PROCESSOR}"
+    BUILD_RPATH "$ORIGIN")
 
-target_compile_options(checker PRIVATE -g)
-
-target_compile_options(checker PRIVATE
-       -std=c++14
-       -fno-common
-       -Werror
-       -fno-strict-aliasing
-       -pipe
-       -O0
-       -g
-       -D_GLIBCXX_USE_CXX11_ABI=0
-)
+hcclvm_apply_common_flags(checker)
 
 install(TARGETS checker
     DESTINATION "plugin/checker"
@@ -94,11 +77,10 @@ install(TARGETS checker
 
 install(FILES "manifest.json"
     DESTINATION "plugin/checker"
-    # 文件的权限 (755)
     PERMISSIONS
-        OWNER_READ OWNER_WRITE OWNER_EXECUTE
-        GROUP_READ GROUP_EXECUTE
-        WORLD_READ WORLD_EXECUTE
+        OWNER_READ OWNER_WRITE
+        GROUP_READ
+        WORLD_READ
 )
 
 # 日志染色: 模块 tag

@@ -29,7 +29,7 @@ include_directories(BEFORE
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
-    
+
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
 
@@ -80,8 +80,18 @@ target_sources(test_checker PRIVATE
     ${CHECKER_SRC}/framework/task_graph_generator_v3/ccu_graph_generator_v3/ccu_task_transform_v3.cc
     ${CHECKER_SRC}/framework/task_graph_generator_v3/ccu_graph_generator_v3/ccu_task_transform_instruct_a5_v3.cc
     ${CHECKER_SRC}/framework/task_graph_generator_v3/ccu_graph_generator_v3/ccu_task_transform_instruct_common_v3.cc
-    ${CHECKER_SRC}/framework/mem_conflict_check/check_rank_mem.cc
+)
+
+if(BUILD_A6_CCU_INSTR)
+    target_sources(test_checker PRIVATE
+        ${CHECKER_SRC}/framework/task_graph_generator/ccu_task_transform_instruct_a6.cc
+        ${CHECKER_SRC}/framework/task_graph_generator_v3/ccu_graph_generator_v3/ccu_task_transform_instruct_a6_v3.cc
+    )
+endif()
+
+target_sources(test_checker PRIVATE
     ${CHECKER_SRC}/framework/mem_conflict_check/mem_conflict_check_utils.cc
+    ${CHECKER_SRC}/framework/mem_conflict_check/check_rank_mem.cc
     ${CHECKER_SRC}/framework/mem_conflict_check/task_graph_revamp.cc
     ${CHECKER_SRC}/framework/mem_conflict_check/task_graph_revamp_base.cc
     ${CHECKER_SRC}/framework/mem_conflict_check/task_graph_revamp_bilateral_ccu.cc
@@ -117,7 +127,7 @@ target_include_directories(test_checker BEFORE PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
-    
+
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
 get_target_property(_checker_includes test_checker INCLUDE_DIRECTORIES)
@@ -125,7 +135,7 @@ list(FILTER _checker_includes EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}/include$")
 set_target_properties(test_checker PROPERTIES INCLUDE_DIRECTORIES "${_checker_includes}")
 target_link_libraries(test_checker PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.a
 )
 set_target_properties(test_checker PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -138,7 +148,7 @@ target_sources(test_check_utils PRIVATE
 )
 target_link_libraries(test_check_utils PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.a
 )
 set_target_properties(test_check_utils PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -151,7 +161,7 @@ target_sources(test_sim_task PRIVATE
 )
 target_link_libraries(test_sim_task PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.a
 )
 set_target_properties(test_sim_task PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -164,7 +174,7 @@ target_sources(test_binary_data_operator_checker PRIVATE
 )
 target_link_libraries(test_binary_data_operator_checker PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.a
 )
 set_target_properties(test_binary_data_operator_checker PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -190,7 +200,7 @@ target_include_directories(test_storage_manager_checker BEFORE PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/include
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
-    
+
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
 get_target_property(_storage_mgr_includes test_storage_manager_checker INCLUDE_DIRECTORIES)
@@ -198,7 +208,7 @@ list(FILTER _storage_mgr_includes EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}/include$")
 set_target_properties(test_storage_manager_checker PROPERTIES INCLUDE_DIRECTORIES "${_storage_mgr_includes}")
 target_link_libraries(test_storage_manager_checker PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.a
 )
 set_target_properties(test_storage_manager_checker PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -213,7 +223,7 @@ target_sources(test_task_ccu PRIVATE
 )
 target_link_libraries(test_task_ccu PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.a
 )
 set_target_properties(test_task_ccu PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
@@ -243,8 +253,8 @@ target_include_directories(test_task_utils BEFORE PRIVATE
     ${THRID_PARTY_DIR}/yaml-cpp/include
     ${CMAKE_SOURCE_DIR}/src/plugin/runner/ccu_executor
     ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc
- 	${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
-   
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/pkg_inc/hccl
+
     ${HCOMM_CODE_ROOT}/src/base_comm/resources/ccu/ccu_microcode
 )
 get_target_property(_task_utils_includes test_task_utils INCLUDE_DIRECTORIES)
@@ -252,7 +262,7 @@ list(FILTER _task_utils_includes EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}/include$")
 set_target_properties(test_task_utils PROPERTIES INCLUDE_DIRECTORIES "${_task_utils_includes}")
 target_link_libraries(test_task_utils PRIVATE
     log
-    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.so
+    ${ASCEND_CANN_PACKAGE_PATH}/${CANN_ARCH_DIR}/lib64/libc_sec.a
 )
 set_target_properties(test_task_utils PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/bin"
