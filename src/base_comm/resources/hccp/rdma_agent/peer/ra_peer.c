@@ -1265,6 +1265,21 @@ notify_base_addr_uninit:
     return ret;
 }
 
+int RaPeerRdevGetPortStatus(struct RaRdmaHandle *rdmaHandle, enum PortStatus *status)
+{
+    unsigned int phyId = rdmaHandle->rdevInfo.phyId;
+    int ret;
+
+    PEER_PTHREAD_MUTEX_LOCK(&gRaPeerMutex[phyId]);
+    RsSetCtx(phyId);
+    ret = RsRdevGetPortStatus(phyId, rdmaHandle->rdevIndex, status);
+    PEER_PTHREAD_MUTEX_UNLOCK(&gRaPeerMutex[phyId]);
+    if (ret != 0) {
+        hccp_err("[get][ra_peer_port_status]RsRdevGetPortStatus failed ret(%d) phyId(%u)", ret, phyId);
+    }
+    return ret;
+}
+
 int RaPeerGetLbMax(struct RaRdmaHandle *rdmaHandle, int *lbMax)
 {
     unsigned int phyId = rdmaHandle->rdevInfo.phyId;

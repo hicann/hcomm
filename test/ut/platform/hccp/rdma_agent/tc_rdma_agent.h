@@ -28,6 +28,8 @@ void TcRaPeerRdevInit04();
 void TcRaPeerRdevDeinit01();
 void TcRaPeerRdevDeinit02();
 void TcRaPeerRdevDeinit03();
+void TcRaPeerRdevGetPortStatusSucc();
+void TcRaPeerRdevGetPortStatusFail();
 void TcRaPeerSocketBatchConnect();
 void TcRaPeerSocketListenStart01();
 void TcRaPeerSocketListenStart02();

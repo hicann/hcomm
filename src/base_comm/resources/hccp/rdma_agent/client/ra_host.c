@@ -132,7 +132,7 @@ struct RaRdmaOps gRaHdcRdmaOps = {
 /* rdma: nic on host/device, support:cx6 1822 */
 struct RaRdmaOps gRaPeerRdmaOps = {
     .raRdevInit = RaPeerRdevInit,
-    .raRdevGetPortStatus = NULL,
+    .raRdevGetPortStatus = RaPeerRdevGetPortStatus,
     .raGetLbMax = RaPeerGetLbMax,
     .raRdevDeinit = RaPeerRdevDeinit,
     .raSetTsqpDepth = RaPeerSetTsqpDepth,

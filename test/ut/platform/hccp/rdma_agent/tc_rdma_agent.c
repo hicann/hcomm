@@ -324,6 +324,49 @@ void TcRaPeerRdevDeinit03()
 	EXPECT_INT_EQ(2, ret);
 }
 
+static int StubRsRdevGetPortStatusActive(unsigned int phyId, unsigned int rdevIndex, enum PortStatus *status)
+{
+    *status = PORT_STATUS_ACTIVE;
+    return 0;
+}
+
+static int StubRsRdevGetPortStatusFail(unsigned int phyId, unsigned int rdevIndex, enum PortStatus *status)
+{
+    return -EINVAL;
+}
+
+void TcRaPeerRdevGetPortStatusSucc()
+{
+	int ret;
+    enum PortStatus status = PORT_STATUS_DOWN;
+    struct RaRdmaHandle *rdmaHandle = (struct RaRdmaHandle *)malloc(sizeof(struct RaRdmaHandle));
+	rdmaHandle->rdevInfo.phyId = 0;
+
+	mocker_invoke(RsRdevGetPortStatus, StubRsRdevGetPortStatusActive, 1);
+    ret = RaPeerRdevGetPortStatus(rdmaHandle, &status);
+	mocker_clean();
+    free(rdmaHandle);
+    rdmaHandle = NULL;
+	EXPECT_INT_EQ(0, ret);
+	EXPECT_INT_EQ(PORT_STATUS_ACTIVE, status);
+}
+
+void TcRaPeerRdevGetPortStatusFail()
+{
+	int ret;
+    enum PortStatus status = PORT_STATUS_DOWN;
+    struct RaRdmaHandle *rdmaHandle = (struct RaRdmaHandle *)malloc(sizeof(struct RaRdmaHandle));
+	rdmaHandle->rdevInfo.phyId = 0;
+
+	mocker_invoke(RsRdevGetPortStatus, StubRsRdevGetPortStatusFail, 1);
+    ret = RaPeerRdevGetPortStatus(rdmaHandle, &status);
+	mocker_clean();
+    free(rdmaHandle);
+    rdmaHandle = NULL;
+	EXPECT_INT_EQ(-EINVAL, ret);
+	EXPECT_INT_EQ(PORT_STATUS_DOWN, status);
+}
+
 void TcRaPeerSocketBatchConnect()
 {
     unsigned int devId = 0;

@@ -143,6 +143,8 @@ TEST_M(RdmaAgent, TcRaPeerRdevInit04);
 TEST_M(RdmaAgent, TcRaPeerRdevDeinit01);
 TEST_M(RdmaAgent, TcRaPeerRdevDeinit02);
 TEST_M(RdmaAgent, TcRaPeerRdevDeinit03);
+TEST_M(RdmaAgent, TcRaPeerRdevGetPortStatusSucc);
+TEST_M(RdmaAgent, TcRaPeerRdevGetPortStatusFail);
 TEST_M(RdmaAgent, TcRaPeerSocketWhiteListDel);
 TEST_M(RdmaAgent, TcRaPeerSocketBatchConnect);
 TEST_M(RdmaAgent, TcRaPeerSocketBatchAbort);
