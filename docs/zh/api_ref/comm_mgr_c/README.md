@@ -27,6 +27,8 @@
   - [HcclConfigGetInfo](HcclConfigGetInfo.md)
   - [HcclGetCommAsyncError](HcclGetCommAsyncError.md)
   - [HcclGetErrorString](HcclGetErrorString.md)
+  - [HcommMemAlloc](HcommMemAlloc.md)
+  - [HcommMemFree](HcommMemFree.md)
 
   - [零拷贝](zero_copy.md)
     - [使用前必读](zero_copy_readme.md)
