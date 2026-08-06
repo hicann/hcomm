@@ -93,7 +93,7 @@ void PreemptPortManager::PreemptPortInRange(const std::shared_ptr<Socket> &liste
         CHK_PRT_THROW(!ret, HCCL_ERROR("[PreemptPortManager::%s] usePort[%u] listen failed.", __func__, usePort),
                       InvalidParamsException, "socket listen failed");
         portRef[ipAddr].second.Ref();
-        HCCL_INFO("[PreemptPortManager::%s] socket has already been listened, ref count[%u].", __func__, portRef[ipAddr].second.Count());
+        HCCL_INFO("[PreemptPortManager::%s] socket has already been listened, ref count[%d].", __func__, portRef[ipAddr].second.Count());
         return;
     }
     // 如果这个IP上没有抢占过的port，则轮询输入的端口范围，找到一个可用的端口
@@ -150,14 +150,14 @@ void PreemptPortManager::ReleasePreempt(IpPortRef& portRef, const std::shared_pt
     // 释放的端口计数异常
     Referenced &ref = portRef[ipAddr].second;
     CHK_PRT_THROW(ref.Count() <= 0, 
-        HCCL_ERROR("[PreemptPortManager::%s] ref[%u], ip[%s] port[%u] has already been released.", __func__, 
+        HCCL_ERROR("[PreemptPortManager::%s] ref[%d], ip[%s] port[%u] has already been released.", __func__,
         ref.Count(), ipAddr.c_str(), port), InvalidParamsException, "socket port dulplicate release");
 
     // 释放绑定端口的Socket
     listenSocket->StopListen();
     int count = ref.Unref();
     CHK_PRT_RET(count > 0,
-        HCCL_INFO("[PreemptPortManager::%s] release a socket on ip[%s], port[%u], ref[%u].", __func__,
+        HCCL_INFO("[PreemptPortManager::%s] release a socket on ip[%s], port[%u], ref[%d].", __func__,
         ipAddr.c_str(), port, count),);
         
     // 如果端口的计数归零，则不再抢占该端口

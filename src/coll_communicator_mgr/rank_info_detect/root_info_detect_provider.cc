@@ -16,7 +16,6 @@
 #include <string>
 
 #include "acl/acl_rt.h"
-#include "exception_util.h"
 #include "hccl_common_v2.h"
 #include "log.h"
 #include "orion_adapter_rts.h"

@@ -31,6 +31,7 @@
 namespace Hccl {
 
 constexpr u32 HOST_CONTROL_BASE_PORT = 60000;  // 控制面起始port
+constexpr u32 HOST_CONTROL_PORT_COUNT = 15;
 constexpr u32 HCCL_WHITELIST_ON = 1;
 constexpr u32 HOST_SOCKET_CONN_LIMIT = 8;  // HCCL_AISERVER_DEVICE_NUM (8)
 
@@ -126,7 +127,7 @@ shared_ptr<Socket> RankInfoDetect::ServerInit()
     if (hostPort_ == HCCL_INVALID_PORT) {
         auto portRange = EnvConfig::GetInstance().GetHostNicConfig().GetHostSocketPortRange();
         if (portRange.empty()) {
-            SocketPortRange defaultRange = {HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + 15};
+            SocketPortRange defaultRange = {HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + HOST_CONTROL_PORT_COUNT};
             portRange.push_back(defaultRange);
         }
         PreemptPortManager::GetInstance(devLogicId_).ListenPreempt(serverSocket, portRange, hostPort_);
@@ -269,7 +270,7 @@ u32 RankInfoDetect::GetHostListenPort()
 
     // 无环境变量设置，返回HCCL_INVALID_PORT触发PreemptPortManager轮询查找端口[60000, 60015]
     listenPort = HCCL_INVALID_PORT;
-    HCCL_INFO("[RankInfoDetect::%s] No port configuration, using default port range[%u, %u]", __func__, HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + 15);
+    HCCL_INFO("[RankInfoDetect::%s] No port configuration, using default port range[%u, %u]", __func__, HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + HOST_CONTROL_PORT_COUNT);
     return listenPort;
 }
 
