@@ -128,8 +128,6 @@ HcclResult CheckCrc::CalcStringCrc(const char *str, u32 *crcValue)
     strLength = strlen(str);
     CHK_PRT_RET(strLength <= 0, \
         HCCL_ERROR("[Calc][StringCrc]String is empty, String length[%d].", strLength), HCCL_E_PARA);
-    CHK_PRT_RET(strLength > FILE_MAX_LENGTH, \
-        HCCL_ERROR("[Calc][StringCrc]String length is over than %d bytes.", FILE_MAX_LENGTH), HCCL_E_PARA);
 
     // 计算并设置CRC值
     CHK_RET(this->Calc32Crc(str, static_cast<u64>(strLength), crcValue));
