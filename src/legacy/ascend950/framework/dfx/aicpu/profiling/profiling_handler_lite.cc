@@ -15,6 +15,7 @@
 #include "task_param.h"
 #include "communicator_impl_lite.h"
 #include "dlprof_function.h"
+#include <mutex>
 namespace Hccl {
 
 static constexpr u32 aging = 1;
@@ -53,6 +54,8 @@ void ProfilingHandlerLite::SetCachedGroupName(const std::string &groupName, u32 
 
 HcclResult ProfilingHandlerLite::Init()
 {
+    static std::mutex initMutex;
+    std::lock_guard<std::mutex> lock(initMutex); // 互斥锁，避免多线程并发调用
     if (initializedFlag_) {
         return HCCL_SUCCESS;
     }

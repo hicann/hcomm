@@ -10,7 +10,15 @@
 #ifndef HCCLV2_RTSQ_A5_H
 #define HCCLV2_RTSQ_A5_H
 #include "rtsq_base.h"
+#include "sqe_v82.h"
+#include "log.h"
 #include <chrono>
+
+namespace hccl
+{
+    class AicpuTsThread;
+}
+
 namespace Hccl {
 
 class RtsqA5 : public RtsqBase {
@@ -75,6 +83,34 @@ public:
 
     bool GetPreStreamSyncStatus() override;
 
+    // 用于aicpu task cache
+    uint32_t GetPendingSqeCnt() const { return pendingSqeCnt; }
+
+    inline HcclResult SetAicpuTsThreadPtr(hccl::AicpuTsThread *threadPtr)
+    {
+        CHK_PTR_NULL(threadPtr);
+        aicpuTsThreadPtr_ = threadPtr;
+        return HCCL_SUCCESS;
+    }
+
+    inline HcclResult SetNeedCacheTaskCallback(std::function<bool()> callback)
+    {
+        CHK_PTR_NULL(callback);
+        needCacheTaskCallback_ = callback;
+        return HCCL_SUCCESS;
+    }
+
+    inline HcclResult SetAddSqeArrayCallback(std::function<HcclResult(Hccl::RtsqA5 *, hccl::AicpuTsThread *, uint64_t, 
+        const uint8_t *, const uint32_t)> callback)
+    {
+        CHK_PTR_NULL(callback);
+        addSqeArrayCallback_ = callback;
+        return HCCL_SUCCESS;
+    }
+
+    void RefreshSqeHeaderTaskField(Rt91095StarsSqeHeader *sqeHeaderPtr);
+
+    void LaunchNewTask(uint8_t *sqeArray, uint32_t sqeCount);
 private:
     u32 pendingSqeCnt{0};
 
@@ -86,11 +122,16 @@ private:
 
     u8 locBuf[RTSQ_SQE_SIZE * PER_LAUNCH_SQE_CNT]{0};
 
+    std::function<bool()> needCacheTaskCallback_{nullptr};
+    std::function<HcclResult(Hccl::RtsqA5 *, hccl::AicpuTsThread *, uint64_t, const uint8_t *, const uint32_t)> 
+        addSqeArrayCallback_{nullptr};
+    hccl::AicpuTsThread* aicpuTsThreadPtr_{nullptr};
+
     u8 *GetCurrSqeBuffer();
 
     void RefreshInfo();
 
-    void CopyLocBufToSq();
+    void CopySqeBufToSq(u8 *sqeBuf);
 
     void MakeSureAvailableSpace();
 
@@ -98,6 +139,10 @@ private:
 
     void CheckLaunchTaskStatus(const std::chrono::steady_clock::time_point &startTime,
         const std::chrono::steady_clock::time_point &curTime);
+
+    void PreLaunchSqeForCache(bool &needCacheTask);
+
+    void PostLaunchSqeForCache();
 };
 
 } // namespace Hccl

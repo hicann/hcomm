@@ -58,6 +58,7 @@ target_include_directories(ccl_kernel PRIVATE
 
     # src/common 头文件 (legacy/ascend910)
     ${HCOMM_DIR}/src/legacy/ascend910/common/stream
+    ${HCOMM_DIR}/src/legacy/ascend910/common/debug/config
     ${HCOMM_DIR}/src/legacy/ascend910/common/debug/profiling/inc
     ${HCOMM_DIR}/src/legacy/ascend910/common/error_manager
     ${HCOMM_DIR}/src/legacy/ascend910/common/launch_aicpu

@@ -112,7 +112,14 @@ extern "C" {
 HcclResult HcclCommInitClusterInfoMemConfig(const char *rankTableString, uint32_t rank,
                                             HcclCommConfig *config, HcclComm *comm);
 
-HcclResult HcclCommResumePostCallback(HcclComm comm);
+#if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
+HcclResult HcclCommStateNotify(HcclComm comm, HcclCommStatePhase state);
+
+static inline HcclResult HcclCommResumePostCallback(HcclComm comm)
+{
+    return HcclCommStateNotify(comm, HcclCommStatePhase::HCCL_COMM_STATE_PHASE_RESUME_POST);
+}
+#endif
 #ifdef __cplusplus
 }
 #endif // __cplusplus

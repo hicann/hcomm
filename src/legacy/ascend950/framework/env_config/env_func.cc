@@ -50,7 +50,6 @@ u32 CastBin2UInt(const std::string &s)
     return b;
 }
 
-
 static HcclResult SplitHcclSocketIfName(const std::string &socketIfName, std::vector<std::string> &configIfNames)
 {
     std::size_t start = 0;
@@ -623,7 +622,7 @@ std::map<OpType, std::vector<HcclAlgoType>> SetHcclAlgoConfig(const std::string 
 HcclAccelerator CastHcclAccelerator(const std::string &s)
 {
     HcclAccelerator mode;
-    if (s == "AI_CPU" || s == "AICPU_TS") {
+    if (s == "AI_CPU" || s == "AICPU_TS" || s == "AICPU_CacheDisable") {
         mode = HcclAccelerator::AICPU_TS;
     } else if (s == "AIV") {
         mode = HcclAccelerator::AIV;
@@ -632,10 +631,11 @@ HcclAccelerator CastHcclAccelerator(const std::string &s)
     } else if (s == "CCU_SCHED") {
         mode = HcclAccelerator::CCU_SCHED;
     } else {
-        HCCL_ERROR("Env HCCL_OP_EXPANSION_MODE config do not support %s, it should be one of [AI_CPU, AICPU_TS, AIV, CCU_MS, CCU_SCHED].", s.c_str());
+        HCCL_ERROR("Env HCCL_OP_EXPANSION_MODE config do not support %s, it should be one of [AI_CPU, AICPU_TS, "
+            "AICPU_CacheDisable, AIV, CCU_MS, CCU_SCHED].", s.c_str());
         THROW<InvalidParamsException>(
             StringFormat("Env HCCL_OP_EXPANSION_MODE config \"%s\" is invalid."
-                "it should be one of [AI_CPU, AICPU_TS, AIV, CCU_MS, CCU_SCHED].", s.c_str()));
+                "it should be one of [AI_CPU, AICPU_TS, AICPU_CacheDisable, AIV, CCU_MS, CCU_SCHED].", s.c_str()));
     }
     return mode;
 }

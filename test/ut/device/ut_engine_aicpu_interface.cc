@@ -100,7 +100,9 @@ TEST_F(Test_Engine_Aicpu_Interface, test_RunAicpuThreadSupplementNotify) {
     MOCKER_CPP(&CollCommAicpu::RegisterThreadAddDfxTaskInfo)
         .stubs()
         .will(returnValue(HCCL_SUCCESS));
-
+    MOCKER_CPP(&CollCommAicpu::RegisterThreadCacheCallback)
+        .stubs()
+        .will(returnValue(HCCL_SUCCESS));
     void *args = (void*)(&aicpuPara);
     EXPECT_EQ(RunAicpuIndOpCommInit(args), 0);
 

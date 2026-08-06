@@ -281,10 +281,11 @@ set(UT_COMMON_INCLUDE_LIST
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_mems
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/endpoints
     ${HCCL_CODE_ROOT}/src/base_comm/common/
+    ${HCCL_CODE_ROOT}/src/base_comm/common/debug
     ${HCCL_CODE_ROOT}/src/base_comm/common/device
     ${HCCL_CODE_ROOT}/src/base_comm/dfx/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoints/
-    ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoints/dfx    
+    ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoints/dfx
     ${HCCL_CODE_ROOT}/src/base_comm/resources/reged_mems/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoints/server_socket/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/
@@ -344,6 +345,7 @@ set(UT_COMMON_INCLUDE_LIST
 
     ${HCCL_CODE_ROOT}/src/base_comm/resources/southbound_adpt/
     ${HCCL_CODE_ROOT}/src/base_comm/common/
+    ${HCCL_CODE_ROOT}/src/base_comm/common/debug
     ${HCCL_CODE_ROOT}/src/base_comm/common/device
     ${HCCL_CODE_ROOT}/src/base_comm/dfx/
 
@@ -410,3 +412,4 @@ add_subdirectory(inter/comm)
 add_subdirectory(inter/hcom)
 add_subdirectory(platform/hccp)
 add_subdirectory(dfx)
+add_subdirectory(base_comm/primitives/aicpu/task_cache)

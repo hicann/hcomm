@@ -277,6 +277,7 @@ void EnvLogConfig::Parse()
                   "rankConsistentState set by %s to [%d]",
         dfsConfig.GetSource(), GetDfsConfig().taskExceptionEnable, dfsConfig.GetSource(),
         GetDfsConfig().clusterHeartBeatEnable, dfsConfig.GetSource(), GetDfsConfig().rankConsistentState);
+
 }
 
 bool EnvLogConfig::GetEntryLogEnable() const

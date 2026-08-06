@@ -101,6 +101,28 @@ public:
                            const SqeConfigLite &cfg, const StreamLite &stream, ConnLiteOperationOut &out) override;
     void BatchOneSidedWrite(const vector<RmaBufSliceLite> &loc, const vector<RmtRmaBufSliceLite> &rmt,
                             const SqeConfigLite &cfg, const StreamLite &stream, ConnLiteOperationOut &out) override;
+
+    // 用于aicpu task cache或者WQE打印
+    inline HcclResult EnableWqeTasks() {
+        isTrackWqeTasks_ = true;
+        wqeTasks_.clear();
+        return HCCL_SUCCESS;
+    }
+    inline HcclResult DisableWqeTasks() {
+        isTrackWqeTasks_ = false;
+        wqeTasks_.clear();
+        return HCCL_SUCCESS;
+    }
+    inline const std::vector<WqeTask>& GetWqeTasks() const {
+        return wqeTasks_;
+    }
+
+    // 用于aicpu task cache下发刷新后的WQE
+    void LaunchOneWqe(UdmaSqeWrite *sqe, UdmaSqOpcode opCode);
+    void LaunchOneWqeWithNotify(UdmaSqeWriteWithNotify *sqe, u32 opCode);
+
+    // 用于aicpu task cache更新DbSqe
+    uint16_t GetPi() const { return pi; }
 private:
     u16  pi{0};
     u16  ci{0};
@@ -116,14 +138,34 @@ private:
         std::function<void(const RmaBufSliceLite &, const RmtRmaBufSliceLite &, SlicePosition)> processOneSlice,
         std::function<void(const RmaBufSliceLite &, const RmtRmaBufSliceLite &, SlicePosition)> processOneSliceWithNotify,
         DataType                                                                 dataType = DataType::INVALID) const;
-    void ProcessOneWqe(UdmaSqeWrite *sqe, UdmaSqOpcode opCode, const StreamLite &stream);
-    void ProcessOneWqeWithNotify(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg,
-                                 UdmaSqeWriteWithNotify *sqe, const RmtRmaBufSliceLite &notify, u64 notifyData,
-                                 u32 opCode, SlicePosition slicePos, const StreamLite &stream);
+    inline void ProcessOneWqe(UdmaSqeWrite *sqe, UdmaSqOpcode opCode, const StreamLite &stream) {
+        (void)stream;
+        LaunchOneWqe(sqe, opCode);
+    }
+    void FillOneWqeWithNotify(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg,
+        UdmaSqeWriteWithNotify *sqe, const RmtRmaBufSliceLite &notify, u64 notifyData, u32 opCode, SlicePosition slicePos);
+    inline void ProcessOneWqeWithNotify(UdmaSqeWriteWithNotify *sqe, u32 opCode, const StreamLite &stream) {
+        (void)stream;
+        LaunchOneWqeWithNotify(sqe, opCode);
+    }
     void FillCommSqeReduceInfo(UdmaSqeCommon &sqeComm, ReduceOp reduceOp, DataType dataType, u32 udfType = 0) const;
     void FillOneSqeWrite(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg,
                          UdmaSqeWrite *sqe, UdmaSqOpcode opCode, SlicePosition slicePos);
     void MemorySetAndCopy(u8 *va, u32 sqeSize, void *sqe);
+
+    // 用于aicpu task cache或者WQE打印
+    bool isTrackWqeTasks_{false};
+    std::vector<WqeTask> wqeTasks_;
+    inline void UpdateWqeTasks(UdmaSqeWrite& sqe) {
+        if (isTrackWqeTasks_) {
+            wqeTasks_.emplace_back(sqe);
+        }
+    }
+    inline void UpdateWqeTasks(UdmaSqeWriteWithNotify& sqe) {
+        if (isTrackWqeTasks_) {
+            wqeTasks_.emplace_back(sqe);
+        }
+    }
 };
 } // namespace Hccl
 

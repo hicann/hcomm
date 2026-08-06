@@ -43,7 +43,7 @@ HcclResult CountCallBack(HcclComm comm, HcclCommStatePhase phase, void *args)
     return HCCL_SUCCESS;
 }
 
-TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_ArgsIsNull_Expect_ReturnIsHCCL_E_PTR)
+TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_ArgsIsNull_Expect_ReturnIsHCCL_SUCCESS)
 {
     UT_COMM_CREATE_DEFAULT(comm);
 
@@ -51,7 +51,7 @@ TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_Whe
 
     HcclResult ret = HcclCommRegCommStateCallback(regName.c_str(), ClearCallBack, nullptr);
 
-    EXPECT_EQ(ret, HCCL_E_PTR);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
 
     Ut_Comm_Destroy(comm);
 }

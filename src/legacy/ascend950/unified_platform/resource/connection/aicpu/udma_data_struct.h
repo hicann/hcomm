@@ -14,6 +14,8 @@
 #include "string_util.h"
 #include "hccl/base.h"
 #include "enum_factory.h"
+#include "task_param.h"
+#include "ip_address.h"
 
 namespace Hccl {
 
@@ -60,8 +62,11 @@ struct UdmaNormalSge {
 
     std::string Desc() const
     {
-        return StringFormat("length = %u dataAddrLow = %u dataAddrHigh = %u",
-                    length, dataAddrLow, dataAddrHigh);
+        constexpr uint64_t UINT32_BIT_WIDTH = 32;
+        const uint64_t dataAddr =
+            (static_cast<uint64_t>(dataAddrHigh) << UINT32_BIT_WIDTH) | static_cast<uint64_t>(dataAddrLow);
+        return StringFormat("length = %u dataAddrLow = %u dataAddrHigh = %u dataAddr = 0x%016llx",
+            length, dataAddrLow, dataAddrHigh, static_cast<unsigned long long>(dataAddr));
     }
 };
 
@@ -181,5 +186,38 @@ struct UdmaSqeRead {
     struct UdmaSqeCommon comm;
     union LocalValueU u;
 };
+
+// 定义WqeTask用于aicpu task cache
+// 注意: 不需要额外维护wqeType指定struct, 因为所有struct开头都是UdmaSqeCommon, 可以利用opCode判断wqe类型
+union WqeTask {
+    struct UdmaSqeRead wqeRead; // 64B (48 + 16); ub_conn_lite.cc中暂不使用UdmaSqeRead
+    struct UdmaSqeWrite wqeWrite; // 64B (48 + 16)
+    struct UdmaSqeWriteWithNotify wqeWriteWithNotify; // 96B (48 + 32 + 16)
+
+    WqeTask() {}
+    ~WqeTask() {}
+
+    explicit WqeTask(const struct UdmaSqeRead& tmpWqeRead) : wqeRead(tmpWqeRead) {}
+    explicit WqeTask(const struct UdmaSqeWrite& tmpWqeWrite) : wqeWrite(tmpWqeWrite) {}
+    explicit WqeTask(const struct UdmaSqeWriteWithNotify& tmpWqeWriteWithNotify) : wqeWriteWithNotify(tmpWqeWriteWithNotify) {}
+};
+
+// 记录DbSqe TaskParam中, 与WQE相关的profiling信息, 用于aicpu task cache适配profiling
+struct DbSqeProfInfo {
+    bool isValid = false;
+    TaskParamType taskParamType;
+    uint64_t srcAddr; // TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t dstAddr; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t size; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    Eid locEid; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    Eid rmtEid; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    DmaOp dmaOp; // TASK_UB
+    HcclReduceOp reduceOp; // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
+    HcclDataType dataType; // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
+    u64 notifyId; // TASK_UB_INLINE_WRITE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t jettyHandle{0}; // TASK_UB_INLINE_WRITE
+    uint32_t jettyId{0}; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+};
+
 }
 #endif // HCCL_AICPU_RESOURCE_AI_CPU_RESOUCES_H_

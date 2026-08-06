@@ -306,4 +306,5 @@ target_sources(hccl_v2_utest
         ${HCCL_V2_CODE_ROOT}/framework/resource_manager/notify/ccu_stream_sync_notify_manager.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/orion_adapter_hal.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/dlhal_function_v2.cc
+        ${HCCL_CODE_ROOT}/src/base_comm/common/debug/aicpu_task_utils.cc
 )

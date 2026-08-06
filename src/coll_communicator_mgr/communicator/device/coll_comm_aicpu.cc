@@ -21,6 +21,9 @@
 #include "hcclCommTaskExceptionLite.h"
 #include "coll_comm_aicpu_destroy_func.h"
 #include "aicpu_indop_env.h"
+#include "aicpu_task_cache_manager.h"
+#include "stream_lite.h"
+#include "rtsq_a5.h"
 #include "unified_platform/pub_inc/config_plf_log.h"
 
 constexpr u32 NOTIFY_SIZE_EIGHT = 8;
@@ -142,6 +145,7 @@ HcclResult CollCommAicpu::InitThreads(ThreadMgrAicpuParam *param)
         threadArray[i] = reinterpret_cast<ThreadHandle>(outThreads[i].get());  // 拷贝裸指针
         HCCL_INFO("[CollCommAicpu][%s] threadArray[%zu] = [%llu]", __func__, i, static_cast<unsigned long long>(threadArray[i]));
         CHK_RET(RegisterThreadAddDfxTaskInfo(threadArray[i]));
+        CHK_RET(RegisterThreadCacheCallback(threadArray[i]));
     }
     std::unique_lock<std::shared_mutex> rwLock(threadMutex_);
     threads_.insert(threads_.end(), std::make_move_iterator(outThreads.begin()),
@@ -170,6 +174,22 @@ HcclResult CollCommAicpu::RegisterThreadAddDfxTaskInfo(ThreadHandle thread)
         return HCCL_E_PTR;
     }
  	return HCCL_SUCCESS;
+}
+
+HcclResult CollCommAicpu::RegisterThreadCacheCallback(ThreadHandle thread)
+{
+    HCCL_INFO("[CollCommAicpu][RegisterThreadCacheCallback] register cache callback for thread[0x%016llx]", thread);
+    AicpuTsThread *threadPtr = reinterpret_cast<AicpuTsThread *>(thread);
+    CHK_PTR_NULL(threadPtr);
+    auto *const streamLitePtr = static_cast<Hccl::StreamLite *>(threadPtr->GetStreamLitePtr());
+    CHK_PTR_NULL(streamLitePtr);
+    Hccl::RtsqA5 *rtsqA5 = static_cast<Hccl::RtsqA5 *>(streamLitePtr->GetRtsq());
+    CHK_PTR_NULL(rtsqA5);
+    CHK_RET(rtsqA5->SetAicpuTsThreadPtr(threadPtr));
+    CHK_RET(rtsqA5->SetNeedCacheTaskCallback(hcomm::AicpuTaskCacheManager::NeedCacheTask));
+    CHK_RET(rtsqA5->SetAddSqeArrayCallback(hcomm::AicpuTaskCacheManager::AddSqeArray));
+    HCCL_INFO("[CollCommAicpu][RegisterThreadCacheCallback] register cache callback for thread[0x%016llx] success", thread);
+    return HCCL_SUCCESS;
 }
 
 HcclResult CollCommAicpu::AllocChannelResource(HcclChannelUrmaRes *commParam)
@@ -216,6 +236,7 @@ HcclResult CollCommAicpu::ProcessUrmaRes(HcclChannelUrmaRes *commParam, bool isI
             // 恢复出的channelHandle回填到commParam中
             channelList[index] = channelHandle;
             CHK_RET(RegisterChannelAddDfxTaskInfo(channelHandle));
+            CHK_RET(RegisterChannelCacheCallback(channelHandle)); // 注册回调函数用于aicpu task cache
             dfx_.AddChannelRemoteRankId(channelHandle, commParam->remoteRankList[index]);
         } else {
             channelHandle = channelList[index];
@@ -285,6 +306,23 @@ HcclResult CollCommAicpu::ParsePackData(std::vector<char> &data, ChannelHandle &
 HcclResult CollCommAicpu::RegisterChannelAddDfxTaskInfo(ChannelHandle channel) {
     int hert = HcommChannelRegisterDfx(channel, dfx_.GetCallback());
     return static_cast<HcclResult>(hert);
+}
+
+HcclResult CollCommAicpu::RegisterChannelCacheCallback(ChannelHandle channel) {
+    // 注意: 目前aicpu task cache只支持UB.URMA协议
+    std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::UbTransportLiteImpl>>::iterator iter =
+        ubTransportMap_.find(channel);
+    if (iter != ubTransportMap_.end()) {
+        // 注册回调函数用于判断是否需要cache task, 以及添加wqe数组到aicpu task cache
+        HCCL_INFO("[CollCommAicpu][RegisterChannelCacheCallback] register cache callback for channel[0x%016llx]",
+            channel);
+        CHK_PTR_NULL(iter->second);
+        iter->second->SetNeedCacheTaskCallback(hcomm::AicpuTaskCacheManager::NeedCacheTask);
+        iter->second->SetAddWqeArrayCallback(hcomm::AicpuTaskCacheManager::AddWqeArray);
+        HCCL_INFO("[CollCommAicpu][RegisterChannelCacheCallback] register cache callback for channel[0x%016llx] success",
+            channel);
+    }
+    return HCCL_SUCCESS;
 }
 
 HcclResult CollCommAicpu::NotifyFree(NotifyMgrAicpuParam *param)

@@ -68,6 +68,10 @@ int HcclCheckLogLevel(int logLevel);
     DlogRecord(moudle, level, fmt, ##__VA_ARGS__); \
 } while (0)
 
+#define HCCL_LOG_PRINT(moduleId, logType, format, ...) do { \
+    LOG_FUNC(moduleId, logType, "[%s:%d] [%u]" format, __FILE__, __LINE__, syscall(SYS_gettid), ##__VA_ARGS__); \
+} while(0)
+
 #define LOG_PRINT(logType, szFormat, ...)                                                                              \
     do {                                                                                                               \
         if (UNLIKELY(HcclCheckLogLevel(logType) == 1)) {                                                               \

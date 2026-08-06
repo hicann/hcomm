@@ -8,12 +8,16 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <vector>
+
 #include "gtest/gtest.h"
 #include <mockcpp/mockcpp.hpp>
 #define private public
 #define protected public
 #include "rtsq_a5.h"
 #include "binary_stream.h"
+#include "unified_platform/pub_inc/config_plf_log.h"
+#include "env_config.h"
 #include "sqe.h"
 #include "ascend_hal.h"
 #include "drv_api_exception.h"
@@ -37,8 +41,14 @@ protected:
 
     virtual void SetUp()
     {
-        MOCKER_CPP(&RtsqBase::QuerySqBaseAddr).stubs().with(mockcpp::any()).will(returnValue(reinterpret_cast<u64>(&mockSq)));
-        MOCKER_CPP(&RtsqBase::QuerySqDepth).stubs().with(mockcpp::any()).will(returnValue(static_cast<u32>(AC_SQE_MAX_CNT)));
+        MOCKER_CPP(&RtsqBase::QuerySqBaseAddr)
+            .stubs()
+            .with(mockcpp::any())
+            .will(returnValue(reinterpret_cast<u64>(&mockSq)));
+        MOCKER_CPP(&RtsqBase::QuerySqDepth)
+            .stubs()
+            .with(mockcpp::any())
+            .will(returnValue(static_cast<u32>(AC_SQE_MAX_CNT)));
         MOCKER_CPP(&RtsqBase::QuerySqStatusByType).stubs().with(mockcpp::any()).will(returnValue(static_cast<u32>(1)));
         MOCKER_CPP(&RtsqBase::ConfigSqStatusByType).stubs();
 
@@ -47,14 +57,15 @@ protected:
 
     virtual void TearDown()
     {
+        EnvConfig::GetInstance().plfDebugCfg.plfDebugConfig_ = 0;
         GlobalMockObject::verify();
         std::cout << "A Test case in RtsqA5 TearDown" << std::endl;
     }
 
     u32 fakedevPhyId = 0;
     u32 fakeStreamId = 1;
-    u32 fakeSqId     = 2;
-    u8  mockSq[AC_SQE_SIZE * AC_SQE_MAX_CNT]{0};
+    u32 fakeSqId = 2;
+    u8 mockSq[AC_SQE_SIZE * AC_SQE_MAX_CNT]{0};
 };
 
 class IsRtsqQueueSpaceSufficientTest : public RtsqA5Test {
@@ -74,8 +85,8 @@ TEST_F(IsRtsqQueueSpaceSufficientTest, Ut_IsRtsqQueueSpaceSufficient_When_HeadEq
     RtsqA5 fakeRtsqA5(fakedevPhyId, fakeStreamId, fakeSqId);
     fakeRtsqA5.pendingSqeCnt = pendingSqeCnt;
     fakeRtsqA5.sqDepth_ = pendingSqeCnt + 1; // 设置availableSpace为pendingSqeCnt + 1
-    fakeRtsqA5.sqHead_ = 0; // 设置sqHead_与sqTail为0，使GetTailToHeadDist返回sqDepth
-    fakeRtsqA5.sqTail_ = 0; // 以上四个变量控制GetTailToHeadDist方法的输出
+    fakeRtsqA5.sqHead_ = 0;                  // 设置sqHead_与sqTail为0，使GetTailToHeadDist返回sqDepth
+    fakeRtsqA5.sqTail_ = 0;                  // 以上四个变量控制GetTailToHeadDist方法的输出
 
     // 模拟QuerySqHead方法
     MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().will(returnValue(fakeRtsqA5.sqHead_));
@@ -93,8 +104,8 @@ TEST_F(IsRtsqQueueSpaceSufficientTest, Ut_IsRtsqQueueSpaceSufficient_When_HeadEq
     RtsqA5 fakeRtsqA5(fakedevPhyId, fakeStreamId, fakeSqId);
     fakeRtsqA5.pendingSqeCnt = pendingSqeCnt;
     fakeRtsqA5.sqDepth_ = pendingSqeCnt + 2; // 设置availableSpace为pendingSqeCnt + 2
-    fakeRtsqA5.sqHead_ = 0; // 设置sqHead_与sqTail为0，使GetTailToHeadDist返回sqDepth
-    fakeRtsqA5.sqTail_ = 0; // 以上四个变量控制GetTailToHeadDist方法的输出
+    fakeRtsqA5.sqHead_ = 0;                  // 设置sqHead_与sqTail为0，使GetTailToHeadDist返回sqDepth
+    fakeRtsqA5.sqTail_ = 0;                  // 以上四个变量控制GetTailToHeadDist方法的输出
 
     // 模拟QuerySqHead方法
     MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().will(returnValue(fakeRtsqA5.sqHead_));
@@ -111,10 +122,10 @@ TEST_F(RtsqA5Test, launch_task_no_loop_back)
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
     rtsq.LaunchTask(); // 没有SQE ，直接返回
 
-    u32 oldTail  = 0;
-    u32 oldHead  = 0;
-    rtsq.sqTail_  = oldTail;
-    rtsq.sqHead_  = oldHead;
+    u32 oldTail = 0;
+    u32 oldHead = 0;
+    rtsq.sqTail_ = oldTail;
+    rtsq.sqHead_ = oldHead;
     rtsq.sqDepth_ = AC_SQE_MAX_CNT;
 
     rtsq.RefreshInfo();
@@ -129,10 +140,10 @@ TEST_F(RtsqA5Test, launch_task_with_loop_back)
     memset_s(mockSq, sizeof(mockSq), 0, sizeof(mockSq));
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
 
-    u32 oldTail  = AC_SQE_MAX_CNT - 1;
-    u32 oldHead  = AC_SQE_MAX_CNT - 2;
-    rtsq.sqTail_  = oldTail;
-    rtsq.sqHead_  = oldHead;
+    u32 oldTail = AC_SQE_MAX_CNT - 1;
+    u32 oldHead = AC_SQE_MAX_CNT - 2;
+    rtsq.sqTail_ = oldTail;
+    rtsq.sqHead_ = oldHead;
     rtsq.sqDepth_ = AC_SQE_MAX_CNT;
 
     MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().with(mockcpp::any()).will(returnValue(oldHead));
@@ -142,6 +153,19 @@ TEST_F(RtsqA5Test, launch_task_with_loop_back)
     rtsq.LaunchTask();
 
     EXPECT_EQ(rtsq.sqTail_, newTail);
+}
+
+TEST_F(RtsqA5Test, launch_task_should_dump_generated_sqes_when_task_debug_enabled)
+{
+    EnvConfig::GetInstance().plfDebugCfg.plfDebugConfig_ = PLF_TASK;
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().will(returnValue(AC_SQE_MAX_CNT - 1));
+
+    rtsq.NotifyWait(0);
+    rtsq.SdmaCopy(0x100, 0x200, 0x300, 0x400);
+    rtsq.UbDbSend(UbJettyLiteId(18, 18, 18), 0);
+
+    EXPECT_NO_THROW(rtsq.LaunchTask());
 }
 
 TEST_F(RtsqA5Test, notify_wait)
@@ -174,7 +198,7 @@ TEST_F(RtsqA5Test, cnt_1ton_notify_wait)
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
 
     u32 fakeNotifyId = 0;
-    u32 fakeValue    = 1;
+    u32 fakeValue = 1;
     rtsq.Cnt1toNNotifyWait(fakeNotifyId, fakeValue);
 }
 
@@ -183,7 +207,7 @@ TEST_F(RtsqA5Test, cnt_1ton_notify_record)
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
 
     u32 fakeNotifyId = 0;
-    u32 fakeValue    = 1;
+    u32 fakeValue = 1;
     rtsq.Cnt1toNNotifyRecord(fakeNotifyId, fakeValue);
 }
 
@@ -192,7 +216,7 @@ TEST_F(RtsqA5Test, cnt_nto1_notify_wait)
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
 
     u32 fakeNotifyId = 0;
-    u32 fakeValue    = 1;
+    u32 fakeValue = 1;
     rtsq.CntNto1NotifyWait(fakeNotifyId, fakeValue);
 }
 
@@ -201,7 +225,7 @@ TEST_F(RtsqA5Test, cnt_nto1_notify_record)
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
 
     u32 fakeNotifyId = 0;
-    u32 fakeValue    = 1;
+    u32 fakeValue = 1;
     rtsq.CntNto1NotifyRecord(fakeNotifyId, fakeValue);
 }
 
@@ -211,8 +235,8 @@ TEST_F(RtsqA5Test, sdma_copy)
 
     u64 srcAddr = 0x100;
     u64 dstAddr = 0x200;
-    u32 size    = 0x300;
-    u32 partId  = 0x400;
+    u32 size = 0x300;
+    u32 partId = 0x400;
     rtsq.SdmaCopy(srcAddr, dstAddr, size, partId);
 }
 
@@ -222,8 +246,8 @@ TEST_F(RtsqA5Test, sdma_reduce)
 
     u64 srcAddr = 0x100;
     u64 dstAddr = 0x200;
-    u32 size    = 0x300;
-    u32 partId  = 0x400;
+    u32 size = 0x300;
+    u32 partId = 0x400;
     ReduceIn reduceIn(DataType::INT8, ReduceOp::MAX);
     rtsq.SdmaReduce(srcAddr, dstAddr, size, partId, reduceIn);
 }
@@ -232,10 +256,10 @@ TEST_F(RtsqA5Test, sdma_reduce_failed)
 {
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
 
-    u64      srcAddr = 0x100;
-    u64      dstAddr = 0x200;
-    u32      size    = 0x300;
-    u32      partId  = 0x400;
+    u64 srcAddr = 0x100;
+    u64 dstAddr = 0x200;
+    u32 size = 0x300;
+    u32 partId = 0x400;
     ReduceIn reduceIn(DataType::UINT8, ReduceOp::MAX);
 
     EXPECT_THROW(rtsq.SdmaReduce(srcAddr, dstAddr, size, partId, reduceIn), Hccl::InternalException);
@@ -245,9 +269,9 @@ TEST_F(RtsqA5Test, ub_db_send)
 {
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
     u32 dieId = 0;
-    u32 funcId  = 0;
+    u32 funcId = 0;
     UbJettyLiteId jettyId(18, 18, 18);
-    u32 piVal   = 0;
+    u32 piVal = 0;
     rtsq.UbDbSend(jettyId, piVal);
 }
 
@@ -255,11 +279,11 @@ TEST_F(RtsqA5Test, ub_direct_send)
 {
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
 
-    u32 dieId    = 0;
-    u32 funcId   = 0;
+    u32 dieId = 0;
+    u32 funcId = 0;
     UbJettyLiteId jettyId(18, 18, 18);
     u32 dwqeSize = 128;
-    u8  dwqe[128]{0};
+    u8 dwqe[128]{0};
     rtsq.UbDirectSend(jettyId, dwqeSize, dwqe);
 }
 
@@ -306,19 +330,19 @@ TEST_F(RtsqA5Test, Ut_CopyLocBufToSq_THROW)
     rtsq.sqTail_ = 6;
     rtsq.sqDepth_ = 16;
     rtsq.pendingSqeCnt = 8;
-    MOCKER(memcpy_s).stubs().with(mockcpp::any()).will(returnValue(1));
-    EXPECT_THROW(rtsq.CopyLocBufToSq(), InternalException);
+    MOCKER(memcpy_sOptAsm).stubs().with(mockcpp::any()).will(returnValue(1));
+    EXPECT_THROW(rtsq.CopySqeBufToSq(rtsq.locBuf), InternalException);
 
     rtsq.pendingSqeCnt = 11;
-    MOCKER(memcpy_s).stubs().with(mockcpp::any()).will(returnValue(1));
-    EXPECT_THROW(rtsq.CopyLocBufToSq(), InternalException);
+    MOCKER(memcpy_sOptAsm).stubs().with(mockcpp::any()).will(returnValue(1));
+    EXPECT_THROW(rtsq.CopySqeBufToSq(rtsq.locBuf), InternalException);
 
     MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().with(mockcpp::any()).will(returnValue(10));
     rtsq.sqTail_ = 1;
     rtsq.sqDepth_ = 16;
     rtsq.pendingSqeCnt = 8;
-    MOCKER(memcpy_s).stubs().with(mockcpp::any()).will(returnValue(1));
-    EXPECT_THROW(rtsq.CopyLocBufToSq(), InternalException);
+    MOCKER(memcpy_sOptAsm).stubs().with(mockcpp::any()).will(returnValue(1));
+    EXPECT_THROW(rtsq.CopySqeBufToSq(rtsq.locBuf), InternalException);
 }
 
 TEST_F(RtsqA5Test, Ut_TryLaunchTask_When_PendingSqeCnt_IsZero_Expect_NoAction)
@@ -424,4 +448,170 @@ TEST_F(RtsqA5Test,
     auto curTime = std::chrono::steady_clock::now();
 
     EXPECT_THROW(rtsq.CheckLaunchTaskStatus(startTime, curTime), Hccl::InternalException);
+}
+
+// ===================== RefreshSqeHeaderTaskField Tests =====================
+
+TEST_F(RtsqA5Test, Ut_RefreshSqeHeaderTaskField_SetsTaskFields)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.taskId_ = 0x00010002U;
+
+    std::vector<uint8_t> sqeBuf(AC_SQE_SIZE, 0);
+    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeBuf.data());
+    header->rtStreamId = 0;
+    header->taskId = 0;
+
+    rtsq.RefreshSqeHeaderTaskField(header);
+
+    EXPECT_EQ(header->rtStreamId, static_cast<uint16_t>(0x0002));
+    EXPECT_EQ(header->taskId, static_cast<uint16_t>(0x0001));
+}
+
+TEST_F(RtsqA5Test, Ut_RefreshSqeHeaderTaskField_IncrementsTaskId)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    u32 initialTaskId = rtsq.taskId_;
+
+    std::vector<uint8_t> sqeBuf(AC_SQE_SIZE, 0);
+    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeBuf.data());
+
+    rtsq.RefreshSqeHeaderTaskField(header);
+
+    EXPECT_EQ(rtsq.taskId_, initialTaskId + 1);
+}
+
+TEST_F(RtsqA5Test, Ut_RefreshSqeHeaderTaskField_MultipleCalls_TaskIdIncrementsEachTime)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    u32 initialTaskId = rtsq.taskId_;
+
+    std::vector<uint8_t> sqeBuf(AC_SQE_SIZE, 0);
+    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeBuf.data());
+
+    rtsq.RefreshSqeHeaderTaskField(header);
+    u32 taskIdAfterFirst = rtsq.taskId_;
+
+    rtsq.RefreshSqeHeaderTaskField(header);
+    u32 taskIdAfterSecond = rtsq.taskId_;
+
+    EXPECT_EQ(taskIdAfterFirst, initialTaskId + 1);
+    EXPECT_EQ(taskIdAfterSecond, initialTaskId + 2);
+}
+
+TEST_F(RtsqA5Test, Ut_RefreshSqeHeaderTaskField_PreservesOtherHeaderFields)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.taskId_ = 0;
+
+    std::vector<uint8_t> sqeBuf(AC_SQE_SIZE, 0);
+    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeBuf.data());
+    header->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
+    header->wrCqe = 1;
+    header->numBlocks = 0xABCD;
+
+    rtsq.RefreshSqeHeaderTaskField(header);
+
+    EXPECT_EQ(header->type, static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT));
+    EXPECT_EQ(header->wrCqe, 1U);
+    EXPECT_EQ(header->numBlocks, static_cast<uint16_t>(0xABCD));
+}
+
+// ===================== LaunchNewTask Tests =====================
+
+TEST_F(RtsqA5Test, Ut_LaunchNewTask_PendingSqeCntNotZero_ThrowsException)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.pendingSqeCnt = 5;
+    rtsq.sqTail_ = 0;
+    rtsq.sqHead_ = 0;
+    rtsq.sqDepth_ = AC_SQE_MAX_CNT;
+
+    std::vector<uint8_t> sqeArray(AC_SQE_SIZE * 2, 0);
+    EXPECT_THROW(rtsq.LaunchNewTask(sqeArray.data(), 2), Hccl::InternalException);
+}
+
+TEST_F(RtsqA5Test, Ut_LaunchNewTask_Success_UpdatesTailAndResetsPendingSqeCnt)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.pendingSqeCnt = 0;
+    rtsq.sqTail_ = 0;
+    rtsq.sqHead_ = 0;
+    rtsq.sqDepth_ = AC_SQE_MAX_CNT;
+
+    MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().will(returnValue(static_cast<u32>(0)));
+
+    std::vector<uint8_t> sqeArray(AC_SQE_SIZE * 3, 0);
+    u32 sqeCount = 3;
+    u32 expectedTail = (rtsq.sqTail_ + sqeCount) % rtsq.sqDepth_;
+
+    EXPECT_NO_THROW(rtsq.LaunchNewTask(sqeArray.data(), sqeCount));
+
+    EXPECT_EQ(rtsq.sqTail_, expectedTail);
+    EXPECT_EQ(rtsq.pendingSqeCnt, 0U);
+}
+
+TEST_F(RtsqA5Test, Ut_LaunchNewTask_Success_CopiesSqeToSqBuffer)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.pendingSqeCnt = 0;
+    rtsq.sqTail_ = 0;
+    rtsq.sqHead_ = 0;
+    rtsq.sqDepth_ = AC_SQE_MAX_CNT;
+
+    MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().will(returnValue(static_cast<u32>(0)));
+
+    std::vector<uint8_t> sqeArray(AC_SQE_SIZE * 2, 0);
+    auto *header0 = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data());
+    header0->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
+    auto *header1 = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data() + AC_SQE_SIZE);
+    header1->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA);
+
+    EXPECT_NO_THROW(rtsq.LaunchNewTask(sqeArray.data(), 2));
+
+    auto *sqHeader0 = reinterpret_cast<Rt91095StarsSqeHeader *>(mockSq);
+    auto *sqHeader1 = reinterpret_cast<Rt91095StarsSqeHeader *>(mockSq + AC_SQE_SIZE);
+    EXPECT_EQ(sqHeader0->type, static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT));
+    EXPECT_EQ(sqHeader1->type, static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA));
+}
+
+TEST_F(RtsqA5Test, Ut_LaunchNewTask_WithLoopback_Success)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.pendingSqeCnt = 0;
+    rtsq.sqTail_ = AC_SQE_MAX_CNT - 1; // 255
+    rtsq.sqHead_ = 4;                  // availableSpace = 256 - (255 - 4) = 5 > 3
+    rtsq.sqDepth_ = AC_SQE_MAX_CNT;
+
+    std::vector<uint8_t> sqeArray(AC_SQE_SIZE * 3, 0);
+    u32 sqeCount = 3;
+    u32 expectedTail = (rtsq.sqTail_ + sqeCount) % rtsq.sqDepth_;
+
+    EXPECT_NO_THROW(rtsq.LaunchNewTask(sqeArray.data(), sqeCount));
+
+    EXPECT_EQ(rtsq.sqTail_, expectedTail);
+    EXPECT_EQ(rtsq.pendingSqeCnt, 0U);
+}
+
+TEST_F(RtsqA5Test, Ut_LaunchNewTask_SingleSqe_Success)
+{
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    rtsq.pendingSqeCnt = 0;
+    rtsq.sqTail_ = 0;
+    rtsq.sqHead_ = 0;
+    rtsq.sqDepth_ = AC_SQE_MAX_CNT;
+
+    MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().will(returnValue(static_cast<u32>(0)));
+
+    std::vector<uint8_t> sqeArray(AC_SQE_SIZE, 0);
+    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data());
+    header->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_RECORD);
+
+    EXPECT_NO_THROW(rtsq.LaunchNewTask(sqeArray.data(), 1));
+
+    EXPECT_EQ(rtsq.sqTail_, 1U);
+    EXPECT_EQ(rtsq.pendingSqeCnt, 0U);
+
+    auto *sqHeader = reinterpret_cast<Rt91095StarsSqeHeader *>(mockSq);
+    EXPECT_EQ(sqHeader->type, static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_RECORD));
 }

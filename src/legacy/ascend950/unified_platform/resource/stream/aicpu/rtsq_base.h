@@ -39,6 +39,11 @@ public:
 
     virtual void Reset();
 
+    inline u32 GetStreamId() const
+    {
+        return streamId_;
+    }
+
     inline u32 GetSqDepth() const
     {
         return sqDepth_;

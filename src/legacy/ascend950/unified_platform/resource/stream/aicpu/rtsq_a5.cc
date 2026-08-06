@@ -18,6 +18,7 @@
 #ifdef CCL_KERNEL_AICPU
 #include "aicpu_ts_primitives_c_adpt.h"
 #endif
+#include "aicpu_task_utils.h"
 
 namespace Hccl {
 using namespace std;
@@ -120,7 +121,7 @@ void RtsqA5::CheckLaunchTaskStatus(const std::chrono::steady_clock::time_point &
     }
 }
 
-void RtsqA5::CopyLocBufToSq()
+void RtsqA5::CopySqeBufToSq(u8 *sqeBuf)
 {
     u8 *sqCurrAddr = reinterpret_cast<u8 *>(sqBaseAddr_) + sqTail_ * RTSQ_SQE_SIZE;
     if (sqTail_ >= sqHead_) {
@@ -128,7 +129,7 @@ void RtsqA5::CopyLocBufToSq()
         if (pendingSqeCnt <= depthLeft) { // 没有回绕
             HCCL_INFO("RtsqA5::%s copy sqe from sqe buffer, sqId_: %u, streamId_: %u, cur head: %u, cur tail: %u, size: %u, depth remain: %u", 
                 __func__, sqId_, streamId_, sqHead_, sqTail_, pendingSqeCnt, depthLeft);
-            int ret = memcpy_sp(sqCurrAddr, pendingSqeCnt * AC_SQE_SIZE, locBuf, pendingSqeCnt * RTSQ_SQE_SIZE);
+            int ret = memcpy_sp(sqCurrAddr, pendingSqeCnt * AC_SQE_SIZE, sqeBuf, pendingSqeCnt * RTSQ_SQE_SIZE);
             if (UNLIKELY(ret != 0)) {
                 THROW<InternalException>(StringFormat("RtsqA5::%s sqe memcpy_sp failed, ret = %d", __func__, ret));
             }
@@ -136,13 +137,13 @@ void RtsqA5::CopyLocBufToSq()
             HCCL_INFO("RtsqA5::%s copy sqe twice, sqId_: %u, streamId_: %u, cur head: %u, cur tail: %u, cnt: %u, depth remain: %u", 
                 __func__, sqId_, streamId_, sqHead_, sqTail_, pendingSqeCnt, depthLeft);
             // 先拷贝rtsq里剩余空间大小
-            int ret = memcpy_sp(sqCurrAddr, depthLeft * AC_SQE_SIZE, locBuf, depthLeft * RTSQ_SQE_SIZE);
+            int ret = memcpy_sp(sqCurrAddr, depthLeft * AC_SQE_SIZE, sqeBuf, depthLeft * RTSQ_SQE_SIZE);
             if (ret != 0) {
                 THROW<InternalException>(
                     StringFormat("RtsqA5::%s rtsq remaining space memcpy_sp failed, ret = %d", __func__, ret));
             }
             // 拷贝剩余sqe
-            ret = memcpy_sp(reinterpret_cast<u8 *>(sqBaseAddr_), sqHead_ * RTSQ_SQE_SIZE, locBuf + depthLeft * RTSQ_SQE_SIZE,
+            ret = memcpy_sp(reinterpret_cast<u8 *>(sqBaseAddr_), sqHead_ * RTSQ_SQE_SIZE, sqeBuf + depthLeft * RTSQ_SQE_SIZE,
                            (pendingSqeCnt - depthLeft) * AC_SQE_SIZE);
             if (UNLIKELY(ret != 0)) {
                 THROW<InternalException>(
@@ -152,10 +153,39 @@ void RtsqA5::CopyLocBufToSq()
     } else {
         HCCL_INFO("RtsqA5::%s copy sqe from sqe buffer, tail < head, sqId_: %u, streamId_: %u, cur head: %u, cur tail: %u, size: %u", 
                 __func__, sqId_, streamId_, sqHead_, sqTail_, pendingSqeCnt);
-        int ret = memcpy_sp(sqCurrAddr, pendingSqeCnt * AC_SQE_SIZE, locBuf, pendingSqeCnt * RTSQ_SQE_SIZE);
+        int ret = memcpy_sp(sqCurrAddr, pendingSqeCnt * AC_SQE_SIZE, sqeBuf, pendingSqeCnt * RTSQ_SQE_SIZE);
         if (UNLIKELY(ret != 0)) {
             THROW<InternalException>(StringFormat("RtsqA5::%s sqe memcpy_sp failed, ret = %d", __func__, ret));
         }
+    }
+}
+
+void RtsqA5::PreLaunchSqeForCache(bool &needCacheTask)
+{
+    // 校验needCacheTaskCallback_
+    // 注意: A5新流程下needCacheTaskCallback_一定非空; 但A5老流程下不支持aicpu task cache, needCacheTaskCallback_为空;
+    //     为避免A5老流程报错, 这里为空时跳过执行而非报错
+    needCacheTask = false;
+    if (UNLIKELY(needCacheTaskCallback_ == nullptr)) {
+        HCCL_WARNING("[RtsqA5][PreLaunchSqeForCache] needCacheTaskCallback_ is null, keep needCacheTask as false");
+    } else {
+        needCacheTask = needCacheTaskCallback_();
+    }
+}
+
+void RtsqA5::PostLaunchSqeForCache()
+{
+    // 注意: 只有needCacheTask为true时才调用PostLaunchSqeForCache, 此时一定是A5新流程, 因此addSqeArrayCallback_一定非空
+    if (UNLIKELY(aicpuTsThreadPtr_ == nullptr)) {
+        THROW<InternalException>("[RtsqA5][PostLaunchSqeForCache] aicpuTsThreadPtr_ is null");
+    }
+    if (UNLIKELY(addSqeArrayCallback_ == nullptr)) {
+        THROW<InternalException>("[RtsqA5][PostLaunchSqeForCache] addSqeArrayCallback_ is null");
+    }    
+    HcclResult ret = addSqeArrayCallback_(this, aicpuTsThreadPtr_, pendingSqeCnt, locBuf, streamId_);
+    if (UNLIKELY(ret != HCCL_SUCCESS)) {
+        THROW<InternalException>("[RtsqA5][PostLaunchSqeForCache] addSqeArrayCallback_ failed, ret %d",
+            ret);
     }
 }
 
@@ -163,7 +193,6 @@ void RtsqA5::CopyLocBufToSq()
 void RtsqA5::LaunchTask()
 {
     HCCL_INFO("RtsqA5::%s: START, pendingSqeCnt[%u]", __func__, pendingSqeCnt);
-
     if (pendingSqeCnt == 0) { // 没有SQE ，直接返回
         HCCL_INFO("RtsqA5::%s: pendingSqeCnt is %u, return", __func__, pendingSqeCnt);
         return;
@@ -174,18 +203,82 @@ void RtsqA5::LaunchTask()
     if (pendingSqeCnt == 0) {
         return;
     }
+
+    bool needCacheTask = false;
+    PreLaunchSqeForCache(needCacheTask);
     // localBuffer拷贝到 RTSQ
-    CopyLocBufToSq();
+    CopySqeBufToSq(locBuf);
+
+    // 正常展开按需打印SQE
+    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_DEBUG))) {
+        PLF_CONFIG_DEBUG(PLF_TASK, "[RtsqA5][LaunchTask] dump %llu generated SQEs in stream[%u]",
+            pendingSqeCnt, streamId_);
+        
+        int ret = HCCL_SUCCESS;
+        uint8_t* sqePtr = locBuf;
+        for (size_t sqeIdx = 0; sqeIdx < pendingSqeCnt; sqeIdx++) {
+            PLF_CONFIG_DEBUG(PLF_TASK, "[RtsqA5][LaunchTask] %uth generated SQE in stream[%u]",
+                sqeIdx, streamId_);
+            ret = hcomm::AicpuTaskUtils::DumpSqeContent(sqePtr);
+            if (UNLIKELY(ret != HCCL_SUCCESS)) {
+                THROW<InternalException>(
+                    StringFormat("RtsqA5::%s DumpSqeContent failed, ret = %d", __func__, ret));
+            }
+
+            sqePtr += RTSQ_SQE_SIZE;
+        }
+    }
 
     // 更新tail，触发芯片执行
     u32 newTail = (sqTail_ + pendingSqeCnt) % sqDepth_;
     ConfigSqTail(newTail);
     sqTail_ = newTail;
 
+    // 缓存sqe
+    if (needCacheTask) {
+        PostLaunchSqeForCache();
+    }
     // 清空本地的locBuffer和sqeCnt数目
-    HCCL_INFO("RtsqA5::%s: END, pendingSqeCnt[%u], sqHead_[%u] sqTail_[%u]", __func__, pendingSqeCnt, sqHead_, sqTail_);
+    HCCL_INFO("RtsqA5::%s: END, pendingSqeCnt[%u], streamId_[%u] sqHead_[%u] sqTail_[%u]",
+        __func__, pendingSqeCnt, streamId_, sqHead_, sqTail_);
     pendingSqeCnt = 0;
     (void)memset_s(locBuf, RTSQ_SQE_SIZE * PER_LAUNCH_SQE_CNT, 0, RTSQ_SQE_SIZE * PER_LAUNCH_SQE_CNT); // locBuffer清零
+}
+
+void RtsqA5::RefreshSqeHeaderTaskField(Rt91095StarsSqeHeader *sqeHeaderPtr)
+{
+    SetSqeHeaderTaskFields(sqeHeaderPtr, taskId_);
+    SetTaskIdBySqeId();
+}
+
+// 向芯片RTSQ VA中写入aicpu task cache SQE，并触发芯片执行
+void RtsqA5::LaunchNewTask(uint8_t *sqeArray, uint32_t sqeCount)
+{
+    // 注意: cache命中时才会调用LaunchNewTask, 此时一定不存在pending SQE
+    if (UNLIKELY(pendingSqeCnt > 0)) {
+        THROW<InternalException>(StringFormat("RtsqA5::%s: pendingSqeCnt[%u] should be 0 when aicpu task cache hits!",
+            __func__, pendingSqeCnt));
+    }
+
+    // 临时设置pendingSqeCnt, 用于MakeSureAvailableSpace
+    pendingSqeCnt = sqeCount;
+
+    // 确保 rtsq 有足够空间放pending SQE
+    MakeSureAvailableSpace();
+
+    // sqeArray拷贝到 RTSQ
+    CopySqeBufToSq(sqeArray);
+
+    // 更新tail，触发芯片执行
+    u32 newTail = (sqTail_ + pendingSqeCnt) % sqDepth_;
+    ConfigSqTail(newTail);
+    sqTail_ = newTail;
+
+    HCCL_INFO("RtsqA5::%s: END, pendingSqeCnt[%u], streamId_[%u] sqHead_[%u] sqTail_[%u]",
+        __func__, pendingSqeCnt, streamId_, sqHead_, sqTail_);
+
+    // 重置pendingSqeCnt
+    pendingSqeCnt = 0;
 }
 
 void RtsqA5::TryLaunchTask()
@@ -200,15 +293,23 @@ void RtsqA5::TryLaunchTask()
         return;
     }
 
-    CopyLocBufToSq();
+    bool needCacheTask = false;
+    PreLaunchSqeForCache(needCacheTask);
+
+    CopySqeBufToSq(locBuf);
 
     u32 newTail = (sqTail_ + pendingSqeCnt) % sqDepth_;
     ConfigSqTail(newTail);
     sqTail_ = newTail;
 
+    // 缓存sqe
+    if (needCacheTask) {
+        PostLaunchSqeForCache();
+    }
     pendingSqeCnt = 0;
     (void)memset_s(locBuf, RTSQ_SQE_SIZE * PER_LAUNCH_SQE_CNT, 0, RTSQ_SQE_SIZE * PER_LAUNCH_SQE_CNT);
-    HCCL_INFO("RtsqA5::%s: END, pendingSqeCnt[%u], sqHead_[%u] sqTail_[%u]", __func__, pendingSqeCnt, sqHead_, sqTail_);
+    HCCL_INFO("RtsqA5::%s: END, pendingSqeCnt[%u], streamId_[%u] sqHead_[%u] sqTail_[%u]",
+        __func__, pendingSqeCnt, streamId_, sqHead_, sqTail_);
 }
 
 u8 *RtsqA5::GetCurrSqeBuffer()

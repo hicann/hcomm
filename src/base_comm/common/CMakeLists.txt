@@ -28,4 +28,5 @@ if(TARGET hcomm)
     )
 endif()
 
+add_subdirectory(debug)
 add_subdirectory(device)

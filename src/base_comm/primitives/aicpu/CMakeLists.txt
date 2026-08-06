@@ -9,6 +9,7 @@
 # -----------------------------------------------------------------------------------------------------------
 set(src_list
     aicpu_primitives_c_adpt.cc
+    aicpu_task_cache_c_adpt.cc
 )
 
 if(TARGET hcomm)
@@ -19,3 +20,14 @@ if(TARGET hcomm)
         ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif()
+
+if(TARGET ccl_kernel)
+    target_sources(ccl_kernel PRIVATE
+        ${src_list}
+    )
+    target_include_directories(ccl_kernel PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+endif()
+
+add_subdirectory(task_cache)

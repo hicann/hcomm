@@ -219,6 +219,8 @@ TEST_F(UbTransportLiteImplTest, construct_test)
 
     MOCKER_CPP(&UbTransportLiteImpl::BuildNotifyWaitTask).stubs();
     MOCKER_CPP(&UbTransportLiteImpl::BuildUbDbSendTask).stubs();
+    MOCKER_CPP(&UbTransportLiteImpl::PreLaunchWqe).stubs();
+    MOCKER_CPP(&UbTransportLiteImpl::PostLaunchWqe).stubs();
 
     transportLite.Post(0, stream);
     transportLite.Wait(0, stream);

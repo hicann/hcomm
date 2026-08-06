@@ -11,6 +11,11 @@
 # 定义 hccl_v2 动态链接库，在 host 侧使用
 add_library(hccl_v2 SHARED)
 
+# 宏定义
+target_compile_definitions(hccl_v2 PRIVATE
+    HCCL_V2
+)
+
 # 编译选项
 target_compile_options(hccl_v2 PRIVATE
     -Werror

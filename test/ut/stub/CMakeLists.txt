@@ -135,6 +135,13 @@ set(orion_list
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/common/tp_qos.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/communicator/rank_consistency_checker_v2.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/common/checkcrc.cc
+    ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/stream/aicpu/rtsq_a5.cc
+    ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/stream/aicpu/rtsq_base.cc
+    ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/stream/aicpu/sqe_build_a5.cc
+    ${HCCL_CODE_ROOT}/src/base_comm/primitives/aicpu/task_cache/aicpu_task_cache_manager.cc
+    ${HCCL_CODE_ROOT}/src/base_comm/primitives/aicpu/task_cache/aicpu_task_cache_entry.cc
+    ${HCCL_CODE_ROOT}/src/base_comm/primitives/aicpu/task_cache/aicpu_task_cache.cc
+    ${HCCL_CODE_ROOT}/src/base_comm/primitives/aicpu/aicpu_task_cache_c_adpt.cc
 )
 
 set(hccl_list
@@ -373,6 +380,7 @@ target_include_directories(hccl_llt  PRIVATE
 
     ${HCCL_CODE_ROOT}/src/base_comm
     ${HCCL_CODE_ROOT}/src/base_comm/common/
+    ${HCCL_CODE_ROOT}/src/base_comm/common/debug
     ${HCCL_CODE_ROOT}/src/base_comm/common/device
     ${HCCL_CODE_ROOT}/src/base_comm/dfx/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels
@@ -453,6 +461,7 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/base_comm/primitives
     ${HCCL_CODE_ROOT}/src/base_comm/primitives/api_c_adpt
     ${HCCL_CODE_ROOT}/src/base_comm/primitives/api_c_adpt/nic_plugin
+    ${HCCL_CODE_ROOT}/src/base_comm/primitives/aicpu/task_cache
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoints/server_socket/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/southbound_adpt/
     ${HCCL_CODE_ROOT}/src/base_comm/resources/ccu/pub_inc/

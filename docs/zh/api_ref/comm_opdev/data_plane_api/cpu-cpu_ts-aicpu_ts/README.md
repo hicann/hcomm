@@ -38,3 +38,8 @@
   - [HcommBatchModeEnd](./others/HcommBatchModeEnd.md)
   - [HcommAcquireComm](./others/HcommAcquireComm.md)
   - [HcommReleaseComm](./others/HcommReleaseComm.md)
+  - [HcommAicpuTsTaskCacheLookup](./others/HcommAicpuTsTaskCacheLookup.md)
+  - [HcommAicpuTsTaskCacheStart](./others/HcommAicpuTsTaskCacheStart.md)
+  - [HcommAicpuTsTaskCacheEnd](./others/HcommAicpuTsTaskCacheEnd.md)
+  - [HcommAicpuTsTaskCacheExecute](./others/HcommAicpuTsTaskCacheExecute.md)
+  - [HcommAicpuTsTaskCacheClear](./others/HcommAicpuTsTaskCacheClear.md)

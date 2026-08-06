@@ -16,6 +16,7 @@
 #include <securec.h>
 #include <arpa/inet.h>
 #include "acl/acl_rt.h"
+#include "hcomm_res_defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -436,6 +437,47 @@ extern int32_t HcommChannelNotifyWaitOnThread(ThreadHandle thread, ChannelHandle
  * WARNING: experimental API, No compatibility is currently guaranteed for this API
  */
 extern int32_t HcommChannelNotifyWait(ChannelHandle channel, uint32_t localNotifyIdx, uint32_t timeOut);
+
+/**
+ * @brief 查找aicpu task cache, 判断tag是否已经缓存
+ * @param[in] tag 缓存标识符
+ * @param[out] isHit 是否cache hit
+ * @return int32_t 执行结果状态码
+ */
+extern HcommResult HcommAicpuTsTaskCacheLookup(const char *tag, bool *isHit);
+
+/**
+ * @brief cache miss下, 算子展开前, 通知aicpu task cache开始缓存task
+ * @param[in] tag 缓存标识符
+ * @param[in] addrs 内存基址信息数组
+ * @param[in] sizes 内存大小信息数组
+ * @param[in] count 内存信息数组长度
+ * @return int32_t 执行结果状态码
+ */
+extern HcommResult HcommAicpuTsTaskCacheStart(const char *tag, void **addrs, uint64_t *sizes, uint64_t count);
+
+/**
+ * @brief cache miss下, 算子展开后, 通知aicpu task cache停止缓存task
+ * @param[in] tag 缓存标识符
+ * @return int32_t 执行结果状态码
+ */
+extern HcommResult HcommAicpuTsTaskCacheEnd(const char *tag);
+
+/**
+ * @brief cache hit下, 刷新task并下发
+ * @param[in] tag 缓存标识符
+ * @param[in] addrs 内存基址信息数组
+ * @param[in] count 内存信息数组长度
+ * @return int32_t 执行结果状态码
+ */
+extern HcommResult HcommAicpuTsTaskCacheExecute(const char *tag, void **addrs, uint64_t *sizes, uint64_t count);
+
+/**
+ * @brief 清理aicpu task cache中指定tag对应的cache entry
+ * @param[in] tag 缓存标识符
+ * @return int32_t 执行结果状态码
+ */
+extern HcommResult HcommAicpuTsTaskCacheClear(const char *tag);
 
 /** @} */  // 通知
 

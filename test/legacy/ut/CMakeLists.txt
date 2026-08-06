@@ -64,10 +64,14 @@ target_include_directories(hccl_v2_utest PRIVATE
         ${HCCL_CODE_ROOT}/test/stub/depends/pkg_inc/runtime/
 
         ${HCCL_CODE_ROOT}/src/legacy/ascend910/common/
+        ${HCCL_CODE_ROOT}/src/legacy/ascend910/common/debug/profiling/inc
         ${HCCL_CODE_ROOT}/src/legacy/ascend910/pub_inc/
         ${HCCL_CODE_ROOT}/src/base_comm/resources/hccp/inc/network/
         ${HCCL_CODE_ROOT}/src/base_comm/resources/hccp/inc/
         ${HCCL_CODE_ROOT}/src/base_comm/common/
+        ${HCCL_CODE_ROOT}/src/base_comm/common/debug/
+        ${HCCL_CODE_ROOT}/src/base_comm/primitives/aicpu/task_cache
+        ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads
         ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_info_detect/
         ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/
         ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/common/
@@ -128,6 +132,7 @@ target_compile_definitions(hccl_v2_utest PRIVATE
     ORION_AICPU_DEPLOY
     ORION_HOST_DEPLOY
     OPEN_HCCL_TEST
+    HCCL_V2
 )
 
 add_subdirectory(all_source_code)
