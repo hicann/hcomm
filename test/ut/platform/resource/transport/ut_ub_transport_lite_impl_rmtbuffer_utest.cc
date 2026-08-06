@@ -47,6 +47,29 @@ protected:
     {
         GlobalMockObject::verify();
     }
+
+    // Build a valid serialized uniqueId for UbTransportLiteImpl::Init.
+    // Using an empty vector causes std::bad_alloc because BinaryStream::operator>>
+    // reads an uninitialized size_t when the stream is empty.
+    static std::vector<char> BuildValidUniqueId(u32 notifyNum = 0, u32 bufferNum = 0,
+                                                 u32 rmtbufferNum = 0, u32 connNum = 0)
+    {
+        BinaryStream binaryStream;
+        binaryStream << static_cast<u32>(TransportType::UB);
+        binaryStream << notifyNum;
+        binaryStream << bufferNum;
+        binaryStream << rmtbufferNum;
+        binaryStream << connNum;
+        std::vector<char> emptyVec;
+        binaryStream << emptyVec; // notifyUniqueIds
+        binaryStream << emptyVec; // rmtNotifyUniqueIds
+        binaryStream << emptyVec; // locBufferUniqueIds
+        binaryStream << emptyVec; // rmtBufferUniqueIds
+        binaryStream << emptyVec; // connUniqueIds
+        std::vector<char> uniqueId;
+        binaryStream.Dump(uniqueId);
+        return uniqueId;
+    }
 };
 
 TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_HeaderSerialization_When_RmtbufferDifferentFromBuffer_Expect_FiveFieldsDeserialized)
@@ -143,15 +166,15 @@ TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_HeaderSerialization_When_RmtbufferEqu
 
 TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_RmtbufferNumMember_When_Default_Expect_Zero)
 {
-    std::vector<char> emptyId;
-    UbTransportLiteImpl transportDev(emptyId);
+    auto uniqueId = BuildValidUniqueId();
+    UbTransportLiteImpl transportDev(uniqueId);
     EXPECT_EQ(transportDev.rmtbufferNum, 0);
 }
 
 TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_RmtbufferNumMember_When_RmtbufferDifferentFromBuffer_Expect_IndependentValue)
 {
-    std::vector<char> emptyId;
-    UbTransportLiteImpl transportDev(emptyId);
+    auto uniqueId = BuildValidUniqueId();
+    UbTransportLiteImpl transportDev(uniqueId);
     transportDev.notifyNum = 2;
     transportDev.bufferNum = 3;
     transportDev.rmtbufferNum = 5;

@@ -4074,6 +4074,26 @@ ACL_FUNC_VISIBILITY aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDev
 
 /**
  * @ingroup AscendCL
+ * @brief get user device id by physical device id
+ * @param [in] phyDevId   physical device id
+ * @param [out] userDevId user device id
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t *const userDevId);
+
+/**
+ * @ingroup AscendCL
+ * @brief get physical device id by user device id
+ * @param [in] userDevId  user device id
+ * @param [out] phyDevId  physical device id
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phyDevId);
+
+/**
+ * @ingroup AscendCL
  * @brief Support users in deploying custom profiling markers at specified network locations.
  *
  * @param [in] userdata Custom information set by user for profiling markers.

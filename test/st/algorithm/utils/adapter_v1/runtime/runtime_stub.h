@@ -11,6 +11,7 @@
 #ifndef RUNTIME_STUB_H
 #define RUNTIME_STUB_H
 
+#include "rt_external.h"
 #include "hccl_common_v1.h"
 #include "hccl_ip_address.h"
 #include "adapter_error_manager_pub.h"
@@ -22,7 +23,6 @@
 #include <string>
 #include "rank_info_recorder.h"
 #include "acl/acl_rt.h"
-#include "rt_external.h"
 #include "device_info_recorder.h"
 
 using namespace std;

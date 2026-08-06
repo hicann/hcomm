@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "acl/acl_rt.h"
 #include "rank_info_detect.h"
 #include <thread>
 #include <stdio.h>
@@ -37,15 +38,26 @@ UniversalConcurrentMap<u32, volatile u32> RankInfoDetect::g_detectServerStatus_;
 
 RankInfoDetect::RankInfoDetect()
 {
-    devLogicId_ = HrtGetDevice();
+    userDevId_ = HrtGetDevice();
+    aclError aclRet = aclrtGetLogicDevIdByUserDevId(userDevId_, &devLogicId_);  // userDevId 转 logicDevId
+    CHK_PRT_THROW(aclRet != ACL_SUCCESS, HCCL_ERROR("[RankInfoDetect::%s] aclrtGetLogicDevIdByUserDevId failed, userDevId[%u], ret[%d]",
+        __func__, userDevId_, aclRet), InternalException, "get logicDevId fail");
     s32 deviceNum = HrtGetDeviceCount();
-    CHK_PRT_THROW(devLogicId_ >= deviceNum,
-        HCCL_ERROR("[RankInfoDetect::%s] deviceLogicId[%d] is invalid, deviceNum[%d].", __func__, devLogicId_, deviceNum),
+    CHK_PRT_THROW(userDevId_ >= deviceNum,
+        HCCL_ERROR("[RankInfoDetect::%s] userDevId[%d] is invalid, deviceNum[%d].", __func__, userDevId_, deviceNum),
         InternalException, "get hostIp fail");
-    devPhyId_ = HrtGetDevicePhyIdByIndex(devLogicId_);
+    // 临时处理，当前拓扑探测阶段本质上都是使用的userDevId_，当前获取到devLogicId_是为了后续整改
+    // 如果使用devLogicId_会在多进程各自设置了RT_VISIBLE_DEVICES环境变量时，可能会因为当前进行无法访问某些devLogicId_代表的rank而报错
+    devLogicId_ = userDevId_;
 
-    HCCL_INFO("[RankInfoDetect::%s] end, deviceNum[%d], devLogicId_[%d], devPhyId_[%u].",
-        __func__, deviceNum, devLogicId_, devPhyId_);
+    s32 phyDevId = 0;
+    aclRet = aclrtGetPhyDevIdByUserDevId(userDevId_, &phyDevId);  // userDevId 转 phyDevId
+    CHK_PRT_THROW(aclRet != ACL_SUCCESS, HCCL_ERROR("[RankInfoDetect::%s] aclrtGetPhyDevIdByUserDevId failed, userDevId[%d], ret[%d]",
+        __func__, userDevId_, aclRet), InternalException, "get phyDevId fail");
+    devPhyId_ = static_cast<u32>(phyDevId);
+
+    HCCL_INFO("[RankInfoDetect::%s] end, deviceNum[%d], userDevId_[%d], devLogicId_[%d], devPhyId_[%u].",
+        __func__, deviceNum, userDevId_, devLogicId_, devPhyId_);
 }
 
 void RankInfoDetect::SetupServer(HcclRootHandleV2 &rootHandle)

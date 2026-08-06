@@ -18,12 +18,14 @@ typedef struct {
     uint32_t dataOffset;
 } rtPlaceHolderInfo_t;
 
+#ifndef CCE_RUNTIME_RT_EXTERNAL_KERNEL_H
 typedef struct tagRtDevBinary {
     uint32_t magic;
     uint32_t version;
     const void *data;
     uint64_t length;
 } rtDevBinary_t;
+#endif
 
 typedef enum tagRtStreamCaptureStatus {
     RT_STREAM_CAPTURE_STATUS_NONE   = 0,

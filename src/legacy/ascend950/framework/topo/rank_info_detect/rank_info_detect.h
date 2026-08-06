@@ -40,6 +40,7 @@ public:
 
 private:
     s32                       devLogicId_{0};
+    s32                       userDevId_{0};
     u32                       devPhyId_{0};
     RankTableInfo             rankTable_{};
     IpAddress                 hostIp_{};
