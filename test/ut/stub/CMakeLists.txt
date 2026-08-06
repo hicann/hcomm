@@ -179,6 +179,7 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/include/hccl/
     ${HCCL_CODE_ROOT}/pkg_inc
     ${HCCL_CODE_ROOT}/pkg_inc/hccl
+    ${HCCL_CODE_ROOT}/pkg_inc/hcomm
     ${HCCL_CODE_ROOT}/pkg_inc/hcomm/ccu 
     ${HCCL_CODE_ROOT}/pkg_inc/legacy
     ${HCCL_CODE_ROOT}/pkg_inc/legacy/hccl
@@ -193,6 +194,8 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/base_comm/resources/hccp/inc
     ${HCCL_CODE_ROOT}/src/base_comm/resources/hccp/inc/network
     ${HCCL_CODE_ROOT}/src/base_comm/resources/hccp/inc/private/network
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/team/hcomm
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/team/hccl
     ${HCCL_CODE_ROOT}/src/pkg_inc
     ${HCCL_CODE_ROOT}/external_depends
 

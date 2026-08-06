@@ -44,7 +44,6 @@
         <file value="hcomm_primitives.h" install_softlink="$(TARGET_ENV)/include/hccl/hcomm_primitives.h"/>
         <file value="hcomm_res_defs.h" install_softlink="$(TARGET_ENV)/include/hccl/hcomm_res_defs.h"/>
         <file value="hcomm_res.h"/>
-        <file value="hcomm_team.h"/>
         <file value="hcomm_team_defs.h" install_softlink="$(TARGET_ENV)/include/hccl/hcomm_team_defs.h"/>
     </file_info>
     <file_info value="include" copy_type="source" src_path="hcomm/src/legacy/ascend910/pub_inc" dst_path="$(TARGET_ENV)/include/hccl" install_path="$(TARGET_ENV)/include/hccl" install_type="devel" install_mod="440">

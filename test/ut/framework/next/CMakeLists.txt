@@ -63,6 +63,7 @@ set(src_to_test_list
     comms/endpoints/reged_mems/ut_hccs_reged_mem_mgr_test.cc
     coll_comms/api_c_adpt/ut_coll_comm_res_c_adpt.cc
     coll_comms/api_c_adpt/ut_coll_comm_ccu_c_adpt.cc
+    coll_comms/team/hccl/ut_hccl_team_c_adpt.cc
     comms/endpoints/reged_mems/ut_aicpu_ts_roce_mem.cc
     # Ns recovery相关测试用例
     comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_urma_channel.cc
@@ -113,11 +114,14 @@ set(src_to_test_list
     coll_comms/rank_info_detect/ut_rank_info_detect_service.cc
     coll_comms/rank_info_detect/ut_rankinfo_dispatcher.cc
     ${HCCL_CODE_ROOT}/test/legacy/ut/framework/env_config/env_config_stub.cc
+    coll_comms/team/hcomm/ut_hcomm_team_test.cc
 )
 
 add_executable(hccl_utest_test_next_resource ${src_to_test_list})
 target_include_directories(hccl_utest_test_next_resource PRIVATE
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/team/hcomm
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/team/hccl
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/group_schedule_mgr/
 

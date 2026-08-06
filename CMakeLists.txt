@@ -184,7 +184,6 @@ elseif(BUILD_OPEN_PROJECT)
     install(FILES
         include/hcomm_res.h
         include/hcomm_res_defs.h
-        include/hcomm_team.h
         include/hcomm_team_defs.h
         DESTINATION ${INSTALL_INCLUDE_DIR}/hcomm/ ${INSTALL_OPTIONAL}
         COMPONENT hcomm

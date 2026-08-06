@@ -15,6 +15,7 @@
 #include "dlhal_function.h"
 #include "hcclCommTaskException.h"
 #include "symmetric_memory/symmetric_memory.h"
+#include "hccl_team_mgr.h"
 
 #include <cstdint>
 #include <exception>
@@ -48,6 +49,8 @@ CollComm::~CollComm()
 
     CHK_PRT(HcclBinaryUnLoad());
 
+    // 兜底释放所有team的syncMem本地内存
+    HcclTeamMgr::GetInstance().ClearByCollComm(this);
     CollCommMgr::GetInstance()->UnRegisteCollComm(this); 
     HCCL_INFO("[CollComm][~CollComm] collComm deinit");
     // dpu的兜底上报 - 异常退出时捕获异常避免二次崩溃

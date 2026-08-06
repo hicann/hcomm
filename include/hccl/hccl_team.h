@@ -14,7 +14,6 @@
 #include <stddef.h>
 #include "hcomm_res_defs.h"
 #include "hcomm_team_defs.h"
-#include "hcomm_team.h"
 #include "hccl_types.h"
 
 #ifdef __cplusplus
@@ -143,7 +142,7 @@ extern HcclResult HcclTeamDestroy(HcommTeamHandle team);
 /* 要保证所有team上的rank都调用, 只能给put接口用, 入参team仅能为worldTeam */
 /* HcclTeamWindowRegister生成的windows必须要调用HcclTeamChannelsCreate之后才能生效，如果只创建不调用无法使用该windows */
 extern HcclResult HcclTeamWindowRegister(HcclComm comm, HcommTeamHandle worldTeam,
-                                         const CommMem *localMem, HcommWindowHandle *window, HcommTeamWindowFlag flag);
+                                         const CommMem *localMem, HcommWindowHandle *window, uint32_t flag);
 
 /**
  * @brief Deregister a memory window for HCCL communication.
