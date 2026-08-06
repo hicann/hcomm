@@ -13,7 +13,6 @@ typedef struct {
     uint32_t  rankNum;
     uint32_t  selfRankId;
     uint32_t  netLayer;     /* 用户希望使用的网络层，0表示默认选择 */
-    uint32_t  channelCnt;   /* 用户可以自行指定channel个数 */
     CommProtocol protocol;  /* 用户希望使用的通信协议，-1表示保留协议类型, 1个team仅支持一个协议 */
     HcommTeamSyncMemRequirement requirement;
 
@@ -30,7 +29,6 @@ typedef struct {
 | rankNum | 成员数量。不可为0或1，且不可大于通信域的rankSize。 |
 | selfRankId | 本rank的实际rankId，必须存在于rankIds中。 |
 | netLayer | 希望使用的网络层，只能为0、1或2，0表示默认选择。 |
-| channelCnt | 每个对端成员的channel个数，不可为0。 |
 | protocol | 希望使用的通信协议，-1或COMM_PROTOCOL_RESERVED表示保留协议类型，1个team仅支持一个协议。CommProtocol类型的定义可参见[CommProtocol](CommProtocol.md)。 |
 | requirement | syncMem需求，包含signal/counter/barrier数量。HcommTeamSyncMemRequirement类型的定义可参见[HcommTeamSyncMemRequirement](HcommTeamSyncMemRequirement.md)。 |
 | reserved[4] | 预留字段。 |

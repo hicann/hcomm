@@ -28,7 +28,7 @@ HcclTeamWindowRegister生成的window必须调用[HcclTeamChannelsCreate](HcclTe
 
 ```c
 HcclResult HcclTeamWindowRegister(HcclComm comm, HcommTeamHandle worldTeam,
-                                  const CommMem *localMem, HcommWindowHandle *window, HcommTeamWindowFlag flag)
+                                  const CommMem *localMem, HcommWindowHandle *window, uint32_t flag)
 ```
 
 ## 参数说明
@@ -51,7 +51,7 @@ HcclResult HcclTeamWindowRegister(HcclComm comm, HcommTeamHandle worldTeam,
 
 2. 需要保证所有team上的rank都调用该接口，且各rank注册window的顺序必须一致，否则[HcclTeamChannelsCreate](HcclTeamChannelsCreate.md)交换远端内存时将因顺序不匹配导致window与远端内存错配。
 
-3. flag当前仅支持HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC，传其他值返回HCCL_E_PARA。
+3. flag当前仅支持传0，传其他值返回HCCL_E_PARA。
 
 4. localMem.type必须为COMM_MEM_TYPE_DEVICE，addr不可为NULL，size不可为0。
 
@@ -72,7 +72,7 @@ localMem.size = memSize;
 
 // 注册window（所有rank都需调用）
 HcommWindowHandle window = nullptr;
-HcclResult ret = HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC);
+HcclResult ret = HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, 0);
 if (ret != HCCL_SUCCESS) {
     printf("HcclTeamWindowRegister failed, ret = %d\n", ret);
     return ret;
