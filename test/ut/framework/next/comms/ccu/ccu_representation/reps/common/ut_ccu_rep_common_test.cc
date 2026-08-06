@@ -443,6 +443,12 @@ TEST_F(CcuRepStoreVarTest, Translate)
     bool result = storeVar.Translate(nullptr, instrPtr, instrId, dep);
     EXPECT_TRUE(result);
     EXPECT_TRUE(storeVar.Translated());
+
+    auto &transInstr = instr[5].v1.transLocMemToLocMem;
+    EXPECT_EQ(transInstr.dstGSAId, dep.commGsa[1]);
+    EXPECT_EQ(transInstr.dstXnId, dep.commXn[0]);
+    EXPECT_EQ(transInstr.srcGSAId, dep.commGsa[0]);
+    EXPECT_EQ(transInstr.srcXnId, dep.commXn[1]);
 }
 
 }

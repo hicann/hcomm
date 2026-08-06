@@ -872,7 +872,7 @@ HcclResult CcuInsGeneratorV1::CcuRepStoreVarTranslate(CcuKernel* ccuKernel, CcuI
     LoadImdToXnInstr(instr++, dep.commXn[0], dep.memTokenInfo, CCU_LOAD_TO_XN_SEC_INFO);
     LoadImdToXnInstr(instr++, dep.commXn[1], dep.ccuResSpaceTokenInfo, CCU_LOAD_TO_XN_SEC_INFO);
     LoadImdToXnInstr(instr++, dep.commXn[2], CCU_RESOURCE_XN_PER_SIZE * storeVarPtr->GetNum());
-    TransLocMemToLocMemInstr(instr++, dep.commGsa[1], dep.commXn[1], dep.commGsa[0], dep.commXn[0], dep.commXn[2],
+    TransLocMemToLocMemInstr(instr++, dep.commGsa[1], dep.commXn[0], dep.commGsa[0], dep.commXn[1], dep.commXn[2],
                              dep.reserveChannalId[0], dep.commSignal, storeVarPtr->GetMask(), 0, 0, 1, 1);
     SetCKEInstr(instr++, 0, 0, dep.commSignal, storeVarPtr->GetMask(), 1);
 
