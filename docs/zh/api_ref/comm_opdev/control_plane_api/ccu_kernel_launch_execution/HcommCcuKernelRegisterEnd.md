@@ -24,8 +24,6 @@
 
 ## 函数原型
 
-//ccu_launch.h
-
 ```c
 CcuResult HcommCcuKernelRegisterEnd(CcuInsHandle insHandle);
 ```

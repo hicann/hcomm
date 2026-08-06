@@ -22,7 +22,7 @@ HCOMM对外接口按API分层组织，分层关系与架构约束以[架构简�
 
 安装固件、驱动及CANN软件包后，编译、运行应用程序时才能引用到HCOMM接口的头文件、库文件。
 
-HCOMM对外头文件在"${INSTALL_DIR}/include/"目录下的hccl/、hcomm/、hcomm/ccu/子目录中，库文件在"${INSTALL_DIR}/lib64/"目录下。${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root用户安装为例，安装后文件默认存储路径为：/usr/local/Ascend/cann。
+HCOMM对外头文件在`${INSTALL_DIR}/include/`目录下的hccl/、hcomm/、hcomm/ccu/子目录中，库文件在`${INSTALL_DIR}/lib64/`目录下。${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root用户安装为例，安装后文件默认存储路径为：/usr/local/Ascend/cann。
 
 > [!CAUTION]注意
 > include/目录下的头文件为对外稳定头文件；pkg_inc/目录为HCOMM↔HCCL、GE等包间接口，安装到单独的包间目录，不对外承诺稳定，请勿在对外业务中直接引用。编译接口程序时，请按照include的头文件依赖对应的库文件，如果引用多余的so文件，可能导致版本功能异常或后续版本升级时存在兼容性问题。

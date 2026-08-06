@@ -24,8 +24,6 @@
 
 ## 函数原型
 
-//ccu_launch.h
-
 ```c
 CcuResult HcommCcuKernelLaunch(ThreadHandle threadHandle,
     CcuKernelHandle kernelHandle, const void *taskArgs, uint32_t argNum);
