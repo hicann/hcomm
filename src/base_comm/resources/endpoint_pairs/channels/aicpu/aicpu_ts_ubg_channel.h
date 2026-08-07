@@ -28,6 +28,8 @@ public:
 
     HcclResult Init() override;
     ChannelStatus GetStatus() override;
+    HcclResult Clean() override;
+    HcclResult Resume() override;
 
 protected:
     HcclResult BuildConnection() override;

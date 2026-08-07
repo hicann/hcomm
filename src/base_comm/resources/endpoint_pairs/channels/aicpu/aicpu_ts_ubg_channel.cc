@@ -173,12 +173,47 @@ ChannelStatus AicpuTsUbgChannel::GetStatus()
         return channelStatus;
 
     ProcessUbgState();
-    if (channelStatus == ChannelStatus::READY && channelDesc_.socket == nullptr && socket_ != nullptr) {
-        SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
-        socket_ = nullptr;
-    }
 
     return channelStatus;
+}
+
+HcclResult AicpuTsUbgChannel::Clean()
+{
+    commonRes_.connVec.clear();
+    connections_.clear();
+
+    rmtNotifyVec_.clear();
+    locBufferVec_.clear();
+
+    recvData_.clear();
+    recvFinishMsg_.clear();
+    sendData_.clear();
+    sendFinishMsg_.clear();
+
+    bufferNum_ = 0;
+    connNum_ = 0;
+    recvDataSize_ = 0;
+
+    {
+        std::lock_guard<std::mutex> lock(remoteMemsMutex_);
+        rmtBufferVec_.clear();
+        cacheValid_ = false;
+        remoteUserMems_.clear();
+        memInfoCopies_.clear();
+        memInfoPointers_.clear();
+    }
+
+    channelStatus = ChannelStatus::INIT;
+    ubgStatus = UbgStatus::INIT;
+
+    return HCCL_SUCCESS;
+}
+
+HcclResult AicpuTsUbgChannel::Resume()
+{
+    channelStatus = ChannelStatus::INIT;
+    ubgStatus = UbgStatus::INIT;
+    return HCCL_SUCCESS;
 }
 
 } // namespace hcomm
