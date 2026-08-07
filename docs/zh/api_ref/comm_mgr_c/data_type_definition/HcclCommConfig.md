@@ -98,8 +98,7 @@ typedef struct HcclCommConfigDef {
     - 该配置仅支持对称组网、推理特性。
     - 该配置下，若数据量不满足在“Vector Core”上的运行要求，部分算子会自动切换到默认模式。
     - 该配置项仅支持Broadcast、Reduce、AllReduce、ReduceScatter、Scatter、AllGather、AlltoAll、AlltoAllV算子，当前仅支持单机场景。
-      - 针对Broadcast、Scatter、AllGather、AlltoAll、AlltoAllV算子，数据类型支持int8、uint8、int16、uint16、int32、uint32、int64、uint64、float16、float32、bfp16。
-      - 针对Reduce、AllReduce、ReduceScatter算子，数据类型支持int8、int16、int32、float16、float32、bfp16。
+      - 针对Reduce、AllReduce、ReduceScatter算子，数据类型支持int8、int16、int32、int64、float16、float32、bfp16。
 
     - 该配置项下，支持控核能力，建议业务根据实际使用场景中计算算子与通信算子的并发情况进行Vector Core核数的配置。
 
