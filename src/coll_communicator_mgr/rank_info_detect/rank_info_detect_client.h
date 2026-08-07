@@ -11,6 +11,8 @@
 #ifndef HCCLV2_RANK_INFO_DETECT_CLIENT_H
 #define HCCLV2_RANK_INFO_DETECT_CLIENT_H
 
+#include <cstddef>
+#include <vector>
 #include "socket.h"
 #include "new_rank_info.h"
 #include "rank_table_info.h"
@@ -20,6 +22,7 @@
 #include "socket_exception.h"
 #include "socket_agent.h"
 #include "root_handle_v2.h"
+#include "ip_address.h"
 
 namespace Hccl {
 
@@ -66,6 +69,11 @@ private:
     void ParseRankTable(vector<char>& rankInfoMsg);
     void GetLocalRankTableJson(const nlohmann::json& parseJson, nlohmann::json& localRankTableJson);
     void GetLocalDevInfoJson(const nlohmann::json& parseJson, nlohmann::json& localDevInfoJson);
+    void SelectLocalHostBackupAddr(nlohmann::json& localDevInfoJson);
+    void SelectAvailableHostAddr(nlohmann::json& addrJson);
+    void UpdateSelectedHostAddr(
+        nlohmann::json& addrJson, const std::vector<IpAddress>& candidates, std::size_t selectedIndex) const;
+    void ProbeHostRoceAddr(const IpAddress& hostAddr, bool& isAvailable) const;
     void ConstructSingleRank(RankTableInfo& localRankTable);
     HcclResult GetLocalTlsStatus(TlsStatus& tlsStatus) const;
     HcclResult VerifyTlsConsistency() const;

@@ -13,6 +13,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 #include "nlohmann/json.hpp"
 #include "ip_address.h"
 #include "topo_common_types.h"
@@ -27,6 +28,7 @@ constexpr unsigned int MIN_VALUE_PORT_LENGTH = 1;
 constexpr unsigned int MAX_VALUE_PORT_LENGTH = 32;
 constexpr unsigned int MIN_VALUE_ADDR_LENGRH = 1;
 constexpr unsigned int MAX_VALUE_ADDR_LENGRH = 256;
+constexpr unsigned int MAX_VALUE_BACKUP_ADDR_SIZE = 16;
 
 class AddressInfo {
 public:
@@ -34,6 +36,7 @@ public:
     ~AddressInfo() {};
 
     IpAddress addr;
+    std::vector<IpAddress> backupAddrs;
     u32 socketPort_{0}; // socket监听端口
     AddrType addrType;
     std::set<std::string> ports; // 网口标记
@@ -42,12 +45,17 @@ public:
     explicit AddressInfo(BinaryStream& binStream);
     void GetBinStream(BinaryStream& binStream) const;
     std::string Describe() const;
+    static void ParseAddrByType(const std::string& addrType, const std::string& address, IpAddress& ipAddress);
+    static void ParseBackupAddrs(
+        const nlohmann::json& backupAddrJson, const std::string& addrType, std::vector<IpAddress>& backupAddrs);
 
 private:
+    static constexpr int MAX_DISPLAY_LEN = 128;
     static const std::unordered_map<std::string, AddrType> strToAddrType;
     void EidToAddr(std::string str);
     void IPV4ToAddr(std::string str);
     void IPV6ToAddr(std::string str);
+    void DeserializeBackupAddrs(const nlohmann::json& addressInfoJson, const std::string& addrTypeStr);
     static bool IsStringInAddrType(std::string str) { return strToAddrType.count(str) > 0; }
 };
 

@@ -18,18 +18,91 @@
 #include "host_buffer.h"
 #include "binary_stream.h"
 #include "hccp_peer_manager.h"
+#include "hcomm_res.h"
 #include "orion_adapter_hccp.h"
 #include "orion_adapter_rts.h"
 #include "host_socket_handle_manager.h"
 #include "socket_manager.h"
 #include "topo_addr_info.h"
 #include "adapter_error_manager_pub.h"
+#include "network_api_exception.h"
 #include "phy_topo_builder.h"
 #include "../../legacy/ascend950/framework/topo/rank_info_detect/preempt_port_manager.h"
 
 namespace Hccl {
 namespace {
     constexpr u32 HOST_CONTROL_PORT_COUNT = 15;
+    constexpr u32 HOST_BACKUP_ADDR_NET_LAYER = 3;
+    constexpr const char* BACKUP_ADDR_FIELD = "backup_addr";
+    constexpr const char* ADDR_FIELD = "addr";
+    constexpr const char* ADDR_TYPE_FIELD = "addr_type";
+
+    void FillCommAddr(CommAddr& commAddr, const IpAddress& ipAddr)
+    {
+        const s32 family = ipAddr.GetFamily();
+        if (family == AF_INET) {
+            commAddr.type = COMM_ADDR_TYPE_IP_V4;
+            commAddr.addr = ipAddr.GetBinaryAddress().addr;
+        } else if (family == AF_INET6) {
+            commAddr.type = COMM_ADDR_TYPE_IP_V6;
+            commAddr.addr6 = ipAddr.GetBinaryAddress().addr6;
+        } else {
+            THROW<InvalidParamsException>(
+                StringFormat("[%s] invalid commAddrType, hostAddr[%s].", __func__, ipAddr.Describe().c_str()));
+        }
+    }
+
+    void BuildHostAddrCandidates(const nlohmann::json& addrJson, std::vector<IpAddress>& candidates)
+    {
+        // 候选顺序固定为主地址在前、备地址按配置顺序在后，选择时取首个探测成功的地址。
+        std::string addrType;
+        std::string primaryAddr;
+        const std::string msgAddrType = "get host addr_type failed";
+        TRY_CATCH_THROW(InvalidParamsException, msgAddrType, addrType = GetJsonProperty(addrJson, ADDR_TYPE_FIELD););
+        const std::string msgPrimaryAddr = "get primary host addr failed";
+        TRY_CATCH_THROW(InvalidParamsException, msgPrimaryAddr, primaryAddr = GetJsonProperty(addrJson, ADDR_FIELD););
+        IpAddress primaryIpAddress;
+        const std::string msgParsePrimaryAddr = "parse primary host addr failed";
+        TRY_CATCH_THROW(InvalidParamsException, msgParsePrimaryAddr,
+                        AddressInfo::ParseAddrByType(addrType, primaryAddr, primaryIpAddress););
+        candidates.clear();
+        candidates.emplace_back(primaryIpAddress);
+
+        std::vector<IpAddress> backupAddrs;
+        const std::string msgParseBackupAddr = "parse backup host addr failed";
+        TRY_CATCH_THROW(InvalidParamsException, msgParseBackupAddr,
+                        AddressInfo::ParseBackupAddrs(addrJson.at(BACKUP_ADDR_FIELD), addrType, backupAddrs););
+        candidates.insert(candidates.end(), backupAddrs.begin(), backupAddrs.end());
+    }
+
+    void CollectLayer3AddrJsons(nlohmann::json& localDevInfoJson, std::vector<nlohmann::json*>& addrJsons)
+    {
+        // 仅返回 netLayer3 及以上且配置了 backup_addr 的可写地址节点，其他地址直接沿用主 addr。
+        addrJsons.clear();
+        CHK_PRT_THROW(
+            !localDevInfoJson.contains("level_list") || !localDevInfoJson.at("level_list").is_array(),
+            HCCL_ERROR("[%s] level_list is missing or is not an array.", __func__), InvalidParamsException,
+            "level_list is missing or is not an array");
+        for (auto& levelJson : localDevInfoJson.at("level_list")) {
+            if (!levelJson.contains("rank_addr_list") || !levelJson["rank_addr_list"].is_array()) {
+                continue;
+            }
+            u32 netLayer = 0;
+            const std::string msgNetLayer = "get net_layer failed";
+            TRY_CATCH_THROW(InvalidParamsException, msgNetLayer,
+                            netLayer = GetJsonPropertyUInt(levelJson, "net_layer"););
+            if (netLayer < HOST_BACKUP_ADDR_NET_LAYER) {
+                continue;
+            }
+            for (auto& addrJson : levelJson["rank_addr_list"]) {
+                if (!addrJson.contains(BACKUP_ADDR_FIELD)) {
+                    HCCL_WARNING("[%s] backup_addr is not configured, use primary addr without probing.", __func__);
+                    continue;
+                }
+                addrJsons.push_back(&addrJson);
+            }
+        }
+    }
 
     std::string QueryTopoFilePathByDevice()
     {
@@ -279,13 +352,15 @@ void RankInfoDetectClient::ConstructRankTable(RankTableInfo& localRankTable)
     // 2. 获取当前devPhyId_对应的devInfo
     nlohmann::json localDevInfoJson{};
     GetLocalDevInfoJson(parseJson, localDevInfoJson);
+    // 3. 在反序列化和上报本地 RankTable 前改写 addr，确保后续全局 RankTable 和 RankGraph 使用选中地址
+    SelectLocalHostBackupAddr(localDevInfoJson);
 
-    // 3. 组rankTable的json格式
+    // 4. 组rankTable的json格式
     nlohmann::json localRankTableJson{};
     GetLocalRankTableJson(parseJson, localRankTableJson);
     localRankTableJson["rank_list"].push_back(localDevInfoJson); // 添加localDevInfoJson
 
-    // 4. 反序列化获得RankTableInfo
+    // 5. 反序列化获得RankTableInfo
     std::string msgDeserialize = "error occurs when localRankTable Deserialize";
     TRY_CATCH_THROW(InvalidParamsException, msgDeserialize, localRankTable.Deserialize(localRankTableJson, false););
 
@@ -296,6 +371,117 @@ void RankInfoDetectClient::ConstructRankTable(RankTableInfo& localRankTable)
         GetLocalTlsStatus(localRankTable.ranks[0].tlsStatus),
         HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus"));
     HCCL_INFO("[RankInfoDetectClient::%s] end.", __func__);
+}
+
+void RankInfoDetectClient::ProbeHostRoceAddr(const IpAddress& hostAddr, bool& isAvailable) const
+{
+    isAvailable = false;
+    // hostAddr 来自 netLayer3 的 rank_addr_list，是 RoCE 数据通信地址；它不同于 RootInfoDetect
+    // 使用的 rootHandle.ip，后者只负责控制面 socket 建链。
+    EndpointDesc endpointDesc{};
+    const HcommResult initRet = EndpointDescInit(&endpointDesc, 1);
+    CHK_PRT_THROW(
+        initRet != HCCL_SUCCESS, HCCL_ERROR("[%s] EndpointDescInit failed, ret[%d].", __func__, initRet),
+        InternalException, StringFormat("[%s] EndpointDescInit failed, ret[%d]", __func__, initRet));
+    endpointDesc.protocol = COMM_PROTOCOL_ROCE;
+    endpointDesc.loc.locType = ENDPOINT_LOC_TYPE_HOST;
+    const std::string msgFillCommAddr = "fill host RoCE endpoint address failed";
+    TRY_CATCH_THROW(InvalidParamsException, msgFillCommAddr, FillCommAddr(endpointDesc.commAddr, hostAddr););
+
+    EndpointHandle endpointHandle = nullptr;
+    const HcommResult createRet = HcommEndpointCreate(&endpointDesc, &endpointHandle);
+    // 仅网络错误允许上层继续尝试备用地址，其他错误按不可恢复异常立即终止。
+    if (createRet == HCCL_E_NETWORK) {
+        HCCL_WARNING(
+            "[%s] host addr is unavailable, hostAddr[%s], ret[%d].", __func__, hostAddr.Describe().c_str(), createRet);
+        return;
+    } else if (createRet != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[%s] HcommEndpointCreate failed, hostAddr[%s], ret[%d].", __func__, hostAddr.Describe().c_str(),
+            createRet);
+        THROW<InternalException>(StringFormat("[%s] HcommEndpointCreate failed, ret[%d]", __func__, createRet));
+    }
+    if (endpointHandle != nullptr) {
+        // Endpoint 仅用于可用性探测，不参与后续通信，探测成功后立即释放。
+        const HcommResult destroyRet = HcommEndpointDestroy(endpointHandle);
+        CHK_PRT_THROW(
+            destroyRet != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[%s] HcommEndpointDestroy failed, hostAddr[%s], ret[%d].", __func__, hostAddr.Describe().c_str(),
+                destroyRet),
+            InternalException, StringFormat("[%s] HcommEndpointDestroy failed, ret[%d]", __func__, destroyRet));
+    }
+    isAvailable = true;
+    HCCL_INFO(
+        "[%s] host addr probe success, devPhyId[%u], rankId[%u], hostAddr[%s].", __func__, devPhyId_, rankId_,
+        hostAddr.Describe().c_str());
+}
+
+void RankInfoDetectClient::SelectLocalHostBackupAddr(nlohmann::json& localDevInfoJson)
+{
+    const bool isLevelListInvalid = localDevInfoJson.empty() || !localDevInfoJson.contains("level_list")
+                                    || !localDevInfoJson["level_list"].is_array();
+    CHK_PRT_THROW(
+        isLevelListInvalid,
+        HCCL_ERROR(
+            "[%s] level_list is missing or is not an array, devPhyId[%u], rankId[%u].", __func__, devPhyId_, rankId_),
+        InvalidParamsException, "level_list is missing or is not an array");
+    std::vector<nlohmann::json*> addrJsons;
+    const std::string msgCollectLayer3Addr = "collect netLayer3 addr failed";
+    TRY_CATCH_THROW(InvalidParamsException, msgCollectLayer3Addr, CollectLayer3AddrJsons(localDevInfoJson, addrJsons););
+    if (addrJsons.empty()) {
+        HCCL_DEBUG("[%s] no netLayer3+ addr with backup_addr needs probing.", __func__);
+        return;
+    }
+    // 主备选择只依赖 RootInfo 的 net_layer 字段，不读取或构建 PhyTopo。
+    // 对每个 netLayer3+ 地址独立探测主 addr；主地址不可用时，再按配置顺序逐个尝试 backup_addr。
+    for (auto* addrJson : addrJsons) {
+        SelectAvailableHostAddr(*addrJson);
+    }
+    HCCL_INFO(
+        "[%s] end, devPhyId[%u], rankId[%u], addrConfigNum[%zu].", __func__, devPhyId_, rankId_, addrJsons.size());
+}
+
+void RankInfoDetectClient::SelectAvailableHostAddr(nlohmann::json& addrJson)
+{
+    std::vector<IpAddress> candidates;
+    const std::string msgBuildCandidates = "build host addr candidates failed";
+    TRY_CATCH_THROW(InvalidParamsException, msgBuildCandidates, BuildHostAddrCandidates(addrJson, candidates););
+    HCCL_INFO(
+        "[%s] devPhyId[%u], rankId[%u], primaryAddr[%s], backupAddrSize[%zu], "
+        "candidateSize[%zu].",
+        __func__, devPhyId_, rankId_, candidates.front().Describe().c_str(), candidates.size() - 1, candidates.size());
+
+    // HCCL_E_NETWORK 是可恢复错误，通过 isAvailable 继续尝试下一个候选地址；
+    // 其他异常不在此处恢复。
+    for (std::size_t idx = 0; idx < candidates.size(); ++idx) {
+        bool isAvailable = false;
+        ProbeHostRoceAddr(candidates[idx], isAvailable);
+        if (isAvailable) {
+            UpdateSelectedHostAddr(addrJson, candidates, idx);
+            return;
+        }
+        if (idx == candidates.size() - 1) {
+            THROW<NetworkApiException>(StringFormat("[%s] all host addr candidates are unavailable", __func__));
+        }
+        HCCL_WARNING(
+            "[%s] host addr is unavailable, try next candidate, "
+            "devPhyId[%u], rankId[%u], candidateAddr[%s], candidateIndex[%zu].",
+            __func__, devPhyId_, rankId_, candidates[idx].Describe().c_str(), idx);
+    }
+}
+
+void RankInfoDetectClient::UpdateSelectedHostAddr(
+    nlohmann::json& addrJson, const std::vector<IpAddress>& candidates, std::size_t selectedIndex) const
+{
+    const std::string oldAddr = addrJson[ADDR_FIELD].get<std::string>();
+    // 只改写当前有效 addr，保留 backup_addr 原始配置，并随本地 RankTable 一并上报。
+    addrJson[ADDR_FIELD] = candidates[selectedIndex].GetIpStr();
+    HCCL_RUN_INFO(
+        "[%s] select host addr success, devPhyId[%u], rankId[%u], "
+        "selectedNicRole[%s], oldHostAddr[%s], selectedHostAddr[%s], candidateIndex[%zu], tryCount[%zu].",
+        __func__, devPhyId_, rankId_, selectedIndex == 0 ? "primary" : "backup", oldAddr.c_str(),
+        candidates[selectedIndex].Describe().c_str(), selectedIndex, selectedIndex + 1);
 }
 
 void RankInfoDetectClient::GetLocalDevInfoJson(const nlohmann::json& parseJson, nlohmann::json& localDevInfoJson)

@@ -284,6 +284,7 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_OptionalFieldsMissing_Expect
                 EXPECT_EQ(
                     expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports,
                     rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports);
+                EXPECT_TRUE(rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].backupAddrs.empty());
             }
         }
     }

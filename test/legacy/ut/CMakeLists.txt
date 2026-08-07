@@ -44,6 +44,19 @@ foreach (dir ${hccl_v2_dir_list})
     endif ()
 endforeach ()
 
+# 新拓扑目录中存在与 legacy 同名的头文件，仅前置这些目录，避免改变其他头文件的搜索顺序。
+target_include_directories(hccl_v2_utest BEFORE PRIVATE
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_info_detect/
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/common/
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo/
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo_builder/
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph/
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/
+        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/topo_info/
+    )
+
 # 添加项目外部头文件
 target_include_directories(hccl_v2_utest PRIVATE
         ${HCCL_CODE_ROOT}/include/
@@ -72,15 +85,6 @@ target_include_directories(hccl_v2_utest PRIVATE
         ${HCCL_CODE_ROOT}/src/base_comm/common/debug/
         ${HCCL_CODE_ROOT}/src/base_comm/primitives/aicpu/task_cache
         ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads
-        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_info_detect/
-        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/
-        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/common/
-        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo/
-        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/phy_topo_builder/
-        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph/
-        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_graph_builder/
-        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/rank_table_info/
-        ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/rank_graph/topo_info/
         ${HCCL_CODE_ROOT}/src/base_comm/dfx/
 
         ${HCCL_LLT_ROOT}/common/virtual_topo_stub/

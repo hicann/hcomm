@@ -21,6 +21,7 @@
 
 namespace Hccl {
 using namespace std;
+
 const unordered_map<string, AddrType> AddressInfo::strToAddrType
     = (unordered_map<string, AddrType>{{"EID", AddrType::EID}, {"IPV4", AddrType::IPV4}, {"IPV6", AddrType::IPV6}});
 
@@ -37,7 +38,6 @@ void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson)
 
     std::string address;
     std::string msgAddr = "error occurs when parser object of propName \"addr\"";
-    const int MAX_DISPLAY_LEN = 128;
     TRY_CATCH_THROW(InvalidParamsException, msgAddr, address = GetJsonProperty(addressInfoJson, "addr", false););
 
     if (address.length() < MIN_VALUE_ADDR_LENGRH || address.length() > MAX_VALUE_ADDR_LENGRH) {
@@ -57,6 +57,9 @@ void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson)
     } else if (addrTypeStr == "EID") {
         EidToAddr(address);
     }
+    // 先解析主地址以确定 addrType，再使用同一类型校验可选的 backup_addr。
+    const std::string msgBackupAddr = "deserialize backup_addr failed";
+    TRY_CATCH_THROW(InvalidParamsException, msgBackupAddr, DeserializeBackupAddrs(addressInfoJson, addrTypeStr););
 
     planeId = addressInfoJson.value<std::string>("plane_id", "0");
     if (planeId.length() > MAX_VALUE_PLANEID) {
@@ -81,6 +84,72 @@ void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson)
         THROW<InvalidParamsException>(StringFormat(
             "ports [%u] length is out of range [%u] to [%u]", ports.size(), MIN_VALUE_PORT, MAX_VALUE_PORT));
     }
+}
+
+void AddressInfo::ParseAddrByType(const std::string& addrType, const std::string& address, IpAddress& ipAddress)
+{
+    if (addrType == "IPV4") {
+        CHK_PRT_THROW(
+            !IpAddress::IsIPv4(address),
+            HCCL_ERROR("[%s] invalid IPV4 backup_addr[%.*s].", __func__, MAX_DISPLAY_LEN, address.c_str()),
+            InvalidParamsException, "invalid IPV4 backup_addr");
+        ipAddress = IpAddress(address, AF_INET);
+    } else if (addrType == "IPV6") {
+        CHK_PRT_THROW(
+            !IpAddress::IsIPv6(address),
+            HCCL_ERROR("[%s] invalid IPV6 backup_addr[%.*s].", __func__, MAX_DISPLAY_LEN, address.c_str()),
+            InvalidParamsException, "invalid IPV6 backup_addr");
+        ipAddress = IpAddress(address, AF_INET6);
+    } else {
+        THROW<InvalidParamsException>(
+            StringFormat("[%s] backup_addr does not support addrType[%s].", __func__, addrType.c_str()));
+    }
+}
+
+void AddressInfo::ParseBackupAddrs(
+    const nlohmann::json& backupAddrJson, const std::string& addrType, std::vector<IpAddress>& backupAddrs)
+{
+    backupAddrs.clear();
+    CHK_PRT_THROW(
+        !backupAddrJson.is_array(), HCCL_ERROR("[%s] backup_addr should be an array.", __func__),
+        InvalidParamsException, "backup_addr should be an array");
+    CHK_PRT_THROW(
+        backupAddrJson.size() > MAX_VALUE_BACKUP_ADDR_SIZE,
+        HCCL_ERROR(
+            "[%s] backup_addr size[%zu] exceeds max[%u].", __func__, backupAddrJson.size(), MAX_VALUE_BACKUP_ADDR_SIZE),
+        InvalidParamsException, "backup_addr size exceeds max");
+
+    for (const auto& backupAddr : backupAddrJson) {
+        CHK_PRT_THROW(
+            !backupAddr.is_string(), HCCL_ERROR("[%s] backup_addr element should be string.", __func__),
+            InvalidParamsException, "backup_addr element should be string");
+        const std::string backupAddrStr = backupAddr.get<std::string>();
+        CHK_PRT_THROW(
+            backupAddrStr.length() < MIN_VALUE_ADDR_LENGRH || backupAddrStr.length() > MAX_VALUE_ADDR_LENGRH,
+            HCCL_ERROR(
+                "[%s] backup_addr[%.*s] length is out of range [%u] to [%u].", __func__, MAX_DISPLAY_LEN,
+                backupAddrStr.c_str(), MIN_VALUE_ADDR_LENGRH, MAX_VALUE_ADDR_LENGRH),
+            InvalidParamsException,
+            StringFormat(
+                "[%s] backup_addr [%.*s] length is out of range [%u] to [%u]", __func__, MAX_DISPLAY_LEN,
+                backupAddrStr.c_str(), MIN_VALUE_ADDR_LENGRH, MAX_VALUE_ADDR_LENGRH));
+        IpAddress backupIpAddress;
+        const std::string msgParseBackupAddr = "parse backup_addr failed";
+        TRY_CATCH_THROW(InvalidParamsException, msgParseBackupAddr,
+                        ParseAddrByType(addrType, backupAddrStr, backupIpAddress););
+        backupAddrs.emplace_back(backupIpAddress);
+    }
+}
+
+void AddressInfo::DeserializeBackupAddrs(const nlohmann::json& addressInfoJson, const std::string& addrTypeStr)
+{
+    backupAddrs.clear();
+    // backup_addr 为可选字段，缺失时兼容未配置主备地址的 RankTable。
+    if (!addressInfoJson.contains("backup_addr")) {
+        HCCL_WARNING("[%s] backup_addr is not configured.", __func__);
+        return;
+    }
+    ParseBackupAddrs(addressInfoJson.at("backup_addr"), addrTypeStr, backupAddrs);
 }
 
 void AddressInfo::EidToAddr(std::string address)
@@ -127,8 +196,9 @@ void AddressInfo::IPV6ToAddr(std::string address)
 std::string AddressInfo::Describe() const
 {
     return StringFormat(
-        "AddressInfo[addrType=%s, addr=%s, planeId=%s, portsize=%u socketPort_=%u]", addrType.Describe().c_str(),
-        addr.Describe().c_str(), planeId.c_str(), ports.size(), socketPort_);
+        "AddressInfo[addrType=%s, addr=%s, backupAddrSize=%u, planeId=%s, portsize=%u socketPort_=%u]",
+        addrType.Describe().c_str(), addr.Describe().c_str(), static_cast<u32>(backupAddrs.size()), planeId.c_str(),
+        static_cast<u32>(ports.size()), socketPort_);
 }
 
 AddressInfo::AddressInfo(BinaryStream& binStream)
@@ -147,6 +217,16 @@ AddressInfo::AddressInfo(BinaryStream& binStream)
     }
     binStream >> planeId;
     binStream >> socketPort_;
+    size_t backupAddrSize{0};
+    binStream >> backupAddrSize;
+    CHK_PRT_THROW(
+        backupAddrSize > MAX_VALUE_BACKUP_ADDR_SIZE,
+        HCCL_ERROR("[%s] backup_addr size[%zu] exceeds max[%u].", __func__, backupAddrSize, MAX_VALUE_BACKUP_ADDR_SIZE),
+        InvalidParamsException, "backup_addr size exceeds limit");
+    for (size_t i = 0; i < backupAddrSize; i++) {
+        IpAddress backupAddr(binStream);
+        backupAddrs.emplace_back(backupAddr);
+    }
 }
 
 void AddressInfo::GetBinStream(BinaryStream& binStream) const
@@ -163,6 +243,10 @@ void AddressInfo::GetBinStream(BinaryStream& binStream) const
     }
     binStream << planeId;
     binStream << socketPort_;
+    binStream << backupAddrs.size();
+    for (const auto& backupAddr : backupAddrs) {
+        backupAddr.GetBinStream(binStream);
+    }
 }
 
 } // namespace Hccl
