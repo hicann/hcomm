@@ -10,10 +10,7 @@
 
 #include "root_info_detect_bridge.h"
 
-#include <map>
 #include <memory>
-#include <mutex>
-#include <string>
 
 #include "acl/acl_rt.h"
 #include "hccl_common_v2.h"
@@ -24,25 +21,6 @@
 
 namespace Hccl {
 namespace {
-
-    std::mutex g_detectServerMutex;
-    std::map<std::string, std::shared_ptr<RankInfoDetect>> g_detectServers;
-
-    void KeepDetectServer(const HcclRootHandleV2& rootHandle, const std::shared_ptr<RankInfoDetect>& detectServer)
-    {
-        std::lock_guard<std::mutex> lock(g_detectServerMutex);
-        g_detectServers.insert({rootHandle.identifier, detectServer});
-    }
-
-    void ReleaseDetectServer(const HcclRootHandleV2& rootHandle)
-    {
-        std::lock_guard<std::mutex> lock(g_detectServerMutex);
-        auto iter = g_detectServers.find(rootHandle.identifier);
-        if (iter != g_detectServers.end()) {
-            g_detectServers.erase(iter);
-            HCCL_INFO("[%s] release RankInfoDetect server, identifier[%s]", __func__, rootHandle.identifier);
-        }
-    }
 
     HcclResult GetCurrentDeviceIds(s32& userDevId, s32& devPhyId)
     {
@@ -66,9 +44,6 @@ namespace {
         std::shared_ptr<RankInfoDetect> rankInfoDetectServer;
         EXCEPTION_CATCH((rankInfoDetectServer = std::make_shared<RankInfoDetect>()), return HCCL_E_MEMORY);
         TRY_CATCH_RETURN(rankInfoDetectServer->SetupServer(rootHandle));
-
-        // 保活 server，避免局部 shared_ptr 析构时提前 join，并在 Init 的 WaitComplete 后释放。
-        KeepDetectServer(rootHandle, rankInfoDetectServer);
 
         u32 rootHandleLen = sizeof(HcclRootHandleV2);
         CHK_PRT_RET(
@@ -124,7 +99,6 @@ namespace {
             HCCL_ERROR("[%s] RankInfoDetect SetupAgent fail, identifier[%s].", __func__, rootHandle.identifier),
             HCCL_E_INTERNAL);
 
-        ReleaseDetectServer(rootHandle);
         rankInfoDetectAgent->GetRankTable(rankTable);
         // bridge 不暴露 RankInfoDetect 类型；调用方持有类型擦除后的 shared_ptr，
         // 使 agent 及其探测资源在后续通信域初始化完成前保持有效。

@@ -94,16 +94,12 @@ void RankInfoDetect::SetupServer(HcclRootHandleV2& rootHandle)
     GetRootHandle(rootHandle);
 
     // 3. 拉起线程，调用RankInfoDetectService.Run()，注意新线程中需要HrtSetDevice
-    // 线程由 serviceThreadPtr_ 持有，在 ~RankInfoDetect 中 join，避免 detach 后主线程提前退出
-    serviceThreadPtr_.reset(new (std::nothrow) std::thread(
+    std::thread threadHandle(
         &RankInfoDetect::SetupRankInfoDetectService, this, serverSocket, devLogicId_, devPhyId_, identifier_,
-        wlistInfo_));
-    CHK_PRT_THROW(
-        serviceThreadPtr_ == nullptr,
-        HCCL_ERROR("[RankInfoDetect::%s] create RankInfoDetectService thread fail.", __func__), InternalException,
-        "create RankInfoDetectService thread fail");
+        wlistInfo_);
+    threadHandle.detach();
 
-    HCCL_INFO("[RankInfoDetect::%s] setup server end.", __func__);
+    HCCL_DEBUG("[RankInfoDetect::%s] setup server end.", __func__);
 }
 
 SocketHandle RankInfoDetect::GetHostSocketHandle()
@@ -125,7 +121,7 @@ SocketHandle RankInfoDetect::GetHostSocketHandle()
         AddHostSocketWhitelist(hostSocketHandle, hostSocketWhitelist);
     }
 
-    HCCL_INFO("[RankInfoDetect::%s] get host socket handle success, socketHandle[%p].", __func__, hostSocketHandle);
+    HCCL_DEBUG("[RankInfoDetect::%s] get host socket handle success, socketHandle[%p].", __func__, hostSocketHandle);
     return hostSocketHandle;
 }
 
@@ -165,12 +161,12 @@ void RankInfoDetect::AddHostSocketWhitelist(SocketHandle& socketHandle, const st
 
     HrtRaSocketWhiteListAdd(socketHandle, wlistInfo_);
 
-    HCCL_INFO("[RankInfoDetect::%s] end, add wlistInfo size[%zu] success.", __func__, wlistInfo_.size());
+    HCCL_DEBUG("[RankInfoDetect::%s] end, add wlistInfo size[%zu] success.", __func__, wlistInfo_.size());
 }
 
 std::shared_ptr<Socket> RankInfoDetect::ClientInit(const HcclRootHandleV2& rootHandle)
 {
-    HCCL_INFO("[RankInfoDetect::%s] client init start devPhyId_[%u].", __func__, devPhyId_);
+    HCCL_DEBUG("[RankInfoDetect::%s] client init start devPhyId_[%u].", __func__, devPhyId_);
 
     // 获取socket句柄
     SocketHandle hostSocketHandle = HostSocketHandleManager::GetInstance().Create(devPhyId_, hostIp_);
@@ -211,7 +207,7 @@ void RankInfoDetect::SetupAgent(u32 rankSize, u32 rankId, const HcclRootHandleV2
     // 2. 调用RankInfoDetectClient.Setup, 获取rankTable
     rankInfoDetectClient->Setup(rankTable_);
 
-    HCCL_INFO("[RankInfoDetect::%s] setup agent end.", __func__);
+    HCCL_DEBUG("[RankInfoDetect::%s] setup agent end.", __func__);
 }
 
 void RankInfoDetect::SetupRankInfoDetectService(
@@ -251,7 +247,7 @@ void RankInfoDetect::SetupRankInfoDetectService(
         status = RANKINFO_DETECT_SERVER_STATUS_IDLE;
     });
 
-    HCCL_INFO("[RankInfoDetect::%s] end, status idle.", __func__);
+    HCCL_DEBUG("[RankInfoDetect::%s] end, status idle.", __func__);
 
     // 确保root info流程先销毁server socket 再返回
     // 可能失败，需要将错误状态带出
@@ -267,7 +263,7 @@ void RankInfoDetect::SetupRankInfoDetectService(
         return;
     }
 
-    HCCL_INFO("[RankInfoDetect::%s] end.", __func__);
+    HCCL_DEBUG("[RankInfoDetect::%s] end.", __func__);
 }
 
 u32 RankInfoDetect::GetHostListenPort()
@@ -384,13 +380,4 @@ void RankInfoDetect::WaitComplete(u32 listenPort, u32 listenStatus) const
     };
 }
 
-void RankInfoDetect::JoinServiceThread()
-{
-    if (serviceThreadPtr_ && serviceThreadPtr_->joinable()) {
-        serviceThreadPtr_->join();
-    }
-    serviceThreadPtr_ = nullptr;
-}
-
-RankInfoDetect::~RankInfoDetect() { JoinServiceThread(); }
 } // namespace Hccl
