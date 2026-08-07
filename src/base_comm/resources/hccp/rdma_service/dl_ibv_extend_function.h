@@ -32,6 +32,11 @@ struct RsIbvExtendOps {
         struct ibv_cq_init_attr_extend *cqInitAttr);
     int (*rsIbvDestroyQpExtend)(struct ibv_context_extend *context, struct ibv_qp_extend *qpExtend);
     int (*rsIbvDestroyCqExtend)(struct ibv_context_extend *context, struct ibv_cq_extend *cqExtend);
+    int (*rsIbvModifyQpExtend)(struct ibv_context_extend *context, struct ibv_qp_attr_extend *attr, int attr_mask);
+    int (*rsIbvQueryQpSupportedHyroceFeature)(struct ibv_context_extend *context, struct ibv_qp *qp, uint32_t sl,
+        uint32_t tc, struct ibv_hyroce_feature *feature);
+    int (*rsIbvNegoQpHyroceFeature)(struct ibv_context_extend *context, struct ibv_qp *qp,
+        const struct ibv_hyroce_feature *input, struct ibv_hyroce_feature *output, uint32_t *needMoreNego);
 };
 
 int RsIbvExtendApiInit(void);
@@ -47,5 +52,10 @@ int RsIbvDestroyCqExtend(struct ibv_context_extend *context, void *ibvCqExt);
 struct ibv_qp_extend *RsIbvCreateQpExtend(struct ibv_context_extend *context,
     struct ibv_qp_init_attr_extend *qpInitAttr);
 int RsIbvDestroyQpExtend(struct ibv_context_extend *context, struct ibv_qp_extend *qpExtend);
+int RsIbvModifyQpExtend(struct ibv_context_extend *context, struct ibv_qp_attr_extend *attr, int attr_mask);
+int RsIbvQueryQpSupportedHyroceFeature(struct ibv_context_extend *context, struct ibv_qp *qp, uint32_t sl, uint32_t tc,
+    struct ibv_hyroce_feature *feature);
+int RsIbvNegoQpHyroceFeature(struct ibv_context_extend *context, struct ibv_qp *qp,
+    const struct ibv_hyroce_feature *input, struct ibv_hyroce_feature *output, uint32_t *needMoreNego);
 
 #endif // DL_IBV_EXTEND_FUNCTION_H

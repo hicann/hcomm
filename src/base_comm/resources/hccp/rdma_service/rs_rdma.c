@@ -29,6 +29,7 @@
 #include "rs_epoll.h"
 #include "dl_hal_function.h"
 #include "dl_ibverbs_function.h"
+#include "dl_ibv_extend_function.h"
 #include "rs_drv_socket.h"
 #include "rs_drv_rdma.h"
 #include "rs_rdma.h"
@@ -2391,6 +2392,51 @@ STATIC void RsTypicalQpModifyInfoRelated(struct RsQpCb *qpCb, struct TypicalQp *
     (void)memcpy_s(qpCb->qpInfoRem.gid.raw, HCCP_GID_RAW_LEN, remoteQpInfo->gid, HCCP_GID_RAW_LEN);
 }
 
+STATIC void RsTypicalQpModifyExtend(struct RsQpCb *qpCb, struct TypicalQp *localQpInfo, struct TypicalQp *remoteQpInfo)
+{
+    struct ibv_hyroce_feature output = {0};
+    struct ibv_hyroce_feature input = {0};
+    struct ibv_qp_attr_extend attr = {0};
+    uint32_t needMoreNego = 0;
+    int ret = 0;
+
+    if (qpCb->rdevCb->ibCtxEx == NULL) {
+        return;
+    }
+
+    if (localQpInfo->tc != qpCb->qosAttr.tc || localQpInfo->sl != qpCb->qosAttr.sl) {
+        hccp_warn("localQpInfo tc:%u sl:%u is not equal to qpCb tc:%u sl:%u", localQpInfo->tc, localQpInfo->sl,
+            qpCb->qosAttr.tc, qpCb->qosAttr.sl);
+        return;
+    }
+
+    ret = memcpy_s(&input, sizeof(struct ibv_hyroce_feature), &remoteQpInfo->feature, sizeof(struct HyperFeature));
+    if (ret != 0) {
+        hccp_warn("memcpy_s feature unsuccessful, ret:%d qpn:%u ibv_hyroce_feature len:%zu HyperFeature len:%zu", ret,
+            qpCb->ibQp->qp_num, sizeof(struct ibv_hyroce_feature), sizeof(struct HyperFeature));
+        return;
+    }
+
+    ret = RsIbvNegoQpHyroceFeature(qpCb->rdevCb->ibCtxEx, qpCb->ibQp, &input, &output, &needMoreNego);
+    if (ret != 0) {
+        hccp_warn("RsIbvNegoQpHyroceFeature unsuccessful, ret:%d qpn:%u errno:%d", ret, qpCb->ibQp->qp_num, errno);
+        return;
+    }
+
+    attr.qp = qpCb->ibQp;
+    (void)memcpy_s(&attr.feature, sizeof(struct ibv_hyroce_feature), &output, sizeof(struct ibv_hyroce_feature));
+    attr.udp_src_port = localQpInfo->udpSport;
+    ret = RsIbvModifyQpExtend(qpCb->rdevCb->ibCtxEx, &attr,
+        IBV_QP_ATTR_EXTEND_UDP_SRC_PORT | IBV_QP_ATTR_EXTEND_HYROCE_FEATURE);
+    if (ret != 0) {
+        hccp_warn("RsIbvModifyQpExtend unsuccessful, ret:%d qpn:%u errno:%d", ret, qpCb->ibQp->qp_num, errno);
+        return;
+    }
+
+    hccp_dbg("RsIbvModifyQpExtend successful, qpn:%u", qpCb->ibQp->qp_num);
+    return;
+}
+
 STATIC int RsTypicalQueryQpAttr(struct RsQpCb *qpCb, struct TypicalQpAttr *qpAttr)
 {
     unsigned int qpAttrMask = HNS_ROCE_AI_QPC_UDPSPN;
@@ -2444,6 +2490,8 @@ RS_ATTRI_VISI_DEF int RsTypicalQpModify(unsigned int phyId, unsigned int rdevInd
     CHK_PRT_RETURN(ret != 0 || attr.qp_state != IBV_QPS_INIT,
         hccp_err("query qpn:%u failed, ret:%d or state:%d != %d", localQpInfo.qpn, ret, attr.qp_state, IBV_QPS_INIT),
         -EOPENSRC);
+
+    RsTypicalQpModifyExtend(qpCb, &localQpInfo, &remoteQpInfo);
 
     ret = RsTypicalQpStateModifytoRtr(qpCb, &localQpInfo, &remoteQpInfo);
     CHK_PRT_RETURN(ret != 0,

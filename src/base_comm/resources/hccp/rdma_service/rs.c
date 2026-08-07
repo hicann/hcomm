@@ -1974,8 +1974,8 @@ int rsGetDevIDByLocalDevID(unsigned int chipId, unsigned int *phyId)
 
 RS_ATTRI_VISI_DEF int RsSetQpAttrQos(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn, struct QosAttr *attr)
 {
-    int ret;
     struct RsQpCb *qpCb = NULL;
+    int ret = 0;
 
     RS_QP_PARA_CHECK(phyId);
     ret = RsQpn2qpcb(phyId, rdevIndex, qpn, &qpCb);
@@ -1991,8 +1991,8 @@ RS_ATTRI_VISI_DEF int RsSetQpAttrQos(unsigned int phyId, unsigned int rdevIndex,
 RS_ATTRI_VISI_DEF int RsSetQpAttrTimeout(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn,
     unsigned int *timeout)
 {
-    int ret;
     struct RsQpCb *qpCb = NULL;
+    int ret = 0;
 
     RS_QP_PARA_CHECK(phyId);
     ret = RsQpn2qpcb(phyId, rdevIndex, qpn, &qpCb);
@@ -2007,8 +2007,8 @@ RS_ATTRI_VISI_DEF int RsSetQpAttrTimeout(unsigned int phyId, unsigned int rdevIn
 RS_ATTRI_VISI_DEF int RsSetQpAttrRetryCnt(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn,
     unsigned int *retryCnt)
 {
-    int ret;
     struct RsQpCb *qpCb = NULL;
+    int ret = 0;
 
     RS_QP_PARA_CHECK(phyId);
     ret = RsQpn2qpcb(phyId, rdevIndex, qpn, &qpCb);

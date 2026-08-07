@@ -98,6 +98,8 @@ void TcIfaddr()
 
 int StubRaHdcSendWrV2(struct RaQpHandle* qpHdc, struct SendWrV2* wr, struct SendWrRsp* opRsp) { return 0; }
 
+int RaGetQpHyperFeatureStub(struct RaQpHandle* qpStub, struct HyperFeature* hyperFeature) { return 0; }
+
 void TcHost()
 {
     DlHalInit();
@@ -609,7 +611,10 @@ void TcHost()
 
     struct QpAttr attr = {0};
     struct RaQpHandle qpHandleTmp = {0};
+    struct RaRdmaOps qpHyperFeatureOps = {0};
     qpHandleTmp.rdmaHandle = rdmaHandle;
+    qpHyperFeatureOps.raGetQpHyperFeature = RaGetQpHyperFeatureStub;
+    qpHandleTmp.rdmaOps = &qpHyperFeatureOps;
     ret = RaGetQpAttr(&qpHandleTmp, &attr);
     EXPECT_INT_EQ(0, ret);
 
@@ -1477,5 +1482,39 @@ void TcRaGetQpLbValue(void)
 
     qpHandle.rdmaOps->raGetQpLbValue = RaPeerGetQpLbValue;
     ret = RaGetQpLbValue(&qpHandle, &lbvalue);
+    EXPECT_INT_EQ(0, ret);
+}
+
+int RaGetQpHyperFeatureFailStub(struct RaQpHandle* qpStub, struct HyperFeature* hyperFeature) { return -1; }
+
+void TcRaGetQpHyperFeature(void)
+{
+    struct RaRdmaHandle rdmaHandle = {0};
+    struct RaQpHandle qpHandle = {0};
+    struct RaRdmaOps rdmaOps = {0};
+    struct QpAttr attr = {0};
+    int ret = 0;
+
+    qpHandle.rdmaHandle = &rdmaHandle;
+
+    ret = RaGetQpAttr(NULL, &attr);
+    EXPECT_INT_EQ(128103, ret);
+
+    ret = RaGetQpAttr(&qpHandle, NULL);
+    EXPECT_INT_EQ(128103, ret);
+
+    ret = RaGetQpAttr(&qpHandle, &attr);
+    EXPECT_INT_EQ(0, ret);
+
+    qpHandle.rdmaOps = &rdmaOps;
+    ret = RaGetQpAttr(&qpHandle, &attr);
+    EXPECT_INT_EQ(0, ret);
+
+    qpHandle.rdmaOps->raGetQpHyperFeature = RaGetQpHyperFeatureStub;
+    ret = RaGetQpAttr(&qpHandle, &attr);
+    EXPECT_INT_EQ(0, ret);
+
+    qpHandle.rdmaOps->raGetQpHyperFeature = RaGetQpHyperFeatureFailStub;
+    ret = RaGetQpAttr(&qpHandle, &attr);
     EXPECT_INT_EQ(0, ret);
 }

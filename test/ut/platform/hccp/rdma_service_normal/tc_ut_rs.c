@@ -32,7 +32,9 @@
 #include "rs_tls.h"
 #include "ut_dispatch.h"
 #include "stub/ibverbs.h"
+#include "ibv_extend.h"
 #include "rs.h"
+#include "rs_nda.h"
 #include "rs_common_inner.h"
 #include "rs_inner.h"
 #include "rs_ping_inner.h"
@@ -6174,6 +6176,71 @@ void TcRsTypicalQpModify()
     EXPECT_INT_EQ(ret, 0);
 
     free(addr);
+}
+
+void TcRsGetQpHyperFeature()
+{
+    int ret = 0;
+    uint32_t phyId = 0;
+    unsigned int rdevIndex = 0;
+    struct RsInitConfig cfg = {0};
+    struct rdev rdevInfo = {0};
+    struct RsQpNorm qpNorm = {0};
+    struct RsQpResp resp = {0};
+    struct HyperFeature hyperFeature = {0};
+    struct RsQpCb* qpCb = NULL;
+
+    rdevInfo.phyId = 0;
+    rdevInfo.family = AF_INET;
+    rdevInfo.localIp.addr.s_addr = inet_addr("127.0.0.1");
+
+    cfg.chipId = 0;
+    cfg.hccpMode = NETWORK_OFFLINE;
+    ret = RsInit(&cfg);
+    EXPECT_INT_EQ(ret, 0);
+
+    ret = RsRdevInit(rdevInfo, NOTIFY, &rdevIndex);
+    EXPECT_INT_EQ(ret, 0);
+
+    qpNorm.flag = 0;
+    qpNorm.qpMode = 1;
+    qpNorm.isExp = 1;
+    ret = RsQpCreate(phyId, rdevIndex, qpNorm, &resp);
+    EXPECT_INT_EQ(ret, 0);
+
+    ret = RsGetQpHyperFeature(phyId, rdevIndex, resp.qpn, &hyperFeature);
+    EXPECT_INT_EQ(ret, 0);
+
+    ret = RsGetQpHyperFeature(RS_MAX_DEV_NUM, rdevIndex, resp.qpn, &hyperFeature);
+    EXPECT_INT_EQ(ret, -EINVAL);
+
+    ret = RsGetQpHyperFeature(phyId, rdevIndex, 99999, &hyperFeature);
+    EXPECT_INT_NE(ret, 0);
+
+    mocker((stub_fn_t)ibv_query_qp_supported_hyroce_feature, 10, -1);
+    ret = RsGetQpHyperFeature(phyId, rdevIndex, resp.qpn, &hyperFeature);
+    EXPECT_INT_NE(ret, 0);
+    mocker_clean();
+
+    mocker((stub_fn_t)memcpy_s, 10, 1);
+    ret = RsGetQpHyperFeature(phyId, rdevIndex, resp.qpn, &hyperFeature);
+    EXPECT_INT_NE(ret, 0);
+    mocker_clean();
+
+    ret = RsQpn2qpcb(phyId, rdevIndex, resp.qpn, &qpCb);
+    EXPECT_INT_EQ(ret, 0);
+    qpCb->rdevCb->ibCtxEx = NULL;
+    ret = RsGetQpHyperFeature(phyId, rdevIndex, resp.qpn, &hyperFeature);
+    EXPECT_INT_EQ(ret, 0);
+
+    ret = RsQpDestroy(phyId, rdevIndex, resp.qpn);
+    EXPECT_INT_EQ(ret, 0);
+
+    ret = RsRdevDeinit(phyId, NOTIFY, rdevIndex);
+    EXPECT_INT_EQ(ret, 0);
+
+    ret = RsDeinit(&cfg);
+    EXPECT_INT_EQ(ret, 0);
 }
 
 void Tcrs_ssl_get_cert()

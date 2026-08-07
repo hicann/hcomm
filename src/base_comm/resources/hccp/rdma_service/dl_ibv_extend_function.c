@@ -26,6 +26,9 @@ struct RsIbvExtendOps gIbvExtendOps = {
     .rsIbvCreateCqExtend = ibv_create_cq_extend,
     .rsIbvDestroyQpExtend = ibv_destroy_qp_extend,
     .rsIbvDestroyCqExtend = ibv_destroy_cq_extend,
+    .rsIbvModifyQpExtend = ibv_modify_qp_extend,
+    .rsIbvQueryQpSupportedHyroceFeature = ibv_query_qp_supported_hyroce_feature,
+    .rsIbvNegoQpHyroceFeature = ibv_nego_qp_hyroce_feature,
 };
 #endif
 
@@ -61,6 +64,17 @@ STATIC int RsIbvExtendIbvApiInit(void)
     gIbvExtendOps.rsIbvDestroyCqExtend = (int (*)(struct ibv_context_extend *,
         struct ibv_cq_extend *))HccpDlsym(gRoceIbvExtendApiHandle, "ibv_destroy_cq_extend");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvDestroyCqExtend, "ibv_destroy_cq_extend");
+    gIbvExtendOps.rsIbvModifyQpExtend = (int (*)(struct ibv_context_extend *, struct ibv_qp_attr_extend *,
+        int))HccpDlsym(gRoceIbvExtendApiHandle, "ibv_modify_qp_extend");
+    DL_API_RET_IS_NULL_INFO(gIbvExtendOps.rsIbvModifyQpExtend, "ibv_modify_qp_extend");
+    gIbvExtendOps.rsIbvQueryQpSupportedHyroceFeature = (int (*)(struct ibv_context_extend *, struct ibv_qp *, uint32_t,
+        uint32_t, struct ibv_hyroce_feature *))HccpDlsym(gRoceIbvExtendApiHandle,
+        "ibv_query_qp_supported_hyroce_feature");
+    DL_API_RET_IS_NULL_INFO(gIbvExtendOps.rsIbvQueryQpSupportedHyroceFeature, "ibv_query_qp_supported_hyroce_feature");
+    gIbvExtendOps.rsIbvNegoQpHyroceFeature = (int (*)(struct ibv_context_extend *, struct ibv_qp *,
+        const struct ibv_hyroce_feature *, struct ibv_hyroce_feature *, uint32_t *))HccpDlsym(gRoceIbvExtendApiHandle,
+        "ibv_nego_qp_hyroce_feature");
+    DL_API_RET_IS_NULL_INFO(gIbvExtendOps.rsIbvNegoQpHyroceFeature, "ibv_nego_qp_hyroce_feature");
 #endif
     return 0;
 }
@@ -220,4 +234,39 @@ int RsIbvDestroyQpExtend(struct ibv_context_extend *context, struct ibv_qp_exten
 #endif
     }
     return gIbvExtendOps.rsIbvDestroyQpExtend(context, qpExtend);
+}
+
+int RsIbvModifyQpExtend(struct ibv_context_extend *context, struct ibv_qp_attr_extend *attr, int attr_mask)
+{
+    if (gIbvExtendOps.rsIbvModifyQpExtend == NULL) {
+#ifndef CA_CONFIG_LLT
+        hccp_warn("rsIbvModifyQpExtend is null");
+        return -EINVAL;
+#endif
+    }
+    return gIbvExtendOps.rsIbvModifyQpExtend(context, attr, attr_mask);
+}
+
+int RsIbvQueryQpSupportedHyroceFeature(struct ibv_context_extend *context, struct ibv_qp *qp, uint32_t sl, uint32_t tc,
+    struct ibv_hyroce_feature *feature)
+{
+    if (gIbvExtendOps.rsIbvQueryQpSupportedHyroceFeature == NULL) {
+#ifndef CA_CONFIG_LLT
+        hccp_warn("rsIbvQueryQpSupportedHyroceFeature is null");
+        return -EINVAL;
+#endif
+    }
+    return gIbvExtendOps.rsIbvQueryQpSupportedHyroceFeature(context, qp, sl, tc, feature);
+}
+
+int RsIbvNegoQpHyroceFeature(struct ibv_context_extend *context, struct ibv_qp *qp,
+    const struct ibv_hyroce_feature *input, struct ibv_hyroce_feature *output, uint32_t *needMoreNego)
+{
+    if (gIbvExtendOps.rsIbvNegoQpHyroceFeature == NULL) {
+#ifndef CA_CONFIG_LLT
+        hccp_warn("rsIbvNegoQpHyroceFeature is null");
+        return -EINVAL;
+#endif
+    }
+    return gIbvExtendOps.rsIbvNegoQpHyroceFeature(context, qp, input, output, needMoreNego);
 }

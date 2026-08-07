@@ -756,3 +756,35 @@ RS_ATTRI_VISI_DEF int RsNdaQpDestroy(unsigned int phyId, unsigned int rdevIndex,
     qpCb = NULL;
     return ret;
 }
+
+RS_ATTRI_VISI_DEF int RsGetQpHyperFeature(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn,
+    struct HyperFeature *hyperFeature)
+{
+    struct ibv_hyroce_feature feature = {0};
+    struct RsQpCb *qpCb = NULL;
+    int ret = 0;
+
+    CHK_PRT_RETURN(hyperFeature == NULL, hccp_warn("hyperFeature is NULL, phyId:%u", phyId), ret);
+
+    ret = RsQpn2qpcb(phyId, rdevIndex, qpn, &qpCb);
+    CHK_PRT_RETURN(ret != 0 || qpCb == NULL, hccp_warn("get qp cb unsuccessful qpn %u, ret %d", qpn, ret), ret);
+
+    if (qpCb->rdevCb->ibCtxEx == NULL) {
+        return 0;
+    }
+
+    ret = RsIbvQueryQpSupportedHyroceFeature(qpCb->rdevCb->ibCtxEx, qpCb->ibQp, qpCb->qosAttr.sl, qpCb->qosAttr.tc,
+        &feature);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_warn("RsIbvQueryQpSupportedHyroceFeature unsuccessful, qpn %u ret %d errno:%d", qpn, ret, errno), ret);
+
+    ret = memcpy_s(hyperFeature, sizeof(struct HyperFeature), &feature, sizeof(struct ibv_hyroce_feature));
+    CHK_PRT_RETURN(ret != 0,
+        hccp_warn("memcpy_s feature unsuccessful, qpn:%u ret:%d HyperFeature len:%zu "
+                  "ibv_hyroce_feature len:%zu",
+            qpn, ret, sizeof(struct HyperFeature), sizeof(struct ibv_hyroce_feature)),
+        ret);
+
+    hccp_dbg("get QpHyperFeature successful qpn %u", qpn);
+    return ret;
+}

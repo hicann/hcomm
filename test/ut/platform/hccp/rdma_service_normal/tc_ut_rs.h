@@ -165,6 +165,7 @@ void TcDlHalSetClearUserConfig();
 
 void TcRsTypicalRegisterMr();
 void TcRsTypicalQpModify();
+void TcRsGetQpHyperFeature();
 
 void Tcrs_ssl_get_cert();
 void tc_rs_ssl_X509_store_init();

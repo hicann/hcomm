@@ -164,3 +164,21 @@ int ibv_destroy_srq_extend(struct ibv_context_extend* context, struct ibv_srq_ex
 }
 
 void verbs_register_driver_extend(const struct verbs_device_extend_ops* ops) { return; }
+
+int ibv_modify_qp_extend(struct ibv_context_extend* context, struct ibv_qp_attr_extend* attr, int attr_mask)
+{
+    return 0;
+}
+
+int ibv_query_qp_supported_hyroce_feature(
+    struct ibv_context_extend* context, struct ibv_qp* qp, uint32_t sl, uint32_t tc, struct ibv_hyroce_feature* feature)
+{
+    return 0;
+}
+
+int ibv_nego_qp_hyroce_feature(
+    struct ibv_context_extend* context, struct ibv_qp* qp, const struct ibv_hyroce_feature* input,
+    struct ibv_hyroce_feature* output, uint32_t* needMoreNego)
+{
+    return 0;
+}
