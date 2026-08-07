@@ -15,6 +15,7 @@
 
 namespace hccl {
 constexpr u32 PIPELINE_NUM = 2;
+constexpr u32 PIPELINE_EXTRA_STREAM_NUM = PIPELINE_NUM;
 
 CollAllGatherPipelineFor91093Executor::CollAllGatherPipelineFor91093Executor(
     const HcclDispatcher dispatcher,
@@ -49,7 +50,7 @@ HcclResult CollAllGatherPipelineFor91093Executor::CalcStreamNum(u32& streamNum)
     // 为三级流水线增加额外的流
     // 从流用于L2，主流用于L1 + L0
     // 新增从流中，一条用于L2流水线，一条用于多申请2个notify，共新增4个notify用于两块内存的主从流之间的同步
-    totalStreamNum += 2;
+    totalStreamNum += PIPELINE_EXTRA_STREAM_NUM;
 
     streamNum = totalStreamNum - 1;
     HCCL_INFO("[CollAllGatherPipelineFor91093Executor][CalcStreamNum] tag[%s] streamNum[%u]",
@@ -140,7 +141,7 @@ HcclResult CollAllGatherPipelineFor91093Executor::Orchestrate(
     mainStreamL1L0_ = param.stream;
     subStreams_ = algResResp_->slaveStreams;
     mainStreamL2_ = subStreams_.back();
-    const u32 baseStreamNum = algResResp_->slaveStreams.size() - PIPELINE_NUM;
+    const u32 baseStreamNum = algResResp_->slaveStreams.size() - PIPELINE_EXTRA_STREAM_NUM;
     notifyL1L0ToL2A_ = algResResp_->notifiesAux[baseStreamNum];
     notifyL1L0ToL2B_ = algResResp_->notifiesAux[baseStreamNum + 1];
     notifyL2ToL1L0A_ = algResResp_->notifiesMain[baseStreamNum];
@@ -148,9 +149,11 @@ HcclResult CollAllGatherPipelineFor91093Executor::Orchestrate(
     HCCL_INFO("[CollAllGatherPipelineFor91093Executor][RunLoop] NotifyIds: "
         "L1L0ToL2A: Aux[%u], L1L0ToL2B: Aux[%u], L2ToL1L0A: Main[%u], L2ToL1L0B: Main[%u]",
        baseStreamNum, baseStreamNum + 1, baseStreamNum, baseStreamNum + 1);
-    notifyRingMain_.assign(algResResp_->notifiesMain.begin(), algResResp_->notifiesMain.end() - PIPELINE_NUM);
-    notifyRingSub_.assign(algResResp_->notifiesAux.begin(), algResResp_->notifiesAux.end() - PIPELINE_NUM);
-    ringSubStreams_.assign(subStreams_.begin(), subStreams_.end() - PIPELINE_NUM);
+    notifyRingMain_.assign(
+        algResResp_->notifiesMain.begin(), algResResp_->notifiesMain.end() - PIPELINE_EXTRA_STREAM_NUM);
+    notifyRingSub_.assign(
+        algResResp_->notifiesAux.begin(), algResResp_->notifiesAux.end() - PIPELINE_EXTRA_STREAM_NUM);
+    ringSubStreams_.assign(subStreams_.begin(), subStreams_.end() - PIPELINE_EXTRA_STREAM_NUM);
 
     // 计算通信域信息和内存类型
     unitSize_ = SIZE_TABLE[param.DataDes.dataType];
@@ -554,7 +557,8 @@ HcclResult CollAllGatherPipelineFor91093Executor::GetSubStreamInfoOnOneRing(cons
                                          std::vector<std::shared_ptr<LocalNotify>> &mainSignalsInOneRing,
                                          std::vector<std::shared_ptr<LocalNotify>> &subSignalsInOneRing)
 {
-    u32 ringNum = algResResp_->slaveStreams.size() - 1;
+    // slaveStreams 不包含主流，先 +1 补回主流，再减去 2 条 Pipeline 专用流，得到基类 ring 数。
+    const u32 ringNum = algResResp_->slaveStreams.size() + 1 - PIPELINE_EXTRA_STREAM_NUM;
     if (ringNum == LEVEL0_PLANE_NUM_IN_NPRING_DOUBLE * STREAM_NUM_FOR_DMAREDUCE_ONE_RING) {
         subStreamsInOneRing.push_back(algResResp_->slaveStreams[ringIndex + 1]);
         mainSignalsInOneRing.push_back(algResResp_->notifiesMain[ringIndex + 1]);

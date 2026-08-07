@@ -246,7 +246,7 @@ HcclResult CollReduceScatterPipelineFor91093Executor::GetLevel2CommInfo(
 
 u32 CollReduceScatterPipelineFor91093Executor::GetLevel0RingNum() const
 {
-    // 排除尾部 Pipeline 专用资源后，与基类 ring 数语义一致。
+    // slaveStreams 不包含主流，先 +1 补回主流，再减去 2 条 Pipeline 专用流，得到基类 ring 数。
     return algResResp_->slaveStreams.size() + 1 - PIPELINE_EXTRA_STREAM_NUM;
 }
 
