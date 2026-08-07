@@ -93,6 +93,7 @@ private:
     HcclResult CreateQp();
     HcclResult ExchangeData();
     HcclResult ModifyQp();
+    HcclResult SyncAfterModifyQp();
 
     void NotifyVecPack(Hccl::BinaryStream& binaryStream);
     HcclResult BufferVecPack(Hccl::BinaryStream& binaryStream);

@@ -166,6 +166,7 @@ using QpInfo = struct QpInfoDef {
     u32 retryCnt = 0;
     u32 retryInterval = 0;
     s32 lbValue = -1; // 支持负载均衡（lbmax > 0）的网卡才会更新该值
+    u32 udpSport = 0;
     QpInfoDef()
         : rdmaHandle(nullptr),
           qpHandle(nullptr),

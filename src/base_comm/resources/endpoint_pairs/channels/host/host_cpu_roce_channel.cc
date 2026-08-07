@@ -26,6 +26,8 @@
 #include "sal.h"
 #include "adapter_hccp.h"
 #include "binary_stream.h"
+#include "env_config/env_config.h"
+#include "env_config/env_func.h"
 #include "../../../../../legacy/ascend910/platform/resource/notify/notify_pool_impl.h"
 #include "../../../../../base_comm/resources/hccp/inc/network/hccp_common.h"
 #include "dlprof_function.h"
@@ -195,16 +197,21 @@ HcclResult HostCpuRoceChannel::BuildSocket()
 HcclResult HostCpuRoceChannel::BuildConnection()
 {
     u32 loopTimes = 0;
-    if (lbMax_ > 0) {
-        if (channelDesc_.roceAttr.queueNum == 1) {
-            loopTimes = lbMax_;
-        } else {
-            loopTimes = channelDesc_.roceAttr.queueNum;
-        }
+    if (lbMax_ > 0 && channelDesc_.roceAttr.queueNum == 1) { // 1825场景且默认qp数量
+        loopTimes = lbMax_;
     } else {
         loopTimes = channelDesc_.roceAttr.queueNum;
     }
-
+    std::vector<u16> srcPorts;
+    if (!channelDesc_.exchangeAllMems) { // hixl场景填0
+        const auto& qpSrcPortConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig();
+        if (qpSrcPortConfig.IsAvailable()) {
+            Hccl::IpAddress localIp, remoteIp;
+            (void)CommAddrToIpAddress(localEp_.commAddr, localIp);
+            (void)CommAddrToIpAddress(remoteEp_.commAddr, remoteIp);
+            srcPorts = Hccl::GetMultiQpSrcPortsByIpPair(qpSrcPortConfig, localIp, remoteIp);
+        }
+    }
     for (u32 i = 0; i < loopTimes; i++) {
         std::unique_ptr<HostRdmaConnection> conn;
         EXCEPTION_CATCH(conn = std::make_unique<HostRdmaConnection>(socket_, rdmaHandle_), return HCCL_E_INTERNAL);
@@ -218,10 +225,14 @@ HcclResult HostCpuRoceChannel::BuildConnection()
         qpInfo.trafficClass = channelDesc_.roceAttr.tc;
         qpInfo.retryCnt = channelDesc_.roceAttr.retryCnt;
         qpInfo.retryInterval = channelDesc_.roceAttr.retryInterval;
+        qpInfo.udpSport = (!channelDesc_.exchangeAllMems && !srcPorts.empty()) ?
+                              static_cast<u32>(srcPorts[i % srcPorts.size()]) :
+                              0;
         HCCL_INFO(
             "[HostCpuRoceChannel::BuildConnection] QpInfo[%u]: lbValue[%u], serviceLevel[%u], trafficClass[%u], "
-            "retryCnt[%u], retryInterval[%u].",
-            i, qpInfo.lbValue, qpInfo.serviceLevel, qpInfo.trafficClass, qpInfo.retryCnt, qpInfo.retryInterval);
+            "retryCnt[%u], retryInterval[%u], udpSport[%u].",
+            i, qpInfo.lbValue, qpInfo.serviceLevel, qpInfo.trafficClass, qpInfo.retryCnt, qpInfo.retryInterval,
+            qpInfo.udpSport);
         connections_.emplace_back(std::move(conn));
     }
     connNum_ = connections_.size();
@@ -286,6 +297,30 @@ HcclResult HostCpuRoceChannel::ProcessStatus()
     }
 }
 
+HcclResult HostCpuRoceChannel::SyncAfterModifyQp()
+{
+    EXCEPTION_HANDLE_BEGIN
+    // 告知对端ModifyQp完成
+    uint8_t sendFlag = 1;
+    CHK_PRT_RET(
+        !socket_->Send(reinterpret_cast<void*>(&sendFlag), sizeof(sendFlag)),
+        HCCL_ERROR("[HostCpuRoceChannel::%s] Send sendFlag failed", __func__), HCCL_E_NETWORK);
+    HCCL_INFO(
+        "[HostCpuRoceChannel::%s] Send sendFlag[%u] of data success. [%llu] bytes sent.", __func__, sendFlag,
+        sizeof(sendFlag));
+
+    // 等待对端ModifyQp完成
+    uint8_t recvFlag = 0;
+    CHK_PRT_RET(
+        !socket_->Recv(reinterpret_cast<void*>(&recvFlag), sizeof(recvFlag)),
+        HCCL_ERROR("[HostCpuRoceChannel::%s] Recv recvFlag failed", __func__), HCCL_E_NETWORK);
+    HCCL_INFO(
+        "[HostCpuRoceChannel::%s] Receive recvFlag[%u] of data success. [%llu] bytes received.", __func__, recvFlag,
+        sizeof(recvFlag));
+    EXCEPTION_HANDLE_END
+    return HCCL_SUCCESS;
+}
+
 HcclResult HostCpuRoceChannel::GetStatus(ChannelStatus& status)
 {
     switch (rdmaStatus_) {
@@ -323,6 +358,7 @@ HcclResult HostCpuRoceChannel::GetStatus(ChannelStatus& status)
             // modify完就不需要再轮询状态了，直接向下走准备Rqe的流程。
             [[fallthrough]];
         case RdmaStatus::QP_MODIFIED:
+            CHK_RET(SyncAfterModifyQp());
             // Prepare Rqes
             if (!isHybridMode_) {
                 for (uint32_t i = 0; i < SEND_RQE_COUNT; ++i) {

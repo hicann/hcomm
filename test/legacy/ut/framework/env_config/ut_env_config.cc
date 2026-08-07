@@ -619,3 +619,188 @@ TEST_F(EnvConfigTest, Ut_EnvPlfDebugConfig_When_CaseInsensitive_Expect_SameResul
     EXPECT_EQ(plfCfg.GetConfigValue(), PLF_TASK);
     unsetenv("HCCL_DEBUG_CONFIG");
 }
+
+// ==================== E1-E7: HCCL_RDMA_QP_PORT_CONFIG_PATH ====================
+// These cases use real filesystem (mkdtemp, write cfg file) so realpath is NOT mocked.
+// They follow the same setenv/unsetenv pattern as other EnvRdmaConfig tests above.
+static std::string CreateTempDirForQpPort()
+{
+    char tpl[] = "/tmp/hcomm_ut_qpport_XXXXXX";
+    char* dir = mkdtemp(tpl);
+    return (dir != nullptr) ? std::string(dir) : "";
+}
+
+static void RemoveDirRecursive(const std::string& dir)
+{
+    std::string cmd = "rm -rf " + dir;
+    (void)system(cmd.c_str());
+}
+
+static void WriteCfgFile(const std::string& dir, const std::string& content)
+{
+    std::string filePath = dir + "/MultiQpSrcPort.cfg";
+    std::ofstream out(filePath.c_str(), std::ofstream::out);
+    out << content;
+    out.close();
+}
+
+// E1: 环境变量未设置 → GetMultiQpSrcPortConfig().IsAvailable()==false
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigGetMultiQpSrcPortConfig_When_EnvNotSet_Expect_NotAvailable)
+{
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+    EnvRdmaConfig rdmaConfig;
+    rdmaConfig.Parse();
+    EXPECT_FALSE(rdmaConfig.GetMultiQpSrcPortConfig().IsAvailable());
+    EXPECT_TRUE(rdmaConfig.GetMultiQpSrcPortConfig().configDirPath.empty());
+}
+
+// E2: 环境变量设为空字符串 → 同 E1
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigGetMultiQpSrcPortConfig_When_EnvSetEmpty_Expect_NotAvailable)
+{
+    setenv("HCCL_RDMA_QP_PORT_CONFIG_PATH", "", 1);
+    EnvRdmaConfig rdmaConfig;
+    rdmaConfig.Parse();
+    EXPECT_FALSE(rdmaConfig.GetMultiQpSrcPortConfig().IsAvailable());
+    EXPECT_TRUE(rdmaConfig.GetMultiQpSrcPortConfig().configDirPath.empty());
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+}
+
+// E3: 环境变量指向有效目录+合法 cfg 文件 → IsAvailable()==true, ipPairToPorts 非空
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigGetMultiQpSrcPortConfig_When_ValidDirWithCfgFile_Expect_Available)
+{
+    std::string tmpDir = CreateTempDirForQpPort();
+    ASSERT_FALSE(tmpDir.empty());
+    WriteCfgFile(tmpDir, "192.168.1.1,192.168.1.2=10001,10002\n");
+
+    setenv("HCCL_RDMA_QP_PORT_CONFIG_PATH", tmpDir.c_str(), 1);
+    EnvRdmaConfig rdmaConfig;
+    rdmaConfig.Parse();
+    EXPECT_TRUE(rdmaConfig.GetMultiQpSrcPortConfig().IsAvailable());
+    EXPECT_EQ(rdmaConfig.GetMultiQpSrcPortConfig().ipPairToPorts.size(), 1u);
+    EXPECT_NE(
+        rdmaConfig.GetMultiQpSrcPortConfig().ipPairToPorts.find("192.168.1.1,192.168.1.2"),
+        rdmaConfig.GetMultiQpSrcPortConfig().ipPairToPorts.end());
+
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+    RemoveDirRecursive(tmpDir);
+}
+
+// E4: 环境变量指向有效目录+空 cfg 文件 → IsAvailable()==false
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigGetMultiQpSrcPortConfig_When_ValidDirButEmptyCfg_Expect_NotAvailable)
+{
+    std::string tmpDir = CreateTempDirForQpPort();
+    ASSERT_FALSE(tmpDir.empty());
+    WriteCfgFile(tmpDir, "");
+
+    setenv("HCCL_RDMA_QP_PORT_CONFIG_PATH", tmpDir.c_str(), 1);
+    EnvRdmaConfig rdmaConfig;
+    rdmaConfig.Parse();
+    EXPECT_FALSE(rdmaConfig.GetMultiQpSrcPortConfig().IsAvailable());
+
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+    RemoveDirRecursive(tmpDir);
+}
+
+// E5: 环境变量指向不存在的路径 → CfgField SetRealPath postProc 抛 InvalidParamsException
+// Note: ParseMultiQpSrcPortConfig catches exceptions internally, so Parse() won't throw.
+// Instead, the CfgField's SetRealPath postProc runs before ParseMultiQpSrcPortConfig.
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigParse_When_InvalidPath_Expect_Throw)
+{
+    setenv("HCCL_RDMA_QP_PORT_CONFIG_PATH", "/nonexistent/path/for/ut/test", 1);
+    EnvRdmaConfig rdmaConfig;
+    EXPECT_THROW(rdmaConfig.Parse(), InvalidParamsException);
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+}
+
+// E6: 环境变量长度 >= PATH_MAX → CfgField CheckFilePath validate 抛 InvalidParamsException
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigParse_When_PathTooLong_Expect_Throw)
+{
+    std::string longPath(PATH_MAX, 'a');
+    setenv("HCCL_RDMA_QP_PORT_CONFIG_PATH", longPath.c_str(), 1);
+    EnvRdmaConfig rdmaConfig;
+    EXPECT_THROW(rdmaConfig.Parse(), InvalidParamsException);
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+}
+
+// E7: 环境变量指向有效目录，但 cfg 文件内容格式错误 → Parse() 不抛异常（内部 catch），
+// 但 IsAvailable()==false（解析失败后 multiQpSrcPortConfig_ 保持默认空值）
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigParse_When_ValidDirButCfgFileMalformed_Expect_NotAvailable)
+{
+    std::string tmpDir = CreateTempDirForQpPort();
+    ASSERT_FALSE(tmpDir.empty());
+    WriteCfgFile(tmpDir, "this_is_not_a_valid_config_line\n");
+
+    setenv("HCCL_RDMA_QP_PORT_CONFIG_PATH", tmpDir.c_str(), 1);
+    EnvRdmaConfig rdmaConfig;
+    EXPECT_NO_THROW(rdmaConfig.Parse());
+    EXPECT_FALSE(rdmaConfig.GetMultiQpSrcPortConfig().IsAvailable());
+
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+    RemoveDirRecursive(tmpDir);
+}
+
+// E8: 单行源端口数 > 32 → 解析失败，IsAvailable()==false
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigParse_When_SrcPortCountExceedsMax_Expect_NotAvailable)
+{
+    std::string tmpDir = CreateTempDirForQpPort();
+    ASSERT_FALSE(tmpDir.empty());
+    std::string ports = "192.168.1.1,192.168.1.2=10001";
+    for (u32 i = 2; i <= 33; i++) {
+        ports += "," + std::to_string(10000 + i);
+    }
+    WriteCfgFile(tmpDir, ports + "\n");
+
+    setenv("HCCL_RDMA_QP_PORT_CONFIG_PATH", tmpDir.c_str(), 1);
+    EnvRdmaConfig rdmaConfig;
+    EXPECT_NO_THROW(rdmaConfig.Parse());
+    EXPECT_FALSE(rdmaConfig.GetMultiQpSrcPortConfig().IsAvailable());
+
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+    RemoveDirRecursive(tmpDir);
+}
+
+// E9: 单行源端口数恰好 32（边界值）→ 解析成功
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigParse_When_SrcPortCountExactlyMax_Expect_Available)
+{
+    std::string tmpDir = CreateTempDirForQpPort();
+    ASSERT_FALSE(tmpDir.empty());
+    std::string ports = "192.168.1.1,192.168.1.2=10001";
+    for (u32 i = 2; i <= 32; i++) {
+        ports += "," + std::to_string(10000 + i);
+    }
+    WriteCfgFile(tmpDir, ports + "\n");
+
+    setenv("HCCL_RDMA_QP_PORT_CONFIG_PATH", tmpDir.c_str(), 1);
+    EnvRdmaConfig rdmaConfig;
+    rdmaConfig.Parse();
+    EXPECT_TRUE(rdmaConfig.GetMultiQpSrcPortConfig().IsAvailable());
+    EXPECT_EQ(rdmaConfig.GetMultiQpSrcPortConfig().ipPairToPorts.size(), 1u);
+    EXPECT_EQ(rdmaConfig.GetMultiQpSrcPortConfig().ipPairToPorts.begin()->second.size(), 32u);
+
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+    RemoveDirRecursive(tmpDir);
+}
+
+// E10: 配置文件行数达到上限 131072 → 截断，第 131073 行不被解析
+TEST_F(EnvConfigTest, Ut_EnvRdmaConfigParse_When_LineCountReachesMax_Expect_Truncated)
+{
+    std::string tmpDir = CreateTempDirForQpPort();
+    ASSERT_FALSE(tmpDir.empty());
+    std::string content(MultiQpSrcPortConfig::CONFIG_FILE_LINE_MAX - 2, '\n');
+    content += "192.168.1.1,192.168.1.2=10001\n";
+    content += "192.168.1.3,192.168.1.4=10002\n";
+    content += "192.168.1.5,192.168.1.6=10003\n";
+    WriteCfgFile(tmpDir, content);
+
+    setenv("HCCL_RDMA_QP_PORT_CONFIG_PATH", tmpDir.c_str(), 1);
+    EnvRdmaConfig rdmaConfig;
+    rdmaConfig.Parse();
+    EXPECT_TRUE(rdmaConfig.GetMultiQpSrcPortConfig().IsAvailable());
+    EXPECT_EQ(rdmaConfig.GetMultiQpSrcPortConfig().ipPairToPorts.size(), 2u);
+    EXPECT_EQ(
+        rdmaConfig.GetMultiQpSrcPortConfig().ipPairToPorts.find("192.168.1.5,192.168.1.6"),
+        rdmaConfig.GetMultiQpSrcPortConfig().ipPairToPorts.end());
+
+    unsetenv("HCCL_RDMA_QP_PORT_CONFIG_PATH");
+    RemoveDirRecursive(tmpDir);
+}

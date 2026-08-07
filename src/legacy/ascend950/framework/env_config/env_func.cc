@@ -895,8 +895,9 @@ void CheckExecTimeOut(const u32& timeOut)
 void CheckFilePath(const string& filePath)
 {
     if (filePath.length() >= (PATH_MAX) || filePath.length() == 0) {
-        THROW<InvalidParamsException>(
-            StringFormat("env[HCCL_WHITELIST_FILE] is invalid, len is %u, should be (0,4096)", filePath.length()));
+        THROW<InvalidParamsException>(StringFormat(
+            "env[HCCL_WHITELIST_FILE] or env[HCCL_RDMA_QP_PORT_CONFIG_PATH] is invalid, len is %u, should be (0,4096)",
+            filePath.length()));
     }
 }
 
@@ -956,6 +957,51 @@ HcclDetourType CastDetourType(const std::string& s)
                                                 " detour:1 and detour:0 or not set."));
     }
     return HcclDetourType::HCCL_DETOUR_DISABLE;
+}
+
+/*----------------------- multi qp src port config --------------------------*/
+std::vector<std::uint16_t>
+GetMultiQpSrcPortsByIpPair(const MultiQpSrcPortConfig& config, const IpAddress& srcIp, const IpAddress& dstIp)
+{
+    if (!config.IsAvailable()) {
+        return {};
+    }
+
+    std::string srcIpStr = srcIp.GetIpStr();
+    std::string dstIpStr = dstIp.GetIpStr();
+    bool isIpv4 = (srcIp.GetFamily() == AF_INET);
+
+    std::string key = srcIpStr + "," + dstIpStr;
+    auto it = config.ipPairToPorts.find(key);
+    if (it != config.ipPairToPorts.end()) {
+        return it->second;
+    }
+
+    key = (isIpv4 ? "0.0.0.0," : "::,") + dstIpStr;
+    it = config.ipPairToPorts.find(key);
+    if (it != config.ipPairToPorts.end()) {
+        return it->second;
+    }
+
+    key = srcIpStr + (isIpv4 ? ",0.0.0.0" : ",::");
+    it = config.ipPairToPorts.find(key);
+    if (it != config.ipPairToPorts.end()) {
+        return it->second;
+    }
+
+    key = isIpv4 ? "0.0.0.0,0.0.0.0" : "::,::";
+    it = config.ipPairToPorts.find(key);
+    if (it != config.ipPairToPorts.end()) {
+        return it->second;
+    }
+
+    return {};
+}
+
+u32 GetMultiQpPortsNumByIpPair(const MultiQpSrcPortConfig& config, const IpAddress& srcIp, const IpAddress& dstIp)
+{
+    auto ports = GetMultiQpSrcPortsByIpPair(config, srcIp, dstIp);
+    return static_cast<u32>(ports.size());
 }
 
 } // namespace Hccl

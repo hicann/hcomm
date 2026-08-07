@@ -1,3 +1,13 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
 #include "gtest/gtest.h"
 #include "mockcpp/mokc.h"
 #include <mockcpp/mockcpp.hpp>
@@ -21,6 +31,10 @@
 #include "hcomm_res.h"
 #include "hcomm_c_adpt.h"
 #include "exchange_rdma_buffer_dto.h"
+
+#include "env_config/env_config.h"
+#include "env_config/env_func.h"
+#include "orion_adpt_utils.h"
 
 #define private public
 using namespace hcomm;
@@ -2107,4 +2121,127 @@ TEST_F(HostCpuRoceChannelTest, Ut_GetRemoteMems_When_UserBuffersExist_Expect_Suc
 
     ASSERT_NE(remoteMem, nullptr);
     ASSERT_NE(memInfos, nullptr);
+}
+
+static void SetupBcMocks() { MOCKER_CPP(&HostRdmaConnection::Init).stubs().will(returnValue(HCCL_SUCCESS)); }
+
+TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_ConfigNotAvailable_Expect_AllUdpSportZero)
+{
+    SetupBcMocks();
+    Hccl::EnvConfig::GetInstance().rdmaCfg.multiQpSrcPortConfig_.ipPairToPorts.clear();
+
+    auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
+    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
+    impl->localEp_ = localEpPtr->GetEndpointDesc();
+    impl->remoteEp_ = channelDesc.remoteEndpoint;
+    impl->lbMax_ = 0;
+    impl->channelDesc_.roceAttr.queueNum = 2;
+    impl->socket_ = fakeSocket;
+    impl->rdmaHandle_ = (void*)0x1000000;
+
+    EXPECT_EQ(impl->BuildConnection(), HCCL_SUCCESS);
+    ASSERT_EQ(impl->connections_.size(), 2u);
+    EXPECT_EQ(impl->connections_[0]->qpInfo_.udpSport, 0u);
+    EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 0u);
+}
+
+TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_ConfigAvailableButNoIpMatch_Expect_AllUdpSportZero)
+{
+    SetupBcMocks();
+    auto& portMap = Hccl::EnvConfig::GetInstance().rdmaCfg.multiQpSrcPortConfig_.ipPairToPorts;
+    portMap.clear();
+    portMap["3.0.0.0,4.0.0.0"] = {10001};
+
+    auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
+    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
+    impl->localEp_ = localEpPtr->GetEndpointDesc();
+    impl->remoteEp_ = channelDesc.remoteEndpoint;
+    impl->lbMax_ = 0;
+    impl->channelDesc_.roceAttr.queueNum = 2;
+    impl->socket_ = fakeSocket;
+    impl->rdmaHandle_ = (void*)0x1000000;
+
+    EXPECT_EQ(impl->BuildConnection(), HCCL_SUCCESS);
+    ASSERT_EQ(impl->connections_.size(), 2u);
+    EXPECT_EQ(impl->connections_[0]->qpInfo_.udpSport, 0u);
+    EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 0u);
+
+    portMap.clear();
+}
+
+TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_PortsCountLessThanLoopTimes_Expect_CycleExpand)
+{
+    SetupBcMocks();
+    auto& portMap = Hccl::EnvConfig::GetInstance().rdmaCfg.multiQpSrcPortConfig_.ipPairToPorts;
+    portMap.clear();
+    portMap["1.0.0.0,2.0.0.0"] = {10001, 10002};
+
+    auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
+    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
+    impl->localEp_ = localEpPtr->GetEndpointDesc();
+    impl->remoteEp_ = channelDesc.remoteEndpoint;
+    impl->lbMax_ = 0;
+    impl->channelDesc_.roceAttr.queueNum = 4;
+    impl->socket_ = fakeSocket;
+    impl->rdmaHandle_ = (void*)0x1000000;
+
+    EXPECT_EQ(impl->BuildConnection(), HCCL_SUCCESS);
+    ASSERT_EQ(impl->connections_.size(), 4u);
+    EXPECT_EQ(impl->connections_[0]->qpInfo_.udpSport, 10001u);
+    EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 10002u);
+    EXPECT_EQ(impl->connections_[2]->qpInfo_.udpSport, 10001u);
+    EXPECT_EQ(impl->connections_[3]->qpInfo_.udpSport, 10002u);
+
+    portMap.clear();
+}
+
+TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_CommAddrToIpFail_Expect_AllUdpSportZero)
+{
+    SetupBcMocks();
+    auto& portMap = Hccl::EnvConfig::GetInstance().rdmaCfg.multiQpSrcPortConfig_.ipPairToPorts;
+    portMap.clear();
+    portMap["1.0.0.0,2.0.0.0"] = {10001};
+    MOCKER(CommAddrToIpAddress).stubs().will(returnValue(HCCL_E_NOT_SUPPORT));
+
+    auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
+    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
+    impl->localEp_ = localEpPtr->GetEndpointDesc();
+    impl->remoteEp_ = channelDesc.remoteEndpoint;
+    impl->lbMax_ = 0;
+    impl->channelDesc_.roceAttr.queueNum = 2;
+    impl->socket_ = fakeSocket;
+    impl->rdmaHandle_ = (void*)0x1000000;
+
+    EXPECT_EQ(impl->BuildConnection(), HCCL_SUCCESS);
+    ASSERT_EQ(impl->connections_.size(), 2u);
+    EXPECT_EQ(impl->connections_[0]->qpInfo_.udpSport, 0u);
+    EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 0u);
+
+    portMap.clear();
+}
+
+// BC5: exchangeAllMems=true（hixl场景）→ 即使 config 可用且 IP 匹配，udpSport 仍为 0
+TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_ExchangeAllMemsTrue_Expect_AllUdpSportZero)
+{
+    SetupBcMocks();
+    auto& portMap = Hccl::EnvConfig::GetInstance().rdmaCfg.multiQpSrcPortConfig_.ipPairToPorts;
+    portMap.clear();
+    portMap["1.0.0.0,2.0.0.0"] = {10001, 10002};
+
+    auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
+    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
+    impl->localEp_ = localEpPtr->GetEndpointDesc();
+    impl->remoteEp_ = channelDesc.remoteEndpoint;
+    impl->lbMax_ = 0;
+    impl->channelDesc_.roceAttr.queueNum = 2;
+    impl->channelDesc_.exchangeAllMems = true;
+    impl->socket_ = fakeSocket;
+    impl->rdmaHandle_ = (void*)0x1000000;
+
+    EXPECT_EQ(impl->BuildConnection(), HCCL_SUCCESS);
+    ASSERT_EQ(impl->connections_.size(), 2u);
+    EXPECT_EQ(impl->connections_[0]->qpInfo_.udpSport, 0u);
+    EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 0u);
+
+    portMap.clear();
 }

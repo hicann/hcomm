@@ -9,6 +9,8 @@
  */
 #include "base_config.h"
 #include <fstream>
+#include <algorithm>
+#include <array>
 #include "log.h"
 
 namespace Hccl {
@@ -135,6 +137,223 @@ void EnvRdmaConfig::Parse()
     HCCL_RUN_INFO(
         "[HCCL_ENV] HCCL_MULTI_QP_THRESHOLD set by %s to [%u]B", multiQpThreshold.GetSource(),
         GetRdmaMultiQpThreshold());
+
+    qpPortConfigPath.Parse();
+    HCCL_RUN_INFO(
+        "[HCCL_ENV] HCCL_RDMA_QP_PORT_CONFIG_PATH set by %s to [%s]", qpPortConfigPath.GetSource(),
+        qpPortConfigPath.Get().c_str());
+    ParseMultiQpSrcPortConfig();
+}
+
+HcclResult EnvRdmaConfig::OpenMultiQpConfigFile(std::ifstream& inFile)
+{
+    std::string fileStr = qpPortConfigPath.Get() + "/MultiQpSrcPort.cfg";
+    std::array<char, PATH_MAX> realFile{};
+    if (realpath(fileStr.c_str(), realFile.data()) == nullptr) {
+        HCCL_ERROR("[EnvRdmaConfig][OpenMultiQpConfigFile] config file path[%s] is invalid.", fileStr.c_str());
+        return HCCL_E_PARA;
+    }
+
+    inFile.open(fileStr.c_str(), std::ifstream::in);
+    if (!inFile) {
+        HCCL_ERROR("[EnvRdmaConfig][OpenMultiQpConfigFile] open config file[%s] failed.", fileStr.c_str());
+        return HCCL_E_PARA;
+    }
+    HCCL_INFO("[EnvRdmaConfig][OpenMultiQpConfigFile] open config file[%s] success.", fileStr.c_str());
+    return HCCL_SUCCESS;
+}
+
+HcclResult EnvRdmaConfig::ParseConfigContent(std::ifstream& inFile, MultiQpSrcPortConfig& config)
+{
+    config.configDirPath = qpPortConfigPath.Get();
+    u32 lineCnt = 1;
+    std::string line;
+    while (std::getline(inFile, line)) {
+        std::string lineAvator = line;
+        line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+        line.erase(std::remove(line.begin(), line.end(), '\t'), line.end());
+        auto hashPos = line.find('#');
+        std::string lineInfo = (hashPos != std::string::npos) ? line.substr(0, hashPos) : line;
+        if (lineInfo.empty()) {
+            lineCnt++;
+            continue;
+        }
+
+        std::string ipPairKey, portPart;
+        HcclResult ret = ParseLineToIpPairAndPortPart(lineInfo, lineCnt, lineAvator, ipPairKey, portPart);
+        if (ret != HCCL_SUCCESS) {
+            return ret;
+        }
+        std::vector<std::uint16_t> ports;
+        ret = ParseSrcPortsFromPortPart(portPart, lineCnt, lineAvator, ports);
+        if (ret != HCCL_SUCCESS) {
+            return ret;
+        }
+        CHK_PRT_RET(
+            config.ipPairToPorts.find(ipPairKey) != config.ipPairToPorts.end(),
+            HCCL_ERROR(
+                "[MulQpInfo][ParseSrcPortsFromString][line: %u] ip pair[%s] already exists.[%s]", lineCnt,
+                ipPairKey.c_str(), lineAvator.c_str()),
+            HCCL_E_PARA);
+        config.ipPairToPorts[ipPairKey] = ports;
+        if (lineCnt >= MultiQpSrcPortConfig::CONFIG_FILE_LINE_MAX) {
+            HCCL_RUN_INFO("config file is too large, stop parsing at line %u.", lineCnt);
+            break;
+        }
+        lineCnt++;
+    }
+    return HCCL_SUCCESS;
+}
+
+void EnvRdmaConfig::ParseMultiQpSrcPortConfig()
+{
+    if (!qpPortConfigPath.IsSetByEnvironment() || qpPortConfigPath.Get().empty()) {
+        return;
+    }
+    try {
+        std::ifstream inFile;
+        CHK_PRT_THROW(
+            OpenMultiQpConfigFile(inFile) != HCCL_SUCCESS,
+            HCCL_ERROR("[EnvRdmaConfig][Parse] open multi qp src port config file failed."), InvalidParamsException,
+            "open config file fail.");
+
+        MultiQpSrcPortConfig config;
+        CHK_PRT_THROW(
+            ParseConfigContent(inFile, config) != HCCL_SUCCESS,
+            HCCL_ERROR("[EnvRdmaConfig][Parse] parse multi qp src port config content failed."), InvalidParamsException,
+            "parse config content fail.");
+
+        inFile.close();
+        multiQpSrcPortConfig_ = config;
+        LogMultiQpSrcPortConfig();
+    } catch (const HcclException& e) {
+        HCCL_ERROR("[EnvRdmaConfig][Parse] LoadMultiQpSrcPortConfig failed: %s", e.what());
+    } catch (const std::exception& e) {
+        HCCL_ERROR("[EnvRdmaConfig][Parse] LoadMultiQpSrcPortConfig failed: %s", e.what());
+    }
+}
+
+HcclResult EnvRdmaConfig::ParseLineToIpPairAndPortPart(
+    const std::string& lineInfo, u32 lineCnt, const std::string& lineAvator, std::string& ipPairKey,
+    std::string& portPart)
+{
+    auto eqPos = lineInfo.find('=');
+    CHK_PRT_RET(
+        eqPos == std::string::npos || eqPos == 0 || eqPos == lineInfo.size() - 1,
+        HCCL_ERROR(
+            "[MulQpInfo][ParseSrcPortsFromString][line: %u]Expected format: "
+            "'srcIP,dstIP=srcPort0,srcPort1,...'.[%s]",
+            lineCnt, lineAvator.c_str()),
+        HCCL_E_PARA);
+    CHK_PRT_RET(
+        lineInfo.find('=', eqPos + 1) != std::string::npos,
+        HCCL_ERROR(
+            "[MulQpInfo][ParseSrcPortsFromString][line: %u]Expected format: "
+            "'srcIP,dstIP=srcPort0,srcPort1,...'.[%s]",
+            lineCnt, lineAvator.c_str()),
+        HCCL_E_PARA);
+    std::string ipPart = lineInfo.substr(0, eqPos);
+    portPart = lineInfo.substr(eqPos + 1);
+
+    auto commaPos = ipPart.find(',');
+    CHK_PRT_RET(
+        commaPos == std::string::npos,
+        HCCL_ERROR(
+            "[MulQpInfo][ParseSrcPortsFromString][line: %u] IP pair format error, "
+            "expected 'srcIP,dstIP'.[%s]",
+            lineCnt, lineAvator.c_str()),
+        HCCL_E_PARA);
+    CHK_PRT_RET(
+        ipPart.find(',', commaPos + 1) != std::string::npos,
+        HCCL_ERROR(
+            "[MulQpInfo][ParseSrcPortsFromString][line: %u] IP pair format error, "
+            "expected 'srcIP,dstIP'.[%s]",
+            lineCnt, lineAvator.c_str()),
+        HCCL_E_PARA);
+
+    IpAddress srcIpAddr, dstIpAddr;
+    try {
+        srcIpAddr = IpAddress(ipPart.substr(0, commaPos));
+        dstIpAddr = IpAddress(ipPart.substr(commaPos + 1));
+    } catch (const InvalidParamsException& e) {
+        HCCL_ERROR(
+            "[MulQpInfo][ParseSrcPortsFromString][line: %u] IP format error: %s.[%s]", lineCnt, e.what(),
+            lineAvator.c_str());
+        return HCCL_E_PARA;
+    }
+
+    ipPairKey = srcIpAddr.GetIpStr() + "," + dstIpAddr.GetIpStr();
+    return HCCL_SUCCESS;
+}
+
+HcclResult EnvRdmaConfig::ParseSrcPortsFromPortPart(
+    const std::string& portPart, u32 lineCnt, const std::string& lineAvator, std::vector<std::uint16_t>& ports)
+{
+    std::size_t start = 0;
+    while (true) {
+        auto p = portPart.find(',', start);
+        std::string token = (p != std::string::npos) ? portPart.substr(start, p - start) : portPart.substr(start);
+
+        CHK_PRT_RET(
+            token.empty(),
+            HCCL_ERROR(
+                "[MulQpInfo][ParseSrcPortsFromString][line: %u]src port[%s] is empty.[%s]", lineCnt, token.c_str(),
+                lineAvator.c_str()),
+            HCCL_E_PARA);
+
+        unsigned long val = 0;
+        try {
+            std::size_t parsePos = 0;
+            val = std::stoul(token, &parsePos, 0);
+            if (parsePos != token.size()) {
+                HCCL_ERROR(
+                    "[MulQpInfo][ParseSrcPortsFromString][line: %u] port[%s] is not a valid integer.[%s]", lineCnt,
+                    token.c_str(), lineAvator.c_str());
+                return HCCL_E_PARA;
+            }
+        } catch (...) {
+            HCCL_ERROR(
+                "[MulQpInfo][ParseSrcPortsFromString][line: %u] port[%s] is not a valid integer.[%s]", lineCnt,
+                token.c_str(), lineAvator.c_str());
+            return HCCL_E_PARA;
+        }
+
+        CHK_PRT_RET(
+            val == 0 || val > MultiQpSrcPortConfig::CONFIG_SRC_PORT_ID_MAX,
+            HCCL_ERROR(
+                "[MulQpInfo][ParseSrcPortsFromString][line: %u]src port[%s] "
+                "should be within the range of[1, %u].[%s]",
+                lineCnt, token.c_str(), MultiQpSrcPortConfig::CONFIG_SRC_PORT_ID_MAX, lineAvator.c_str()),
+            HCCL_E_PARA);
+
+        ports.emplace_back(static_cast<std::uint16_t>(val));
+        if (p == std::string::npos)
+            break;
+        start = p + 1;
+    }
+
+    CHK_PRT_RET(
+        ports.size() > MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX || ports.empty(),
+        HCCL_ERROR(
+            "[MulQpInfo][ParseSrcPortsFromString][line: %u]config ports num[%zu] more than the "
+            "threshold[%u].[%s]",
+            lineCnt, ports.size(), MultiQpSrcPortConfig::CONFIG_SRC_PORT_NUM_MAX, lineAvator.c_str()),
+        HCCL_E_PARA);
+
+    return HCCL_SUCCESS;
+}
+
+void EnvRdmaConfig::LogMultiQpSrcPortConfig() const
+{
+    for (const auto& entry : multiQpSrcPortConfig_.ipPairToPorts) {
+        std::string portsStr;
+        for (size_t j = 0; j < entry.second.size(); j++) {
+            if (j > 0)
+                portsStr += ",";
+            portsStr += std::to_string(entry.second[j]);
+        }
+        HCCL_RUN_INFO("[HCCL_ENV] MultiQpSrcPort: ipPair[%s] -> ports[%s]", entry.first.c_str(), portsStr.c_str());
+    }
 }
 
 u32 EnvRdmaConfig::GetRdmaTrafficClass() const { return rdmaTrafficClass.Get(); }
@@ -151,6 +370,8 @@ u32 EnvRdmaConfig::GetUbTimeOut() const { return ubTimeOut.Get(); }
 u32 EnvRdmaConfig::GetRdmaQueueNum() const { return queueNum.Get(); }
 
 u32 EnvRdmaConfig::GetRdmaMultiQpThreshold() const { return multiQpThreshold.Get(); }
+
+const MultiQpSrcPortConfig& EnvRdmaConfig::GetMultiQpSrcPortConfig() const { return multiQpSrcPortConfig_; }
 
 // EnvAlgoConfig
 

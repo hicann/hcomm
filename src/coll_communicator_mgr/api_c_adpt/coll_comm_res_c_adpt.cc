@@ -106,6 +106,35 @@ static void FillRoceQos(
         static_cast<unsigned>(dscp), static_cast<unsigned>(slOut), static_cast<unsigned>(tcOut));
 }
 
+static u32 ResolveQueueNum(const Hccl::EnvRdmaConfig& rdmaConfig, const HcclChannelDesc& channelDesc)
+{
+    if (channelDesc.roceAttr.queueNum != INVALID_UINT) { // 用户有配置qp数量，使用用户配置的
+        return channelDesc.roceAttr.queueNum;
+    }
+    // 查询channelDesc，localEndpoint与remoteEndpoint的CommAddr字段，得到ip对
+    const auto& qpSrcPortConfig = rdmaConfig.GetMultiQpSrcPortConfig();
+    const CommAddr& localCommAddr = channelDesc.localEndpoint.commAddr;
+    const CommAddr& remoteCommAddr = channelDesc.remoteEndpoint.commAddr;
+    char localIpStr[INET6_ADDRSTRLEN] = {0};
+    char remoteIpStr[INET6_ADDRSTRLEN] = {0};
+    s32 localFamily = (localCommAddr.type == COMM_ADDR_TYPE_IP_V6) ? AF_INET6 : AF_INET;
+    s32 remoteFamily = (remoteCommAddr.type == COMM_ADDR_TYPE_IP_V6) ? AF_INET6 : AF_INET;
+    const void* localSrc = (localFamily == AF_INET6) ? static_cast<const void*>(&localCommAddr.addr6) :
+                                                       static_cast<const void*>(&localCommAddr.addr);
+    const void* remoteSrc = (remoteFamily == AF_INET6) ? static_cast<const void*>(&remoteCommAddr.addr6) :
+                                                         static_cast<const void*>(&remoteCommAddr.addr);
+    (void)inet_ntop(localFamily, localSrc, localIpStr, sizeof(localIpStr));
+    (void)inet_ntop(remoteFamily, remoteSrc, remoteIpStr, sizeof(remoteIpStr));
+    Hccl::IpAddress localIp(localIpStr, localFamily);
+    Hccl::IpAddress remoteIp(remoteIpStr, remoteFamily);
+    // 根据ip对，查HCCL_RDMA_QP_PORT_CONFIG_PATH环境变量对应的源端口号
+    u32 srcPortNum = Hccl::GetMultiQpPortsNumByIpPair(qpSrcPortConfig, localIp, remoteIp);
+    if (srcPortNum > 0) { // 查看源端口号是否有配置，有则使用
+        return srcPortNum;
+    }
+    return rdmaConfig.GetRdmaQueueNum();
+}
+
 static void FillChannelDescFinal(
     hccl::CommConfig commConfig, const HcclChannelDesc& channelDesc, HcclChannelDesc& channelDescFinal,
     bool isCommunicatorV2)
@@ -119,9 +148,7 @@ static void FillChannelDescFinal(
                                                       rdmaConfig.GetRdmaTimeOut() :
                                                       channelDesc.roceAttr.retryInterval;
         FillRoceQos(commConfig, rdmaConfig, channelDesc, channelDescFinal.roceAttr.sl, channelDescFinal.roceAttr.tc);
-        channelDescFinal.roceAttr.queueNum = (channelDesc.roceAttr.queueNum == INVALID_UINT) ?
-                                                 rdmaConfig.GetRdmaQueueNum() :
-                                                 channelDesc.roceAttr.queueNum;
+        channelDescFinal.roceAttr.queueNum = ResolveQueueNum(rdmaConfig, channelDesc);
     } else {
         channelDescFinal.roceAttr.retryCnt = (channelDesc.roceAttr.retryCnt == INVALID_UINT) ?
                                                  EnvConfig::GetExternalInputRdmaRetryCnt() :

@@ -127,6 +127,7 @@ public:
     u32 GetUbTimeOut() const;
     u32 GetRdmaQueueNum() const;
     u32 GetRdmaMultiQpThreshold() const;
+    const MultiQpSrcPortConfig& GetMultiQpSrcPortConfig() const;
 
     static constexpr u32 HCCL_RDMA_TC_DEFAULT = 132;      // 默认的traffic class为132(33*4)
     static constexpr u32 HCCL_RDMA_SL_DEFAULT = 4;        // 默认的server level为4
@@ -169,6 +170,18 @@ private:
     CfgField<u32> queueNum{"HCCL_RDMA_QPS_PER_CONNECTION", u32(1), Str2T<u32>, CHK_RANGE_CLOSED<u32>(1, 32)};
     CfgField<u32> multiQpThreshold{
         "HCCL_MULTI_QP_THRESHOLD", u32(512 * 1024), Str2T<u32>, CHK_RANGE_CLOSED<u32>(1, 8192), ConvertUnitQpThreshold};
+    void ParseMultiQpSrcPortConfig();
+    HcclResult OpenMultiQpConfigFile(std::ifstream& inFile);
+    HcclResult ParseConfigContent(std::ifstream& inFile, MultiQpSrcPortConfig& config);
+    HcclResult ParseLineToIpPairAndPortPart(
+        const std::string& lineInfo, u32 lineCnt, const std::string& lineAvator, std::string& ipPairKey,
+        std::string& portPart);
+    HcclResult ParseSrcPortsFromPortPart(
+        const std::string& portPart, u32 lineCnt, const std::string& lineAvator, std::vector<std::uint16_t>& ports);
+    void LogMultiQpSrcPortConfig() const;
+    CfgField<std::string> qpPortConfigPath{
+        "HCCL_RDMA_QP_PORT_CONFIG_PATH", "", Str2T<std::string>, CheckFilePath, SetRealPath};
+    MultiQpSrcPortConfig multiQpSrcPortConfig_;
 };
 
 // 算法配置
