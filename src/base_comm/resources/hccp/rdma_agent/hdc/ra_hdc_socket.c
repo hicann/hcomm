@@ -433,8 +433,8 @@ STATIC int RaHdcGetAllVnic(unsigned int curPhyId, unsigned int *vnicIp, unsigned
 
     for (logicId = 0; logicId < devNum; logicId++) {
         ret = DlDrvDeviceGetPhyIdByIndex(logicId, &phyId);
-        CHK_PRT_RETURN(ret != 0 || phyId >= RA_MAX_PHY_ID_NUM || phyId >= num, hccp_err("[get][ra_hdc_all_vnic]get phy"
-            "id failed, logicId(%u) ret(%d) phyId(%u) >= %d or >= %u invalid", logicId, ret, phyId,
+    CHK_PRT_RETURN(ret != 0 || phyId >= RA_MAX_PHY_ID_NUM || phyId >= num, hccp_err("[get][ra_hdc_all_vnic]get phy"
+        "id failed, logicId(%u) ret(%d) phyId(%u) >= %d or >= %u invalid", logicId, ret, phyId,
             RA_MAX_PHY_ID_NUM, num), -ENODEV);
 
         vnicIpData.txData.phyId = phyId;

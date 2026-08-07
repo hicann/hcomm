@@ -23,7 +23,7 @@ int RaPeerGetClientSocketErrInfo(unsigned int phyId, struct SocketConnectInfoT c
 
     ret = RaGetSocketConnectInfo(conn, num, connOut, MAX_SOCKET_NUM);
     CHK_PRT_RETURN(ret != 0, hccp_err("[get][ra_peer_socket]ra_get_socket_connect_info failed, "
-        "ret(%d)", ret), ret);
+        "ret(%d), phyId(%u)", ret, phyId), ret);
 
     RaPeerMutexLock(phyId);
     RsSetCtx(phyId);
@@ -43,8 +43,8 @@ int RaPeerGetServerSocketErrInfo(unsigned int phyId, struct SocketListenInfoT co
     int ret;
 
     ret = RaGetSocketListenInfo(conn, num, connOut, MAX_SOCKET_NUM);
-    CHK_PRT_RETURN(ret, hccp_err("[get][ra_peer_socket]ra_get_socket_listen_info failed "
-        "ret(%d)", ret), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("[get][ra_peer_socket]ra_get_socket_listen_info failed "
+        "ret(%d), phyId(%u)", ret, phyId), ret);
 
     RaPeerMutexLock(phyId);
     RsSetCtx(phyId);
@@ -64,7 +64,7 @@ int RaPeerSocketAcceptCreditAdd(unsigned int phyId, struct SocketListenInfoT con
     int ret;
 
     ret = RaGetSocketListenInfo(conn, num, rsConn, MAX_SOCKET_NUM);
-    CHK_PRT_RETURN(ret, hccp_err("[set][ra_peer_socket]ra_peer_get_socket_listen_info failed ret(%d) phyId(%u)",
+    CHK_PRT_RETURN(ret != 0, hccp_err("[set][ra_peer_socket]ra_peer_get_socket_listen_info failed ret(%d) phyId(%u)",
         ret, phyId), ret);
 
     RaPeerMutexLock(phyId);
