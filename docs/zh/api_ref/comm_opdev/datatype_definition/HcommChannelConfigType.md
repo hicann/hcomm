@@ -2,7 +2,7 @@
 
 ## 功能说明
 
-Channel 配置属性类型枚举，用于[HcommChannelConfigSetInt](../control_plane_api/basic_resource_mgmt/HcommChannelConfigSetInt.md)接口指定待设置的属性类型。
+Channel配置属性类型枚举，用于[HcommChannelConfigSetInt](../control_plane_api/basic_resource_mgmt/HcommChannelConfigSetInt.md)接口指定待设置的属性类型。
 
 ## 类型定义
 

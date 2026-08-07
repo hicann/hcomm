@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-创建 Channel 配置对象，用于[HcommChannelCreateWithConfig](HcommChannelCreateWithConfig.md)接口创建通信通道时传入共享 Jetty 等高级配置。
+创建Channel配置对象，用于[HcommChannelCreateWithConfig](HcommChannelCreateWithConfig.md)接口创建通信通道时传入共享Jetty等高级配置。
 
 配置对象创建后，可通过[HcommChannelConfigSetInt](HcommChannelConfigSetInt.md)设置属性，使用完毕后须通过[HcommChannelConfigDestroy](HcommChannelConfigDestroy.md)销毁。
 
@@ -34,7 +34,7 @@ HcommResult HcommChannelConfigCreate(HcommChannelConfig *config)
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| config | 输出 | Channel 配置对象的不透明句柄。<br>HcommChannelConfig类型的定义请参见[HcommChannelConfig](../../datatype_definition/HcommChannelConfig.md)。<br>调用者仅需传入指针，由接口内部分配并返回句柄。 |
+| config | 输出 | Channel配置对象的不透明句柄。<br>HcommChannelConfig类型的定义请参见[HcommChannelConfig](../../datatype_definition/HcommChannelConfig.md)。<br>调用者仅需传入指针，由接口内部分配并返回句柄。 |
 
 ## 返回值
 

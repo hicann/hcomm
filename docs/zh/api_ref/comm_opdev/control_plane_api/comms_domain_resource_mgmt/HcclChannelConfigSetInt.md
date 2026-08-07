@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-设置 Channel 配置对象的整型属性。目前支持的属性类型请参见[HcclChannelConfigType](../../datatype_definition/HcclChannelConfigType.md)。
+设置Channel配置对象的整型属性。目前支持的属性类型请参见[HcclChannelConfigType](../../datatype_definition/HcclChannelConfigType.md)。
 
 ## 函数原型
 
@@ -31,8 +31,8 @@ HcclResult HcclChannelConfigSetInt(HcclChannelConfig config, HcclChannelConfigTy
 ## 参数说明
 
 | 参数名 | 输入/输出 | 描述 |
-| | --- | --- |
-| config | 输入 | Channel 配置对象句柄，须通过[HcclChannelConfigCreate](HcclChannelConfigCreate.md)创建。 |
+| --- | --- | --- |
+| config | 输入 | Channel配置对象句柄，须通过[HcclChannelConfigCreate](HcclChannelConfigCreate.md)创建。 |
 | type | 输入 | 属性类型枚举值。<br>HcclChannelConfigType类型的定义请参见[HcclChannelConfigType](../../datatype_definition/HcclChannelConfigType.md)。 |
 | value | 输入 | 属性值。对于bool类型属性，0表示false，非0表示true。 |
 

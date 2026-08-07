@@ -2,7 +2,7 @@
 
 ## 功能说明
 
-Channel 配置对象的不透明句柄，用于[HcclChannelAcquireWithConfig](../control_plane_api/comms_domain_resource_mgmt/HcclChannelAcquireWithConfig.md)接口创建通信通道时传入共享 Jetty 等高级配置。
+Channel配置对象的不透明句柄，用于[HcclChannelAcquireWithConfig](../control_plane_api/comms_domain_resource_mgmt/HcclChannelAcquireWithConfig.md)接口创建通信通道时传入共享Jetty等高级配置。
 
 ## 类型定义
 

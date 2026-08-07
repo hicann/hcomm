@@ -20,12 +20,12 @@
 
 ## 功能说明
 
-基于通信域和配置对象创建通信通道，是[HcclChannelAcquire](HcclChannelAcquire.md)的增强版本，支持通过配置对象传入共享 Jetty 等高级配置。
+基于通信域和配置对象创建通信通道，是[HcclChannelAcquire](HcclChannelAcquire.md)的增强版本，支持通过配置对象传入共享Jetty等高级配置。
 
 当config为nullptr或未设置IS_SHARED_QUEUE时，行为与[HcclChannelAcquire](HcclChannelAcquire.md)完全等价。
 
-当config中IS_SHARED_QUEUE=true时，启用共享 Jetty 模式：
-- 使用相同 SHARED_QUEUE_TAG 多次调用本接口创建的 Channel，若源目的 endpointPair 相同，则共享同一个底层 Jetty 资源，实现通信资源的复用。
+当config中IS_SHARED_QUEUE=true时，启用共享Jetty模式：
+- 使用相同SHARED_QUEUE_TAG多次调用本接口创建的Channel，若源目的endpointPair相同，则共享同一个底层Jetty资源，实现通信资源的复用。
 - 适用于需要频繁创建/销毁通信通道的场景，可显著降低建链开销。
 
 ## 函数原型
@@ -40,10 +40,10 @@ HcclResult HcclChannelAcquireWithConfig(HcclComm comm, CommEngine engine,
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
 | comm | 输入 | 通信域句柄。<br>HcclComm类型的定义如下：<br>typedef void *HcclComm; |
-| engine | 输入 | 通信引擎类型。<br>CommEngine类型的定义可参见[CommEngine](../../datatype_definition/CommEngine.md)。 |
-| channelDescs | 输入 | 通信通道描述列表，列表长度为channelNum。<br>HcclChannelDesc类型的定义可参见[HcclChannelDesc](../../datatype_definition/HcclChannelDesc.md)。<br>**必须使用[HcclChannelDescInit](HcclChannelDescInit.md)进行初始化。** |
+| engine | 输入 | 通信引擎类型。<br>CommEngine类型的定义请参见[CommEngine](../../datatype_definition/CommEngine.md)。 |
+| channelDescs | 输入 | 通信通道描述列表，列表长度为channelNum。<br>HcclChannelDesc类型的定义请参见[HcclChannelDesc](../../datatype_definition/HcclChannelDesc.md)。<br>**必须使用[HcclChannelDescInit](HcclChannelDescInit.md)进行初始化。** |
 | channelNum | 输入 | 通信通道数量，取值范围为(0, 1024 * 1024]。 |
-| config | 输入 | Channel 配置对象指针，可为nullptr（等价于[HcclChannelAcquire](HcclChannelAcquire.md)）。<br>HcclChannelConfig类型的定义请参见[HcclChannelConfig](../../datatype_definition/HcclChannelConfig.md)。<br>通过[HcclChannelConfigCreate](HcclChannelConfigCreate.md)创建。 |
+| config | 输入 | Channel配置对象指针，可为nullptr（等价于[HcclChannelAcquire](HcclChannelAcquire.md)）。<br>HcclChannelConfig类型的定义请参见[HcclChannelConfig](../../datatype_definition/HcclChannelConfig.md)。<br>通过[HcclChannelConfigCreate](HcclChannelConfigCreate.md)创建。 |
 | channels | 输出 | 通信通道句柄列表，列表长度为channelNum。 |
 
 ## 返回值
@@ -60,10 +60,10 @@ HcclResult HcclChannelAcquireWithConfig(HcclComm comm, CommEngine engine,
    - 仅支持AIV引擎。
    - 仅支持UB网络语义协议（COMM_PROTOCOL_UBC_CTP、COMM_PROTOCOL_UBC_TP），不支持UBMem/RoCE/UBOE/UBG。
    - 必须设置SHARED_QUEUE_TAG（非空字符串）。
-   - channelDescs中所有元素的localEndpoint必须相同（复用的 Jetty 只能关联一个 endpoint）。
+   - channelDescs中所有元素的localEndpoint必须相同（复用的Jetty只能关联一个endpoint）。
    - 仅支持V2通信器（需通过HcclCommInitClusterInfoConfig等V2接口创建通信域）。
 
-4. 共享 Jetty 模式下，相同tag+endpointPair的Channel复用规则：
+4. 共享Jetty模式下，相同tag+endpointPair的Channel复用规则：
    - 重复调用时，若已有Channel数量不足则创建新的补充，足够则直接按序返回已有Channel。
    - Channel的销毁由通信域统一管理，调用者无需单独销毁。
 
@@ -71,10 +71,10 @@ HcclResult HcclChannelAcquireWithConfig(HcclComm comm, CommEngine engine,
 
 ## 调用示例
 
-以共享 Jetty 模式创建 AIV 通信通道为例：
+以共享Jetty模式创建AIV通信通道为例：
 
 ```c
-// 1. 创建并配置 Channel 配置对象
+// 1. 创建并配置Channel配置对象
 HcclChannelConfig config = nullptr;
 HcclChannelConfigCreate(&config);
 HcclChannelConfigSetInt(config, HCCL_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE, 1);
@@ -88,7 +88,7 @@ for (uint32_t i = 0; i < CHANNEL_NUM; i++) {
     HcclChannelDescInit(&channelDescs[i], 1);
     channelDescs[i].remoteRank = remoteRanks[i];
     channelDescs[i].channelProtocol = COMM_PROTOCOL_UBC_TP;
-    // 填充 localEndpoint / remoteEndpoint ...
+    // 填充localEndpoint / remoteEndpoint ...
 }
 
 // 3. 使用配置创建通信通道
@@ -103,7 +103,7 @@ if (ret != HCCL_SUCCESS) {
 // 4. 销毁配置对象（Channel已创建，配置对象不再需要）
 HcclChannelConfigDestroy(config);
 
-// 5. 后续可重复调用，相同tag的channel会复用底层Jetty
+// 5. 后续可重复调用，相同tag的Channel会复用底层Jetty
 // HcclChannelAcquireWithConfig(comm, COMM_ENGINE_AIV,
 //     channelDescs2, CHANNEL_NUM2, config2, channels2);
 ```

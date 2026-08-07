@@ -20,11 +20,11 @@
 
 ## 功能说明
 
-通过配置对象创建通信通道，是[HcommChannelCreate](HcommChannelCreate.md)的增强版本，支持通过配置对象传入共享 Jetty 等高级配置。
+通过配置对象创建通信通道，是[HcommChannelCreate](HcommChannelCreate.md)的增强版本，支持通过配置对象传入共享Jetty等高级配置。
 
 当config为nullptr或未设置IS_SHARED_QUEUE时，行为与[HcommChannelCreate](HcommChannelCreate.md)完全等价。
 
-当config中IS_SHARED_QUEUE=true时，启用共享 Jetty 模式：
+当config中IS_SHARED_QUEUE=true时，启用共享Jetty模式：
 - 使用相同endpointHandle多次调用本接口创建的Channel，若源目的endpointPair相同，则共享同一个底层Jetty资源，实现通信资源的复用。
 - 适用于需要频繁创建/销毁通信通道的场景，可显著降低建链开销。
 
@@ -43,9 +43,9 @@ HcommResult HcommChannelCreateWithConfig(EndpointHandle endpointHandle, CommEngi
 | --- | --- | --- |
 | endpointHandle | 输入 | 网络设备端点句柄，标识一个已创建的本地网络设备端点。<br>EndpointHandle类型的定义请参见[EndpointHandle](../../datatype_definition/EndpointHandle.md)，该句柄必须通过[HcommEndpointCreate](HcommEndpointCreate.md)成功创建，且未销毁。 |
 | engine | 输入 | 通信引擎类型，指定通道的执行位置。<br>CommEngine类型的定义请参见[CommEngine](../../datatype_definition/CommEngine.md)。 |
-| channelDescs | 输入 | 通道描述符数组，每个元素描述一个待创建通道的属性信息。<br>HcommChannelDesc类型的定义可参见[HcommChannelDesc](../../datatype_definition/HcclChannelDesc.md)。 |
+| channelDescs | 输入 | 通道描述符数组，每个元素描述一个待创建通道的属性信息。<br>HcommChannelDesc类型的定义请参见[HcommChannelDesc](../../datatype_definition/HcommChannelDesc.md)。 |
 | channelNum | 输入 | 待创建的通道数量，取值范围：[1, 1048576]。 |
-| config | 输入 | Channel 配置对象指针，可为nullptr（等价于[HcommChannelCreate](HcommChannelCreate.md)）。<br>HcommChannelConfig类型的定义请参见[HcommChannelConfig](../../datatype_definition/HcommChannelConfig.md)。<br>通过[HcommChannelConfigCreate](HcommChannelConfigCreate.md)创建。 |
+| config | 输入 | Channel配置对象指针，可为nullptr（等价于[HcommChannelCreate](HcommChannelCreate.md)）。<br>HcommChannelConfig类型的定义请参见[HcommChannelConfig](../../datatype_definition/HcommChannelConfig.md)。<br>通过[HcommChannelConfigCreate](HcommChannelConfigCreate.md)创建。 |
 | channels | 输出 | 通道句柄数组，用于返回创建成功的通道句柄列表。<br>ChannelHandle类型的定义请参见[ChannelHandle](../../datatype_definition/ChannelHandle.md)。<br>调用者分配的数组，需要至少包含channelNum个元素的空间。 |
 
 ## 返回值
@@ -89,13 +89,13 @@ HcommResult：接口成功返回0，其他失败。
 
 ## 调用示例
 
-以共享 Jetty 模式创建 AIV 通信通道为例：
+以共享Jetty模式创建AIV通信通道为例：
 
 ```c
 EndpointHandle endpointHandle = nullptr;
 // ... 创建端点的代码（省略）
 
-// 1. 创建并配置 Channel 配置对象
+// 1. 创建并配置Channel配置对象
 HcommChannelConfig config = nullptr;
 HcommChannelConfigCreate(&config);
 HcommChannelConfigSetInt(config, HCOMM_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE, 1);
@@ -107,7 +107,7 @@ ChannelHandle channels[CHANNEL_NUM] = {0};
 for (uint32_t i = 0; i < CHANNEL_NUM; i++) {
     HcommChannelDescInit(&channelDescs[i]);
     channelDescs[i].remoteEndpoint.protocol = COMM_PROTOCOL_UBC_TP;
-    // 填充 localEndpoint / remoteEndpoint ...
+    // 填充localEndpoint / remoteEndpoint ...
 }
 
 // 3. 使用配置创建通信通道
@@ -123,5 +123,5 @@ if (ret != 0) {
 // 4. 销毁配置对象（Channel已创建，配置对象不再需要）
 HcommChannelConfigDestroy(config);
 
-// 5. 后续通过 HcommChannelGetStatus 推动建链状态机
+// 5. 后续通过HcommChannelGetStatus推动建链状态机
 ```

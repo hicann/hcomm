@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-创建 Channel 配置对象，用于[HcclChannelAcquireWithConfig](HcclChannelAcquireWithConfig.md)接口创建通信通道时传入共享 Jetty 等高级配置。
+创建Channel配置对象，用于[HcclChannelAcquireWithConfig](HcclChannelAcquireWithConfig.md)接口创建通信通道时传入共享Jetty等高级配置。
 
 配置对象创建后，可通过[HcclChannelConfigSetInt](HcclChannelConfigSetInt.md)和[HcclChannelConfigSetStr](HcclChannelConfigSetStr.md)设置属性，使用完毕后须通过[HcclChannelConfigDestroy](HcclChannelConfigDestroy.md)销毁。
 
@@ -33,8 +33,8 @@ HcclResult HcclChannelConfigCreate(HcclChannelConfig *config)
 ## 参数说明
 
 | 参数名 | 输入/输出 | 描述 |
-| | --- | --- |
-| config | 输出 | Channel 配置对象的不透明句柄。<br>HcclChannelConfig类型的定义请参见[HcclChannelConfig](../../datatype_definition/HcclChannelConfig.md)。<br>调用者仅需传入指针，由接口内部分配并返回句柄。 |
+| --- | --- | --- |
+| config | 输出 | Channel配置对象的不透明句柄。<br>HcclChannelConfig类型的定义请参见[HcclChannelConfig](../../datatype_definition/HcclChannelConfig.md)。<br>调用者仅需传入指针，由接口内部分配并返回句柄。 |
 
 ## 返回值
 
