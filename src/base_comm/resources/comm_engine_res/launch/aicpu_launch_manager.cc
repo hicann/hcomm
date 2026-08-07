@@ -80,8 +80,12 @@ static HcclResult PrepareThreadMgrParam(const std::vector<std::shared_ptr<Thread
     // 拷贝每个线程的 unique id
     for (u32 i = 0; i < opParam.threadNum; ++i) {
         const std::string &uid = newThreads[i]->GetUniqueId();
-        size_t copyLen = std::min(uid.size(), static_cast<size_t>(THREAD_UNIQUE_ID_MAX_SIZE));
-        sRet = memcpy_s(opParam.threadParam[i], THREAD_UNIQUE_ID_MAX_SIZE, uid.c_str(), copyLen);
+        // 不同于notify路径中uid边界条件，此处采用 >=， 最后一位留给'\0'
+        CHK_PRT_RET(uid.size() >= THREAD_UNIQUE_ID_MAX_SIZE,
+            HCCL_ERROR("[%s] uid.size()[%zu] exceeds limitation[%u], return [%d].", __func__,
+            uid.size(), THREAD_UNIQUE_ID_MAX_SIZE - 1, HCCL_E_MEMORY),
+            HCCL_E_MEMORY);
+        sRet = memcpy_s(opParam.threadParam[i], static_cast<size_t>(THREAD_UNIQUE_ID_MAX_SIZE), uid.c_str(), uid.size());
         CHK_PRT_RET(sRet != EOK,
             HCCL_ERROR("[%s] memcpy_s failed, return [%d].", __func__, sRet),
             HCCL_E_MEMORY);
@@ -308,9 +312,10 @@ HcclResult AicpuLaunchMgr::NotifyKernelLaunchAlloc(std::vector<std::unique_ptr<L
         HCCL_ERROR("[AicpuLaunchMgr][%s] uid is empty.", __func__, HCCL_E_MEMORY);
         return HCCL_E_MEMORY;
     }
-    size_t copyLen = std::min(uid.size(), static_cast<size_t>(NOTIFY_UNIQUE_ID_MAX_SIZE));
-    errno_t sRet = memcpy_s(opParam.notifyParam, NOTIFY_UNIQUE_ID_MAX_SIZE, uid.c_str(), copyLen);
-    CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[AicpuLaunchMgr][%s] call memcpy_s failed, return [%d].", __func__, sRet),
+    errno_t sRet = memcpy_s(opParam.notifyParam, static_cast<size_t>(NOTIFY_UNIQUE_ID_MAX_SIZE), uid.c_str(), uid.size());
+    CHK_PRT_RET(sRet != EOK,
+        HCCL_ERROR("[%s] uid.size()[%zu] exceeds limitation[%u], return [%d].", __func__,
+        uid.size(), NOTIFY_UNIQUE_ID_MAX_SIZE, HCCL_E_MEMORY),
         HCCL_E_MEMORY);
     // 打印每个字节
     if (UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
